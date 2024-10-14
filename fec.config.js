@@ -1,5 +1,5 @@
 module.exports = {
-  appUrl: '/staging/starter',
+  appUrl: '/insights/digital-roadmap',
   debug: true,
   useProxy: true,
   proxyVerbose: true,
@@ -9,11 +9,21 @@ module.exports = {
    * If the dash character is present, you will have add a camelCase version of it to the sassPrefix.
    * If it does not contain the dash character, remove this configuration.
    */
-  sassPrefix: '.frontend-starter-app, .frontendStarterApp',
+  sassPrefix: '.digital-roadmap, .digitalRoadmap',
   /**
    * Change to false after your app is registered in configuration files
    */
   interceptChromeConfig: false,
+
+   // NOTE: This is here for local testing purposes
+  // remove it when you want to use deployed chrome-service,
+  // meaning fed-modules and navigation is updated in chrome-service-backend
+  routes: {
+    '/api/chrome-service/v1/static': {
+      host: 'http://localhost:8000',
+    },
+  },
+
   /**
    * Add additional webpack plugins
    */

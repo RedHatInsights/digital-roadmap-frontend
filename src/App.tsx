@@ -16,7 +16,7 @@ const App = () => {
     const registry = getRegistry();
     registry.register({ notifications: notificationsReducer as Reducer });
     // You can use directly the name of your app
-    updateDocumentTitle('Starter app');
+    updateDocumentTitle('Digital Roadmap');
   }, []);
 
   return (

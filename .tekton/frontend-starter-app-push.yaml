@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:
-    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/frontend-starter-app?rev={{revision}}
+    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/digital-roadmap?rev={{revision}}
     build.appstudio.redhat.com/commit_sha: '{{revision}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
@@ -10,10 +10,10 @@ metadata:
       == "master"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: frontend-starter-app
-    appstudio.openshift.io/component: frontend-starter-app
+    appstudio.openshift.io/application: digital-roadmap
+    appstudio.openshift.io/component: digital-roadmap
     pipelines.appstudio.openshift.io/type: build
-  name: frontend-starter-app-on-push
+  name: digital-roadmap-on-push
   namespace: rh-platform-experien-tenant
 spec:
   params:
@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/rh-platform-experien-tenant/frontend-starter-app/frontend-starter-app:{{revision}}
+    value: quay.io/redhat-user-workloads/rh-platform-experien-tenant/digital-roadmap/digital-roadmap:{{revision}}
   - name: dockerfile
     value: ./Dockerfile
   pipelineSpec:

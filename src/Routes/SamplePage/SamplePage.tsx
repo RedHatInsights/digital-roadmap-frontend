@@ -80,12 +80,10 @@ const SamplePage = () => {
                 </Title>
               </StackItem>
               <StackItem>
-                <AppLink to="/oops"> How to handle 500s in app </AppLink>
+                <AppLink to="oops"> How to handle 500s in app </AppLink>
               </StackItem>
               <StackItem>
-                <AppLink to="/no-permissions">
-                  How to handle 403s in app
-                </AppLink>
+                <AppLink to="no-permissions">How to handle 403s in app</AppLink>
               </StackItem>
             </Stack>
           </StackItem>
