@@ -2,26 +2,26 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: frontend-starter-app
+  name: digital-roadmap
 objects:
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: Frontend
     metadata:
-      name: frontend-starter-app
+      name: digital-roadmap
     spec:
       API:
         versions:
           - v1
       envName: ${ENV_NAME}
       title: Starter App
-      deploymentRepo: https://github.com/RedHatInsights/frontend-starter-app
+      deploymentRepo: https://github.com/RedHatInsights/digital-roadmap
       frontend:
         paths:
-          - /apps/frontend-starter-app
+          - /apps/digital-roadmap
       image: ${IMAGE}:${IMAGE_TAG}
 
       module:
-        manifestLocation: '/apps/frontend-starter-app/fed-mods.json'
+        manifestLocation: '/apps/digital-roadmap/fed-mods.json'
         modules:
           - id: 'overview'
             module: './RootApp'
@@ -34,4 +34,4 @@ parameters:
   - name: IMAGE_TAG
     required: true
   - name: IMAGE
-    value: quay.io/cloudservices/frontend-starter-app
+    value: quay.io/cloudservices/digital-roadmap

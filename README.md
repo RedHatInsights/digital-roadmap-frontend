@@ -1,15 +1,12 @@
-[![Build Status](https://travis-ci.org/RedHatInsights/frontend-starter-app.svg?branch=master)](https://travis-ci.org/RedHatInsights/frontend-starter-app)
+[![Build Status](https://travis-ci.org/RedHatInsights/digital-roadmap.svg?branch=main)](https://travis-ci.org/RedHatInsights/digital-roadmap)
 
-# frontend-starter-app
+# Digital Roadmap
 
+TODO: Add a description of the project here.
 
-React.js starter app for Red Hat Insights products that includes Patternfly 4 and shared Red Hat cloud service frontend components.
+## Getting started
 
-## Alternative
-
-Before using this template, please check the [create-crc-app](https://github.com/RedHatInsights/frontend-components/blob/master/packages/docs/pages/ui-onboarding/create-crc-app.mdx). It has some extra setup you may like.
-
-## Initial etc/hosts setup
+### Initial etc/hosts setup
 
 In order to access the https://[env].foo.redhat.com in your browser, you have to add entries to your `/etc/hosts` file. This is a **one-time** setup that has to be done only once (unless you modify hosts) on each devel machine.
 
@@ -29,22 +26,22 @@ If this command throws an error run it as a `sudo`:
 sudo npm run patch:hosts
 ```
 
-## Getting started
-
-1. ```npm install```
-
-2. ```npm run start```
-   1. If you are running the [chrome-service-backend](https://github.com/RedHatInsights/chrome-service-backend) locally, set the environment variable `CHROME_SERVICE` to the port that it is listening on (by default `8000`). For example, `CHROME_SERVICE=8000 npm run start`.
-
-3. Open browser in URL listed in the terminal output
-
-Update `appUrl` string inside `fec.config.js` according to your application URL. [Read more](http://front-end-docs-insights.apps.ocp4.prod.psi.redhat.com/ui-onboarding/fec-binary#TODO:documentalloptions).
+1. [This repo] etc/hosts setup is required to access the application in the browser.
+2. Clone `chrome-service-backend` and checkout [this branch](https://github.com/andywaltlova/chrome-service-backend/tree/feat/digital-roadmap-nav)
+   * the changes on that branch are required to see the application in navigation menu
+   * run `make dev-static` to start the service
+3. [This repo] ```npm install```
+4. [This repo] ```npm run start```
+   * set the environment variable `CHROME_SERVICE` to the port that it is listening on (by default `8000`). For example, `CHROME_SERVICE=8000 npm run start`.
+5. [This repo] Select environment to run the app in, for dev you can use e.g. `stage-stable`, url for that would be `https://stage.foo.redhat.com:1337/insights/digital-roadmap`
+6. [This repo] Open browser in URL listed in the terminal output
+   * If you see cert error continue to the page anyway (this is expected), I had no problem with firefox but chrome may be more strict
 
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
 
-## Deploying
+## TODO: Deploying
 
 - The starter repo uses Travis to deploy the webpack build to another Github repo defined in `.travis.yml`
   - That Github repo has the following branches:

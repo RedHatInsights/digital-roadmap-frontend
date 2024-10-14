@@ -19,7 +19,8 @@ jobs:
     script: npm run test && npx codecov
 env:
   global:
-  - REPO="git@github.com:RedHatInsights/frontend-starter-app-build"
-  - REPO_DIR="frontend-starter-app-build"
+  # TODO
+  - REPO="git@github.com:RedHatInsights/digital-roadmap-build"
+  - REPO_DIR="digital-roadmap-build"
   - BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}
   - NODE_OPTIONS="--max-old-space-size=4096 --max_old_space_size=4096"
