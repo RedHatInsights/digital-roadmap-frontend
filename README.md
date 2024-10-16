@@ -36,6 +36,7 @@ sudo npm run patch:hosts
 5. [This repo] Select environment to run the app in, for dev you can use e.g. `stage-stable`, url for that would be `https://stage.foo.redhat.com:1337/insights/digital-roadmap`
 6. [This repo] Open browser in URL listed in the terminal output
    * If you see cert error continue to the page anyway (this is expected), I had no problem with firefox but chrome may be more strict
+   * For the credentials you can check our shared password manager, if you don't have required rights at your own account
 
 ### Testing
 
