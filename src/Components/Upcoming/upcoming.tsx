@@ -1,4 +1,4 @@
-import './released.scss';
+import './upcoming.scss';
 import React, { Suspense, lazy } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -19,7 +19,7 @@ const SampleComponent = lazy(
   () => import('../SampleComponent/sample-component')
 );
 
-const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
+const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const dispatch = useDispatch();
   const handleAlert = () => {
     dispatch(
@@ -34,8 +34,8 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
     <Stack hasGutter>
       <StackItem>
         <TextContent>
-          <Text component="h2">Released</Text>
-          <Text component="p">This is the released tab.</Text>
+          <Text component="h2">Upcoming</Text>
+          <Text component="p">This is the upcoming tab.</Text>
         </TextContent>
       </StackItem>
       <StackItem>
@@ -76,4 +76,4 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
   );
 };
 
-export default ReleasedTab;
+export default UpcomingTab;

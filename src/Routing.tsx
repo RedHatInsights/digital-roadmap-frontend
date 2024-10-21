@@ -28,17 +28,15 @@ const routes = [
     path: 'oops',
     element: OopsPage,
   },
+  /* Catch all unmatched routes */
+  {
+    path: 'invalid',
+    element: InvalidObject,
+  },
   {
     path: '*',
     element: LandingPage,
   },
-  // /* Catch all unmatched routes */
-  // {
-  //   route: {
-  //     path: '*',
-  //   },
-  //   element: InvalidObject,
-  // },
 ];
 
 interface RouteType {
