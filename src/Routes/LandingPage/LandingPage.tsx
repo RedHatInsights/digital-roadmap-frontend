@@ -14,6 +14,9 @@ import './landing-page.scss';
 
 const ReleasedTab = lazy(() => import('../../Components/Released/released'));
 const UpcomingTab = lazy(() => import('../../Components/Upcoming/upcoming'));
+const SystemCard = lazy(
+  () => import('../../Components/SystemInfoCard/SystemInfoCard')
+);
 
 /**
  * A smart component that handles all the api calls and data needed by the dumb components.
@@ -64,6 +67,7 @@ const LandingPage = () => {
           information on how RHEL minor and major releases will affect the
           customers environment
         </p>
+        <SystemCard />
       </PageHeader>
       <Tabs
         className="pf-c-tabs pf-c-page-header pf-c-table"
