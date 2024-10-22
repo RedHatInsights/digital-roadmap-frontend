@@ -1,11 +1,11 @@
-// js generates class '.page__{rootClass}' that wraps the content in your page added to the root tag
-// Found in Routes.js as the rootClass
+@import "~@redhat-cloud-services/frontend-components-utilities/styles/variables";
 
 .pf-c-tabs {
-    margin-left: 1em;
-    margin-bottom: 1em;
+    margin: $ins-margin;
+    margin-bottom: 0;
 }
 
 .pf-c-page__main-section {
-    margin-left: 1em;
+    margin: $ins-margin;
+    margin-top: 0;
 }
