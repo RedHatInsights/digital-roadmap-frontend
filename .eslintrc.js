@@ -23,6 +23,6 @@ module.exports = {
       },
     ],
     // Enable this if you want to use absolute import paths
-    "rulesdir/forbid-pf-relative-imports": "off"
+    "rulesdir/forbid-pf-relative-imports": "off",
   },
 };
