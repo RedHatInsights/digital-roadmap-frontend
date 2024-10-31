@@ -74,17 +74,23 @@ const LandingPage = () => {
         activeKey={activeTabKey}
         onSelect={handleTabClick}
       >
-        <Tab eventKey={0} title={<TabTitleText>Released</TabTitleText>}>
-          <section className="pf-l-page__main-section pf-c-page__main-section">
+        <Tab eventKey={0} title={<TabTitleText>Upcoming</TabTitleText>}>
+          <section
+            className="pf-l-page__main-section pf-c-page__main-section"
+            id="upcoming"
+          >
             <Suspense fallback={<Spinner />}>
-              <ReleasedTab />
+              <UpcomingTab />
             </Suspense>
           </section>
         </Tab>
-        <Tab eventKey={1} title={<TabTitleText>Upcoming</TabTitleText>}>
-          <section className="pf-l-page__main-section pf-c-page__main-section">
+        <Tab eventKey={1} title={<TabTitleText>Released</TabTitleText>}>
+          <section
+            className="pf-l-page__main-section pf-c-page__main-section"
+            id="released"
+          >
             <Suspense fallback={<Spinner />}>
-              <UpcomingTab />
+              <ReleasedTab />
             </Suspense>
           </section>
         </Tab>

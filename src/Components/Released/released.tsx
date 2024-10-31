@@ -14,10 +14,10 @@ import {
 } from '@patternfly/react-core';
 
 const ToggleGroupReleasedView = lazy(
-  () => import('../ReleasedViewToolbar/CustomToggleGroup')
+  () => import('../FilterComponents/CustomToggleGroup')
 );
 const SelectOptionVariations = lazy(
-  () => import('../ReleasedViewToolbar/CustomDropdown')
+  () => import('../FilterComponents/CustomDropdown')
 );
 
 const ReleasedTab: React.FC<React.PropsWithChildren> = () => {

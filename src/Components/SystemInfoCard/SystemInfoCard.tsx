@@ -4,7 +4,6 @@ import {
   Card,
   CardBody,
   CardExpandableContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@patternfly/react-core';
@@ -32,8 +31,10 @@ const SystemCardExpandable: React.FunctionComponent = () => {
         </CardTitle>
       </CardHeader>
       <CardExpandableContent>
-        <CardBody>Body</CardBody>
-        <CardFooter>Footer</CardFooter>
+        <CardBody>
+          TODO: Filter toolbar which will through context tell the table
+          component the additional filters
+        </CardBody>
       </CardExpandableContent>
     </Card>
   );
