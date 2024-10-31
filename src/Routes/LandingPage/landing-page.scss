@@ -3,9 +3,13 @@
 .pf-c-tabs {
     margin: $ins-margin;
     margin-bottom: 0;
+    margin-top: 0;
 }
 
 .pf-c-page__main-section {
-    margin: $ins-margin;
     margin-top: 0;
+}
+
+#upcoming {
+    padding-top: 0; // alert should be immediatly below the tabs header
 }
