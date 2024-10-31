@@ -1,78 +1,75 @@
 import './released.scss';
 import React, { Suspense, lazy } from 'react';
-import { useDispatch } from 'react-redux';
 import {
-  Button,
+  Sidebar,
+  SidebarContent,
+  SidebarPanel,
   Spinner,
-  Stack,
-  StackItem,
   Text,
   TextContent,
-  Title,
+  TextVariants,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from '@patternfly/react-core';
 
-import { addNotification } from '@redhat-cloud-services/frontend-components-notifications/redux';
-
-import AppLink from '../../Components/AppLink';
-
-const SampleComponent = lazy(
-  () => import('../SampleComponent/sample-component')
+const ToggleGroupReleasedView = lazy(
+  () => import('../ReleasedViewToolbar/CustomToggleGroup')
+);
+const SelectOptionVariations = lazy(
+  () => import('../ReleasedViewToolbar/CustomDropdown')
 );
 
 const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
-  const dispatch = useDispatch();
-  const handleAlert = () => {
-    dispatch(
-      addNotification({
-        variant: 'success',
-        title: 'Notification title',
-        description: 'notification description',
-      })
-    );
-  };
-  return (
-    <Stack hasGutter>
-      <StackItem>
-        <TextContent>
-          <Text component="h2">Released</Text>
-          <Text component="p">This is the released tab.</Text>
-        </TextContent>
-      </StackItem>
-      <StackItem>
-        <Title headingLevel="h2" size="3xl">
-          {' '}
-          Alerts{' '}
-        </Title>
-        <Button variant="primary" onClick={handleAlert}>
-          {' '}
-          Dispatch alert{' '}
-        </Button>
-      </StackItem>
-      <StackItem>
+  const items = (
+    <React.Fragment>
+      <ToolbarItem variant="search-filter">
         <Suspense fallback={<Spinner />}>
-          <SampleComponent />
+          <SelectOptionVariations />
         </Suspense>
-      </StackItem>
-      <StackItem>
-        <Stack hasGutter>
-          <StackItem>
-            <Title headingLevel="h2" size="3xl">
-              {' '}
-              Links{' '}
-            </Title>
-          </StackItem>
-          <StackItem>
-            <AppLink to="oops"> How to handle 500s in app </AppLink>
-          </StackItem>
-          <StackItem>
-            <AppLink to="no-permissions">How to handle 403s in app</AppLink>
-          </StackItem>
-          <StackItem>
-            <AppLink to="invalid"> How to handle invalid requests </AppLink>
-          </StackItem>
-        </Stack>
-      </StackItem>
-    </Stack>
+      </ToolbarItem>
+      <ToolbarItem style={{ alignSelf: 'center' }}>
+        <TextContent>
+          <Text component={TextVariants.h6}>View</Text>
+        </TextContent>
+      </ToolbarItem>
+      <ToolbarItem>
+        <Suspense fallback={<Spinner />}>
+          <ToggleGroupReleasedView />
+        </Suspense>
+      </ToolbarItem>
+    </React.Fragment>
+  );
+  return (
+    <>
+      <Toolbar id="toolbar-items-example">
+        <ToolbarContent alignItems={'center'}>{items}</ToolbarContent>
+      </Toolbar>
+      <Sidebar hasBorder hasGutter>
+        <SidebarPanel>Sidebar panel - TODO Sidebar component</SidebarPanel>
+        <SidebarContent>
+          <p>TODO table component</p>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+            dapibus nulla id augue dictum commodo. Donec mollis arcu massa,
+            sollicitudin venenatis est rutrum vitae. Integer pulvinar ligula at
+            augue mollis, ac pulvinar arcu semper. Maecenas nisi lorem,
+            malesuada ac lectus nec, porta pretium neque. Ut convallis libero
+            sit amet metus mattis, vel facilisis lorem malesuada. Duis
+            consectetur ante sit amet magna efficitur, a interdum leo vulputate.
+          </p>
+          <p>
+            Praesent at odio nec sapien ultrices tincidunt in non mauris. Orci
+            varius natoque penatibus et magnis dis parturient montes, nascetur
+            ridiculus mus. Duis consectetur nisl quis facilisis faucibus. Sed eu
+            bibendum risus. Suspendisse porta euismod tortor, at elementum odio
+            suscipit sed. Cras eget ultrices urna, ac feugiat lectus. Integer a
+            pharetra velit, in imperdiet mi. Phasellus vel hendrerit velit.
+            Vestibulum ut augue vitae erat vulputate bibendum a ut magna.
+          </p>
+        </SidebarContent>
+      </Sidebar>
+    </>
   );
 };
 
