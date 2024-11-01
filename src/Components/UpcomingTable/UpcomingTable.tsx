@@ -32,121 +32,31 @@ import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
 
-interface Repository {
-  name: string;
-  threads: string;
-  apps: string;
-  workspaces: string;
-  status: string;
-  location: string;
+import { Record } from '../Upcoming/mock_data';
+
+interface UpcomingTableProps {
+  data: Record[];
+  columnNames: {
+    name: string;
+    release: string;
+    date: string;
+  };
 }
 
-// In real usage, this data would come from some external source like an API via props.
-const repositories: Repository[] = [
-  {
-    name: 'US-Node 1',
-    threads: '5',
-    apps: '25',
-    workspaces: '5',
-    status: 'Stopped',
-    location: 'Raleigh',
-  },
-  {
-    name: 'US-Node 2',
-    threads: '5',
-    apps: '30',
-    workspaces: '2',
-    status: 'Down',
-    location: 'Westford',
-  },
-  {
-    name: 'US-Node 3',
-    threads: '13',
-    apps: '35',
-    workspaces: '12',
-    status: 'Degraded',
-    location: 'Boston',
-  },
-  {
-    name: 'US-Node 4',
-    threads: '2',
-    apps: '5',
-    workspaces: '18',
-    status: 'Needs Maintenance',
-    location: 'Raleigh',
-  },
-  {
-    name: 'US-Node 5',
-    threads: '7',
-    apps: '30',
-    workspaces: '5',
-    status: 'Running',
-    location: 'Boston',
-  },
-  {
-    name: 'US-Node 6',
-    threads: '5',
-    apps: '20',
-    workspaces: '15',
-    status: 'Stopped',
-    location: 'Raleigh',
-  },
-  {
-    name: 'CZ-Node 1',
-    threads: '12',
-    apps: '48',
-    workspaces: '13',
-    status: 'Down',
-    location: 'Brno',
-  },
-  {
-    name: 'CZ-Node 2',
-    threads: '3',
-    apps: '8',
-    workspaces: '20',
-    status: 'Running',
-    location: 'Brno',
-  },
-  {
-    name: 'CZ-Remote-Node 1',
-    threads: '1',
-    apps: '15',
-    workspaces: '20',
-    status: 'Down',
-    location: 'Brno',
-  },
-  {
-    name: 'Bangalore-Node 1',
-    threads: '1',
-    apps: '20',
-    workspaces: '20',
-    status: 'Running',
-    location: 'Bangalore',
-  },
-];
-
-const columnNames = {
-  name: 'Servers',
-  threads: 'Threads',
-  apps: 'Applications',
-  workspaces: 'Workspaces',
-  status: 'Status',
-  location: 'Location',
-};
-
-export const UpcomingTable: React.FunctionComponent = () => {
+export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
+  props
+) => {
   // Set up repo filtering
+  const { data, columnNames } = props;
   const [searchValue, setSearchValue] = React.useState('');
-  const [locationSelections, setLocationSelections] = React.useState<string[]>(
-    []
-  );
-  const [statusSelection, setStatusSelection] = React.useState('');
+  const [dateSelections, setDateSelections] = React.useState<string[]>([]);
+  const [releaseSelection, setReleaseSelection] = React.useState('');
 
   const onSearchChange = (value: string) => {
     setSearchValue(value);
   };
 
-  const onFilter = (repo: Repository) => {
+  const onFilter = (repo: Record) => {
     // Search name with search value
     let searchValueInput: RegExp;
     try {
@@ -157,84 +67,87 @@ export const UpcomingTable: React.FunctionComponent = () => {
         'i'
       );
     }
-    const matchesSearchValue = repo.name.search(searchValueInput) >= 0;
+    const matchesNameValue = repo.name.search(searchValueInput) >= 0;
 
-    // Search status with status selection
-    const matchesStatusValue =
-      repo.status.toLowerCase() === statusSelection.toLowerCase();
+    // Search release with status selection
+    const matchesReleaseValue =
+      repo.release.toLowerCase() === releaseSelection.toLowerCase();
 
     // Search location with location selections
-    const matchesLocationValue = locationSelections.includes(repo.location);
+    const matchesDateValue = dateSelections.includes(repo.date);
 
+    console.log(
+      `repo: ${repo.release} searchValue: ${searchValue}, matchesNameValue: ${matchesNameValue}, releaseSelection: ${releaseSelection}, matchesReleaseValue: ${matchesReleaseValue}, dateSelections: ${dateSelections}, matchesDateValue: ${matchesDateValue}`
+    );
     return (
-      (searchValue === '' || matchesSearchValue) &&
-      (statusSelection === '' || matchesStatusValue) &&
-      (locationSelections.length === 0 || matchesLocationValue)
+      (searchValue === '' || matchesNameValue) &&
+      (releaseSelection === '' || matchesReleaseValue) &&
+      (dateSelections.length === 0 || matchesDateValue)
     );
   };
-  const filteredRepos = repositories.filter(onFilter);
+  const filteredRepos = data.filter(onFilter);
 
   // Set up name search input
   const searchInput = (
     <SearchInput
-      placeholder="Filter by server name"
+      placeholder="Filter by name"
       value={searchValue}
       onChange={(_event, value) => onSearchChange(value)}
       onClear={() => onSearchChange('')}
     />
   );
 
-  // Set up status single select
-  const [isStatusMenuOpen, setIsStatusMenuOpen] =
+  // Set up release single select
+  const [isReleaseMenuOpen, setIsReleaseMenuOpen] =
     React.useState<boolean>(false);
-  const statusToggleRef = React.useRef<HTMLButtonElement>(null);
-  const statusMenuRef = React.useRef<HTMLDivElement>(null);
-  const statusContainerRef = React.useRef<HTMLDivElement>(null);
+  const releaseToggleRef = React.useRef<HTMLButtonElement>(null);
+  const releaseMenuRef = React.useRef<HTMLDivElement>(null);
+  const releaseContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const handleStatusMenuKeys = (event: KeyboardEvent) => {
+  const handleReleaseMenuKeys = (event: KeyboardEvent) => {
     if (
-      isStatusMenuOpen &&
-      statusMenuRef.current?.contains(event.target as Node)
+      isReleaseMenuOpen &&
+      releaseMenuRef.current?.contains(event.target as Node)
     ) {
       if (event.key === 'Escape' || event.key === 'Tab') {
-        setIsStatusMenuOpen(!isStatusMenuOpen);
-        statusToggleRef.current?.focus();
+        setIsReleaseMenuOpen(!isReleaseMenuOpen);
+        releaseToggleRef.current?.focus();
       }
     }
   };
 
-  const handleStatusClickOutside = (event: MouseEvent) => {
+  const handleReleaseClickOutside = (event: MouseEvent) => {
     if (
-      isStatusMenuOpen &&
-      !statusMenuRef.current?.contains(event.target as Node)
+      isReleaseMenuOpen &&
+      !releaseMenuRef.current?.contains(event.target as Node)
     ) {
-      setIsStatusMenuOpen(false);
+      setIsReleaseMenuOpen(false);
     }
   };
 
   React.useEffect(() => {
-    window.addEventListener('keydown', handleStatusMenuKeys);
-    window.addEventListener('click', handleStatusClickOutside);
+    window.addEventListener('keydown', handleReleaseMenuKeys);
+    window.addEventListener('click', handleReleaseClickOutside);
     return () => {
-      window.removeEventListener('keydown', handleStatusMenuKeys);
-      window.removeEventListener('click', handleStatusClickOutside);
+      window.removeEventListener('keydown', handleReleaseMenuKeys);
+      window.removeEventListener('click', handleReleaseClickOutside);
     };
-  }, [isStatusMenuOpen, statusMenuRef]);
+  }, [isReleaseMenuOpen, releaseMenuRef]);
 
-  const onStatusToggleClick = (ev: React.MouseEvent) => {
+  const onReleaseToggleClick = (ev: React.MouseEvent) => {
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
-      if (statusMenuRef.current) {
-        const firstElement = statusMenuRef.current.querySelector(
+      if (releaseMenuRef.current) {
+        const firstElement = releaseMenuRef.current.querySelector(
           'li > button:not(:disabled)'
         );
         firstElement && (firstElement as HTMLElement).focus();
       }
     }, 0);
-    setIsStatusMenuOpen(!isStatusMenuOpen);
+    setIsReleaseMenuOpen(!isReleaseMenuOpen);
   };
 
-  function onStatusSelect(
+  function onReleaseSelect(
     event: React.MouseEvent | undefined,
     itemId: string | number | undefined
   ) {
@@ -242,57 +155,68 @@ export const UpcomingTable: React.FunctionComponent = () => {
       return;
     }
 
-    setStatusSelection(itemId.toString());
-    setIsStatusMenuOpen(!isStatusMenuOpen);
+    setReleaseSelection(itemId.toString());
+    setIsReleaseMenuOpen(!isReleaseMenuOpen);
   }
 
-  const statusToggle = (
+  const releaseToggle = (
     <MenuToggle
-      ref={statusToggleRef}
-      onClick={onStatusToggleClick}
-      isExpanded={isStatusMenuOpen}
+      ref={releaseToggleRef}
+      onClick={onReleaseToggleClick}
+      isExpanded={isReleaseMenuOpen}
       style={
         {
           width: '200px',
         } as React.CSSProperties
       }
     >
-      Filter by status
+      Filter by release
     </MenuToggle>
   );
 
-  const statusMenu = (
+  const releaseUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.release))
+  ).map((release) => ({
+    release: release,
+  }));
+
+  const releaseMenu = (
     <Menu
-      ref={statusMenuRef}
+      ref={releaseMenuRef}
       id="attribute-search-status-menu"
-      onSelect={onStatusSelect}
-      selected={statusSelection}
+      onSelect={onReleaseSelect}
+      selected={releaseSelection}
     >
       <MenuContent>
         <MenuList>
-          <MenuItem itemId="Degraded">Degraded</MenuItem>
-          <MenuItem itemId="Down">Down</MenuItem>
-          <MenuItem itemId="Needs maintenance">Needs maintenance</MenuItem>
-          <MenuItem itemId="Running">Running</MenuItem>
-          <MenuItem itemId="Stopped">Stopped</MenuItem>
+          {releaseUniqueOptions.map((option) => (
+            <MenuItem
+              key={option.release}
+              isSelected={releaseSelection === option.release}
+              itemId={option.release}
+            >
+              {option.release}
+            </MenuItem>
+          ))}
         </MenuList>
       </MenuContent>
     </Menu>
   );
 
-  const statusSelect = (
-    <div ref={statusContainerRef}>
+  const releaseSelect = (
+    <div ref={releaseContainerRef}>
       <Popper
-        trigger={statusToggle}
-        triggerRef={statusToggleRef}
-        popper={statusMenu}
-        popperRef={statusMenuRef}
-        appendTo={statusContainerRef.current || undefined}
-        isVisible={isStatusMenuOpen}
+        trigger={releaseToggle}
+        triggerRef={releaseToggleRef}
+        popper={releaseMenu}
+        popperRef={releaseMenuRef}
+        appendTo={releaseContainerRef.current || undefined}
+        isVisible={isReleaseMenuOpen}
       />
     </div>
   );
 
+  // TODO: Rewrite this for our column
   // Set up location checkbox select
   const [isLocationMenuOpen, setIsLocationMenuOpen] =
     React.useState<boolean>(false);
@@ -353,10 +277,10 @@ export const UpcomingTable: React.FunctionComponent = () => {
 
     const itemStr = itemId.toString();
 
-    setLocationSelections(
-      locationSelections.includes(itemStr)
-        ? locationSelections.filter((selection) => selection !== itemStr)
-        : [itemStr, ...locationSelections]
+    setDateSelections(
+      dateSelections.includes(itemStr)
+        ? dateSelections.filter((selection) => selection !== itemStr)
+        : [itemStr, ...dateSelections]
     );
   }
 
@@ -365,8 +289,8 @@ export const UpcomingTable: React.FunctionComponent = () => {
       ref={locationToggleRef}
       onClick={onLocationMenuToggleClick}
       isExpanded={isLocationMenuOpen}
-      {...(locationSelections.length > 0 && {
-        badge: <Badge isRead>{locationSelections.length}</Badge>,
+      {...(dateSelections.length > 0 && {
+        badge: <Badge isRead>{dateSelections.length}</Badge>,
       })}
       style={
         {
@@ -374,7 +298,7 @@ export const UpcomingTable: React.FunctionComponent = () => {
         } as React.CSSProperties
       }
     >
-      Filter by location
+      Filter by date
     </MenuToggle>
   );
 
@@ -383,41 +307,41 @@ export const UpcomingTable: React.FunctionComponent = () => {
       ref={locationMenuRef}
       id="attribute-search-location-menu"
       onSelect={onLocationMenuSelect}
-      selected={locationSelections}
+      selected={dateSelections}
     >
       <MenuContent>
         <MenuList>
           <MenuItem
             hasCheckbox
-            isSelected={locationSelections.includes('Bangalore')}
+            isSelected={dateSelections.includes('Bangalore')}
             itemId="Bangalore"
           >
             Bangalore
           </MenuItem>
           <MenuItem
             hasCheckbox
-            isSelected={locationSelections.includes('Boston')}
+            isSelected={dateSelections.includes('Boston')}
             itemId="Boston"
           >
             Boston
           </MenuItem>
           <MenuItem
             hasCheckbox
-            isSelected={locationSelections.includes('Brno')}
+            isSelected={dateSelections.includes('Brno')}
             itemId="Brno"
           >
             Brno
           </MenuItem>
           <MenuItem
             hasCheckbox
-            isSelected={locationSelections.includes('Raleigh')}
+            isSelected={dateSelections.includes('Raleigh')}
             itemId="Raleigh"
           >
             Raleigh
           </MenuItem>
           <MenuItem
             hasCheckbox
-            isSelected={locationSelections.includes('Westford')}
+            isSelected={dateSelections.includes('Westford')}
             itemId="Westford"
           >
             Westford
@@ -442,8 +366,8 @@ export const UpcomingTable: React.FunctionComponent = () => {
 
   // Set up attribute selector
   const [activeAttributeMenu, setActiveAttributeMenu] = React.useState<
-    'Servers' | 'Status' | 'Location'
-  >('Servers');
+    'Name' | 'Release' | 'Date'
+  >('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = React.useState(false);
   const attributeToggleRef = React.useRef<HTMLButtonElement>(null);
   const attributeMenuRef = React.useRef<HTMLDivElement>(null);
@@ -510,16 +434,16 @@ export const UpcomingTable: React.FunctionComponent = () => {
       ref={attributeMenuRef}
       onSelect={(_ev, itemId) => {
         setActiveAttributeMenu(
-          itemId?.toString() as 'Servers' | 'Status' | 'Location'
+          itemId?.toString() as 'Name' | 'Release' | 'Date'
         );
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
     >
       <MenuContent>
         <MenuList>
-          <MenuItem itemId="Servers">Servers</MenuItem>
-          <MenuItem itemId="Status">Status</MenuItem>
-          <MenuItem itemId="Location">Location</MenuItem>
+          <MenuItem itemId="Name">Name</MenuItem>
+          <MenuItem itemId="Release">Release</MenuItem>
+          <MenuItem itemId="Date">Date</MenuItem>
         </MenuList>
       </MenuContent>
     </Menu>
@@ -542,7 +466,7 @@ export const UpcomingTable: React.FunctionComponent = () => {
   const toolbarPagination = (
     <Pagination
       titles={{ paginationAriaLabel: 'Attribute search pagination' }}
-      itemCount={repositories.length}
+      itemCount={data.length}
       perPage={10}
       page={1}
       widgetId="attribute-search-mock-pagination"
@@ -555,8 +479,8 @@ export const UpcomingTable: React.FunctionComponent = () => {
       id="attribute-search-filter-toolbar"
       clearAllFilters={() => {
         setSearchValue('');
-        setStatusSelection('');
-        setLocationSelections([]);
+        setReleaseSelection('');
+        setDateSelections([]);
       }}
     >
       <ToolbarContent>
@@ -568,29 +492,29 @@ export const UpcomingTable: React.FunctionComponent = () => {
               deleteChip={() => setSearchValue('')}
               deleteChipGroup={() => setSearchValue('')}
               categoryName="Name"
-              showToolbarItem={activeAttributeMenu === 'Servers'}
+              showToolbarItem={activeAttributeMenu === 'Name'}
             >
               {searchInput}
             </ToolbarFilter>
             <ToolbarFilter
               chips={
-                statusSelection !== '' ? [statusSelection] : ([] as string[])
+                releaseSelection !== '' ? [releaseSelection] : ([] as string[])
               }
-              deleteChip={() => setStatusSelection('')}
-              deleteChipGroup={() => setStatusSelection('')}
-              categoryName="Status"
-              showToolbarItem={activeAttributeMenu === 'Status'}
+              deleteChip={() => setReleaseSelection('')}
+              deleteChipGroup={() => setReleaseSelection('')}
+              categoryName="Release"
+              showToolbarItem={activeAttributeMenu === 'Release'}
             >
-              {statusSelect}
+              {releaseSelect}
             </ToolbarFilter>
             <ToolbarFilter
-              chips={locationSelections}
+              chips={dateSelections}
               deleteChip={(category, chip) =>
                 onLocationMenuSelect(undefined, chip as string)
               }
-              deleteChipGroup={() => setLocationSelections([])}
-              categoryName="Location"
-              showToolbarItem={activeAttributeMenu === 'Location'}
+              deleteChipGroup={() => setDateSelections([])}
+              categoryName="Date"
+              showToolbarItem={activeAttributeMenu === 'Date'}
             >
               {locationSelect}
             </ToolbarFilter>
@@ -624,8 +548,8 @@ export const UpcomingTable: React.FunctionComponent = () => {
             variant="link"
             onClick={() => {
               setSearchValue('');
-              setStatusSelection('');
-              setLocationSelections([]);
+              setReleaseSelection('');
+              setDateSelections([]);
             }}
           >
             Clear all filters
@@ -641,35 +565,23 @@ export const UpcomingTable: React.FunctionComponent = () => {
       <Table aria-label="Selectable table">
         <Thead>
           <Tr>
-            <Th width={20}>{columnNames.name}</Th>
-            <Th width={10}>{columnNames.threads}</Th>
-            <Th width={10}>{columnNames.apps}</Th>
-            <Th width={10}>{columnNames.workspaces}</Th>
-            <Th width={20}>{columnNames.status}</Th>
-            <Th width={20}>{columnNames.location}</Th>
+            <Th width={10}>{columnNames.name}</Th>
+            <Th width={10}>{columnNames.release}</Th>
+            <Th width={10}>{columnNames.date}</Th>
           </Tr>
         </Thead>
         <Tbody>
           {filteredRepos.length > 0 &&
             filteredRepos.map((repo) => (
-              <Tr key={repo.name}>
+              <Tr key={`${repo.name}-${repo.release}-${repo.date}`}>
                 <Td dataLabel={columnNames.name} modifier="truncate">
                   {repo.name}
                 </Td>
-                <Td dataLabel={columnNames.threads} modifier="truncate">
-                  {repo.threads}
+                <Td dataLabel={columnNames.release} modifier="truncate">
+                  {repo.release}
                 </Td>
-                <Td dataLabel={columnNames.apps} modifier="truncate">
-                  {repo.apps}
-                </Td>
-                <Td dataLabel={columnNames.workspaces} modifier="truncate">
-                  {repo.workspaces}
-                </Td>
-                <Td dataLabel={columnNames.status} modifier="truncate">
-                  {repo.status}
-                </Td>
-                <Td dataLabel={columnNames.location} modifier="truncate">
-                  {repo.location}
+                <Td dataLabel={columnNames.date} modifier="truncate">
+                  {repo.date}
                 </Td>
               </Tr>
             ))}
@@ -686,7 +598,7 @@ export const UpcomingTable: React.FunctionComponent = () => {
       <Pagination
         variant={PaginationVariant.bottom}
         titles={{ paginationAriaLabel: 'Attribute search pagination' }}
-        itemCount={repositories.length}
+        itemCount={data.length}
         perPage={10}
         page={1}
         widgetId="pagination-options-menu-bottom"

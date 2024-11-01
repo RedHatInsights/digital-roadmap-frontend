@@ -31,9 +31,9 @@ const LandingPage = () => {
 
   const { pathname } = useLocation();
 
-  const tabsPath = ['released', 'upcoming'];
+  const tabsPath = ['upcoming', 'released'];
 
-  const tabPath = pathname.split('/').pop() || 'released';
+  const tabPath = pathname.split('/').pop() || 'upcoming';
   const initialActiveTabKey =
     tabsPath.indexOf(tabPath) >= 0 ? tabsPath.indexOf(tabPath) : 0;
   const [activeTabKey, setActiveTabKey] = useState(initialActiveTabKey);
