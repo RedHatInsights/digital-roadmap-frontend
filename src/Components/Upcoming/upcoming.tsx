@@ -17,6 +17,9 @@ import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-i
 
 const MyTableWithToolbar = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
+// TODO: Replace this with the actual data fetch
+import { columnNames, data } from './mock_data';
+
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const id1 = 'clickable-card-input-1';
   const id2 = 'clickable-card-input-2';
@@ -93,7 +96,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         </Grid>
       </StackItem>
       <StackItem>
-        <MyTableWithToolbar />
+        <MyTableWithToolbar data={data} columnNames={columnNames} />
       </StackItem>
     </Stack>
   );
