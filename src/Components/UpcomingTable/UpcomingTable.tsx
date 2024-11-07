@@ -76,9 +76,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
     // Search location with location selections
     const matchesDateValue = dateSelections.includes(repo.date);
 
-    console.log(
-      `repo: ${repo.release} searchValue: ${searchValue}, matchesNameValue: ${matchesNameValue}, releaseSelection: ${releaseSelection}, matchesReleaseValue: ${matchesReleaseValue}, dateSelections: ${dateSelections}, matchesDateValue: ${matchesDateValue}`
-    );
     return (
       (searchValue === '' || matchesNameValue) &&
       (releaseSelection === '' || matchesReleaseValue) &&

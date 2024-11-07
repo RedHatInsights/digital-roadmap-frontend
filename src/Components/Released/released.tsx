@@ -1,6 +1,7 @@
 import './released.scss';
 import React, { Suspense, lazy } from 'react';
 import {
+  Button,
   Sidebar,
   SidebarContent,
   SidebarPanel,
@@ -13,6 +14,10 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 
+import { getRelevantReleaseNotes } from '../../api';
+
+const DynamicTag = lazy(() => import('../DynamicComponents/DynamicTag'));
+
 const ToggleGroupReleasedView = lazy(
   () => import('../FilterComponents/CustomToggleGroup')
 );
@@ -20,7 +25,33 @@ const SelectOptionVariations = lazy(
   () => import('../FilterComponents/CustomDropdown')
 );
 
+type ReleaseNote = {
+  title: string;
+  text: string;
+  tag: string;
+  relevant: boolean;
+};
+
 const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
+  const emptyReleaseNotes: ReleaseNote[] = [];
+  const [relevantReleaseNotes, setRelevantReleaseNotes] =
+    React.useState(emptyReleaseNotes);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const fetchData = (major: number, minor: number, keyword: string) => {
+    setIsLoading(true);
+    getRelevantReleaseNotes(major, minor, keyword)
+      .then((data) => {
+        const releaseNoteParagraphs: ReleaseNote[] = data || [];
+        setRelevantReleaseNotes(releaseNoteParagraphs);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        // Dispatch notif here
+        setIsLoading(false);
+      });
+  };
+
   const items = (
     <React.Fragment>
       <ToolbarItem variant="search-filter">
@@ -38,8 +69,26 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
           <ToggleGroupReleasedView />
         </Suspense>
       </ToolbarItem>
+      <ToolbarItem>
+        <Button onClick={() => fetchData(9, 5, 'security')} variant="primary">
+          GET 9.5 with security
+        </Button>
+      </ToolbarItem>
+      <ToolbarItem>
+        <Button
+          onClick={() => fetchData(9, 6, 'virtualization')}
+          variant="primary"
+        >
+          GET 9.6 with virtualization
+        </Button>
+      </ToolbarItem>
     </React.Fragment>
   );
+
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
   return (
     <>
       <Toolbar id="toolbar-items-example">
@@ -48,25 +97,22 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
       <Sidebar hasBorder hasGutter>
         <SidebarPanel>Sidebar panel - TODO Sidebar component</SidebarPanel>
         <SidebarContent>
-          <p>TODO table component</p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            dapibus nulla id augue dictum commodo. Donec mollis arcu massa,
-            sollicitudin venenatis est rutrum vitae. Integer pulvinar ligula at
-            augue mollis, ac pulvinar arcu semper. Maecenas nisi lorem,
-            malesuada ac lectus nec, porta pretium neque. Ut convallis libero
-            sit amet metus mattis, vel facilisis lorem malesuada. Duis
-            consectetur ante sit amet magna efficitur, a interdum leo vulputate.
-          </p>
-          <p>
-            Praesent at odio nec sapien ultrices tincidunt in non mauris. Orci
-            varius natoque penatibus et magnis dis parturient montes, nascetur
-            ridiculus mus. Duis consectetur nisl quis facilisis faucibus. Sed eu
-            bibendum risus. Suspendisse porta euismod tortor, at elementum odio
-            suscipit sed. Cras eget ultrices urna, ac feugiat lectus. Integer a
-            pharetra velit, in imperdiet mi. Phasellus vel hendrerit velit.
-            Vestibulum ut augue vitae erat vulputate bibendum a ut magna.
-          </p>
+          {isLoading ? (
+            <Spinner />
+          ) : relevantReleaseNotes.length > 0 ? (
+            relevantReleaseNotes.map((note, index) => (
+              <div
+                key={index}
+                className={note.relevant ? 'relevant' : 'non-relevant'}
+                style={{ marginBottom: '0.5em' }}
+              >
+                <DynamicTag tag={note.tag} text={note.title} />
+                <p>{note.text}</p>
+              </div>
+            ))
+          ) : (
+            <p>No release notes found</p>
+          )}
         </SidebarContent>
       </Sidebar>
     </>
