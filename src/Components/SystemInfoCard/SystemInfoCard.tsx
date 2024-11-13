@@ -26,14 +26,14 @@ const SystemCardExpandable: React.FunctionComponent = () => {
           'aria-expanded': isExpanded,
         }}
       >
-        <CardTitle id="expandable-card-title">
-          Known System Information
-        </CardTitle>
+        <CardTitle id="expandable-card-title">System filters</CardTitle>
       </CardHeader>
       <CardExpandableContent>
         <CardBody>
-          TODO: Filter toolbar which will through context tell the table
-          component the additional filters
+          The roadmap is tailored to your needs based on knowledge about the
+          systems in your inventory. Adjust these filters to make changes to the
+          roadmap results, for example by adding an additional architecture or
+          restricting to fewer packages. TODO: Add filter components here
         </CardBody>
       </CardExpandableContent>
     </Card>

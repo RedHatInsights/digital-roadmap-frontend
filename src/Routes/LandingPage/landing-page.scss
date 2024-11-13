@@ -1,9 +1,10 @@
 @import "~@redhat-cloud-services/frontend-components-utilities/styles/variables";
 
 .pf-c-tabs {
-    margin: $ins-margin;
+    padding: 0 1em;
     margin-bottom: 0;
     margin-top: 0;
+    background-color: white;
 }
 
 .pf-c-page__main-section {
