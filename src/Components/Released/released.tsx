@@ -18,9 +18,6 @@ import { getRelevantReleaseNotes } from '../../api';
 
 const DynamicTag = lazy(() => import('../DynamicComponents/DynamicTag'));
 
-const ToggleGroupReleasedView = lazy(
-  () => import('../FilterComponents/CustomToggleGroup')
-);
 const SelectOptionVariations = lazy(
   () => import('../FilterComponents/CustomDropdown')
 );
@@ -54,19 +51,14 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
 
   const items = (
     <React.Fragment>
-      <ToolbarItem variant="search-filter">
-        <Suspense fallback={<Spinner />}>
-          <SelectOptionVariations />
-        </Suspense>
-      </ToolbarItem>
       <ToolbarItem style={{ alignSelf: 'center' }}>
         <TextContent>
-          <Text component={TextVariants.h6}>View</Text>
+          <Text component={TextVariants.h6}>Release</Text>
         </TextContent>
       </ToolbarItem>
-      <ToolbarItem>
+      <ToolbarItem variant="bulk-select">
         <Suspense fallback={<Spinner />}>
-          <ToggleGroupReleasedView />
+          <SelectOptionVariations />
         </Suspense>
       </ToolbarItem>
       <ToolbarItem>
@@ -94,8 +86,17 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
       <Toolbar id="toolbar-items-example">
         <ToolbarContent alignItems={'center'}>{items}</ToolbarContent>
       </Toolbar>
-      <Sidebar hasBorder hasGutter>
-        <SidebarPanel>Sidebar panel - TODO Sidebar component</SidebarPanel>
+      <Sidebar isPanelRight hasBorder hasGutter>
+        <SidebarPanel>
+          <TextContent>
+            <Text component={TextVariants.h6}>Jump to section</Text>
+          </TextContent>
+          <TextContent>
+            <Text component={TextVariants.p}>
+              TODO: List of headings to jump to
+            </Text>
+          </TextContent>
+        </SidebarPanel>
         <SidebarContent>
           {isLoading ? (
             <Spinner />
