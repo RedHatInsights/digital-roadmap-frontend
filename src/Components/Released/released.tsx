@@ -16,8 +16,6 @@ import {
 
 import { getRelevantReleaseNotes } from '../../api';
 
-const DynamicTag = lazy(() => import('../DynamicComponents/DynamicTag'));
-
 const SelectOptionVariations = lazy(
   () => import('../FilterComponents/CustomDropdown')
 );
@@ -25,7 +23,19 @@ const SelectOptionVariations = lazy(
 type ReleaseNote = {
   title: string;
   text: string;
-  tag: string;
+  tag:
+    | 'small'
+    | 'a'
+    | 'blockquote'
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'p'
+    | 'pre'
+    | undefined;
   relevant: boolean;
 };
 
@@ -107,7 +117,7 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
                 className={note.relevant ? 'relevant' : 'non-relevant'}
                 style={{ marginBottom: '0.5em' }}
               >
-                <DynamicTag tag={note.tag} text={note.title} />
+                <Text component={note.tag}>{note.title}</Text>
                 <p>{note.text}</p>
               </div>
             ))
