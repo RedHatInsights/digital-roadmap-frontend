@@ -2,9 +2,6 @@ import './released.scss';
 import React, { Suspense, lazy } from 'react';
 import {
   Button,
-  Sidebar,
-  SidebarContent,
-  SidebarPanel,
   Spinner,
   Text,
   TextContent,
@@ -19,6 +16,8 @@ import { getRelevantReleaseNotes } from '../../api';
 const SelectOptionVariations = lazy(
   () => import('../FilterComponents/CustomDropdown')
 );
+
+const Scrollspy = lazy(() => import('../ReleasedView/ReleasedView'));
 
 type ReleaseNote = {
   title: string;
@@ -96,36 +95,7 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
       <Toolbar id="toolbar-items-example">
         <ToolbarContent alignItems={'center'}>{items}</ToolbarContent>
       </Toolbar>
-      <Sidebar isPanelRight hasBorder hasGutter>
-        <SidebarPanel>
-          <TextContent>
-            <Text component={TextVariants.h6}>Jump to section</Text>
-          </TextContent>
-          <TextContent>
-            <Text component={TextVariants.p}>
-              TODO: List of headings to jump to
-            </Text>
-          </TextContent>
-        </SidebarPanel>
-        <SidebarContent>
-          {isLoading ? (
-            <Spinner />
-          ) : relevantReleaseNotes.length > 0 ? (
-            relevantReleaseNotes.map((note, index) => (
-              <div
-                key={index}
-                className={note.relevant ? 'relevant' : 'non-relevant'}
-                style={{ marginBottom: '0.5em' }}
-              >
-                <Text component={note.tag}>{note.title}</Text>
-                <p>{note.text}</p>
-              </div>
-            ))
-          ) : (
-            <p>No release notes found</p>
-          )}
-        </SidebarContent>
-      </Sidebar>
+      {isLoading ? <Spinner /> : <Scrollspy data={relevantReleaseNotes} />}
     </>
   );
 };
