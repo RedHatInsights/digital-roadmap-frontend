@@ -483,7 +483,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
       <ToolbarContent>
         <ToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
           <ToolbarGroup variant="filter-group">
-            <ToolbarItem>{attributeDropdown}</ToolbarItem>
+            <ToolbarItem className='ins-c-conditional-filter'>{attributeDropdown}</ToolbarItem>
             <ToolbarFilter
               chips={searchValue !== '' ? [searchValue] : ([] as string[])}
               deleteChip={() => setSearchValue('')}
