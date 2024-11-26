@@ -37,7 +37,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
-            <Card ouiaId="BasicCard" isClickable>
+            <Card ouiaId="MostImportant" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
@@ -56,7 +56,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="BasicCard" isClickable>
+            <Card ouiaId="GoodToKnow" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
@@ -75,7 +75,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="BasicCard" isClickable>
+            <Card ouiaId="FutherOff" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
