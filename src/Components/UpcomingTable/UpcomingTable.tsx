@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Badge,
   Bullseye,
@@ -27,19 +27,39 @@ import {
   ToolbarItem,
   ToolbarToggleGroup,
 } from '@patternfly/react-core';
-import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import {
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  ExpandableRowContent,
+} from '@patternfly/react-table';
+import { TableRow } from "./UpcomingRow";
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
 
 import { Record } from '../Upcoming/mock_data';
+import { Simulate } from 'react-dom/test-utils';
+import toggle = Simulate.toggle;
 
 interface UpcomingTableProps {
   data: Record[];
   columnNames: {
     name: string;
+    type: string;
     release: string;
     date: string;
+  };
+  details?: {
+    summary: string;
+    potentiallyAffectedSystems: number;
+    trainingTicket: string;
+    dateAdded: string;
+    lastModified: string;
+    detailFormat: 0 | 1 | 2 | 3;
   };
 }
 
@@ -48,9 +68,25 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
 ) => {
   // Set up repo filtering
   const { data, columnNames } = props;
-  const [searchValue, setSearchValue] = React.useState('');
+  const [searchValue, setSearchValue] = useState('');
   const [dateSelections, setDateSelections] = React.useState<string[]>([]);
   const [releaseSelection, setReleaseSelection] = React.useState('');
+
+  // Set up Expandable table
+  const [expandedRepoNames, setExpandedRepoNames] = useState([]);
+  const setRepoExpanded = (repo: Record, isExpanding = true) =>
+    setExpandedRepoNames((prevExpanded) => {
+      const otherExpandedRepoNames = prevExpanded.filter(
+        (r) => r !== repo.name
+      );
+      return isExpanding
+        ? [...otherExpandedRepoNames, repo.name]
+        : otherExpandedRepoNames;
+    });
+  const isRepoExpanded = (repo: Record) =>
+    expandedRepoNames.includes(repo.name);
+
+  const [isExampleCompact, setIsExampleCompact] = React.useState(true);
 
   const onSearchChange = (value: string) => {
     setSearchValue(value);
@@ -363,7 +399,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
 
   // Set up attribute selector
   const [activeAttributeMenu, setActiveAttributeMenu] = React.useState<
-    'Name' | 'Release' | 'Date'
+    'Name' | 'Type' | 'Release' | 'Date'
   >('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = React.useState(false);
   const attributeToggleRef = React.useRef<HTMLButtonElement>(null);
@@ -431,7 +467,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
       ref={attributeMenuRef}
       onSelect={(_ev, itemId) => {
         setActiveAttributeMenu(
-          itemId?.toString() as 'Name' | 'Release' | 'Date'
+          itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date'
         );
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
@@ -439,6 +475,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
       <MenuContent>
         <MenuList>
           <MenuItem itemId="Name">Name</MenuItem>
+          <MenuItem itemId="Type">Type</MenuItem>
           <MenuItem itemId="Release">Release</MenuItem>
           <MenuItem itemId="Date">Date</MenuItem>
         </MenuList>
@@ -492,6 +529,17 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
               showToolbarItem={activeAttributeMenu === 'Name'}
             >
               {searchInput}
+            </ToolbarFilter>
+            <ToolbarFilter
+              chips={
+                releaseSelection !== '' ? [releaseSelection] : ([] as string[])
+              }
+              deleteChip={() => setReleaseSelection('')}
+              deleteChipGroup={() => setReleaseSelection('')}
+              categoryName="Type"
+              showToolbarItem={activeAttributeMenu === 'Type'}
+            >
+              {releaseSelect}
             </ToolbarFilter>
             <ToolbarFilter
               chips={
@@ -559,39 +607,31 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
   return (
     <React.Fragment>
       {toolbar}
-      <Table aria-label="Selectable table">
+      <Table
+        aria-label="Expandable table"
+        variant={isExampleCompact ? 'compact' : undefined}
+      >
         <Thead>
           <Tr>
-            <Th width={10}>{columnNames.name}</Th>
+            <Th screenReaderText="Row expansion" />
+            <Th width={30}>{columnNames.name}</Th>
+            <Th width={10}>{columnNames.type}</Th>
             <Th width={10}>{columnNames.release}</Th>
-            <Th width={10}>{columnNames.date}</Th>
+            <Th width={20}>{columnNames.date}</Th>
           </Tr>
         </Thead>
-        <Tbody>
-          {filteredRepos.length > 0 &&
-            filteredRepos.map((repo) => (
-              <Tr key={`${repo.name}-${repo.release}-${repo.date}`}>
-                <Td dataLabel={columnNames.name} modifier="truncate">
-                  {repo.name}
-                </Td>
-                <Td dataLabel={columnNames.release} modifier="truncate">
-                  {repo.release}
-                </Td>
-                <Td dataLabel={columnNames.date} modifier="truncate">
-                  {repo.date}
-                </Td>
-              </Tr>
-            ))}
-          {filteredRepos.length === 0 && (
-            <Tr>
-              <Td colSpan={8}>
-                <Bullseye>{emptyState}</Bullseye>
-              </Td>
-            </Tr>
-          )}
-        </Tbody>
+        {data.map((repo, rowIndex) => {
+          return (
+            <TableRow
+              repo={repo}
+              columnNames={columnNames}
+              rowIndex={rowIndex}
+            />
+          );
+        })}
+
       </Table>
-      {/* Bottom Pagination */}
+      Bottom Pagination
       <Pagination
         variant={PaginationVariant.bottom}
         titles={{ paginationAriaLabel: 'Attribute search pagination' }}
