@@ -17,12 +17,12 @@ export interface Record {
 export const data: Record[] = [
   {
     name: 'OpenJDK 11 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'Oct 2024',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -31,12 +31,12 @@ export const data: Record[] = [
   },
   {
     name: '.NET 6 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'Nov 2024',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -45,12 +45,12 @@ export const data: Record[] = [
   },
   {
     name: 'gcc-toolset 12 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'Nov 2024',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -59,12 +59,12 @@ export const data: Record[] = [
   },
   {
     name: 'Ruby 3.1 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'Mar 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -73,12 +73,12 @@ export const data: Record[] = [
   },
   {
     name: 'Node.js 18 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'Apr 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -87,12 +87,12 @@ export const data: Record[] = [
   },
   {
     name: '6.11 kernel version',
-    type: 'Addition',
+    type: 'Change',
     release: '10.0',
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -106,7 +106,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -120,7 +120,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -134,7 +134,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -148,7 +148,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -157,12 +157,12 @@ export const data: Record[] = [
   },
   {
     name: 'PHP 8.1 retirement',
-    type: 'Addition',
+    type: 'Deprecation',
     release: '9.x',
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -176,7 +176,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -190,7 +190,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -204,7 +204,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -218,7 +218,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -232,7 +232,7 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -240,13 +240,13 @@ export const data: Record[] = [
     },
   },
   {
-    name: 'Ruby 3.4',
+    name: 'Ruby 3.5',
     type: 'Addition',
     release: '10.0',
-    date: 'May 2025',
+    date: 'June 2025',
     details: {
       detailFormat: 0,
-      summary: 'example text here',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
