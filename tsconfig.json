@@ -2,7 +2,7 @@
   "compilerOptions": {
       "outDir": "./dist/",
       "sourceMap": true,
-      "noImplicitAny": false,
+      "noImplicitAny": true,
       "module": "esnext",
       "target": "esnext",
       "jsx": "react",
