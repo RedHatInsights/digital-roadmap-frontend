@@ -1,3 +1,5 @@
+
+// add to a type file
 export interface Record {
   name: string;
   type: string;

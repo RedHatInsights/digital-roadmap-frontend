@@ -8,6 +8,7 @@ import {
   DR_LIFECYCLE_APPSTREAMS,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
+  DR_UPCOMING,
 } from './constants';
 
 /* Digital Roadmap */
@@ -17,9 +18,20 @@ export const getRelevantReleaseNotes = async (
   minor: number,
   keyword: string
 ) => {
-  const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
+  const path = DR_API.concat(DR_RELEASE_NOTES);
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
   const response = await axios.get(path.concat(params)).catch(function (error) {
+    return error;
+  });
+
+  return getResponseOrError(response);
+};
+
+export const getUpcomingChanges = async (
+
+) => {
+  const path = DR_API.concat(DR_UPCOMING)
+  const response = await axios.get(path).catch(function (error) {
     return error;
   });
 

@@ -1,5 +1,5 @@
 import './upcoming.scss';
-import React, { lazy } from 'react';
+import React, { lazy, useEffect } from 'react';
 import {
   Alert,
   Card,
@@ -12,15 +12,62 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
+import { getUpcomingChanges } from '../../api';
+
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 
-const MyTableWithToolbar = lazy(() => import('../UpcomingTable/UpcomingTable'));
+const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
 // TODO: Replace this with the actual data fetch
-import { columnNames, data } from './mock_data';
+import { columnNames } from './mock_data';
+
+type UpcomingChanges = {
+  name: string;
+  type: string;
+  release: string;
+  date: string;
+  details?: {
+    summary: string;
+    potentiallyAffectedSystems: number;
+    trainingTicket: string;
+    dateAdded: string;
+    lastModified: string;
+    detailFormat: 0 | 1 | 2 | 3;
+  };
+};
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
+
+  const emptyUpcomingChanges: UpcomingChanges[] = [];
+  const [relevantUpcomingChanges, setUpcomingChanges] =
+    React.useState(emptyUpcomingChanges);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+
+  const fetchData = () => {
+    setIsLoading(true);
+    getUpcomingChanges()
+      .then((data) => {
+        const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
+        setUpcomingChanges(upcomingChangesParagraphs);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        // Dispatch notif here
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    //update type
+    const apiData : any  = fetchData()
+    console.log(apiData)
+    setUpcomingChanges(apiData)
+    
+  }, []);
+
+
   const id1 = 'clickable-card-input-1';
   const id2 = 'clickable-card-input-2';
   const id3 = 'clickable-card-input-3';
@@ -96,7 +143,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         </Grid>
       </StackItem>
       <StackItem>
-        <MyTableWithToolbar data={data} columnNames={columnNames} />
+        <UpcomingTable data={relevantUpcomingChanges} columnNames={columnNames} />
       </StackItem>
     </Stack>
   );

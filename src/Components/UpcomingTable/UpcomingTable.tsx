@@ -65,7 +65,7 @@ interface UpcomingTableProps {
 }
 
 export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
-  props
+  {data, columnNames}
 ) => {
 
   // Set up Expandable table
@@ -88,7 +88,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
 
 
   // Set up repo filtering
-  const { data, columnNames } = props;
   const [searchValue, setSearchValue] = useState('');
   const [typeSelections, setTypeSelections] = useState<string[]>([]);
   const [dateSelection, setDateSelection] = useState('');
