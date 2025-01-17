@@ -16,13 +16,14 @@ const SystemCardExpandable: React.FunctionComponent = () => {
   };
 
   return (
-    <Card id="expandable-card" isExpanded={isExpanded}>
+    <Card id="expandable-card" ouiaId="SystemFilters" isExpanded={isExpanded}>
       <CardHeader
         onExpand={onExpand}
         toggleButtonProps={{
-          id: 'toggle-button1',
+          id: 'toggle-button',
+          ouiaId: 'SystemFilters-ToggleButton',
           'aria-label': 'Details',
-          'aria-labelledby': 'expandable-card-title toggle-button1',
+          'aria-labelledby': 'expandable-card-title toggle-button',
           'aria-expanded': isExpanded,
         }}
       >
