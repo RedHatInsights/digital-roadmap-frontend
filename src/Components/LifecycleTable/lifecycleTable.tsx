@@ -4,7 +4,7 @@ import { Table, Thead, Tr, Th, Tbody, Td, ThProps } from '@patternfly/react-tabl
 import { getLifecycleChanges } from '../../api';
 
 
-type LifecycleChanges = {
+interface LifecycleChanges {
     name: string;
     release: string;
     major: number;
@@ -14,44 +14,31 @@ type LifecycleChanges = {
     systems: number;
   };
 
-export const LifecycleTable: React.FunctionComponent = (
-) => {
+interface LifecycleChangesProps {
+  lifecycleData: LifecycleChanges[];
+}
 
-    const emptyLifecycleChanges: LifecycleChanges[] = [];
-    const [relevantLifecycleChanges, setLifecycleChanges] =
-    useState(emptyLifecycleChanges);
-    const [isLoading, setIsLoading] = useState(false);
-
-
-    const fetchData = () => {
-    setIsLoading(true);
-    getLifecycleChanges()
-        .then((data: never[]) => {
-        const upcomingChangesParagraphs: LifecycleChanges[] = data || [];
-        setLifecycleChanges(upcomingChangesParagraphs);
-        setIsLoading(false);
-        })
-        .catch(() => {
-        // Dispatch notif here
-        setIsLoading(false);
-        });
-    };
-
-    useEffect(() => {
-    const apiData : any  = fetchData()
-    console.log(apiData)
-    setLifecycleChanges(apiData)
-    
-    }, []);
-
-
-  const columnNames = {
-    name: 'Name',
-    release: 'Release',
-    release_date: 'Release Date',
-    retirement_date: 'Retirement Date',
-    systems: 'Systems'
+type columnNames = {
+  columnNames: {
+    name: string;
+    release: string;
+    release_date: Date;
+    retirement_date: Date;
+    systems: number;
   };
+}
+
+const columnNames = {
+  name: 'Name',
+  release: 'Release',
+  release_date: 'Release Date',
+  retirement_date: 'Retirement Date',
+  systems: 'Systems'
+  };
+
+export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
+  {lifecycleData}
+) => {
 
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -71,9 +58,9 @@ export const LifecycleTable: React.FunctionComponent = (
 
   // Note that we perform the sort as part of the component's render logic and not in onSort.
   // We shouldn't store the list of data in state because we don't want to have to sync that with props.
-  let sortedRepositories = relevantLifecycleChanges;
+  let sortedRepositories = lifecycleData;
   if (activeSortIndex !== null) {
-    sortedRepositories = relevantLifecycleChanges.sort((a: LifecycleChanges, b: LifecycleChanges) => {
+    sortedRepositories = lifecycleData.sort((a: LifecycleChanges, b: LifecycleChanges) => {
       const aValue = getSortableRowValues(a)[activeSortIndex];
       const bValue = getSortableRowValues(b)[activeSortIndex];
       if (typeof aValue === 'number') {
@@ -115,7 +102,7 @@ export const LifecycleTable: React.FunctionComponent = (
             {columnNames.release}
           </Th>
           <Th modifier="wrap" sort={getSortParams(2)}>
-            {columnNames.release_date}
+          {columnNames.release_date}
           </Th>
           <Th modifier="wrap" sort={getSortParams(3)}>
             {columnNames.retirement_date}
@@ -130,9 +117,9 @@ export const LifecycleTable: React.FunctionComponent = (
           <Tr key={rowIndex}>
             <Td style={{paddingRight: '140px'}} dataLabel={columnNames.name}>{repo.name} {repo.major}.{repo.minor}</Td>
             <Td dataLabel={columnNames.release}>Not Applicable</Td>
-            <Td dataLabel={columnNames.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
-            <Td dataLabel={columnNames.retirement_date}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>
-            <Td dataLabel={columnNames.systems}>{repo.systems}</Td>
+            <Td dataLabel={(columnNames.release_date)}>{(Moment(repo.release_date).format('MMM YYYY'))}</Td>
+            <Td dataLabel={(columnNames.retirement_date)}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>
+            <Td dataLabel={(columnNames.systems)}>{repo.systems}</Td>
           </Tr>
         ))}
       </Tbody>

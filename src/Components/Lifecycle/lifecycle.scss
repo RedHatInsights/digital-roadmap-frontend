@@ -1,0 +1,19 @@
+@import "~@redhat-cloud-services/frontend-components-utilities/styles/variables";
+
+.sample-component {
+  font-size: $ins-fontSize;
+  margin: $ins-margin;
+  display: block;
+}
+
+.non-relevant {
+  color: gray;
+}
+
+.pf-v5-c-sidebar {
+  background-color: white;
+}
+
+.pf-v5-c-sidebar__main {
+  padding: 0 1em;
+}
