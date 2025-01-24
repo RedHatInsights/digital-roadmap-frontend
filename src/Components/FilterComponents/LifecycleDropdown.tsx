@@ -40,18 +40,12 @@ export const LifecycleDropdown: React.FunctionComponent = () => {
     //   onOpenChange={(isOpen) => setIsOpen(isOpen)}
     toggle={toggle}
     shouldFocusToggleOnSelect
-  >
-    <SelectList>
-      <SelectOption value="Basic option">Basic option</SelectOption>
-      <SelectOption
-        value="Option with description"
-        description="This is a description"
-      >
-        Option with description
-      </SelectOption>
-      
-    </SelectList>
-  </Select>
+    >
+      <SelectList>
+        <SelectOption value="RHEL 9 Application Streams">RHEL 9 Application Streams</SelectOption>
+        <SelectOption value="Red Hat Enterprise Linux" >Red Hat Enterprise Linux</SelectOption>
+      </SelectList>
+    </Select>
 );
 };
 

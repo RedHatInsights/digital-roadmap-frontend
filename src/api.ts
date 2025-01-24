@@ -4,7 +4,8 @@ import { AxiosResponse } from 'axios';
 import {
   DR_API,
   DR_RELEASE_NOTES,
-  DR_LIFECYCLE,
+  DR_LIFECYCLE_SYSTEMS,
+  DR_LIFECYCLE_APPSTREAMS,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
 } from './constants';
@@ -25,9 +26,19 @@ export const getRelevantReleaseNotes = async (
   return getResponseOrError(response);
 };
 
-export const getLifecycleChanges = async (
+export const getLifecycleSystems = async (
 ) => {
-  const path = DR_API.concat(DR_LIFECYCLE)
+  const path = DR_API.concat(DR_LIFECYCLE_SYSTEMS)
+  const response = await axios.get(path).catch(function (error) {
+    return error;
+  });
+
+  return getResponseOrError(response);
+};
+
+export const getLifecycleAppstreams = async (
+) => {
+  const path = DR_API.concat(DR_LIFECYCLE_APPSTREAMS)
   const response = await axios.get(path).catch(function (error) {
     return error;
   });
