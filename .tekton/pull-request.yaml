@@ -30,7 +30,7 @@ spec:
       value: '{{ revision }}'
 
     - name: output-image
-      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap:pr-{{ pull_request_number }}-latest
+      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap-frontend:pr-{{ pull_request_number }}-latest
 
     - name: image-expires-after
       value: 5d
