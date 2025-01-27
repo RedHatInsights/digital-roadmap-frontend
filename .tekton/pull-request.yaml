@@ -30,7 +30,7 @@ spec:
       value: '{{ revision }}'
 
     - name: output-image
-      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap:on-pr-{{ revision }}
+      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap:pr-{{ pull_request_number }}-latest
 
     - name: image-expires-after
       value: 5d
@@ -38,8 +38,8 @@ spec:
     - name: dockerfile
       value: Dockerfile
 
-    - name: path-context
-      value: .
+    - name: tag-prefix
+      value: pr-{{ pull_request_number }}-
 
   pipelineRef:
     name: pipeline-build

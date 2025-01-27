@@ -72,6 +72,11 @@ spec:
       type: string
       default: ""
 
+    - name: tag-prefix
+      description: Prefix added to additional tags
+      type: string
+      default: ""
+
     # Default params for building frontend container file
     # Avoids having to use the parse-build-deploy-script task
     - name: component
@@ -709,6 +714,10 @@ spec:
       params:
         - name: IMAGE
           value: $(tasks.build-image-index.results.IMAGE_URL)
+
+        - name: ADDITIONAL_TAGS
+          value:
+            - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
 
       runAfter:
         - build-image-index
