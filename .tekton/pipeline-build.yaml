@@ -246,40 +246,40 @@ spec:
           value: $(params.path-context)
 
         - name: component
-          value: $(tasks.parse-build-deploy-script.results.component)
+          value: $(params.component)
 
         - name: image
-          value: $(tasks.parse-build-deploy-script.results.image)
+          value: $(params.image)
 
         - name: node-build-version
-          value: $(tasks.parse-build-deploy-script.results.node-build-version)
+          value: $(params.node-build-version)
 
         - name: quay-expire-time
-          value: $(tasks.parse-build-deploy-script.results.quay-expire-time)
+          value: $(params.quay-expire-time)
 
         - name: npm-build-script
-          value: $(tasks.parse-build-deploy-script.results.npm-build-script)
+          value: $(params.npm-build-script)
 
         - name: yarn-build-script
-          value: $(tasks.parse-build-deploy-script.results.yarn-build-script)
+          value: $(params.yarn-build-script)
 
         - name: route-path
-          value: $(tasks.parse-build-deploy-script.results.route-path)
+          value: $(params.route-path)
 
         - name: beta-route-path
-          value: $(tasks.parse-build-deploy-script.results.beta-route-path)
+          value: $(params.beta-route-path)
 
         - name: preview-route-path
-          value: $(tasks.parse-build-deploy-script.results.preview-route-path)
+          value: $(params.preview-route-path)
 
         - name: ci-root
-          value: $(tasks.parse-build-deploy-script.results.ci-root)
+          value: $(params.ci-root)
 
         - name: server-name
-          value: $(tasks.parse-build-deploy-script.results.server-name)
+          value: $(params.server-name)
 
         - name: dist-folder
-          value: $(tasks.parse-build-deploy-script.results.dist-folder)
+          value: $(params.dist-folder)
 
       taskRef:
         resolver: git
