@@ -29,7 +29,7 @@ spec:
       value: '{{ revision }}'
 
     - name: output-image
-      value: quay.io/redhat-user-workloads/rhel-lightspeed/digital-roadmap-frontend:{{ revision }}
+      value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap-frontend:{{ revision }}
 
     - name: dockerfile
       value: Dockerfile
