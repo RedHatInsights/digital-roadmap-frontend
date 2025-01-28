@@ -49,51 +49,40 @@ export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
 ) => {
 
 
-  const getLifecycleType = (lifecycleType:string)=> {
-      switch(lifecycleType){
-        case 'eus':
-          return " EUS";
-        case 'e4s':
-          return " for SAP";
-        default:
-          return "";
-      }
-  }
-  // Construct full name for RHEL versions from api
-  // Add a conditional to ensure this is only done for Lifecycle Systems 
-  const getNameAndVersion = (lifecycleData: LifecycleChanges[]) => {
-    const nameVersion : any  = [];
-    let lifecycleType : string = "";
-    const [lifecycleName, setLifecycleName] = useState(lifecycleType)
+  const [newLifecycleData, setNewLifecycleData] = useState(lifecycleData);
 
-    lifecycleData.map((item: any) => {
-      lifecycleType = getLifecycleType(item.lifecycle_type)
-      nameVersion.push(`${item.name} ${item.major}.${item.minor}${lifecycleType}`);
+  const getLifecycleType = (lifecycleType: string) => {
+    switch (lifecycleType) {
+      case 'eus':
+        return ' EUS';
+      case 'e4s':
+        return ' for SAP';
+      default:
+        return '';
     }
-    );
-  
-    return {nameVersion};
   };
 
-  const RhelNameAndVersion = getNameAndVersion(lifecycleData)
+  const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+    const lifecycleText = getLifecycleType(lifecycleType);
+    return `${name} ${major}.${minor}${lifecycleText}`;
+  };
 
-  const GetNewLifecycleData: any =(lifecycleData: any[], RhelNameAndVersion: NameandVersionProps) => {
-    let newLifecycleData : any = [];
+  const updateLifecycleData = () => {
+    const newData = lifecycleData.map((datum) => {
+      datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
+      return datum;
+    });
+    console.log(newData);
+    setNewLifecycleData(newData);
+  };
 
-    for (let i = 0; i < lifecycleData.length; i++) {
-      newLifecycleData.push({
-        name: RhelNameAndVersion.nameVersion[i],
-        release: lifecycleData[i].release,
-        release_date: lifecycleData[i].release_date,
-        retirement_date: lifecycleData[i].retirement_date,
-        systems: lifecycleData[i].systems,
+  useEffect(() => {
+    updateLifecycleData();
+  }, []);
 
-      });
-    }
-    return newLifecycleData;
-  }
-
-  const newLifecycleData : any = GetNewLifecycleData(lifecycleData, RhelNameAndVersion)
+  useEffect(() => {
+    updateLifecycleData();
+  }, [lifecycleData]);
 
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -114,7 +103,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
   // Note that we perform the sort as part of the component's render logic and not in onSort.
   // We shouldn't store the list of data in state because we don't want to have to sync that with props.
   let sortedRepositories = newLifecycleData;
-  if (activeSortIndex) {
+  if (typeof activeSortIndex !== 'undefined') {
     sortedRepositories = newLifecycleData.sort((a: LifecycleChanges, b: LifecycleChanges) => {
       const aValue = getSortableRowValues(a)[activeSortIndex];
       const bValue = getSortableRowValues(b)[activeSortIndex];
