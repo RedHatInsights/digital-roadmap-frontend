@@ -77,6 +77,11 @@ spec:
       type: string
       default: ""
 
+    - name: additional-tags
+      description: Additional tags to apply to the image
+      type: array
+      default: []
+
     # Default params for building frontend container file
     # Avoids having to use the parse-build-deploy-script task
     - name: component
@@ -163,7 +168,7 @@ spec:
             value: init
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-init@sha256:4c6712db9419461b8c8a39523c012cb0dc061fb58563bb9170b3777d74f54659
+            value: quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:4c6712db9419461b8c8a39523c012cb0dc061fb58563bb9170b3777d74f54659
 
           - name: kind
             value: task
@@ -717,6 +722,7 @@ spec:
 
         - name: ADDITIONAL_TAGS
           value:
+            - $(params.additional-tags[*])
             - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
 
       runAfter:
