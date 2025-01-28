@@ -42,6 +42,7 @@ type LifecycleChanges = {
   release_date: Date;
   retirement_date: Date;
   systems: number;
+  lifecycle_type: string;
 };
 
 

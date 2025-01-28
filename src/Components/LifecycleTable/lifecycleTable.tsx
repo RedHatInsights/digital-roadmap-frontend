@@ -11,6 +11,7 @@ interface LifecycleChanges {
     release_date: Date;
     retirement_date: Date;
     systems: number;
+    lifecycle_type: string;
   };
 
 interface LifecycleChangesProps {
@@ -35,9 +36,64 @@ const columnNames = {
   systems: 'Systems'
   };
 
+interface NameandVersionProps {
+  nameVersion: NameandVersion[];
+}
+
+interface NameandVersion {
+  name: string;
+}
+
 export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
   {lifecycleData}
 ) => {
+
+
+  const getLifecycleType = (lifecycleType:string)=> {
+      switch(lifecycleType){
+        case 'eus':
+          return " EUS";
+        case 'e4s':
+          return " for SAP";
+        default:
+          return "";
+      }
+  }
+  // Construct full name for RHEL versions from api
+  // Add a conditional to ensure this is only done for Lifecycle Systems 
+  const getNameAndVersion = (lifecycleData: LifecycleChanges[]) => {
+    const nameVersion : any  = [];
+    let lifecycleType : string = "";
+    const [lifecycleName, setLifecycleName] = useState(lifecycleType)
+
+    lifecycleData.map((item: any) => {
+      lifecycleType = getLifecycleType(item.lifecycle_type)
+      nameVersion.push(`${item.name} ${item.major}.${item.minor}${lifecycleType}`);
+    }
+    );
+  
+    return {nameVersion};
+  };
+
+  const RhelNameAndVersion = getNameAndVersion(lifecycleData)
+
+  const GetNewLifecycleData: any =(lifecycleData: any[], RhelNameAndVersion: NameandVersionProps) => {
+    let newLifecycleData : any = [];
+
+    for (let i = 0; i < lifecycleData.length; i++) {
+      newLifecycleData.push({
+        name: RhelNameAndVersion.nameVersion[i],
+        release: lifecycleData[i].release,
+        release_date: lifecycleData[i].release_date,
+        retirement_date: lifecycleData[i].retirement_date,
+        systems: lifecycleData[i].systems,
+
+      });
+    }
+    return newLifecycleData;
+  }
+
+  const newLifecycleData : any = GetNewLifecycleData(lifecycleData, RhelNameAndVersion)
 
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -57,9 +113,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
 
   // Note that we perform the sort as part of the component's render logic and not in onSort.
   // We shouldn't store the list of data in state because we don't want to have to sync that with props.
-  let sortedRepositories = lifecycleData;
+  let sortedRepositories = newLifecycleData;
   if (activeSortIndex) {
-    sortedRepositories = lifecycleData.sort((a: LifecycleChanges, b: LifecycleChanges) => {
+    sortedRepositories = newLifecycleData.sort((a: LifecycleChanges, b: LifecycleChanges) => {
       const aValue = getSortableRowValues(a)[activeSortIndex];
       const bValue = getSortableRowValues(b)[activeSortIndex];
       if (typeof aValue === 'number') {
@@ -112,9 +168,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
         </Tr>
       </Thead>
       <Tbody>
-        {sortedRepositories.map((repo: { name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; major: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; minor: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; release: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; release_date: Moment.MomentInput; retirement_date: Moment.MomentInput; systems: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, rowIndex: React.Key | null | undefined) => (
+        {sortedRepositories.map((repo: LifecycleChanges , rowIndex: React.Key | null | undefined) => (
           <Tr key={rowIndex}>
-            <Td style={{paddingRight: '140px'}} dataLabel={columnNames.name}>{repo.name} {repo.major}.{repo.minor}</Td>
+            <Td style={{paddingRight: '140px'}} dataLabel={columnNames.name}>{repo.name}</Td>
             <Td dataLabel={columnNames.release}>{repo.release}</Td>
             <Td dataLabel={(columnNames.release_date)}>{(Moment(repo.release_date).format('MMM YYYY'))}</Td>
             <Td dataLabel={(columnNames.retirement_date)}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>

@@ -33,6 +33,24 @@ const LifecycleChart: React.FC<React.PropsWithChildren> = () => {
       return isTime ? `${dateString} ${timeString}` : dateString;
     };
 
+    
+    const getPackageColor = (datum: string) => {
+        switch(datum) {
+          case 'Retired':
+            return "var(--pf-v5-global--danger-color--100)";
+          case 'Support ends within 6 months':
+            return "var(--pf-v5-global--warning-color--100)";
+          case 'Not installed':
+            return "var(--pf-v5-global--palette--blue-200)";
+          case 'Supported':
+            return "var(--pf-v5-global--success-color--100)";
+          case 'Upcoming release':
+            return "var(--pf-v5-global--palette--blue-100)";
+          default:
+            return "var(--pf-v5-global--default-color--300)";
+        }
+    }
+
     const getChart = (alert: any[], index: number) => {
       const data: any[] = [];
 
@@ -40,17 +58,7 @@ const LifecycleChart: React.FC<React.PropsWithChildren> = () => {
         data.push({
           ...datum,
           x: alerts.length - index,
-          fill: datum.packageType === "Retired"
-            ? "var(--pf-v5-global--danger-color--100)"
-            : datum.packageType === "Support ends within 6 months"
-              ? "var(--pf-v5-global--warning-color--100)"
-              : datum.packageType === "Not installed"
-                ? "var(--pf-v5-global--palette--blue-200)"
-                : datum.packageType === "Supported"
-                  ? "var(--pf-v5-global--success-color--100)"
-                    : datum.packageType === "Upcoming release"
-                      ? "var(--pf-v5-global--palette--blue-100)"
-                      : "var(--pf-v5-global--default-color--300)",
+          fill: getPackageColor(datum.packageType),
         });
       });
 
