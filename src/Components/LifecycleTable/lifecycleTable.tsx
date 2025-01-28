@@ -72,7 +72,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleChangesProps> = (
       datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
       return datum;
     });
-    console.log(newData);
     setNewLifecycleData(newData);
   };
 
