@@ -527,6 +527,9 @@ spec:
         - name: image-url
           value: $(tasks.build-image-index.results.IMAGE_URL)
 
+        - name: ARGS
+          value: "--project-name=digital-roadmap-frontend --report --org=12d05a23-73a7-4a1d-9162-ab12e8c051c4"
+
       runAfter:
         - build-image-index
 
