@@ -1,0 +1,11 @@
+.drf-lifecycle__filters {
+  display: flex;
+  padding: var(----pf-v5-global--spacer--md, 16px) var(----pf-v5-global--spacer--lg, 24px);
+  flex-direction: column;
+  gap: 24px;
+}
+
+.drf-lifecycle__filters-toolbar {
+  display: flex;
+  justify-content: space-between;
+}
