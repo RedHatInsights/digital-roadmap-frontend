@@ -14,6 +14,8 @@ import './landing-page.scss';
 
 const ReleasedTab = lazy(() => import('../../Components/Released/released'));
 const UpcomingTab = lazy(() => import('../../Components/Upcoming/upcoming'));
+const LifecycleTab = lazy(() => import('../../Components/Lifecycle/lifecycle'));
+
 const SystemCard = lazy(
   () => import('../../Components/SystemInfoCard/SystemInfoCard')
 );
@@ -31,7 +33,7 @@ const LandingPage = () => {
 
   const { pathname } = useLocation();
 
-  const tabsPath = ['upcoming', 'released'];
+  const tabsPath = ['upcoming', 'released', 'lifecycle'];
 
   const tabPath = pathname.split('/').pop() || 'upcoming';
   const initialActiveTabKey =
@@ -91,6 +93,16 @@ const LandingPage = () => {
           >
             <Suspense fallback={<Spinner />}>
               <ReleasedTab />
+            </Suspense>
+          </section>
+        </Tab>
+        <Tab eventKey={2} title={<TabTitleText>Lifecycle</TabTitleText>}>
+          <section
+            className="pf-l-page__main-section pf-c-page__main-section"
+            id="lifecycle"
+          >
+            <Suspense fallback={<Spinner />}>
+              <LifecycleTab />
             </Suspense>
           </section>
         </Tab>
