@@ -29,6 +29,8 @@ const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleD
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/lifecycleChart'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/lifecycleTable'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
+const AppLifecycleTable = lazy(() => import('../../Components/AppLifecycleTable/appLifecycleTable'))
+
 
 type LifecycleChanges = {
   name: string;
@@ -55,6 +57,43 @@ const lifecycleChartData = [
   [{ x: 'RHEL 9.0', y0: new Date('2024-08'), y: new Date('2025-06'), packageType: 'Not installed' }],
   [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
 ];
+
+type dataAppLifeCycleChanges = {
+  data: AppLifecycleChanges[];
+
+}
+
+type AppLifecycleChanges = {
+  module_name: string;
+  rhel_major_version: number;
+  streams: Stream[];
+}
+
+type Stream = {
+  arch: string;
+  context: string;
+  description: string;
+  end_date: string;
+  name: string;
+  profiles: Profiles;
+  start_date: string;
+  stream: string;
+  version: string;
+}
+
+type Profiles = {
+  common: string[];
+}
+
+
+
+const LifecycleColumnNames = {
+name: 'Name',
+release: 'Release',
+release_date: 'Release Date',
+retirement_date: 'Retirement Date',
+systems: 'Systems'
+};
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const emptyLifecycleChanges: LifecycleChanges[] = [];
@@ -105,6 +144,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
+  // const emptyAppLifecycleChanges: dataAppLifeCycleChanges[] = []
+  // const [AppLifecycleChanges, setAppLifecycleChanges] = useState(emptyAppLifecycleChanges);
+  const [AppLifecycleChanges, setAppLifecycleChanges] = useState<dataAppLifeCycleChanges | null>(null);
+
   const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
     const lifecycleText = getLifecycleType(lifecycleType);
     return `${name} ${major}.${minor}${lifecycleText}`;
@@ -121,8 +164,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setIsLoading(true);
     try {
       const data = await getLifecycleSystems();
+      const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = data || [];
+      // const appStreams = appData || {};
       setLifecycleChanges(upcomingChangesParagraphs);
+      setAppLifecycleChanges(appData);
       const tableData = updateLifecycleData(upcomingChangesParagraphs);
       setLifecycleChanges(tableData);
       setFilteredTableData(tableData);
@@ -228,6 +274,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             <>
               <LifecycleChart lifecycleData={filteredChartData} />
               <LifecycleTable lifecycleData={filteredTableData} />
+              <AppLifecycleTable data={App}/>
             </>
           )}
         </Card>
