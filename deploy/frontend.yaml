@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: digital-roadmap
+  name: digital-roadmap-frontend
 objects:
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: Frontend
@@ -13,7 +13,7 @@ objects:
         versions:
           - v1
       envName: ${ENV_NAME}
-      title: Starter App
+      title: Digital Roadmap
       deploymentRepo: https://github.com/RedHatInsights/digital-roadmap
       frontend:
         paths:
@@ -23,15 +23,17 @@ objects:
       module:
         manifestLocation: '/apps/digital-roadmap/fed-mods.json'
         modules:
-          - id: 'overview'
+          - id: 'digital-roadmap'
             module: './RootApp'
             routes:
-              - pathname: /staging/starter
+              - pathname: /insights/digital-roadmap
 
 parameters:
   - name: ENV_NAME
     required: true
+
   - name: IMAGE_TAG
     required: true
+
   - name: IMAGE
-    value: quay.io/cloudservices/digital-roadmap
+    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/digital-roadmap-frontend
