@@ -25,12 +25,12 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
+import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleDropdown'));
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/lifecycleChart'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/lifecycleTable'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
-const AppLifecycleTable = lazy(() => import('../../Components/AppLifecycleTable/appLifecycleTable'))
-
+const AppLifecycleTable = lazy(() => import('../../Components/AppLifecycleTable/appLifecycleTable'));
 
 type LifecycleChanges = {
   name: string;
@@ -60,39 +60,14 @@ const lifecycleChartData = [
 
 type dataAppLifeCycleChanges = {
   data: AppLifecycleChanges[];
-
-}
-
-type AppLifecycleChanges = {
-  module_name: string;
-  rhel_major_version: number;
-  streams: Stream[];
-}
-
-type Stream = {
-  arch: string;
-  context: string;
-  description: string;
-  end_date: string;
-  name: string;
-  profiles: Profiles;
-  start_date: string;
-  stream: string;
-  version: string;
-}
-
-type Profiles = {
-  common: string[];
-}
-
-
+};
 
 const LifecycleColumnNames = {
-name: 'Name',
-release: 'Release',
-release_date: 'Release Date',
-retirement_date: 'Retirement Date',
-systems: 'Systems'
+  name: 'Name',
+  release: 'Release',
+  release_date: 'Release Date',
+  retirement_date: 'Retirement Date',
+  systems: 'Systems',
 };
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
@@ -146,7 +121,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // const emptyAppLifecycleChanges: dataAppLifeCycleChanges[] = []
   // const [AppLifecycleChanges, setAppLifecycleChanges] = useState(emptyAppLifecycleChanges);
-  const [AppLifecycleChanges, setAppLifecycleChanges] = useState<dataAppLifeCycleChanges | null>(null);
+  const [AppLifecycleChanges, setAppLifecycleChanges] = useState<AppLifecycleChanges[]>([]);
 
   const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
     const lifecycleText = getLifecycleType(lifecycleType);
@@ -166,9 +141,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const data = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = data || [];
-      // const appStreams = appData || {};
+      const appStreams = appData.data || [];
       setLifecycleChanges(upcomingChangesParagraphs);
-      setAppLifecycleChanges(appData);
+      setAppLifecycleChanges(appStreams);
       const tableData = updateLifecycleData(upcomingChangesParagraphs);
       setLifecycleChanges(tableData);
       setFilteredTableData(tableData);
@@ -274,7 +249,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             <>
               <LifecycleChart lifecycleData={filteredChartData} />
               <LifecycleTable lifecycleData={filteredTableData} />
-              <AppLifecycleTable data={App}/>
+              <AppLifecycleTable data={AppLifecycleChanges} />
             </>
           )}
         </Card>
