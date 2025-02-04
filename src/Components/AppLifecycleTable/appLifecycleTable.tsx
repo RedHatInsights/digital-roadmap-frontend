@@ -1,39 +1,18 @@
 import React from 'react';
-import { Table, Tbody, Tr, Td } from '@patternfly/react-table';
+import { Table, Tbody, Tr, Td, Thead, Th } from '@patternfly/react-table';
 import Moment from 'moment';
+import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 
 interface dataAppLifeCycleChanges {
     data: AppLifecycleChanges[];
 
 }
 
-interface AppLifecycleChanges {
-    module_name: string;
-    rhel_major_version: number;
-    streams: Stream[];
-  }
-  
-interface Stream {
-    arch: string;
-    context: string;
-    description: string;
-    end_date: string;
-    name: string;
-    profiles: Profiles;
-    start_date: string;
-    stream: string;
-    version: string;
-  }
-  
-interface Profiles {
-    common: string[];
-  }
-
 const columnNames = {
   name: 'Name',
   release: 'Release',
-  release_date: 'Release Date',
-  retirement_date: 'Retirement Date',
+  release_date: 'Release date',
+  retirement_date: 'Retirement date',
   systems: 'Systems'
 };
 
@@ -41,9 +20,10 @@ export const appLifecycleTab: React.FunctionComponent<dataAppLifeCycleChanges> =
   {data}
 ) => {
     const rows = data.flatMap(repo => repo.streams).map(stream => (
+        
         <Tr key={stream.name}>
-          <Td style={{ paddingRight: '140px' }} dataLabel={columnNames.name}>{stream.name}</Td>
-          <Td dataLabel={columnNames.release}>{stream.context}</Td>
+          <Td dataLabel={columnNames.name}>{stream.name} {stream.stream}</Td>
+          <Td dataLabel={columnNames.release}>{data.filter((appLifecycleChanges) => appLifecycleChanges.streams.some((str) => str.context === stream.context))[0].rhel_major_version}</Td>
           <Td dataLabel={(columnNames.release_date)}>{(Moment(stream.start_date).format('MMM YYYY'))}</Td>
           <Td dataLabel={(columnNames.retirement_date)}>{Moment(stream.end_date).format('MMM YYYY')}</Td>
           <Td dataLabel={(columnNames.systems)}>N/A</Td>
@@ -51,7 +31,16 @@ export const appLifecycleTab: React.FunctionComponent<dataAppLifeCycleChanges> =
   ));
 
   return (
-    <Table variant="compact" borders={false}>
+    <Table aria-label="Simple table">
+      <Thead>
+        <Tr>
+        <Th>{columnNames.name}</Th>
+        <Th>{columnNames.release}</Th>
+        <Th>{columnNames.release_date}</Th>
+        <Th>{columnNames.retirement_date}</Th>
+        <Th>{columnNames.systems}</Th>
+        </Tr>
+      </Thead>
       <Tbody>
         {rows}
       </Tbody>

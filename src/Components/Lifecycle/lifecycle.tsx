@@ -58,18 +58,6 @@ const lifecycleChartData = [
   [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
 ];
 
-type dataAppLifeCycleChanges = {
-  data: AppLifecycleChanges[];
-};
-
-const LifecycleColumnNames = {
-  name: 'Name',
-  release: 'Release',
-  release_date: 'Release Date',
-  retirement_date: 'Retirement Date',
-  systems: 'Systems',
-};
-
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const emptyLifecycleChanges: LifecycleChanges[] = [];
   const [relevantLifecycleChanges, setLifecycleChanges] = useState(emptyLifecycleChanges);
@@ -119,8 +107,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  // const emptyAppLifecycleChanges: dataAppLifeCycleChanges[] = []
-  // const [AppLifecycleChanges, setAppLifecycleChanges] = useState(emptyAppLifecycleChanges);
   const [AppLifecycleChanges, setAppLifecycleChanges] = useState<AppLifecycleChanges[]>([]);
 
   const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
