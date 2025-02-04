@@ -25,10 +25,12 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
+import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleDropdown'));
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/lifecycleChart'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/lifecycleTable'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
+const AppLifecycleTable = lazy(() => import('../../Components/AppLifecycleTable/appLifecycleTable'));
 
 type LifecycleChanges = {
   name: string;
@@ -105,6 +107,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
+  const [AppLifecycleChanges, setAppLifecycleChanges] = useState<AppLifecycleChanges[]>([]);
+
   const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
     const lifecycleText = getLifecycleType(lifecycleType);
     return `${name} ${major}.${minor}${lifecycleText}`;
@@ -121,8 +125,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setIsLoading(true);
     try {
       const data = await getLifecycleSystems();
+      const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = data || [];
+      const appStreams = appData.data || [];
       setLifecycleChanges(upcomingChangesParagraphs);
+      setAppLifecycleChanges(appStreams);
       const tableData = updateLifecycleData(upcomingChangesParagraphs);
       setLifecycleChanges(tableData);
       setFilteredTableData(tableData);
@@ -228,6 +235,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             <>
               <LifecycleChart lifecycleData={filteredChartData} />
               <LifecycleTable lifecycleData={filteredTableData} />
+              <AppLifecycleTable data={AppLifecycleChanges} />
             </>
           )}
         </Card>
