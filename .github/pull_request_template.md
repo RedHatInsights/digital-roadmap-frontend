@@ -2,10 +2,11 @@
 <!-- Must include 2-3 sentence summary of proposed changes -->
 <!-- Must include links to impacted UI(s) or information regarding the impacted UI -->
 <!-- Must include any relevant steps to reproduce (if not clear in tracked issue or story) -->
-<!-- Must include RHCLOUDXXXX link (if proposed change involves tracked issue or story) -->
+<!-- Must include RSPEED-XXX link (if proposed change involves tracked issue or story) -->
 description text...
 
-[RHCLOUDXXXX](https://issues.redhat.com/browse/RHCLOUDXXXX)
+Jira link:
+[RSPEED-XXX](https://issues.redhat.com/browse/RSPEED-XXX)
 
 ---
 
