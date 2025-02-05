@@ -128,8 +128,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
      (dateSelection === '' || matchesDateValue) 
    );
  };
- const filteredRepos = data.filter(onFilter);
 
+ const filteredRepos = data.filter(onFilter);
+ console.log(filteredRepos, "filter")
  // Set up name search input
  const searchInput = (
    <SearchInput

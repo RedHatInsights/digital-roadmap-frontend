@@ -15,6 +15,7 @@ import {
 import { getUpcomingChanges } from '../../api';
 
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
@@ -96,10 +97,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle>
                   <ExclamationCircleIcon color={'#C9190B'} />
-                  {'  '}Most Important!
+                  {'  '}  Upcoming deprecations
                 </CardTitle>
               </CardHeader>
-              <CardBody>Body</CardBody>
+              <CardBody>upcoming deprecations that could affect your systems</CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
@@ -114,11 +115,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 }}
               >
                 <CardTitle>
-                  <InfoCircleIcon color={'#2B9AF3'} />
-                  {'  '}Good to Know
+                  <ExclamationTriangleIcon color={'#FFA500'} />
+                  {'  '}  Upcoming changes
                 </CardTitle>
               </CardHeader>
-              <CardBody>Body</CardBody>
+              <CardBody>upcoming changes that could affect your systems</CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
@@ -134,10 +135,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle>
                   <InfoCircleIcon color={'#2B9AF3'} />
-                  {'  '}Further off, but still useful
+                  {'  '}  Upcoming additions
                 </CardTitle>
               </CardHeader>
-              <CardBody>Body</CardBody>
+              <CardBody>upcoming additions that could affect your systems</CardBody>
             </Card>
           </GridItem>
         </Grid>
