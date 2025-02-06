@@ -2,10 +2,10 @@ import React from 'react';
 import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import Moment from 'moment';
 import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
-import { LifecycleChanges } from '../../types/LifecycleChanges';
+import { SystemLifecycleChanges} from '../../types/SystemLifecycleChanges';
 
 interface LifecycleTableProps {
-  data: AppLifecycleChanges[] | LifecycleChanges[];
+  data: AppLifecycleChanges[] | SystemLifecycleChanges[];
 }
 
 const LIFECYCLE_COLUMN_NAMES = {
@@ -33,8 +33,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>(undefined);
   // Sort direction of the currently sorted column
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
-
-  const checkDataType = (data: AppLifecycleChanges[] | LifecycleChanges[]) => {
+  console.log(data, "data")
+  const checkDataType = (data: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
     if (!data || data.length === 0) {
       return '';
     }
@@ -49,7 +49,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // Since OnSort specifies sorted columns by index, we need sortable values for our object by column index.
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
-  const getSortableRowValues = (repo: LifecycleChanges): (string | number | Date)[] => {
+  const getSortableRowValues = (repo: SystemLifecycleChanges): (string | number | Date)[] => {
     const { name, release, release_date, retirement_date, systems } = repo;
     return [name, release, release_date, retirement_date, systems];
   };
@@ -88,13 +88,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
         </Tr>
       ));
 
-  const renderLifecycleData = (data: LifecycleChanges[]) => {
+  const renderSystemLifecycleData = (data: SystemLifecycleChanges[]) => {
     // Note that we perform the sort as part of the component's render logic and not in onSort.
     // We shouldn't store the list of data in state because we don't want to have to sync that with props.
-    let sortedRepositories = data as LifecycleChanges[];
+    let sortedRepositories = data as SystemLifecycleChanges[];
 
     if (typeof activeSortIndex !== 'undefined') {
-      sortedRepositories = sortedRepositories.sort((a: LifecycleChanges, b: LifecycleChanges) => {
+      sortedRepositories = sortedRepositories.sort((a: SystemLifecycleChanges, b: SystemLifecycleChanges) => {
         const aValue = getSortableRowValues(a)[activeSortIndex];
         const bValue = getSortableRowValues(b)[activeSortIndex];
         if (typeof aValue === 'number') {
@@ -113,7 +113,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       });
     }
 
-    return sortedRepositories.map((repo: LifecycleChanges) => (
+    return sortedRepositories.map((repo: SystemLifecycleChanges) => (
       <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
         <Td style={{ paddingRight: '140px' }} dataLabel={LIFECYCLE_COLUMN_NAMES.name}>
           {repo.name}
@@ -133,12 +133,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     switch (dataType) {
       case 'appLifecycle':
         return (
-          <Tr>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.release}</Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.release_date}</Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.retirement_date}</Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.systems}</Th>
+          <Tr key={LIFECYCLE_COLUMN_NAMES.name}>
+            <Th sort={getSortParams(0)}>{LIFECYCLE_COLUMN_NAMES.name}</Th>
+            <Th modifier="wrap" sort={getSortParams(1)}>
+              {LIFECYCLE_COLUMN_NAMES.release}
+            </Th>
+            <Th modifier="wrap" sort={getSortParams(2)}>
+              {LIFECYCLE_COLUMN_NAMES.release_date}
+            </Th>
+            <Th modifier="wrap" sort={getSortParams(3)}>
+              {LIFECYCLE_COLUMN_NAMES.retirement_date}
+            </Th>
+            <Th modifier="wrap" sort={getSortParams(4)}>
+              {LIFECYCLE_COLUMN_NAMES.systems}
+            </Th>
           </Tr>
         );
       case 'lifecycle':
@@ -172,7 +180,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       case 'appLifecycle':
         return renderAppLifecycleData(data as AppLifecycleChanges[]);
       case 'lifecycle':
-        return renderLifecycleData(data as LifecycleChanges[]);
+        return renderSystemLifecycleData(data as SystemLifecycleChanges[]);
       default:
         return;
     }
