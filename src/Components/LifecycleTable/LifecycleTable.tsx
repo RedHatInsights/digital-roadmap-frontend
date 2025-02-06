@@ -3,6 +3,8 @@ import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-tabl
 import Moment from 'moment';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
+import { Pagination, PaginationVariant, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   type: 'streams' | 'rhel';
@@ -33,6 +35,59 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>(undefined);
   // Sort direction of the currently sorted column
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+  const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+
+  React.useEffect(() => {
+    setPaginatedRows(data.slice(0, perPage));
+  }, [data]);
+
+  const handleSetPage = (
+    _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPage: number,
+    _perPage?: number,
+    startIdx?: number,
+    endIdx?: number
+  ) => {
+    setPaginatedRows(data.slice(startIdx, endIdx));
+    setPage(newPage);
+  };
+
+  const handlePerPageSelect = (
+    _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPerPage: number,
+    newPage: number,
+    startIdx?: number,
+    endIdx?: number
+  ) => {
+    setPaginatedRows(data.slice(startIdx, endIdx));
+    setPage(newPage);
+    setPerPage(newPerPage);
+  };
+
+  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
+    <Pagination
+      isCompact={isCompact}
+      itemCount={data.length}
+      page={page}
+      perPage={perPage}
+      onSetPage={handleSetPage}
+      onPerPageSelect={handlePerPageSelect}
+      variant={variant}
+      titles={{
+        paginationAriaLabel: `${variant} pagination`,
+      }}
+    />
+  );
+
+  const toolbar = (
+    <Toolbar>
+      <ToolbarContent>
+        <ToolbarItem variant="pagination">{buildPagination('top', false)}</ToolbarItem>
+      </ToolbarContent>
+    </Toolbar>
+  );
 
   // Since OnSort specifies sorted columns by index, we need sortable values for our object by column index.
   // This example is trivial since our data objects just contain strings, but if the data was more complex
@@ -65,7 +120,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const renderAppLifecycleData = (data: Stream[]) =>
     data.map((stream) => {
       return (
-        <Tr key={`${stream.name}-${stream.stream}-${stream.start_date}-${stream.end_date}`}>
+        <Tr
+          key={`${stream.name}-${stream.stream}-${stream.rhel_major_version}-${stream.start_date}-${stream.end_date}`}
+        >
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {stream.name} {stream.stream}
           </Td>
@@ -102,17 +159,24 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       });
     }
 
-    return sortedRepositories.map((repo: SystemLifecycleChanges) => (
-      <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
-        <Td style={{ paddingRight: '140px' }} dataLabel={LIFECYCLE_COLUMN_NAMES.name}>
-          {repo.name}
-        </Td>
-        <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release}>{repo.release}</Td>
-        <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
-        <Td dataLabel={LIFECYCLE_COLUMN_NAMES.retirement_date}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>
-        <Td dataLabel={LIFECYCLE_COLUMN_NAMES.systems}>{repo.systems}</Td>
-      </Tr>
-    ));
+    return sortedRepositories.map((repo: SystemLifecycleChanges) => {
+      // sometimes React wasn't properly handling the keys here
+      if (!repo.release || !repo.release_date || !repo.retirement_date) {
+        return;
+      }
+
+      return (
+        <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
+          <Td style={{ paddingRight: '140px' }} dataLabel={LIFECYCLE_COLUMN_NAMES.name}>
+            {repo.name}
+          </Td>
+          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release}>{repo.release}</Td>
+          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
+          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.retirement_date}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>
+          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.systems}>{repo.systems}</Td>
+        </Tr>
+      );
+    });
   };
 
   const renderHeaders = () => {
@@ -161,9 +225,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const renderData = (): React.ReactNode => {
     switch (type) {
       case 'streams':
-        return renderAppLifecycleData(data as Stream[]);
+        return renderAppLifecycleData(paginatedRows as Stream[]);
       case 'rhel':
-        return renderSystemLifecycleData(data as SystemLifecycleChanges[]);
+        return renderSystemLifecycleData(paginatedRows as SystemLifecycleChanges[]);
       default:
         return;
     }
@@ -181,10 +245,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   };
 
   return (
-    <Table aria-label={getAriaLabel()}>
-      <Thead>{renderHeaders()}</Thead>
-      <Tbody>{renderData()}</Tbody>
-    </Table>
+    <>
+      {toolbar}
+      <Table aria-label={getAriaLabel()}>
+        <Thead>{renderHeaders()}</Thead>
+        <Tbody>{renderData()}</Tbody>
+      </Table>
+      {buildPagination('bottom', true)}
+    </>
   );
 };
 
