@@ -25,19 +25,19 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     return 'lifecycle';
   };
 
-  const lifecycleChartData = [
-  [{ x: 'RHEL 8.3', y0: new Date('2023-01'), y: new Date('2024-06'), packageType: 'Retired' }],
-  [
-    {
-      x: 'RHEL 8.7',
-      y0: new Date('2023-01'),
-      y: new Date('2025-10'),
-      packageType: 'Support ends within 6 months',
-    },
-  ],
-  [{ x: 'RHEL 9.0', y0: new Date('2024-08'), y: new Date('2025-06'), packageType: 'Not installed' }],
-  [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
-  ];
+  // const lifecycleChartData = [
+  // [{ x: 'RHEL 8.3', y0: new Date('2023-01'), y: new Date('2024-06'), packageType: 'Retired' }],
+  // [
+  //   {
+  //     x: 'RHEL 8.7',
+  //     y0: new Date('2023-01'),
+  //     y: new Date('2025-10'),
+  //     packageType: 'Support ends within 6 months',
+  //   },
+  // ],
+  // [{ x: 'RHEL 9.0', y0: new Date('2024-08'), y: new Date('2025-06'), packageType: 'Not installed' }],
+  // [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
+  // ];
 
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData : any[][] = []
@@ -105,7 +105,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     alert?.map((datum: { packageType: string }) => {
       data.push({
         ...datum,
-        x: lifecycleChartData.length - index,
+        x: updatedLifecycleData.length - index,
         fill: getPackageColor(datum.packageType),
       });
     });
@@ -181,12 +181,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         />
         <ChartAxis
           showGrid
-          tickValues={lifecycleChartData.map((data) => {
+          tickValues={updatedLifecycleData.map((data) => {
             return data;
           })}
         />
 
-        <ChartGroup horizontal>{lifecycleChartData.map((data, index) => getChart(data, index))}</ChartGroup>
+        <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
       </Chart>
     </div>
   );
