@@ -14,7 +14,7 @@ import './landing-page.scss';
 
 const ReleasedTab = lazy(() => import('../../Components/Released/released'));
 const UpcomingTab = lazy(() => import('../../Components/Upcoming/upcoming'));
-const LifecycleTab = lazy(() => import('../../Components/Lifecycle/lifecycle'));
+const LifecycleTab = lazy(() => import('../../Components/Lifecycle/Lifecycle'));
 
 const SystemCard = lazy(
   () => import('../../Components/SystemInfoCard/SystemInfoCard')

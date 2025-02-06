@@ -1,4 +1,4 @@
-import './lifecycle.scss';
+import './Lifecycle.scss';
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
@@ -27,7 +27,7 @@ import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
 import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { LifecycleChanges } from '../../types/LifecycleChanges';
 const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleDropdown'));
-const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/lifecycleChart'));
+const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 
