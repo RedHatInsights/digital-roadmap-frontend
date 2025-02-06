@@ -29,22 +29,7 @@ import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleDropdown'));
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
-const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/lifecycleTable'));
-
-// Start = y0, end = y
-// const lifecycleChartData = [
-//   [{ x: 'RHEL 8.3', y0: new Date('2023-01'), y: new Date('2024-06'), packageType: 'Retired' }],
-//   [
-//     {
-//       x: 'RHEL 8.7',
-//       y0: new Date('2023-01'),
-//       y: new Date('2025-10'),
-//       packageType: 'Support ends within 6 months',
-//     },
-//   ],
-//   [{ x: 'RHEL 9.0', y0: new Date('2024-08'), y: new Date('2025-06'), packageType: 'Not installed' }],
-//   [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
-// ];
+const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 
 const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 
@@ -114,7 +99,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         setFilteredChartData(updatedSystems)
       }
     } catch (error) {
-      console.error('Error fetching lifecycle changes:', error);
     } finally {
       setIsLoading(false);
     }
@@ -161,8 +145,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const resetFilters = () => {
     setNameFilter(''); 
     setFilteredTableData(systemLifecycleChanges);
-    setFilteredChartData(systemLifecycleChanges);
-   
+    // setFilteredChartData(systemLifecycleChanges);
+  
   };
 
   if (isLoading) {
@@ -214,8 +198,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       </EmptyState>
     </Bullseye>
   );
-  console.log(filteredChartData, "chart2")
-  console.log(filteredTableData, "chart2")
   const renderContent = () => {
     if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;
