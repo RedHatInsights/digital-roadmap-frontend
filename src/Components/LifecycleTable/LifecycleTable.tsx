@@ -33,7 +33,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>(undefined);
   // Sort direction of the currently sorted column
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
-  console.log(data, "data")
   const checkDataType = (data: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
     if (!data || data.length === 0) {
       return '';

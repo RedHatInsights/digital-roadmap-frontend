@@ -99,6 +99,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         setFilteredChartData(updatedSystems)
       }
     } catch (error) {
+      console.error('Error fetching lifecycle changes:', error);
     } finally {
       setIsLoading(false);
     }

@@ -179,12 +179,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         <ChartAxis
           dependentAxis
           showGrid
-          tickFormat={(t: Date) => {
-            return t.toLocaleDateString('en-US', { year: 'numeric' });
-          }}
+          tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           tickValues={[
-            new Date('January 1 2017'),
-            new Date('January 1 2018'),
             new Date('January 1 2019'),
             new Date('January 1 2020'),
             new Date('January 1 2021'),
