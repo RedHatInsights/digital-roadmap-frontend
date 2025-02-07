@@ -10,4 +10,5 @@ export interface Stream {
   start_date: string;
   stream: string;
   version: string;
+  rhel_major_version: number; // we are adding this on FE side from AppLifecycleChanges type
 }
