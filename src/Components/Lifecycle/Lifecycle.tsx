@@ -25,36 +25,21 @@ import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
 import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
-import { LifecycleChanges } from '../../types/LifecycleChanges';
+import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 const SelectOptionVariations = lazy(() => import('../FilterComponents/LifecycleDropdown'));
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 
-// Start = y0, end = y
-const lifecycleChartData = [
-  [{ x: 'RHEL 8.3', y0: new Date('2023-01'), y: new Date('2024-06'), packageType: 'Retired' }],
-  [
-    {
-      x: 'RHEL 8.7',
-      y0: new Date('2023-01'),
-      y: new Date('2025-10'),
-      packageType: 'Support ends within 6 months',
-    },
-  ],
-  [{ x: 'RHEL 9.0', y0: new Date('2024-08'), y: new Date('2025-06'), packageType: 'Not installed' }],
-  [{ x: 'RHEL 9.1', y0: new Date('2023-01'), y: new Date('2027-10'), packageType: 'Supported' }],
-];
-
 const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
-  const [relevantLifecycleChanges, setLifecycleChanges] = useState<LifecycleChanges[]>([]);
-  const [filteredTableData, setFilteredTableData] = useState<LifecycleChanges[] | AppLifecycleChanges[]>([]);
+  const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
+  const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | AppLifecycleChanges[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
-  const [filteredChartData, setFilteredChartData] = useState(lifecycleChartData);
+  const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | AppLifecycleChanges[]>([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<AppLifecycleChanges[]>([]);
   // drop down menu
   const [dropdownValue, setDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
@@ -62,8 +47,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const onDropdownSelect = (value: string) => {
     if (value === DEFAULT_DROPDOWN_VALUE) {
       setFilteredTableData(appLifecycleChanges);
+      setFilteredChartData(appLifecycleChanges);
+
+
     } else {
-      setFilteredTableData(relevantLifecycleChanges);
+      setFilteredTableData(systemLifecycleChanges);
+      setFilteredChartData(systemLifecycleChanges);
+
     }
   };
 
@@ -93,18 +83,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const data = await getLifecycleSystems();
+      const systemData = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
-      const upcomingChangesParagraphs = data || [];
+      const upcomingChangesParagraphs = systemData || [];
       const appStreams = appData.data || [];
-      setLifecycleChanges(upcomingChangesParagraphs);
+      setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
-      const tableData = updateLifecycleData(upcomingChangesParagraphs);
-      setLifecycleChanges(tableData);
+      const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
+      setSystemLifecycleChanges(updatedSystems);
       if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
         setFilteredTableData(appStreams);
+        setFilteredChartData(appStreams)
       } else {
-        setFilteredTableData(tableData);
+        setFilteredTableData(updatedSystems);
+        setFilteredChartData(updatedSystems)
       }
     } catch (error) {
       console.error('Error fetching lifecycle changes:', error);
@@ -119,10 +111,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // TODO fixme filtering
   const filterData = (name: string) => {
-    let currentDataSource: AppLifecycleChanges[] | LifecycleChanges[] = [];
+    let currentDataSource: AppLifecycleChanges[] | SystemLifecycleChanges[] = [];
     if (nameFilter !== '') {
-      const newChartData = lifecycleChartData.filter((datum) => datum[0].x.toLowerCase().includes(name.toLowerCase()));
-      setFilteredChartData(newChartData);
 
       if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
         currentDataSource = appLifecycleChanges.filter((datum) => {
@@ -130,19 +120,21 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           return datum.module_name.toLowerCase().includes(name.toLowerCase());
         });
       } else {
-        currentDataSource = relevantLifecycleChanges.filter((datum) => {
+        currentDataSource = systemLifecycleChanges.filter((datum) => {
           const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
           return product.includes(name.toLowerCase());
         });
       }
       setFilteredTableData(currentDataSource);
+      setFilteredChartData(currentDataSource);
     } else {
       if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
         setFilteredTableData(appLifecycleChanges);
+        setFilteredChartData(appLifecycleChanges);
       } else {
-        setFilteredTableData(relevantLifecycleChanges);
+        setFilteredTableData(systemLifecycleChanges);
+        setFilteredChartData(systemLifecycleChanges);
       }
-      setFilteredChartData(lifecycleChartData);
     }
   };
 
@@ -152,9 +144,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const resetFilters = () => {
-    setNameFilter('');
-    setFilteredChartData(lifecycleChartData);
-    setFilteredTableData(relevantLifecycleChanges);
+    setNameFilter(''); 
+    setFilteredTableData(systemLifecycleChanges);
+    setFilteredChartData(systemLifecycleChanges);
+  
   };
 
   if (isLoading) {
@@ -206,7 +199,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       </EmptyState>
     </Bullseye>
   );
-
   const renderContent = () => {
     if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;

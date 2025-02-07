@@ -1,18 +1,75 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import { Chart, ChartAxis, ChartBar, ChartGroup, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
+import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
+import { SystemLifecycleChanges} from '../../types/SystemLifecycleChanges';
 
 interface LifecycleChartProps {
-  lifecycleData: { x: string; y0: Date; y: Date; packageType: string }[][];
+  lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[];
+
 }
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [chartWidth, setChartWidth] = React.useState(0);
 
+  //check data type and contruct a chart array 
+
+  const checkDataType = (lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
+    if (!lifecycleData || lifecycleData.length === 0) {
+      return '';
+    }
+    if ('module_name' in lifecycleData[0]) {
+      return 'appLifecycle';
+    }
+    return 'lifecycle';
+  };
+
+  const dataType = checkDataType(lifecycleData);
+  const updatedLifecycleData : any[][] = []
+
+
+  const constructLifecycleData = (lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
+    if (!dataType) {
+      return;
+    }
+    if (dataType === 'appLifecycle') {
+      lifecycleData.forEach((item: any) => {
+        if (item.streams[0].start_date === 'Unknown' || item.streams[0].end_date === 'Unknown') {
+          return;
+        }
+        updatedLifecycleData.push([
+          {
+            x: item.module_name,
+            y0: new Date(item.streams[0].start_date),
+            y: new Date(item.streams[0].end_date),
+            packageType: 'Supported',
+          },
+        ]);
+      });
+    }
+    else{
+      lifecycleData.forEach((item: any) => {
+        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+          return;
+        }
+        updatedLifecycleData.push([
+          {
+            x: item.name,
+            y0: new Date(item.release_date),
+            y: new Date(item.retirement_date),
+            packageType: 'Supported',
+          },
+        ]);
+      });
+    }
+  };
+
+  constructLifecycleData(lifecycleData)
+
   React.useEffect(() => {
     const handleResize = () => {
-      setChartWidth(ref.current && ref.current?.offsetWidth > 976 ? ref.current?.offsetWidth - 50 : 976);
+      // setChartWidth(ref.current && ref.current?.offsetWidth > 976 ? ref.current?.offsetWidth - 50 : 976);
     };
 
     handleResize();
@@ -53,7 +110,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     alert?.map((datum: { packageType: string }) => {
       data.push({
         ...datum,
-        x: lifecycleData.length - index,
+        x: updatedLifecycleData.length - index,
         fill: getPackageColor(datum.packageType),
       });
     });
@@ -73,6 +130,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         }}
       />
     );
+  };
+
+  const fetchTicks = () => {
+    return updatedLifecycleData.map((data) => {
+      return data[0].x;
+    });
   };
 
   return (
@@ -107,13 +170,20 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           right: 50, // Adjusted to accommodate tooltip
           top: 50,
         }}
-        width={chartWidth}
+        // width={chartWidth}
+        // adjust this by number of items
+        height={900}
+        width={900}
       >
         <ChartAxis
           dependentAxis
           showGrid
           tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           tickValues={[
+            new Date('January 1 2019'),
+            new Date('January 1 2020'),
+            new Date('January 1 2021'),
+            new Date('January 1 2022'),
             new Date('January 1 2023'),
             new Date('January 1 2024'),
             new Date('January 1 2025'),
@@ -127,17 +197,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
             new Date('January 1 2033'),
           ]}
         />
-        <ChartAxis
-          showGrid
-          tickValues={lifecycleData.map((data) => {
-            return data[0].x;
-          })}
-        />
+        <ChartAxis showGrid tickValues={fetchTicks()} />
 
-        <ChartGroup horizontal>{lifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
+        <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
       </Chart>
     </div>
   );
 };
-
+  
 export default LifecycleChart;

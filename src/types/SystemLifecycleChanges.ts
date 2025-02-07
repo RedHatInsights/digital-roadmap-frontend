@@ -1,4 +1,4 @@
-export type LifecycleChanges = {
+export type SystemLifecycleChanges = {
   name: string;
   release: string;
   major: number;
