@@ -133,10 +133,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   };
 
   const fetchTicks = () => {
-    const a = updatedLifecycleData.map((data) => {
+    return updatedLifecycleData.map((data) => {
       return data[0].x;
     });
-    return a;
   };
 
   return (
