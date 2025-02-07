@@ -146,7 +146,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const resetFilters = () => {
     setNameFilter(''); 
     setFilteredTableData(systemLifecycleChanges);
-    // setFilteredChartData(systemLifecycleChanges);
+    setFilteredChartData(systemLifecycleChanges);
   
   };
 
