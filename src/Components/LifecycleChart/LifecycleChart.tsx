@@ -1,54 +1,52 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import { Chart, ChartAxis, ChartBar, ChartGroup, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
-import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
-import { SystemLifecycleChanges} from '../../types/SystemLifecycleChanges';
+import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
+import { Stream } from '../../types/Stream';
 
 interface LifecycleChartProps {
-  lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[];
-
+  lifecycleData: Stream[] | SystemLifecycleChanges[];
 }
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [chartWidth, setChartWidth] = React.useState(0);
 
-  //check data type and contruct a chart array 
+  //check data type and contruct a chart array
 
-  const checkDataType = (lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
+  const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('module_name' in lifecycleData[0]) {
+    if ('arch' in lifecycleData[0]) {
       return 'appLifecycle';
     }
     return 'lifecycle';
   };
 
   const dataType = checkDataType(lifecycleData);
-  const updatedLifecycleData : any[][] = []
+  const updatedLifecycleData: any[][] = [];
 
-
-  const constructLifecycleData = (lifecycleData: AppLifecycleChanges[] | SystemLifecycleChanges[]) => {
+  const constructLifecycleData = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!dataType) {
       return;
     }
     if (dataType === 'appLifecycle') {
       lifecycleData.forEach((item: any) => {
-        if (item.streams[0].start_date === 'Unknown' || item.streams[0].end_date === 'Unknown') {
+        console.log(item);
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
           return;
         }
         updatedLifecycleData.push([
           {
-            x: item.module_name,
-            y0: new Date(item.streams[0].start_date),
-            y: new Date(item.streams[0].end_date),
+            x: `${item.name}`,
+            y0: new Date(item.start_date),
+            y: new Date(item.end_date),
             packageType: 'Supported',
           },
         ]);
       });
-    }
-    else{
+    } else {
       lifecycleData.forEach((item: any) => {
         if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
           return;
@@ -65,7 +63,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
   };
 
-  constructLifecycleData(lifecycleData)
+  constructLifecycleData(lifecycleData);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -204,5 +202,5 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     </div>
   );
 };
-  
+
 export default LifecycleChart;
