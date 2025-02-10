@@ -39,7 +39,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         }
         updatedLifecycleData.push([
           {
-            x: `${item.name}`,
+            x: `${item.name} ${item.stream}`,
             y0: new Date(item.start_date),
             y: new Date(item.end_date),
             packageType: 'Supported',
@@ -164,13 +164,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         name="chart5"
         padding={{
           bottom: 100, // Adjusted to accommodate legend
-          left: 100,
+          left: 160,
           right: 50, // Adjusted to accommodate tooltip
           top: 50,
         }}
         // width={chartWidth}
         // adjust this by number of items
-        height={900}
+        height={updatedLifecycleData.length * 15 + 300}
         width={900}
       >
         <ChartAxis
