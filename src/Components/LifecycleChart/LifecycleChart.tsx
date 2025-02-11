@@ -10,7 +10,6 @@ interface LifecycleChartProps {
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   const ref = React.useRef<HTMLDivElement>(null);
-  const [chartWidth, setChartWidth] = React.useState(0);
 
   //check data type and contruct a chart array
 
@@ -34,12 +33,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     if (dataType === 'appLifecycle') {
       lifecycleData.forEach((item: any) => {
         console.log(item);
-        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.rhel_major_version === 8) {
           return;
         }
         updatedLifecycleData.push([
           {
-            x: `${item.name}`,
+            x: `${item.name} ${item.stream}`,
             y0: new Date(item.start_date),
             y: new Date(item.end_date),
             packageType: 'Supported',
@@ -79,10 +78,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     };
   }, [ref]);
 
-  const formatDate = (date: Date, isTime: boolean) => {
-    const dateString = date?.toLocaleDateString('en-US');
-    const timeString = date?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    return isTime ? `${dateString} ${timeString}` : dateString;
+  const formatDate = (date: Date) => {
+    const dateString = date?.toLocaleDateString('en-US', {timeZone:'UTC'});
+    return dateString
   };
 
   const getPackageColor = (datum: string) => {
@@ -102,13 +100,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
   };
 
-  const getChart = (alert: any[], index: number) => {
+  const getChart = (lifecycle: any[], index: number) => {
     const data: any[] = [];
 
-    alert?.map((datum: { packageType: string }) => {
+    lifecycle?.forEach((datum: { packageType: string, x: string }) => {
       data.push({
         ...datum,
-        x: updatedLifecycleData.length - index,
+        name: datum.x,
+        x: index += 1,
         fill: getPackageColor(datum.packageType),
       });
     });
@@ -146,10 +145,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           <ChartVoronoiContainer
             labelComponent={<ChartTooltip constrainToVisibleArea />}
             labels={({ datum }) =>
-              `Package: ${datum.x}\npackageType: ${datum.packageType}\nStart: ${formatDate(
-                new Date(datum.y0),
-                true
-              )}\nEnd: ${formatDate(new Date(datum.y), true)}`
+              `Name: ${datum.name}\nSupport Type: ${datum.packageType}\nStart: ${formatDate(
+                new Date(datum.y0)
+              )}\nEnd: ${formatDate(new Date(datum.y))}`
             }
           />
         }
@@ -164,13 +162,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         name="chart5"
         padding={{
           bottom: 100, // Adjusted to accommodate legend
-          left: 100,
+          left: 160,
           right: 50, // Adjusted to accommodate tooltip
           top: 50,
         }}
         // width={chartWidth}
         // adjust this by number of items
-        height={900}
+        height={updatedLifecycleData.length * 15 + 300}
         width={900}
       >
         <ChartAxis
@@ -178,7 +176,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           showGrid
           tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           tickValues={[
-            new Date('January 1 2019'),
             new Date('January 1 2020'),
             new Date('January 1 2021'),
             new Date('January 1 2022'),
