@@ -92,9 +92,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // Since OnSort specifies sorted columns by index, we need sortable values for our object by column index.
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
-  const getSortableRowValues = (repo: SystemLifecycleChanges): (string | number | Date)[] => {
+  const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number | Date)[] => {
     const { name, release, release_date, retirement_date, systems } = repo;
     return [name, release, release_date, retirement_date, systems];
+  };
+
+  const getAppSortableRowValues = (repo: Stream): (string | number | Date)[] => {
+    const { name, rhel_major_version, start_date, end_date, systems } = repo;
+    return [name, rhel_major_version, start_date, end_date, systems];
   };
 
   const getSortParams = (columnIndex: number): ThProps['sort'] => ({
@@ -117,22 +122,50 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     return Moment(date).format('MMM YYYY');
   };
 
-  const renderAppLifecycleData = (data: Stream[]) =>
-    data.map((stream) => {
+  const renderAppLifecycleData = (data: Stream[]) => {
+    // Note that we perform the sort as part of the component's render logic and not in onSort.
+    // We shouldn't store the list of data in state because we don't want to have to sync that with props.
+    let sortedRepositories = data as Stream[];
+
+    if (typeof activeSortIndex !== 'undefined') {
+      sortedRepositories = sortedRepositories.sort((a: Stream, b: Stream) => {
+        const aValue = getAppSortableRowValues(a)[activeSortIndex];
+        const bValue = getAppSortableRowValues(b)[activeSortIndex];
+        if (typeof aValue === 'number') {
+          // Numeric sort
+          if (activeSortDirection === 'asc') {
+            return (aValue as number) - (bValue as number);
+          }
+          return (bValue as number) - (aValue as number);
+        } else {
+          // String sort
+          if (activeSortDirection === 'asc') {
+            return (aValue as string).localeCompare(bValue as string);
+          }
+          return (bValue as string).localeCompare(aValue as string);
+        }
+      });
+    }
+
+    return sortedRepositories.map((repo: Stream) => {
+      // sometimes React wasn't properly handling the keys here
+      if (!repo.rhel_major_version || !repo.start_date || !repo.end_date) {
+        return;
+      }
       return (
-        <Tr
-          key={`${stream.name}-${stream.stream}-${stream.rhel_major_version}-${stream.start_date}-${stream.end_date}`}
-        >
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
-            {stream.name} {stream.stream}
+        <Tr key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}>
+          <Td style={{ paddingRight: '140px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
+            {repo.name}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{stream.rhel_major_version}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(stream.start_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(stream.end_date)}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.start_date).format('MMM YYYY')}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{Moment(repo.end_date).format('MMM YYYY')}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>N/A</Td>
         </Tr>
       );
     });
+    
+  };
 
   const renderSystemLifecycleData = (data: SystemLifecycleChanges[]) => {
     // Note that we perform the sort as part of the component's render logic and not in onSort.
@@ -141,8 +174,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
     if (typeof activeSortIndex !== 'undefined') {
       sortedRepositories = sortedRepositories.sort((a: SystemLifecycleChanges, b: SystemLifecycleChanges) => {
-        const aValue = getSortableRowValues(a)[activeSortIndex];
-        const bValue = getSortableRowValues(b)[activeSortIndex];
+        const aValue = getSystemSortableRowValues(a)[activeSortIndex];
+        const bValue = getSystemSortableRowValues(b)[activeSortIndex];
         if (typeof aValue === 'number') {
           // Numeric sort
           if (activeSortDirection === 'asc') {
@@ -194,7 +227,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             <Th modifier="wrap" sort={getSortParams(3)}>
               {LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
-            <Th modifier="wrap" sort={getSortParams(4)}>
+            <Th >
               {LIFECYCLE_COLUMN_NAMES.systems}
             </Th>
           </Tr>

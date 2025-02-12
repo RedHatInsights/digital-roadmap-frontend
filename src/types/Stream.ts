@@ -11,4 +11,5 @@ export interface Stream {
   stream: string;
   version: string;
   rhel_major_version: number; // we are adding this on FE side from AppLifecycleChanges type
+  systems: number; // placeholder for when system counts get added to the data
 }
