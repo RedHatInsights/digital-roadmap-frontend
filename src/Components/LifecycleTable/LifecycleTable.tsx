@@ -158,8 +158,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             {repo.name}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.start_date).format('MMM YYYY')}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{Moment(repo.end_date).format('MMM YYYY')}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>N/A</Td>
         </Tr>
       );
