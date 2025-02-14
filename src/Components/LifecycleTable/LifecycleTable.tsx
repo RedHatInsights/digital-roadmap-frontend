@@ -202,7 +202,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
         <Tr
           key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}
         >
-          <Td style={{ paddingRight: '140px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
+          <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
@@ -233,7 +233,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       }
       return (
         <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
-          <Td style={{ paddingRight: '140px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
+          <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
