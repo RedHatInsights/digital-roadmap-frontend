@@ -3,8 +3,8 @@ export type SystemLifecycleChanges = {
   release: string;
   major: number;
   minor: number;
-  release_date: Date;
-  retirement_date: Date;
+  release_date: string;
+  retirement_date: string;
   systems: number;
   lifecycle_type: string;
 };
