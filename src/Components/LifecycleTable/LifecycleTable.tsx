@@ -10,9 +10,8 @@ interface LifecycleTableProps {
   type: 'streams' | 'rhel';
 }
 
-const LIFECYCLE_COLUMN_NAMES = {
+const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
-  release: 'Release',
   release_date: 'Release date',
   retirement_date: 'Retirement date',
   systems: 'Systems',
@@ -26,7 +25,7 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
   systems: 'Systems',
 };
 
-const DEFAULT_ARIA_LABEL = 'Table displaying lifecycle information';
+const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 
 export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data, type }: LifecycleTableProps) => {
   // Index of the currently sorted column
@@ -112,8 +111,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
   const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number)[] => {
-    const { name, release, release_date, retirement_date, systems } = repo;
-    return [name, release, release_date, retirement_date, systems];
+    const { name, release_date, retirement_date, systems } = repo;
+    return [name, release_date, retirement_date, systems];
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
@@ -234,13 +233,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       }
       return (
         <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
-          <Td style={{ paddingRight: '140px' }} dataLabel={LIFECYCLE_COLUMN_NAMES.name}>
+          <Td style={{ paddingRight: '140px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
-          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release}>{repo.release}</Td>
-          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
-          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.retirement_date}>{Moment(repo.retirement_date).format('MMM YYYY')}</Td>
-          <Td dataLabel={LIFECYCLE_COLUMN_NAMES.systems}>{repo.systems}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>
+            {Moment(repo.retirement_date).format('MMM YYYY')}
+          </Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.systems}>{repo.systems}</Td>
         </Tr>
       );
     });
@@ -250,35 +250,34 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     switch (type) {
       case 'streams':
         return (
-          <Tr key={LIFECYCLE_COLUMN_NAMES.name}>
-            <Th sort={getAppSortParams(0)}>{LIFECYCLE_COLUMN_NAMES.name}</Th>
+          <Tr key={APP_LIFECYCLE_COLUMN_NAMES.name}>
+            <Th sort={getAppSortParams(0)}>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
+
             <Th modifier="wrap" sort={getAppSortParams(1)}>
-              {LIFECYCLE_COLUMN_NAMES.release}
+              {APP_LIFECYCLE_COLUMN_NAMES.release}
             </Th>
             <Th modifier="wrap" sort={getAppSortParams(2)}>
-              {LIFECYCLE_COLUMN_NAMES.release_date}
+              {APP_LIFECYCLE_COLUMN_NAMES.release_date}
             </Th>
+
             <Th modifier="wrap" sort={getAppSortParams(3)}>
-              {LIFECYCLE_COLUMN_NAMES.retirement_date}
+              {APP_LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
-            <Th>{LIFECYCLE_COLUMN_NAMES.systems}</Th>
+            <Th>{APP_LIFECYCLE_COLUMN_NAMES.systems}</Th>
           </Tr>
         );
       case 'rhel':
         return (
-          <Tr key={LIFECYCLE_COLUMN_NAMES.name}>
-            <Th sort={getSystemSortParams(0)}>{LIFECYCLE_COLUMN_NAMES.name}</Th>
+          <Tr key={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
+            <Th sort={getSystemSortParams(0)}>{SYSTEM_LIFECYCLE_COLUMN_NAMES.name}</Th>
             <Th modifier="wrap" sort={getSystemSortParams(1)}>
-              {LIFECYCLE_COLUMN_NAMES.release}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}
             </Th>
             <Th modifier="wrap" sort={getSystemSortParams(2)}>
-              {LIFECYCLE_COLUMN_NAMES.release_date}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
             <Th modifier="wrap" sort={getSystemSortParams(3)}>
-              {LIFECYCLE_COLUMN_NAMES.retirement_date}
-            </Th>
-            <Th modifier="wrap" sort={getSystemSortParams(4)}>
-              {LIFECYCLE_COLUMN_NAMES.systems}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.systems}
             </Th>
           </Tr>
         );
@@ -301,9 +300,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const getAriaLabel = () => {
     switch (type) {
       case 'streams':
-        return 'Table displaying RHEL 9 Application Streams Lifecycle information';
+        return 'RHEL 9 Application Streams Lifecycle information';
       case 'rhel':
-        return 'Table displaying Red Hat Enterprise Linux Lifecycle information';
+        return 'Red Hat Enterprise Linux Lifecycle information';
       default:
         return DEFAULT_ARIA_LABEL;
     }
