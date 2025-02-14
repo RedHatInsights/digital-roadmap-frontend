@@ -8,11 +8,15 @@ interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
 }
 
+interface ChartDataObject {
+  x: string;
+  y0: Date;
+  y: Date;
+  packageType: string;
+}
+
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-
   //check data type and contruct a chart array
-
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
@@ -24,62 +28,85 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   };
 
   const dataType = checkDataType(lifecycleData);
-  const updatedLifecycleData: any[][] = [];
+  const updatedLifecycleData: ChartDataObject[][] = [];
+  const years: { [key: string]: Date } = {};
+
+  const formatChartData = (name: string, startDate: string, endDate: string, packageType: string) => {
+    updatedLifecycleData.push([
+      {
+        x: name,
+        y0: new Date(startDate),
+        y: new Date(endDate),
+        packageType,
+      },
+    ]);
+  };
+
+  const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
+    const years = Object.keys(yearsObject).sort();
+    if (years.length < 2) {
+      return yearsObject;
+    }
+
+    let startYear = parseInt(years[0]);
+    const endYear = parseInt(years[years.length - 1]);
+
+    while (startYear < endYear) {
+      const yearString = String(startYear);
+      if (!(yearString in yearsObject)) {
+        yearsObject[yearString] = new Date(`January 1 ${yearString}`);
+      }
+      startYear++;
+    }
+
+    return yearsObject;
+  };
+
+  // We use this to deduplicate years and add on the last year as a data point
+  // Years always start with January, but the end date may be June 2023
+  // We want the axis to end with January 1 of the following year if the end date isn't already January
+  const formatYearAxisData = (start: string, end: string) => {
+    const endDate = new Date(end);
+    const startYear = new Date(start).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
+    const endYear = endDate.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
+    years[startYear] = new Date(`January 1 ${startYear}`);
+    years[endYear] = new Date(`January 1 ${endYear}`);
+    if (endDate.getMonth() > 0) {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      const endDateAsString = endDate.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
+      years[endDateAsString] = new Date(`January 1 ${endDateAsString}`);
+    }
+  };
 
   const constructLifecycleData = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!dataType) {
       return;
     }
     if (dataType === 'appLifecycle') {
-      lifecycleData.forEach((item: any) => {
+      (lifecycleData as Stream[]).forEach((item) => {
         if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.rhel_major_version === 8) {
           return;
         }
-        updatedLifecycleData.push([
-          {
-            x: `${item.name} ${item.stream}`,
-            y0: new Date(item.start_date),
-            y: new Date(item.end_date),
-            packageType: 'Supported',
-          },
-        ]);
+        formatChartData(`${item.name} ${item.stream}`, item.start_date, item.end_date, 'Supported');
+        formatYearAxisData(item.start_date, item.end_date);
       });
     } else {
-      lifecycleData.forEach((item: any) => {
+      (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
         if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
           return;
         }
-        updatedLifecycleData.push([
-          {
-            x: item.name,
-            y0: new Date(item.release_date),
-            y: new Date(item.retirement_date),
-            packageType: 'Supported',
-          },
-        ]);
+        formatChartData(item.name, item.release_date, item.retirement_date, 'Supported');
+        formatYearAxisData(item.release_date, item.retirement_date);
       });
     }
+    addInterstitialYears(years);
   };
 
   constructLifecycleData(lifecycleData);
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      // setChartWidth(ref.current && ref.current?.offsetWidth > 976 ? ref.current?.offsetWidth - 50 : 976);
-    };
-
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [ref]);
-
   const formatDate = (date: Date) => {
-    const dateString = date?.toLocaleDateString('en-US', {timeZone:'UTC'});
-    return dateString
+    const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
+    return dateString;
   };
 
   const getPackageColor = (datum: string) => {
@@ -99,14 +126,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
   };
 
-  const getChart = (lifecycle: any[], index: number) => {
+  const getChart = (lifecycle: ChartDataObject[], index: number) => {
     const data: any[] = [];
 
-    lifecycle?.forEach((datum: { packageType: string, x: string }) => {
+    lifecycle?.forEach((datum: { packageType: string; x: string }) => {
       data.push({
         ...datum,
         name: datum.x,
-        x: index += 1,
+        x: (index += 1),
         fill: getPackageColor(datum.packageType),
       });
     });
@@ -135,7 +162,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   };
 
   return (
-    <div ref={ref} className="drf-lifecycle__chart" tabIndex={0}>
+    <div className="drf-lifecycle__chart" tabIndex={0}>
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
@@ -165,34 +192,19 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           right: 50, // Adjusted to accommodate tooltip
           top: 50,
         }}
-        // width={chartWidth}
         // adjust this by number of items
         height={updatedLifecycleData.length * 15 + 300}
         width={900}
       >
-        <ChartAxis
-          dependentAxis
-          showGrid
-          tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
-          tickValues={[
-            new Date('January 1 2020'),
-            new Date('January 1 2021'),
-            new Date('January 1 2022'),
-            new Date('January 1 2023'),
-            new Date('January 1 2024'),
-            new Date('January 1 2025'),
-            new Date('January 1 2026'),
-            new Date('January 1 2027'),
-            new Date('January 1 2028'),
-            new Date('January 1 2029'),
-            new Date('January 1 2030'),
-            new Date('January 1 2031'),
-            new Date('January 1 2032'),
-            new Date('January 1 2033'),
-          ]}
-        />
+        {Object.values(years).length > 0 && (
+          <ChartAxis
+            dependentAxis
+            showGrid
+            tickValues={Object.values(years)}
+            tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
+          />
+        )}
         <ChartAxis showGrid tickValues={fetchTicks()} />
-
         <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
       </Chart>
     </div>
