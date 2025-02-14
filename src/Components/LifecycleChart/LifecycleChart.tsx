@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
-import { Chart, ChartAxis, ChartBar, ChartGroup, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
+import { Chart, ChartAxis, ChartBar, ChartGroup, ChartLine, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 
@@ -206,6 +206,10 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         )}
         <ChartAxis showGrid tickValues={fetchTicks()} />
         <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
+        <ChartLine y={() => Date.now()} y0={() => Date.now()} style={{
+            data: {
+                stroke: 'black',
+                strokeWidth: .5,    }}} />
       </Chart>
     </div>
   );
