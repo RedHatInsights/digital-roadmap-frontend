@@ -35,21 +35,32 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [activeSystemSortIndex, setActiveSystemSortIndex] = React.useState<number | undefined>(undefined);
   const [activeAppSortIndex, setActiveAppSortIndex] = React.useState<number | undefined>(undefined);
 
-  // Sort direction of the currently sorted column 
-  const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
+  // Sort direction of the currently sorted column
+  const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<'asc' | 'desc' | undefined>(
+    undefined
+  );
   const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
-
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
+  const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
 
   React.useEffect(() => {
-    setPaginatedRows(data.slice(0, perPage));
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
     setActiveAppSortIndex(undefined);
     setActiveSystemSortIndex(undefined);
-  }, [data]);
+    setPage(1);
+    setPerPage(10);
+    let sortedData;
+    if (type === 'streams') {
+      sortedData = sortAppLifecycleData();
+    } else {
+      sortedData = sortSystemLifecycleData();
+    }
+    setSortedRows(sortedData);
+    setPaginatedRows(sortedData.slice(0, 10));
+  }, [data, type]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -58,7 +69,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     startIdx?: number,
     endIdx?: number
   ) => {
-    setPaginatedRows(data.slice(startIdx, endIdx));
+    setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
   };
 
@@ -69,7 +80,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     startIdx?: number,
     endIdx?: number
   ) => {
-    setPaginatedRows(data.slice(startIdx, endIdx));
+    setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
     setPerPage(newPerPage);
   };
@@ -100,12 +111,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // Since OnSort specifies sorted columns by index, we need sortable values for our object by column index.
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
-  const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number | Date)[] => {
+  const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number)[] => {
     const { name, release, release_date, retirement_date, systems } = repo;
     return [name, release, release_date, retirement_date, systems];
   };
 
-  const getAppSortableRowValues = (repo: Stream): (string | number | Date)[] => {
+  const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
     const { name, rhel_major_version, start_date, end_date, systems } = repo;
     return [name, rhel_major_version, start_date, end_date, systems];
   };
@@ -117,6 +128,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
+      const sortedData = sortSystemLifecycleData(index, direction);
+      setSortedRows(sortedData);
+      const startIndex = (page - 1) * perPage;
+      const endIndex = (page - 1) * perPage + perPage;
+      setPaginatedRows(sortedData.slice(startIndex, endIndex));
       setActiveSystemSortIndex(index);
       setActiveSystemSortDirection(direction);
     },
@@ -130,6 +146,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
+      const sortedData = sortAppLifecycleData(index, direction);
+      setSortedRows(sortedData);
+      const startIndex = (page - 1) * perPage;
+      const endIndex = (page - 1) * perPage + perPage;
+      setPaginatedRows(sortedData.slice(startIndex, endIndex));
       setActiveAppSortIndex(index);
       setActiveAppSortDirection(direction);
     },
@@ -143,38 +164,45 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     return Moment(date).format('MMM YYYY');
   };
 
-  const renderAppLifecycleData = (data: Stream[]) => {
-    // Note that we perform the sort as part of the component's render logic and not in onSort.
-    // We shouldn't store the list of data in state because we don't want to have to sync that with props.
+  const sort = (aValue: number | string, bValue: number | string, direction?: string) => {
+    if (typeof aValue === 'number') {
+      // Numeric sort
+      if (direction === 'asc') {
+        return (aValue as number) - (bValue as number);
+      }
+      return (bValue as number) - (aValue as number);
+    } else {
+      // String sort
+      if (direction === 'asc') {
+        return (aValue as string).localeCompare(bValue as string);
+      }
+      return (bValue as string).localeCompare(aValue as string);
+    }
+  };
+
+  const sortAppLifecycleData = (index?: number, direction?: string) => {
     let sortedRepositories = data as Stream[];
 
-    if (typeof activeAppSortIndex !== 'undefined') {
+    if (typeof index !== 'undefined') {
       sortedRepositories = sortedRepositories.sort((a: Stream, b: Stream) => {
-        const aValue = getAppSortableRowValues(a)[activeAppSortIndex];
-        const bValue = getAppSortableRowValues(b)[activeAppSortIndex];
-        if (typeof aValue === 'number') {
-          // Numeric sort
-          if (activeAppSortDirection === 'asc') {
-            return (aValue as number) - (bValue as number);
-          }
-          return (bValue as number) - (aValue as number);
-        } else {
-          // String sort
-          if (activeAppSortDirection === 'asc') {
-            return (aValue as string).localeCompare(bValue as string);
-          }
-          return (bValue as string).localeCompare(aValue as string);
-        }
+        const aValue = getAppSortableRowValues(a)[index];
+        const bValue = getAppSortableRowValues(b)[index];
+        return sort(aValue, bValue, direction);
       });
     }
 
-    return sortedRepositories.map((repo: Stream) => {
-      // sometimes React wasn't properly handling the keys here
-      if (!repo.rhel_major_version || !repo.start_date || !repo.end_date) {
+    return sortedRepositories;
+  };
+
+  const renderAppLifecycleData = () => {
+    return (paginatedRows as Stream[]).map((repo: Stream) => {
+      if (!repo.name || !repo.stream || !repo.rhel_major_version) {
         return;
       }
       return (
-        <Tr key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}>
+        <Tr
+          key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}
+        >
           <Td style={{ paddingRight: '140px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
@@ -187,37 +215,23 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     });
   };
 
-  const renderSystemLifecycleData = (data: SystemLifecycleChanges[]) => {
-    // Note that we perform the sort as part of the component's render logic and not in onSort.
-    // We shouldn't store the list of data in state because we don't want to have to sync that with props.
+  const sortSystemLifecycleData = (index?: number, direction?: string) => {
     let sortedRepositories = data as SystemLifecycleChanges[];
-    if (typeof activeSystemSortIndex !== 'undefined') {
+    if (typeof index !== 'undefined') {
       sortedRepositories = sortedRepositories.sort((a: SystemLifecycleChanges, b: SystemLifecycleChanges) => {
-        const aValue = getSystemSortableRowValues(a)[activeSystemSortIndex];
-        const bValue = getSystemSortableRowValues(b)[activeSystemSortIndex];
-        if (typeof aValue === 'number') {
-          // Numeric sort
-          if (activeSystemSortDirection === 'asc') {
-            return (aValue as number) - (bValue as number);
-          }
-          return (bValue as number) - (aValue as number);
-        } else {
-          // String sort
-
-          if (activeSystemSortDirection === 'asc') {
-            return (aValue as string).localeCompare(bValue as string);
-          }
-          return (bValue as string).localeCompare(aValue as string);
-        }
+        const aValue = getSystemSortableRowValues(a)[index];
+        const bValue = getSystemSortableRowValues(b)[index];
+        return sort(aValue, bValue, direction);
       });
     }
+    return sortedRepositories;
+  };
 
-    return sortedRepositories.map((repo: SystemLifecycleChanges) => {
-      // sometimes React wasn't properly handling the keys here
-      if (!repo.release || !repo.release_date || !repo.retirement_date) {
+  const renderSystemLifecycleData = () => {
+    return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
+      if (!repo.name || !repo.release || !repo.systems) {
         return;
       }
-
       return (
         <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
           <Td style={{ paddingRight: '140px' }} dataLabel={LIFECYCLE_COLUMN_NAMES.name}>
@@ -247,9 +261,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             <Th modifier="wrap" sort={getAppSortParams(3)}>
               {LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
-            <Th>
-              {LIFECYCLE_COLUMN_NAMES.systems}
-            </Th>
+            <Th>{LIFECYCLE_COLUMN_NAMES.systems}</Th>
           </Tr>
         );
       case 'rhel':
@@ -278,9 +290,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const renderData = (): React.ReactNode => {
     switch (type) {
       case 'streams':
-        return renderAppLifecycleData(paginatedRows as Stream[]);
+        return renderAppLifecycleData();
       case 'rhel':
-        return renderSystemLifecycleData(paginatedRows as SystemLifecycleChanges[]);
+        return renderSystemLifecycleData();
       default:
         return;
     }
