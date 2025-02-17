@@ -22,7 +22,7 @@ module.exports = {
     '/api/chrome-service/v1/static': {
       host: 'http://localhost:8000',
     },
-    '/api/digital-roadmap/v1': {
+    '/api/roadmap/v1': {
       host: 'http://localhost:8081/',
     },
   },
