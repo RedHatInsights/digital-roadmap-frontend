@@ -1,0 +1,216 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Chart, 
+  ChartAxis, 
+  ChartBar, 
+  ChartGroup, 
+  ChartLegend,
+  ChartLegendTooltip, 
+  createContainer, 
+  getInteractiveLegendEvents, 
+  getInteractiveLegendItemStyles,
+} from '@patternfly/react-charts';
+import { formatDate } from './utils'; // Assuming you have a formatDate function in utils
+import './LifecycleChart.css';
+
+interface ChartDataObject {
+  packageType: string;
+  x: string;
+}
+
+const LifecycleChart: React.FC = () => {
+  const [updatedLifecycleData, setUpdatedLifecycleData] = useState<ChartDataObject[][]>([]);
+  const [years, setYears] = useState<{ [key: string]: Date }>({});
+  const [hiddenSeries, setHiddenSeries] = useState<Set<number>>(new Set());
+  
+  // Get chart names associated with each data series
+  const getChartNames = () => {
+    const result: string[] = [];
+    updatedLifecycleData.map((_, index) => {
+      result.push(`bar-${index}`);
+    });
+    return result;
+  };
+
+  // Get onMouseOver, onMouseOut, and onClick events for the interactive legend
+  const getEvents = () => getInteractiveLegendEvents({
+    chartNames: getChartNames(),
+    isHidden: (index) => hiddenSeries.has(index),
+    legendName: 'lifecycle-chart-legend',
+    onLegendClick: handleLegendClick
+  });
+
+  // Get legend data styled per hiddenSeries
+  const getLegendData = () => {
+    return updatedLifecycleData.map((_, index) => {
+      return {
+        childName: `bar-${index}`, // Sync tooltip legend with the series associated with given chart name
+        name: `Package ${index + 1}`, // Example name, adjust as needed
+        ...getInteractiveLegendItemStyles(hiddenSeries.has(index)) // hidden styles
+      };
+    });
+  };
+
+  // Hide each data series individually
+  const handleLegendClick = (props: { index: number }) => {
+    if (!hiddenSeries.delete(props.index)) {
+      hiddenSeries.add(props.index);
+    }
+    setHiddenSeries(new Set(hiddenSeries));
+  };
+
+  // Set chart width per current window size
+  useEffect(() => {
+    const handleResize = () => {
+      // Assuming you need to update something based on window size
+      // This is just a placeholder
+      console.log('Window resized');
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Returns true if data series is hidden
+  const isHidden = (index: number) => {
+    return hiddenSeries.has(index);
+  };
+
+  // Note: Container order is important
+  const CursorVoronoiContainer = createContainer("voronoi", "cursor");
+
+  const cursorVoronoiContainer = (
+    <CursorVoronoiContainer
+      cursorDimension="x"
+      labels={({ datum }) => datum.childName.includes('bar-') && datum.y !== null ? `${datum.y}` : null}
+      labelComponent={<ChartLegendTooltip legendData={getLegendData()} title={(datum) => datum.x}/>}
+      mouseFollowTooltips
+      voronoiDimension="x"
+      voronoiPadding={50}
+    />
+  );
+
+  const constructLifecycleData = (lifecycleData: any[]) => {
+    // Your existing logic to construct lifecycle data
+    // ...
+    setUpdatedLifecycleData(updatedLifecycleData);
+  };
+
+  const addInterstitialYears = (years: any) => {
+    // Your existing logic to add interstitial years
+    // ...
+    setYears(years);
+  };
+
+  useEffect(() => {
+    const lifecycleData = [
+      // Example data, replace with actual data
+      { name: 'Package 1', release_date: '2020-01-01', retirement_date: '2025-01-01' },
+      // Add more data as needed
+    ];
+    constructLifecycleData(lifecycleData);
+  }, []);
+
+  const formatChartData = (name: string, release_date: string, retirement_date: string, packageType: string) => {
+    // Your existing logic to format chart data
+    // ...
+  };
+
+  const formatYearAxisData = (release_date: string, retirement_date: string) => {
+    // Your existing logic to format year axis data
+    // ...
+  };
+
+  const getPackageColor = (datum: string) => {
+    switch (datum) {
+      case 'Retired':
+        return 'var(--pf-v5-global--danger-color--100)';
+      case 'Support ends within 6 months':
+        return 'var(--pf-v5-global--warning-color--100)';
+      case 'Not installed':
+        return 'var(--pf-v5-global--palette--blue-200)';
+      case 'Supported':
+        return 'var(--pf-v5-global--success-color--100)';
+      case 'Upcoming release':
+        return 'var(--pf-v5-global--palette--blue-100)';
+      default:
+        return 'var(--pf-v5-global--default-color--300)';
+    }
+  };
+
+  const getChart = (lifecycle: ChartDataObject[], index: number) => {
+    const data: any[] = [];
+
+    lifecycle?.forEach((datum: { packageType: string; x: string }) => {
+      data.push({
+        ...datum,
+        name: datum.x,
+        x: (index += 1),
+        fill: getPackageColor(datum.packageType),
+      });
+    });
+
+    if (data?.length === 0) {
+      return null;
+    }
+    return (
+      <ChartBar
+        data={data}
+        key={index}
+        style={{
+          data: {
+            fill: ({ datum }) => datum.fill,
+            stroke: ({ datum }) => datum.fill,
+          },
+        }}
+      />
+    );
+  };
+
+  const fetchTicks = () => {
+    return updatedLifecycleData.map((data) => {
+      return data[0].x;
+    });
+  };
+
+  return (
+    <div className="drf-lifecycle__chart" tabIndex={0}>
+      <Chart
+        ariaDesc="Support timelines of packages and RHEL versions"
+        ariaTitle="Lifecycle bar chart"
+        containerComponent={cursorVoronoiContainer}
+        events={getEvents()}
+        legendComponent={<ChartLegend name={'lifecycle-chart-legend'} data={getLegendData()} />}
+        legendPosition="bottom-left"
+        name="lifecycle-chart"
+        padding={{
+          bottom: 100, // Adjusted to accommodate legend
+          left: 160,
+          right: 50, // Adjusted to accommodate tooltip
+          top: 50,
+        }}
+        height={updatedLifecycleData.length * 15 + 300}
+        width={900}
+      >
+        {Object.values(years).length > 0 && (
+          <ChartAxis
+            dependentAxis
+            showGrid
+            tickValues={Object.values(years)}
+            tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
+          />
+        )}
+        <ChartAxis showGrid tickValues={fetchTicks()} />
+        <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
+        <ChartLine y={() => Date.now()} y0={() => Date.now()} style={{
+            data: {
+                stroke: 'black',
+                strokeWidth: .5,    }}} />
+      </Chart>
+    </div>
+  );
+};
+
+export default LifecycleChart;
