@@ -34,10 +34,6 @@ import {
   Tr,
 } from '@patternfly/react-table';
 import { TableRow } from "../UpcomingRow/UpcomingRow";
-// import { UpcomingToolbar } from "../UpcomingToolbar/UpcomingToolbar"
-import { 
-
-} from '../Constants/constants'
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
