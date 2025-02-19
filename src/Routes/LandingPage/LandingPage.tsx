@@ -13,7 +13,7 @@ import { Tab, TabTitleText, Tabs } from '@patternfly/react-core';
 import './landing-page.scss';
 
 const ReleasedTab = lazy(() => import('../../Components/Released/released'));
-const UpcomingTab = lazy(() => import('../../Components/Upcoming/upcoming'));
+const UpcomingTab = lazy(() => import('../../Components/Upcoming/Upcoming'));
 const LifecycleTab = lazy(() => import('../../Components/Lifecycle/Lifecycle'));
 
 const SystemCard = lazy(

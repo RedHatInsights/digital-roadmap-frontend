@@ -33,17 +33,17 @@ import {
   Thead,
   Tr,
 } from '@patternfly/react-table';
-import { TableRow } from "../UpcomingRow/UpcomingRow";
+import { TableRow } from "../../Components/UpcomingRow/UpcomingRow";
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
 
-import { columnNames, Record } from '../Upcoming/mock_data';
+import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { Simulate } from 'react-dom/test-utils';
 import toggle = Simulate.toggle;
 
 interface UpcomingTableProps {
-  data: Record[];
+  data: UpcomingChanges[];
   columnNames: {
     name: string;
     type: string;
@@ -67,7 +67,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
   // Set up Expandable table
 
   const [expandedRepoNames, setExpandedRepoNames] = useState<string[]>([]);
-  const setRepoExpanded = (repo: Record, isExpanding = true) =>
+  const setRepoExpanded = (repo: UpcomingChanges, isExpanding = true) =>
     setExpandedRepoNames((prevExpanded) => {
       const otherExpandedRepoNames = prevExpanded.filter(
         (r) => r !== repo.name
@@ -76,7 +76,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
         ? [...otherExpandedRepoNames, repo.name]
         : otherExpandedRepoNames;
     });
-  const isRepoExpanded = (repo: Record) =>
+  const isRepoExpanded = (repo: UpcomingChanges) =>
     expandedRepoNames.includes(repo.name);
 
   const [isExampleCompact, setIsExampleCompact] = useState(true); 
@@ -94,7 +94,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = (
    setSearchValue(value);
  };
 
- const onFilter = (repo: Record) => {
+ const onFilter = (repo: UpcomingChanges) => {
    // Search name with search value
    let searchValueInput: RegExp;
    try {

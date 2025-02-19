@@ -13,6 +13,7 @@ import {
 } from '@patternfly/react-core';
 
 import { getUpcomingChanges } from '../../api';
+import { UpcomingChanges } from '../../types/UpcomingChanges'; 
 
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
@@ -20,22 +21,11 @@ import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-i
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
-// TODO: Replace this with the actual data fetch
-import { columnNames } from './mock_data';
-
-type UpcomingChanges = {
-  name: string;
-  type: string;
-  release: string;
-  date: string;
-  details?: {
-    summary: string;
-    potentiallyAffectedSystems: number;
-    trainingTicket: string;
-    dateAdded: string;
-    lastModified: string;
-    detailFormat: 0 | 1 | 2 | 3;
-  };
+export const UPCOMING_COLUMN_NAMES = {
+  name: 'Name',
+  type: 'Type',
+  release: 'Release',
+  date: 'Date',
 };
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
@@ -144,7 +134,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         </Grid>
       </StackItem>
       <StackItem>
-        <UpcomingTable data={relevantUpcomingChanges} columnNames={columnNames} />
+        <UpcomingTable data={relevantUpcomingChanges} columnNames={UPCOMING_COLUMN_NAMES} />
       </StackItem>
     </Stack>
   );
