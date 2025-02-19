@@ -18,7 +18,7 @@ export const getRelevantReleaseNotes = async (
   minor: number,
   keyword: string
 ) => {
-  const path = DR_API.concat(DR_RELEASE_NOTES);
+  const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
   const response = await axios.get(path.concat(params)).catch(function (error) {
     return error;
