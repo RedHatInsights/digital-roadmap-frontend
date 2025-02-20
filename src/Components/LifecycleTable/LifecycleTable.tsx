@@ -1,4 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import { useSearchParams } from "react-router-dom";
 import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import Moment from 'moment';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
@@ -39,12 +40,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     undefined
   );
   const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
-  const [page, setPage] = React.useState(1);
+  const [currentPage, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+  let [searchParams, setSearchParams] = useSearchParams();
+  const page: any = searchParams.get('page')
 
-  React.useEffect(() => {
+  useEffect(() => {
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
     setActiveAppSortIndex(undefined);
@@ -60,6 +63,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     setSortedRows(sortedData);
     setPaginatedRows(sortedData.slice(0, 10));
   }, [data, type]);
+
+  console.log(page, "page")
+  
+  useEffect(() => {
+    if (page !== null){
+      setPage(page)
+    }
+  }, [page])
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -88,7 +99,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     <Pagination
       isCompact={isCompact}
       itemCount={data.length}
-      page={page}
+      page={currentPage}
       perPage={perPage}
       onSetPage={handleSetPage}
       onPerPageSelect={handlePerPageSelect}
@@ -129,8 +140,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     onSort: (_event, index, direction) => {
       const sortedData = sortSystemLifecycleData(index, direction);
       setSortedRows(sortedData);
-      const startIndex = (page - 1) * perPage;
-      const endIndex = (page - 1) * perPage + perPage;
+      const startIndex = (currentPage - 1) * perPage;
+      const endIndex = (currentPage - 1) * perPage + perPage;
       setPaginatedRows(sortedData.slice(startIndex, endIndex));
       setActiveSystemSortIndex(index);
       setActiveSystemSortDirection(direction);
@@ -147,8 +158,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     onSort: (_event, index, direction) => {
       const sortedData = sortAppLifecycleData(index, direction);
       setSortedRows(sortedData);
-      const startIndex = (page - 1) * perPage;
-      const endIndex = (page - 1) * perPage + perPage;
+      const startIndex = (currentPage - 1) * perPage;
+      const endIndex = (currentPage - 1) * perPage + perPage;
       setPaginatedRows(sortedData.slice(startIndex, endIndex));
       setActiveAppSortIndex(index);
       setActiveAppSortDirection(direction);
