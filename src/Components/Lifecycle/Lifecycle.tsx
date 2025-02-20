@@ -37,6 +37,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
+  const [chartSortByValue, setChartSortByValue] = React.useState<string>('Name');
+
+  const updateChartSortValue = (value: string) => {
+    setChartSortByValue(value);
+  };
 
   const onLifecycleDropdownSelect = (value: string) => {
     if (value === DEFAULT_DROPDOWN_VALUE) {
@@ -213,6 +218,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             lifecycleDropdownValue={lifecycleDropdownValue}
             setLifecycleDropdownValue={setLifecycleDropdownValue}
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
+            selectedChartSortBy={chartSortByValue}
+            setSelectedChartSortBy={updateChartSortValue}
           />
           {renderContent()}
         </Card>
