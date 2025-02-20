@@ -28,7 +28,7 @@ interface LifecycleFiltersProps {
   setSelectedChartSortBy: (name: string) => void;
 }
 
-const DROPDOWN_ITEMS = ['Name', 'Release (version)', 'Release date', 'Retirement date', 'Systems (number of)'];
+const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
 
 export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = ({
   nameFilter,

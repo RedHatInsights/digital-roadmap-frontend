@@ -21,11 +21,19 @@ import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
 import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
+import {
+  DEFAULT_CHART_SORTBY_VALUE,
+  DEFAULT_DROPDOWN_VALUE,
+  filterChartDataByName,
+  filterChartDataByRelease,
+  filterChartDataByReleaseDate,
+  filterChartDataByRetirementDate,
+  filterChartDataBySystems,
+  OTHER_DROPDOWN_VALUE,
+} from './filteringUtils';
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
-
-const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
@@ -37,7 +45,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
-  const [chartSortByValue, setChartSortByValue] = React.useState<string>('Name');
+  const [dropdownValue, setDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
+  const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
 
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
@@ -47,13 +56,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const onLifecycleDropdownSelect = (value: string) => {
     if (value === DEFAULT_DROPDOWN_VALUE) {
       setFilteredTableData(appLifecycleChanges);
-      setFilteredChartData(appLifecycleChanges);
+      setFilteredChartData(filterChartDataByRetirementDate(appLifecycleChanges, DEFAULT_DROPDOWN_VALUE));
     } else {
       setFilteredTableData(systemLifecycleChanges);
-      setFilteredChartData(systemLifecycleChanges);
+      setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, OTHER_DROPDOWN_VALUE));
     }
     setNameFilter('');
-    setChartSortByValue('Name');
+    setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
   };
 
   const getLifecycleType = (lifecycleType: string) => {
@@ -104,10 +113,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setSystemLifecycleChanges(updatedSystems);
       if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
         setFilteredTableData(appStreams);
-        setFilteredChartData(appStreams);
+        setFilteredChartData(filterChartDataByRetirementDate(appStreams, DEFAULT_DROPDOWN_VALUE));
       } else {
         setFilteredTableData(updatedSystems);
-        setFilteredChartData(updatedSystems);
+        setFilteredChartData(filterChartDataByRetirementDate(updatedSystems, OTHER_DROPDOWN_VALUE));
       }
     } catch (error) {
       console.error('Error fetching lifecycle changes:', error);
@@ -130,122 +139,24 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const filterChartDataByName = () => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      currentDataSource = appLifecycleChanges.sort((a: Stream, b: Stream) => {
-        console.log(a);
-        console.log('pizza');
-        const aName = `${a.name.toLowerCase()} ${a.stream.toLowerCase()}`;
-        const bName = `${b.name.toLowerCase()} ${b.stream.toLowerCase()}`;
-        if (aName > bName) return -1;
-        if (aName < bName) return 1;
-        return 0;
-      });
-    } else {
-      currentDataSource = systemLifecycleChanges.sort((a, b) => {
-        const aName = `${a.name.toLowerCase()} ${a.major}.${a.minor}`;
-        const bName = `${b.name.toLowerCase()} ${b.major}.${b.minor}`;
-        if (aName > bName) return -1;
-        if (aName < bName) return 1;
-        return 0;
-      });
-    }
-    return currentDataSource;
-  };
-
-  const filterChartDataByReleaseDate = () => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      currentDataSource = appLifecycleChanges.sort((a: Stream, b: Stream) => {
-        if (a.start_date > b.start_date) return -1;
-        if (a.start_date < b.start_date) return 1;
-        return 0;
-      });
-    } else {
-      currentDataSource = systemLifecycleChanges.sort((a, b) => {
-        if (a.release_date > b.release_date) return -1;
-        if (a.release_date < b.release_date) return 1;
-        return 0;
-      });
-    }
-    return currentDataSource;
-  };
-
-  const filterChartDataByRetirementDate = () => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      currentDataSource = appLifecycleChanges.sort((a: Stream, b: Stream) => {
-        if (a.end_date > b.end_date) return -1;
-        if (a.end_date < b.end_date) return 1;
-        return 0;
-      });
-    } else {
-      currentDataSource = systemLifecycleChanges.sort((a, b) => {
-        if (a.retirement_date > b.retirement_date) return -1;
-        if (a.retirement_date < b.retirement_date) return 1;
-        return 0;
-      });
-    }
-    return currentDataSource;
-  };
-
-  const filterChartDataByRelease = () => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      currentDataSource = appLifecycleChanges.sort((a: Stream, b: Stream) => {
-        if (a.rhel_major_version > b.rhel_major_version) return -1;
-        if (a.rhel_major_version < b.rhel_major_version) return 1;
-        return 0;
-      });
-    } else {
-      currentDataSource = systemLifecycleChanges.sort((a, b) => {
-        const aVer = `${a.major}.${a.minor}`;
-        const bVer = `${b.major}.${b.minor}`;
-        if (aVer > bVer) return -1;
-        if (aVer < bVer) return 1;
-        return 0;
-      });
-    }
-    return currentDataSource;
-  };
-
-  const filterChartDataBySystems = () => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      currentDataSource = appLifecycleChanges.sort((a: Stream, b: Stream) => {
-        if (a.systems > b.systems) return -1;
-        if (a.systems < b.systems) return 1;
-        return 0;
-      });
-    } else {
-      currentDataSource = systemLifecycleChanges.sort((a, b) => {
-        if (a.systems > b.systems) return -1;
-        if (a.systems < b.systems) return 1;
-        return 0;
-      });
-    }
-    return currentDataSource;
-  };
-
   const filterChartData = (sortBy: string) => {
     let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
 
     switch (sortBy) {
       case 'Name':
-        currentDataSource = filterChartDataByName();
+        currentDataSource = filterChartDataByName(filteredChartData, dropdownValue);
         break;
-      case 'Release (version)':
-        currentDataSource = filterChartDataByRelease();
+      case 'Release version':
+        currentDataSource = filterChartDataByRelease(filteredChartData, dropdownValue);
         break;
       case 'Release date':
-        currentDataSource = filterChartDataByReleaseDate();
+        currentDataSource = filterChartDataByReleaseDate(filteredChartData, dropdownValue);
         break;
       case 'Retirement date':
-        currentDataSource = filterChartDataByRetirementDate();
+        currentDataSource = filterChartDataByRetirementDate(filteredChartData, dropdownValue);
         break;
-      case 'Systems (number of)':
-        currentDataSource = filterChartDataBySystems();
+      case 'Systems':
+        currentDataSource = filterChartDataBySystems(filteredChartData, dropdownValue);
         break;
       default:
         return;
