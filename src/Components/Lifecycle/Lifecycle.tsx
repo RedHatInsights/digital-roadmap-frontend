@@ -24,12 +24,12 @@ import { Stream } from '../../types/Stream';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
+  OTHER_DROPDOWN_VALUE,
   filterChartDataByName,
   filterChartDataByRelease,
   filterChartDataByReleaseDate,
   filterChartDataByRetirementDate,
   filterChartDataBySystems,
-  OTHER_DROPDOWN_VALUE,
 } from './filteringUtils';
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
@@ -50,7 +50,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
-    filterChartData(value);
+    setFilteredChartData(filterChartData(filteredChartData, value));
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -132,37 +132,33 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const resetDataFiltering = () => {
     if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
       setFilteredTableData(appLifecycleChanges);
-      setFilteredChartData(appLifecycleChanges);
+      const chartData = filterChartData(appLifecycleChanges, chartSortByValue);
+      setFilteredChartData(chartData);
     } else {
       setFilteredTableData(systemLifecycleChanges);
-      setFilteredChartData(systemLifecycleChanges);
+      const chartData = filterChartData(systemLifecycleChanges, chartSortByValue);
+      setFilteredChartData(chartData);
     }
   };
 
-  const filterChartData = (sortBy: string) => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-
+  const filterChartData = (
+    data: Stream[] | SystemLifecycleChanges[],
+    sortBy: string
+  ): Stream[] | SystemLifecycleChanges[] => {
     switch (sortBy) {
       case 'Name':
-        currentDataSource = filterChartDataByName(filteredChartData, dropdownValue);
-        break;
+        return filterChartDataByName(data, dropdownValue);
       case 'Release version':
-        currentDataSource = filterChartDataByRelease(filteredChartData, dropdownValue);
-        break;
+        return filterChartDataByRelease(data, dropdownValue);
       case 'Release date':
-        currentDataSource = filterChartDataByReleaseDate(filteredChartData, dropdownValue);
-        break;
+        return filterChartDataByReleaseDate(data, dropdownValue);
       case 'Retirement date':
-        currentDataSource = filterChartDataByRetirementDate(filteredChartData, dropdownValue);
-        break;
+        return filterChartDataByRetirementDate(data, dropdownValue);
       case 'Systems':
-        currentDataSource = filterChartDataBySystems(filteredChartData, dropdownValue);
-        break;
+        return filterChartDataBySystems(data, dropdownValue);
       default:
-        return;
+        return filteredChartData;
     }
-
-    setFilteredChartData(currentDataSource);
   };
 
   const filterData = (name: string) => {
