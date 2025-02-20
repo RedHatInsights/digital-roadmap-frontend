@@ -1,6 +1,14 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
-import { Chart, ChartAxis, ChartBar, ChartGroup, ChartLine, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
+import {
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartGroup,
+  ChartLine,
+  ChartTooltip,
+  ChartVoronoiContainer,
+} from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 
@@ -170,11 +178,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         containerComponent={
           <ChartVoronoiContainer
             labelComponent={<ChartTooltip constrainToVisibleArea />}
-            labels={({ datum }) =>
-              `Name: ${datum.name}\nSupport Type: ${datum.packageType}\nStart: ${formatDate(
-                new Date(datum.y0)
-              )}\nEnd: ${formatDate(new Date(datum.y))}`
-            }
+            labels={({ datum }) => {
+              if (datum.name && datum.packageType && datum.y0) {
+                return `Name: ${datum.name}\nSupport Type: ${datum.packageType}\nStart: ${formatDate(
+                  new Date(datum.y0)
+                )}\nEnd: ${formatDate(new Date(datum.y))}`;
+              }
+              return formatDate(new Date());
+            }}
           />
         }
         legendData={[
@@ -206,10 +217,16 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         )}
         <ChartAxis showGrid tickValues={fetchTicks()} />
         <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
-        <ChartLine y={() => Date.now()} y0={() => Date.now()} style={{
+        <ChartLine
+          y={() => Date.now()}
+          y0={() => Date.now()}
+          style={{
             data: {
-                stroke: 'black',
-                strokeWidth: .5,    }}} />
+              stroke: 'black',
+              strokeWidth: 0.5,
+            },
+          }}
+        />
       </Chart>
     </div>
   );
