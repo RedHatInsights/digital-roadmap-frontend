@@ -7,5 +7,23 @@
 
 .drf-lifecycle__filters-toolbar {
   display: flex;
+  flex-direction: column;
+}
+
+.drf-lifecycle__filters-toolbar-group {
+  display: flex;
   justify-content: space-between;
+}
+
+.drf-lifecycle__filter-formgroup {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+
+  label {
+    color: #000;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+  }
 }

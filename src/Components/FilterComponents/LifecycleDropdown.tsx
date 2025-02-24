@@ -47,7 +47,6 @@ export const LifecycleDropdown: React.FunctionComponent<LifecycleDropdownProps> 
       isOpen={isOpen}
       selected={currentValue}
       onSelect={onSelect}
-      //   onOpenChange={(isOpen) => setIsOpen(isOpen)}
       toggle={toggle}
       shouldFocusToggleOnSelect
     >
