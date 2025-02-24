@@ -45,7 +45,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
-  const [dropdownValue, setDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
 
   const updateChartSortValue = (value: string) => {
@@ -147,15 +146,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   ): Stream[] | SystemLifecycleChanges[] => {
     switch (sortBy) {
       case 'Name':
-        return filterChartDataByName(data, dropdownValue);
+        return filterChartDataByName(data, lifecycleDropdownValue);
       case 'Release version':
-        return filterChartDataByRelease(data, dropdownValue);
+        return filterChartDataByRelease(data, lifecycleDropdownValue);
       case 'Release date':
-        return filterChartDataByReleaseDate(data, dropdownValue);
+        return filterChartDataByReleaseDate(data, lifecycleDropdownValue);
       case 'Retirement date':
-        return filterChartDataByRetirementDate(data, dropdownValue);
+        return filterChartDataByRetirementDate(data, lifecycleDropdownValue);
       case 'Systems':
-        return filterChartDataBySystems(data, dropdownValue);
+        return filterChartDataBySystems(data, lifecycleDropdownValue);
       default:
         return filteredChartData;
     }
@@ -176,7 +175,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         });
       }
       setFilteredTableData(currentDataSource);
-      setFilteredChartData(currentDataSource);
+      const chartData = filterChartData(currentDataSource, chartSortByValue);
+      setFilteredChartData(chartData);
     } else {
       resetDataFiltering();
     }

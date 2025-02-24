@@ -1,13 +1,13 @@
 import {
-  Form,
-  FormGroup,
-  SearchInput,
-  ToggleGroup,
-  ToggleGroupItem,
   Dropdown,
   DropdownItem,
   DropdownList,
+  Form,
+  FormGroup,
   MenuToggle,
+  SearchInput,
+  ToggleGroup,
+  ToggleGroupItem,
   Toolbar,
   ToolbarGroup,
   ToolbarItem,
@@ -39,7 +39,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedChartSortBy,
   setSelectedChartSortBy,
 }: LifecycleFiltersProps) => {
-   const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const selectedToggle = 'installed';
 
@@ -47,9 +47,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
     //setIsSelected(id);
+  };
 
-
- 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
   };
@@ -73,35 +72,6 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   setCurrentValue={(value: string) => setLifecycleDropdownValue(value)}
                   onDropdownSelect={onLifecycleDropdownSelect}
                 />
-              </FormGroup>
-            </Form>
-          </ToolbarItem>
-        </ToolbarGroup>
-        <ToolbarGroup>
-          <ToolbarItem>
-            <Form>
-              <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
-                <Dropdown
-                  isOpen={isOpen}
-                  onSelect={onSelect}
-                  onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
-                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                    <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
-                      {selectedChartSortBy}
-                    </MenuToggle>
-                  )}
-                  ouiaId="Value to sort lifecycle chart by"
-                  shouldFocusToggleOnSelect
-                  popperProps={{ enableFlip: true, position: 'end' }}
-                >
-                  <DropdownList>
-                    {DROPDOWN_ITEMS.map((item) => (
-                      <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
-                        {item}
-                      </DropdownItem>
-                    ))}
-                  </DropdownList>
-                </Dropdown>
               </FormGroup>
             </Form>
           </ToolbarItem>
@@ -139,7 +109,33 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarGroup>
-            <ToolbarItem>Third item</ToolbarItem>
+            <ToolbarItem>
+              <Form>
+                <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                  <Dropdown
+                    isOpen={isOpen}
+                    onSelect={onSelect}
+                    onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                      <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                        {selectedChartSortBy}
+                      </MenuToggle>
+                    )}
+                    ouiaId="Value to sort lifecycle chart by"
+                    shouldFocusToggleOnSelect
+                    popperProps={{ enableFlip: true, position: 'end' }}
+                  >
+                    <DropdownList>
+                      {DROPDOWN_ITEMS.map((item) => (
+                        <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
+                          {item}
+                        </DropdownItem>
+                      ))}
+                    </DropdownList>
+                  </Dropdown>
+                </FormGroup>
+              </Form>
+            </ToolbarItem>
           </ToolbarGroup>
         </div>
       </Toolbar>

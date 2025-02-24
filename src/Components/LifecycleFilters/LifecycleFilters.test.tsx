@@ -28,6 +28,7 @@ describe('LifecycleFilters', () => {
     expect(screen.getByRole('button', { name: /Installed and related/i }));
     expect(screen.getByRole('button', { name: /Installed only/i }));
     expect(screen.getByRole('button', { name: /Red Hat Enterprise Linux/i }));
+    expect(screen.getByRole('button', { name: /Retirement date/i }));
   });
   it('renders correctly with a filter set', () => {
     render(
