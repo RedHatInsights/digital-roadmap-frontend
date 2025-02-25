@@ -1,55 +1,55 @@
-import "@patternfly/react-core/dist/styles/base.css";
+import '@patternfly/react-core/dist/styles/base.css';
 import { Record, columnNames } from '../Upcoming/mock_data';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { Tbody, Td, Tr } from '@patternfly/react-table';
 import {
-  Tr,
-  Tbody,
-  Td,
-  ExpandableRowContent
-} from "@patternfly/react-table";
-
-import { Icon, TextContent, Text, TextVariants, TextList, TextListVariants, TextListItem, TextListItemVariants } from '@patternfly/react-core';
-
+  Icon,
+  Text,
+  TextContent,
+  TextList,
+  TextListItem,
+  TextListItemVariants,
+  TextListVariants,
+  TextVariants,
+} from '@patternfly/react-core';
 
 interface TableRowProps {
   repo: Record;
   columnNames: typeof columnNames;
-  rowIndex: number,
+  rowIndex: number;
 }
 
-export const TableRow: React.FunctionComponent<TableRowProps> = ({
-  repo,
-  rowIndex,
-  columnNames,
-
-}) => {
+export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowIndex, columnNames }) => {
   const [isRepoExpanded, setIsRepoExpanded] = useState(false);
   let childIsFullWidth = false;
   let childHasNoPadding = false;
 
-
   // Set Icons for the type column
-  let typeIcon = null
-  if (repo.type == "Addition") {
-    typeIcon = <Icon status="info">
-                <InfoCircleIcon />
-               </Icon>
+  let typeIcon = null;
+  if (repo.type == 'Addition') {
+    typeIcon = (
+      <Icon status="info">
+        <InfoCircleIcon />
+      </Icon>
+    );
   }
-  if (repo.type == "Change") {
-    typeIcon = <Icon status="warning">
-                <ExclamationTriangleIcon />
-               </Icon>
+  if (repo.type == 'Change') {
+    typeIcon = (
+      <Icon status="warning">
+        <ExclamationTriangleIcon />
+      </Icon>
+    );
   }
-  if (repo.type == "Deprecation") {
-    typeIcon = <Icon status="danger">
-                <ExclamationCircleIcon />
-               </Icon>
+  if (repo.type == 'Deprecation') {
+    typeIcon = (
+      <Icon status="danger">
+        <ExclamationCircleIcon />
+      </Icon>
+    );
   }
-
 
   if (repo.details) {
     const { detailFormat } = repo.details;
@@ -57,65 +57,54 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
     childHasNoPadding = [2, 3].includes(detailFormat);
   }
   return (
-    <Tbody key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`} 
-    isExpanded={isRepoExpanded}>
+    <Tbody key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`} isExpanded={isRepoExpanded}>
       <Tr>
         <Td
           expand={{
             rowIndex: rowIndex,
             isExpanded: isRepoExpanded,
             onToggle: () => setIsRepoExpanded(!isRepoExpanded),
-            expandId: "composable-expandable-example"
+            expandId: 'composable-expandable-example',
           }}
-        />  
+        />
         <Td dataLabel={columnNames.name} modifier="truncate">
-            {repo.name}
+          {repo.name}
         </Td>
         <Td dataLabel={columnNames.type} modifier="truncate">
-            {typeIcon} {repo.type}
+          {typeIcon} {repo.type}
         </Td>
         <Td dataLabel={columnNames.release} modifier="truncate">
-            {repo.release}
+          {repo.release}
         </Td>
         <Td dataLabel={columnNames.date} modifier="truncate">
-            {repo.date}
+          {repo.date}
         </Td>
       </Tr>
       {repo.details ? (
         <Tr isExpanded={isRepoExpanded}>
-            {!childIsFullWidth ? <Td /> : null}
-            <Td
-                dataLabel="Summary"
-                noPadding={childHasNoPadding}
-                colSpan={3}
-            >
-                <TextContent style={{paddingTop: '8px', paddingBottom: '8px'}}>
-                  <Text component={TextVariants.p}>
-                  {repo.details.summary}
-                  </Text>
-                </TextContent>
+          {!childIsFullWidth ? <Td /> : null}
+          <Td dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
+            <TextContent style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+              <Text component={TextVariants.p}>{repo.details.summary}</Text>
+            </TextContent>
 
-                <TextContent style={{paddingTop: '8px', paddingBottom: '8px'}}>
-                  <TextList component={TextListVariants.dl} style={{gridRowGap: '0px'}}>
-                    <TextListItem component={TextListItemVariants.dt} style={{paddingBottom: '16px'}}>Potentially affected systems</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.potentiallyAffectedSystems}
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.trainingTicket}
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Date added                    {""}</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.dateAdded}
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.lastModified}
-                    </TextListItem>
-                  </TextList>
-                </TextContent>
-{/* 
+            <TextContent style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+              <TextList component={TextListVariants.dl} style={{ gridRowGap: '0px' }}>
+                <TextListItem component={TextListItemVariants.dt} style={{ paddingBottom: '16px' }}>
+                  Potentially affected systems
+                </TextListItem>
+                <TextListItem component={TextListItemVariants.dd}>
+                  {repo.details.potentiallyAffectedSystems}
+                </TextListItem>
+                <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
+                <TextListItem component={TextListItemVariants.dd}>{repo.details.trainingTicket}</TextListItem>
+                <TextListItem component={TextListItemVariants.dt}>Date added {''}</TextListItem>
+                <TextListItem component={TextListItemVariants.dd}>{repo.details.dateAdded}</TextListItem>
+                <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
+                <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
+              </TextList>
+            </TextContent>
+            {/* 
                 <TextContent>
                   <TextList component={TextListVariants.dl}>
                     <TextListItem component={TextListItemVariants.dt}>Date added                    {""}</TextListItem>
@@ -133,9 +122,9 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                   </TextListItem>
                  </TextList>
                 </TextContent> */}
-            </Td>            
+          </Td>
         </Tr>
-        ) : null}
+      ) : null}
     </Tbody>
   );
 };

@@ -1,19 +1,9 @@
 import './upcoming.scss';
 import React, { lazy, useEffect } from 'react';
-import {
-  Alert,
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  Grid,
-  GridItem,
-  Stack,
-  StackItem,
-} from '@patternfly/react-core';
+import { Alert, Card, CardBody, CardHeader, CardTitle, Grid, GridItem, Stack, StackItem } from '@patternfly/react-core';
 
 import { getUpcomingChanges } from '../../api';
-import { UpcomingChanges } from '../../types/UpcomingChanges'; 
+import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
@@ -29,12 +19,9 @@ export const UPCOMING_COLUMN_NAMES = {
 };
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
-
   const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [relevantUpcomingChanges, setUpcomingChanges] =
-    React.useState(emptyUpcomingChanges);
+  const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
-
 
   const fetchData = () => {
     setIsLoading(true);
@@ -52,12 +39,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   useEffect(() => {
     //update type
-    const apiData : any  = fetchData()
-    console.log(apiData)
-    setUpcomingChanges(apiData)
-    
+    const apiData: any = fetchData();
+    setUpcomingChanges(apiData);
   }, []);
-
 
   const id1 = 'clickable-card-input-1';
   const id2 = 'clickable-card-input-2';
@@ -65,12 +49,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   return (
     <Stack hasGutter>
       <StackItem>
-        <Alert
-          id="changes-warning"
-          variant="warning"
-          isInline
-          title="Upcoming features are subject to change."
-        />
+        <Alert id="changes-warning" variant="warning" isInline title="Upcoming features are subject to change." />
       </StackItem>
       <StackItem>
         <Grid hasGutter span={12}>
@@ -87,7 +66,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle>
                   <ExclamationCircleIcon color={'#C9190B'} />
-                  {'  '}  Upcoming deprecations
+                  {'  '} Upcoming deprecations
                 </CardTitle>
               </CardHeader>
               <CardBody>upcoming deprecations that could affect your systems</CardBody>
@@ -106,7 +85,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle>
                   <ExclamationTriangleIcon color={'#FFA500'} />
-                  {'  '}  Upcoming changes
+                  {'  '} Upcoming changes
                 </CardTitle>
               </CardHeader>
               <CardBody>upcoming changes that could affect your systems</CardBody>
@@ -125,7 +104,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle>
                   <InfoCircleIcon color={'#2B9AF3'} />
-                  {'  '}  Upcoming additions
+                  {'  '} Upcoming additions
                 </CardTitle>
               </CardHeader>
               <CardBody>upcoming additions that could affect your systems</CardBody>
