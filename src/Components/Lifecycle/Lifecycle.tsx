@@ -24,7 +24,7 @@ import { Stream } from '../../types/Stream';
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
-
+import { module_data } from '../Upcoming/mock_data';  
 const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
@@ -65,8 +65,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return `${name} ${major}.${minor}${lifecycleText}`;
   };
 
-  const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
+  const updateLifecycleData = (data: any[]) => {
+    console.log(data, "data")
     return data.map((datum) => {
+      console.log(datum, "datum")
       datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
       return datum;
     });
@@ -86,30 +88,34 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
-    try {
-      const systemData = await getLifecycleSystems();
-      const appData = await getLifecycleAppstreams();
-      const upcomingChangesParagraphs = systemData || [];
-      const appStreams = updateAppLifecycleData(appData.data) || [];
-      setSystemLifecycleChanges(upcomingChangesParagraphs);
-      setAppLifecycleChanges(appStreams);
-      const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
-      setSystemLifecycleChanges(updatedSystems);
-      if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
-        setFilteredTableData(appStreams);
-        setFilteredChartData(appStreams);
-      } else {
-        setFilteredTableData(updatedSystems);
-        setFilteredChartData(updatedSystems);
-      }
-    } catch (error) {
-      console.error('Error fetching lifecycle changes:', error);
-    } finally {
-      setIsLoading(false);
+      console.log("hi1")
+    const systemData = await getLifecycleSystems();
+    console.log(systemData, "system")
+    const appData = module_data
+    console.log(systemData, "system")
+    console.log(appData, "app")
+
+    const upcomingChangesParagraphs = systemData || [];
+    // const appStreams = updateAppLifecycleData(appData.data) || [];
+    setSystemLifecycleChanges(upcomingChangesParagraphs);
+    console.log(systemData, "system")
+    console.log(upcomingChangesParagraphs, "systems")
+    setAppLifecycleChanges(appData);
+    const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
+    console.log(updatedSystems, "up")
+    setSystemLifecycleChanges(updatedSystems);
+    if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
+      setFilteredTableData(appData);
+      setFilteredChartData(appData);
+    } else {
+      setFilteredTableData(updatedSystems);
+      setFilteredChartData(updatedSystems);
     }
+     setIsLoading(false);
   };
 
   useEffect(() => {
+    console.log("hi")
     fetchData();
   }, []);
 
@@ -133,7 +139,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         });
       } else {
         currentDataSource = systemLifecycleChanges.filter((datum) => {
-          const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
+          const product = `${datum.data.name.toLowerCase()} ${datum.data.major}.${datum.data.minor}`;
           return product.includes(name.toLowerCase());
         });
       }

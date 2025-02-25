@@ -92,11 +92,11 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+        if (item.data.release_date === 'Unknown' || item.data.retirement_date === 'Unknown') {
           return;
         }
-        formatChartData(item.name, item.release_date, item.retirement_date, 'Supported');
-        formatYearAxisData(item.release_date, item.retirement_date);
+        formatChartData(item.data.name, item.data.release_date, item.data.retirement_date, 'Supported');
+        formatYearAxisData(item.data.release_date, item.data.retirement_date);
       });
     }
     addInterstitialYears(years);
