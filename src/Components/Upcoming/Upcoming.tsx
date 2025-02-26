@@ -8,6 +8,7 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
+import { filter } from '@redhat-cloud-services/frontend-components-utilities';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -22,6 +23,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
   const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [numDeprecations, setNumDeprecations] = React.useState(0);
+  const [numAdditions, setNumAdditions] = React.useState(0);
+  const [numChanges, setNumChanges] = React.useState(0);
+  const [deprecations, setDeprecations] = React.useState<UpcomingChanges[]>([]);
+  const [changes, setChanges] = React.useState<UpcomingChanges[]>([]);
+  const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
+  const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
 
   const fetchData = () => {
     setIsLoading(true);
@@ -29,6 +37,16 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       .then((data) => {
         const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
         setUpcomingChanges(upcomingChangesParagraphs);
+        const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
+        setDeprecations(filteredDeprecations);
+        setNumDeprecations(filteredDeprecations.length);
+        const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'addition');
+        setAdditions(filteredAdditions);
+        setNumAdditions(filteredAdditions.length);
+        const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
+        setChanges(filteredChanges);
+        setNumChanges(filteredChanges.length);
+        setVisibleData(upcomingChangesParagraphs);
         setIsLoading(false);
       })
       .catch(() => {
@@ -43,9 +61,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setUpcomingChanges(apiData);
   }, []);
 
-  const id1 = 'clickable-card-input-1';
-  const id2 = 'clickable-card-input-2';
-  const id3 = 'clickable-card-input-3';
+  const deprecationId = 'filter-by-type-deprecation';
+  const changeId = 'filter-by-type-change';
+  const additionId = 'filter-by-type-addition';
+
   return (
     <Stack hasGutter>
       <StackItem>
@@ -54,14 +73,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
-            <Card ouiaId="MostImportant" isClickable>
+            <Card ouiaId="upcoming-deprecations" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
-                  onClickAction: () => console.log(`${id1} clicked`),
-                  selectableActionId: id1,
-                  selectableActionAriaLabelledby: 'clickable-card-example-1',
-                  name: 'clickable-card-example',
+                  onClickAction: () => setVisibleData(deprecations),
+                  selectableActionId: deprecationId,
+                  selectableActionAriaLabelledby: 'Upcoming deprecations',
+                  name: 'filter-by-type',
                 }}
               >
                 <CardTitle>
@@ -69,18 +88,18 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming deprecations
                 </CardTitle>
               </CardHeader>
-              <CardBody>upcoming deprecations that could affect your systems</CardBody>
+              <CardBody>{numDeprecations} upcoming deprecations that could affect your systems</CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="GoodToKnow" isClickable>
+            <Card ouiaId="upcoming-changes" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
-                  onClickAction: () => console.log(`${id2} clicked`),
-                  selectableActionId: id2,
-                  selectableActionAriaLabelledby: 'clickable-card-example-2',
-                  name: 'clickable-card-example',
+                  onClickAction: () => setVisibleData(changes),
+                  selectableActionId: changeId,
+                  selectableActionAriaLabelledby: 'filter-by-type-2',
+                  name: 'filter-by-type',
                 }}
               >
                 <CardTitle>
@@ -88,18 +107,18 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming changes
                 </CardTitle>
               </CardHeader>
-              <CardBody>upcoming changes that could affect your systems</CardBody>
+              <CardBody>{numChanges} upcoming changes that could affect your systems</CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="FutherOff" isClickable>
+            <Card ouiaId="upcoming-additions" isClickable>
               <CardHeader
                 selectableActions={{
                   // eslint-disable-next-line no-console
-                  onClickAction: () => console.log(`${id3} clicked`),
-                  selectableActionId: id3,
-                  selectableActionAriaLabelledby: 'clickable-card-example-3',
-                  name: 'clickable-card-example',
+                  onClickAction: () => setVisibleData(additions),
+                  selectableActionId: additionId,
+                  selectableActionAriaLabelledby: 'filter-by-type-3',
+                  name: 'filter-by-type',
                 }}
               >
                 <CardTitle>
@@ -107,13 +126,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming additions
                 </CardTitle>
               </CardHeader>
-              <CardBody>upcoming additions that could affect your systems</CardBody>
+              <CardBody>{numAdditions} upcoming additions that could affect your systems</CardBody>
             </Card>
           </GridItem>
         </Grid>
       </StackItem>
       <StackItem>
-        <UpcomingTable data={relevantUpcomingChanges} columnNames={UPCOMING_COLUMN_NAMES} />
+        <UpcomingTable data={visibleData} columnNames={UPCOMING_COLUMN_NAMES} />
       </StackItem>
     </Stack>
   );
