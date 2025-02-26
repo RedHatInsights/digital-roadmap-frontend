@@ -1,0 +1,11 @@
+.drf-lifecycle__upcoming-row-text {
+  --pf-v5-c-content--FontSize: var(--pf-v5-c-table--cell--FontWeight);
+  padding-top: '8px';
+  padding-bottom: '8px';
+}
+
+.drf-lifecycle__upcoming-row {
+  @media screen and (max-width: 768px) {
+    padding: 20px;
+  }
+}

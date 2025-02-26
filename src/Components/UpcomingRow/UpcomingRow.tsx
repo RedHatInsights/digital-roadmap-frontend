@@ -84,12 +84,12 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
       {repo.details ? (
         <Tr isExpanded={isRepoExpanded}>
           {!childIsFullWidth ? <Td /> : null}
-          <Td dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
-            <TextContent style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
+            <TextContent className="drf-lifecycle__upcoming-row-text">
               <Text component={TextVariants.p}>{repo.details.summary}</Text>
             </TextContent>
 
-            <TextContent style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+            <TextContent className="drf-lifecycle__upcoming-row-text">
               <TextList component={TextListVariants.dl} style={{ gridRowGap: '0px' }}>
                 <TextListItem component={TextListItemVariants.dt} style={{ paddingBottom: '16px' }}>
                   Potentially affected systems
