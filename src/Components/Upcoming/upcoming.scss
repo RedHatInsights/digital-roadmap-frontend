@@ -1,4 +1,4 @@
-@import "~@redhat-cloud-services/frontend-components-utilities/styles/variables";
+@import '~@redhat-cloud-services/frontend-components-utilities/styles/variables';
 
 // .sample-component {
 //   font-size: $ins-fontSize;
@@ -8,4 +8,18 @@
 
 #changes-warning {
   border: none;
+}
+
+.drf-lifecycle__upcoming-count {
+  font-weight: bold;
+}
+
+.drf-lifecycle__upcoming-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drf-lifecycle__upcoming {
+  padding-top: 24px;
 }
