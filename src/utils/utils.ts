@@ -12,3 +12,7 @@ export const mergeToBasename = (to: To, basename: string): To => {
     pathname: `${basename}/${to.pathname}`.replace(`^${basename}//`, ''),
   };
 };
+
+export const capitalizeFirstLetter = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
