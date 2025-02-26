@@ -14,7 +14,7 @@ const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
   release_date: 'Release date',
   retirement_date: 'Retirement date',
-  systems: 'Systems',
+  count: 'Systems',
 };
 
 const APP_LIFECYCLE_COLUMN_NAMES = {
@@ -111,8 +111,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
   const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number)[] => {
-    const { name, release_date, retirement_date, systems } = repo;
-    return [name, release_date, retirement_date, systems];
+    const { name, release_date, retirement_date, count } = repo;
+    return [name, release_date, retirement_date, count];
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
@@ -228,11 +228,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
-      if (!repo.name || !repo.release || !repo.systems) {
+      if (!repo.name || !repo.count) {
         return;
       }
       return (
-        <Tr key={`${repo.name}-${repo.release}-${repo.release_date}-${repo.retirement_date}-${repo.systems}`}>
+        <Tr key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
@@ -240,7 +240,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>
             {Moment(repo.retirement_date).format('MMM YYYY')}
           </Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.systems}>{repo.systems}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
         </Tr>
       );
     });
@@ -277,7 +277,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
               {SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
             <Th modifier="wrap" sort={getSystemSortParams(3)}>
-              {SYSTEM_LIFECYCLE_COLUMN_NAMES.systems}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.count}
             </Th>
           </Tr>
         );

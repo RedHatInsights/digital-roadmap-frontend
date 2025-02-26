@@ -83,13 +83,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         return stream;
       });
   };
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const systemData = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
-      const upcomingChangesParagraphs = systemData || [];
+      const upcomingChangesParagraphs = systemData.data || [];
       const appStreams = updateAppLifecycleData(appData.data) || [];
       setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
