@@ -8,7 +8,7 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-import { filter } from '@redhat-cloud-services/frontend-components-utilities';
+import { pluralize } from '../../utils/utils';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -88,7 +88,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming deprecations
                 </CardTitle>
               </CardHeader>
-              <CardBody>{numDeprecations} upcoming deprecations that could affect your systems</CardBody>
+              <CardBody>
+                {numDeprecations} upcoming {pluralize(numDeprecations, 'deprecation')} that could affect your systems
+              </CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
@@ -107,7 +109,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming changes
                 </CardTitle>
               </CardHeader>
-              <CardBody>{numChanges} upcoming changes that could affect your systems</CardBody>
+              <CardBody>
+                {numChanges} upcoming {pluralize(numChanges, 'change')} that could affect your systems
+              </CardBody>
             </Card>
           </GridItem>
           <GridItem span={4}>
@@ -126,7 +130,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   {'  '} Upcoming additions
                 </CardTitle>
               </CardHeader>
-              <CardBody>{numAdditions} upcoming additions that could affect your systems</CardBody>
+              <CardBody>
+                {numAdditions} upcoming {pluralize(numAdditions, 'addition')} that could affect your systems
+              </CardBody>
             </Card>
           </GridItem>
         </Grid>
