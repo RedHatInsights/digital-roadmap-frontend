@@ -15,7 +15,6 @@ import {
   TextListVariants,
   TextVariants,
 } from '@patternfly/react-core';
-import { capitalizeFirstLetter } from '../../utils/utils';
 
 interface TableRowProps {
   repo: Record;
@@ -30,7 +29,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
 
   // Set Icons for the type column
   let typeIcon = null;
-  if (capitalizeFirstLetter(repo.type) == 'Addition') {
+  if (repo.type == 'Addition') {
     typeIcon = (
       <Icon status="info">
         <InfoCircleIcon />
@@ -72,7 +71,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
           {repo.name}
         </Td>
         <Td dataLabel={columnNames.type} modifier="truncate">
-          {typeIcon} {capitalizeFirstLetter(repo.type)}
+          {typeIcon} {repo.type}
         </Td>
         <Td dataLabel={columnNames.release} modifier="truncate">
           {repo.release}
