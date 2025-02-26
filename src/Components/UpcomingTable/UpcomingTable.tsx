@@ -17,7 +17,6 @@ import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
-import { capitalizeFirstLetter } from '../../utils/utils';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -156,7 +155,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
   }));
 
   const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
-    type: capitalizeFirstLetter(type),
+    type: type,
   }));
 
   return (

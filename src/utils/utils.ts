@@ -13,10 +13,6 @@ export const mergeToBasename = (to: To, basename: string): To => {
   };
 };
 
-export const capitalizeFirstLetter = (string: string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-};
-
 /** This function is a helper for pluralizing strings, borrowed from PatternFly 6
  *
  * @param {number} i The quantity of the string you want to pluralize

@@ -52,7 +52,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
         setDeprecations(filteredDeprecations);
         setNumDeprecations(filteredDeprecations.length);
-        const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'addition');
+        const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'Addition');
         setAdditions(filteredAdditions);
         setNumAdditions(filteredAdditions.length);
         const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
