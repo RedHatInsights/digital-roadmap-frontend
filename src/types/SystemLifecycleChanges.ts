@@ -1,7 +1,7 @@
 export type SystemLifecycleChanges = {
   name: string;
   major: number;
-  minor?: number;
+  minor: number;
   release_date: string;
   retirement_date: string;
   count: number;
