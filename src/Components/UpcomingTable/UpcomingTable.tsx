@@ -72,7 +72,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
     <Pagination
       isCompact={isCompact}
-      itemCount={data.length}
+      itemCount={filteredData.length}
       page={page}
       perPage={perPage}
       onSetPage={handleSetPage}
@@ -138,6 +138,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     setPaginatedRows(filteredData.slice(0, perPage));
   }, [data]);
 
+  useEffect(() => {
+    const filteredData = data.filter(onFilter);
+    setFilteredData(filteredData);
+    const startIndex = (page - 1) * perPage;
+    const endIndex = (page - 1) * perPage + perPage;
+    setPaginatedRows(filteredData.slice(startIndex, endIndex));
+  }, [searchValue, typeSelections, dateSelection, releaseSelections]);
+
   const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
     release: release,
   }));
@@ -153,7 +161,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
   return (
     <React.Fragment>
       <UpcomingTableFilters
-        itemCount={data.length}
+        itemCount={filteredData.length}
         resetFilters={resetFilters}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
