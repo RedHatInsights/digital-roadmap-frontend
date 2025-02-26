@@ -58,4 +58,3 @@ jobs:
         with:
           directory: coverage
           fail_ci_if_error: true
-          verbose: true
