@@ -58,7 +58,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
     childHasNoPadding = [2, 3].includes(detailFormat);
   }
   return (
-    <Tbody key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`} isExpanded={isRepoExpanded}>
+    <Tbody isExpanded={isRepoExpanded}>
       <Tr>
         <Td
           expand={{

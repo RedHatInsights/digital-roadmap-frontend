@@ -180,7 +180,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
         dateOptions={dateUniqueOptions}
         typeOptions={typeUniqueOptions}
       />
-      <Table aria-label="Expandable table" variant="compact">
+      <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>
           <Tr>
             <Th>
@@ -203,8 +203,12 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
         ) : (
           paginatedRows.map((repo, rowIndex) => {
             return (
-              // eslint-disable-next-line react/jsx-key
-              <TableRow repo={repo} columnNames={columnNames} rowIndex={rowIndex} />
+              <TableRow
+                key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`}
+                repo={repo}
+                columnNames={columnNames}
+                rowIndex={rowIndex}
+              />
             );
           })
         )}
