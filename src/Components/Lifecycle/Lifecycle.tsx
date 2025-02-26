@@ -60,7 +60,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+  const getNewName = (name: string, major: number, minor: number | undefined, lifecycleType: string) => {
     const lifecycleText = getLifecycleType(lifecycleType);
     return `${name} ${major}.${minor}${lifecycleText}`;
   };
@@ -83,13 +83,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         return stream;
       });
   };
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const systemData = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
-      const upcomingChangesParagraphs = systemData || [];
+      const upcomingChangesParagraphs = systemData.data || [];
       const appStreams = updateAppLifecycleData(appData.data) || [];
       setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
