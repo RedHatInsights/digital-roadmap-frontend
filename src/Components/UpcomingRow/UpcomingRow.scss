@@ -1,11 +1,16 @@
 .drf-lifecycle__upcoming-row-text {
   --pf-v5-c-content--FontSize: var(--pf-v5-c-table--cell--FontWeight);
-  padding-top: '8px';
-  padding-bottom: '8px';
 }
 
 .drf-lifecycle__upcoming-row {
+  padding: 0px 8px 16px 8px;
   @media screen and (max-width: 768px) {
     padding: 20px;
   }
+}
+
+.drf-lifecycle__upcoming-row-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
