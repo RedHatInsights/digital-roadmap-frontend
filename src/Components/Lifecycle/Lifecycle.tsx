@@ -66,9 +66,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const getLifecycleType = (lifecycleType: string) => {
     switch (lifecycleType) {
-      case 'eus':
+      case 'EUS':
         return ' EUS';
-      case 'e4s':
+      case 'ELS':
+          return ' ELS';
+      case 'E4S':
         return ' for SAP';
       default:
         return '';
