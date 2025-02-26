@@ -18,6 +18,8 @@ describe('LifecycleFilters', () => {
         lifecycleDropdownValue="Red Hat Enterprise Linux"
         setLifecycleDropdownValue={jest.fn()}
         onLifecycleDropdownSelect={jest.fn()}
+        selectedChartSortBy="Retirement date"
+        setSelectedChartSortBy={jest.fn()}
       />
     );
     expect(screen.getByRole('textbox', { name: /Find by name/i })).toBeTruthy();
@@ -26,6 +28,7 @@ describe('LifecycleFilters', () => {
     expect(screen.getByRole('button', { name: /Installed and related/i }));
     expect(screen.getByRole('button', { name: /Installed only/i }));
     expect(screen.getByRole('button', { name: /Red Hat Enterprise Linux/i }));
+    expect(screen.getByRole('button', { name: /Retirement date/i }));
   });
   it('renders correctly with a filter set', () => {
     render(
@@ -37,6 +40,8 @@ describe('LifecycleFilters', () => {
         lifecycleDropdownValue="Red Hat Enterprise Linux"
         setLifecycleDropdownValue={jest.fn()}
         onLifecycleDropdownSelect={jest.fn()}
+        selectedChartSortBy="Retirement date"
+        setSelectedChartSortBy={jest.fn()}
       />
     );
     expect(screen.getByRole('textbox', { name: /Find by name/i })).toBeTruthy();
@@ -54,6 +59,8 @@ describe('LifecycleFilters', () => {
         lifecycleDropdownValue="Red Hat Enterprise Linux"
         setLifecycleDropdownValue={jest.fn()}
         onLifecycleDropdownSelect={jest.fn()}
+        selectedChartSortBy="Retirement date"
+        setSelectedChartSortBy={jest.fn()}
       />
     );
     const nameFilter = screen.getByRole('textbox', { name: /Find by name/i });
@@ -71,6 +78,8 @@ describe('LifecycleFilters', () => {
         lifecycleDropdownValue="Red Hat Enterprise Linux"
         setLifecycleDropdownValue={jest.fn()}
         onLifecycleDropdownSelect={jest.fn()}
+        selectedChartSortBy="Retirement date"
+        setSelectedChartSortBy={jest.fn()}
       />
     );
     const resetBtn = screen.getByRole('button', { name: /Reset/i });
