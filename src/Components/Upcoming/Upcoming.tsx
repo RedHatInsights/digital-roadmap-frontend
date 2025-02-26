@@ -1,6 +1,18 @@
 import './upcoming.scss';
 import React, { lazy, useEffect } from 'react';
-import { Alert, Card, CardBody, CardHeader, CardTitle, Grid, GridItem, Stack, StackItem } from '@patternfly/react-core';
+import {
+  Alert,
+  Bullseye,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Grid,
+  GridItem,
+  Spinner,
+  Stack,
+  StackItem,
+} from '@patternfly/react-core';
 
 import { getUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
@@ -65,10 +77,20 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const changeId = 'filter-by-type-change';
   const additionId = 'filter-by-type-addition';
 
+  if (isLoading) {
+    return (
+      <div>
+        <Bullseye>
+          <Spinner />
+        </Bullseye>
+      </div>
+    );
+  }
+
   return (
     <Stack hasGutter>
       <StackItem>
-        <Alert id="changes-warning" variant="warning" isInline title="Upcoming features are subject to change." />
+        <Alert id="changes-warning" variant="warning" title="Upcoming features are subject to change." />
       </StackItem>
       <StackItem>
         <Grid hasGutter span={12}>
@@ -76,7 +98,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-deprecations" isClickable>
               <CardHeader
                 selectableActions={{
-                  // eslint-disable-next-line no-console
                   onClickAction: () => setVisibleData(deprecations),
                   selectableActionId: deprecationId,
                   selectableActionAriaLabelledby: 'Upcoming deprecations',
@@ -98,7 +119,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-changes" isClickable>
               <CardHeader
                 selectableActions={{
-                  // eslint-disable-next-line no-console
                   onClickAction: () => setVisibleData(changes),
                   selectableActionId: changeId,
                   selectableActionAriaLabelledby: 'filter-by-type-2',
@@ -120,7 +140,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-additions" isClickable>
               <CardHeader
                 selectableActions={{
-                  // eslint-disable-next-line no-console
                   onClickAction: () => setVisibleData(additions),
                   selectableActionId: additionId,
                   selectableActionAriaLabelledby: 'filter-by-type-3',
