@@ -1,0 +1,26 @@
+codecov:
+  notify:
+    after_n_builds: 2
+    wait_for_ci: false
+
+  require_ci_to_pass: false
+  token: 96f04366-8d77-44b6-8432-1772d420758b  # notsecret  # repo-scoped, upload-only, stability in fork PRs
+
+coverage:
+  range: 30..100
+  status:
+    project:
+      default:
+        target: false  # Disabling project target for now
+      app:
+        target: 30%
+        paths:
+          - src/
+
+    patch:
+      default:
+        target: 75%
+      app:
+        target: 75%
+        paths:
+          - src/
