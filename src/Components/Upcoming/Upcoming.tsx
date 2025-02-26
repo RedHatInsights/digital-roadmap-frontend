@@ -88,10 +88,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   return (
-    <Stack hasGutter>
-      <StackItem>
-        <Alert id="changes-warning" variant="warning" title="Upcoming features are subject to change." />
-      </StackItem>
+    <Stack className="drf-lifecycle__upcoming" hasGutter>
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
