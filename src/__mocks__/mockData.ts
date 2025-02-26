@@ -49,7 +49,7 @@ const RHEL_NINE_TWO = {
   release: 'Not applicable',
   release_date: '2023-05-01',
   retirement_date: '2023-11-01',
-  systems: 5,
+  count: 5,
 };
 
 const RHEL_EIGHT_THREE = {
@@ -60,7 +60,7 @@ const RHEL_EIGHT_THREE = {
   release: 'Not applicable',
   release_date: '2020-11-01',
   retirement_date: '2021-05-01',
-  systems: 50,
+  count: 50,
 };
 
 const RHEL_EIGHT_SEVEN = {
@@ -71,7 +71,7 @@ const RHEL_EIGHT_SEVEN = {
   release: 'Not applicable',
   release_date: '2023-05-01',
   retirement_date: '2023-05-01',
-  systems: 12,
+  count: 12,
 };
 
 const RHEL_NINE = {
@@ -82,7 +82,7 @@ const RHEL_NINE = {
   release: 'Not applicable',
   release_date: '2022-05-18',
   retirement_date: '2032-05-01',
-  systems: 45,
+  count: 45,
 };
 
 export const ONE_MOCK_RHEL_DATA = [RHEL_NINE_TWO];
