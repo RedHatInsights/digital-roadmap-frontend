@@ -127,7 +127,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           item.retirement_date,
           'Supported',
           `${item.major}.${item.minor}`,
-          `${item.systems ?? 'N/A'}`
+          `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.release_date, item.retirement_date);
       });
