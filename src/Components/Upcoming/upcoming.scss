@@ -13,3 +13,9 @@
 .drf-lifecycle__upcoming-count {
   font-weight: bold;
 }
+
+.drf-lifecycle__upcoming-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

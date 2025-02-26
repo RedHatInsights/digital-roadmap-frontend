@@ -83,9 +83,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   name: 'filter-by-type',
                 }}
               >
-                <CardTitle>
+                <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationCircleIcon color={'#C9190B'} />
-                  {'  '} Upcoming deprecations
+                  Upcoming deprecations
                 </CardTitle>
               </CardHeader>
               <CardBody>
@@ -105,9 +105,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   name: 'filter-by-type',
                 }}
               >
-                <CardTitle>
+                <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationTriangleIcon color={'#FFA500'} />
-                  {'  '} Upcoming changes
+                  Upcoming changes
                 </CardTitle>
               </CardHeader>
               <CardBody>
@@ -127,9 +127,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                   name: 'filter-by-type',
                 }}
               >
-                <CardTitle>
+                <CardTitle className="drf-lifecycle__upcoming-card">
                   <InfoCircleIcon color={'#2B9AF3'} />
-                  {'  '} Upcoming additions
+                  Upcoming additions
                 </CardTitle>
               </CardHeader>
               <CardBody>
