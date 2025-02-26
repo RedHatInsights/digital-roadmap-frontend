@@ -71,10 +71,16 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
 
   // Hide each data series individually
   const handleLegendClick = (props: { index: number }) => {
+
+    let newSeries;
     if (!hiddenSeries.delete(props.index)) {
-      hiddenSeries.add(props.index);
+      newSeries = hiddenSeries.add(props.index);
     }
-    setHiddenSeries(new Set(hiddenSeries));
+    if ( newSeries ) {
+      setHiddenSeries(newSeries);
+    }
+    
+    debugger;
   };
 
   // Get legend data styled per hiddenSeries
@@ -89,9 +95,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   };
 
   // Returns true if data series is hidden
-  const isHidden = (index: number) => {
-    return hiddenSeries.has(index);
-  };
+  // const isHidden = (index: number) => {
+  //   return hiddenSeries.has(index);
+  // };
 
   // Note: Container order is important
   const CursorVoronoiContainer = createContainer("voronoi", "cursor");
@@ -236,7 +242,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
       data.push({
         ...datum,
         name: datum.x,
-        x: (index += 1),
+        x: !hiddenSeries.has(index) ? index +=1 : [null],
         fill: getPackageColor(datum.packageType),
       });
     });
@@ -256,6 +262,11 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         }}
       />
     );
+  };
+
+  const isDataAvailable = () => {
+    debugger;
+    return hiddenSeries.size !== updatedLifecycleData.length;
   };
 
   const fetchTicks = () => {
@@ -282,6 +293,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     />
   );
 
+  const container = React.cloneElement(
+    cursorVoronoiContainer, 
+    {
+      disable: !isDataAvailable()
+    }
+  );
+
   return (
     <div className="drf-lifecycle__chart" tabIndex={0}>
       <Chart
@@ -289,7 +307,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         ariaDesc="Support timelines of packages and RHEL versions"
         ariaTitle="Lifecycle bar chart"
         containerComponent={
-          cursorVoronoiContainer
+          container
         }
         events={getEvents()}
         legendComponent={<ChartLegend name={'lifecycle-chart-legend'} data={getLegendData()} />}

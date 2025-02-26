@@ -24,13 +24,12 @@ const LifecycleChart: React.FC = () => {
   const [hiddenSeries, setHiddenSeries] = useState<Set<number>>(new Set());
   
   // Get chart names associated with each data series
-  const getChartNames = () => {
-    const result: string[] = [];
-    updatedLifecycleData.map((_, index) => {
-      result.push(`bar-${index}`);
-    });
-    return result;
-  };
+  const getChartNames = (): [string | string[]] => {
+    if (updatedLifecycleData.length === 0) {
+    return [[]]; // Return an array with an empty array if there's no data
+    }
+    return updatedLifecycleData.map((_, index) => [`bar-${index}`]) as [string | string[]];
+    };
 
   // Get onMouseOver, onMouseOut, and onClick events for the interactive legend
   const getEvents = () => getInteractiveLegendEvents({
