@@ -1,6 +1,10 @@
 import {
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Form,
   FormGroup,
+  MenuToggle,
   SearchInput,
   ToggleGroup,
   ToggleGroupItem,
@@ -20,7 +24,11 @@ interface LifecycleFiltersProps {
   lifecycleDropdownValue: string;
   setLifecycleDropdownValue: (value: string) => void;
   onLifecycleDropdownSelect: (value: string) => void;
+  selectedChartSortBy: NamedCurve;
+  setSelectedChartSortBy: (name: string) => void;
 }
+
+const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
 
 export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = ({
   nameFilter,
@@ -28,13 +36,28 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   lifecycleDropdownValue,
   setLifecycleDropdownValue,
   onLifecycleDropdownSelect,
+  selectedChartSortBy,
+  setSelectedChartSortBy,
 }: LifecycleFiltersProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const selectedToggle = 'installed';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
     //setIsSelected(id);
+  };
+
+  const onToggleClick = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+    setIsOpen(false);
+    if (value && typeof value == 'string') {
+      setSelectedChartSortBy(value);
+    }
   };
 
   return (
@@ -86,7 +109,33 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarGroup>
-            <ToolbarItem>Third item</ToolbarItem>
+            <ToolbarItem>
+              <Form>
+                <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                  <Dropdown
+                    isOpen={isOpen}
+                    onSelect={onSelect}
+                    onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                      <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                        {selectedChartSortBy}
+                      </MenuToggle>
+                    )}
+                    ouiaId="Value to sort lifecycle chart by"
+                    shouldFocusToggleOnSelect
+                    popperProps={{ enableFlip: true, position: 'end' }}
+                  >
+                    <DropdownList>
+                      {DROPDOWN_ITEMS.map((item) => (
+                        <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
+                          {item}
+                        </DropdownItem>
+                      ))}
+                    </DropdownList>
+                  </Dropdown>
+                </FormGroup>
+              </Form>
+            </ToolbarItem>
           </ToolbarGroup>
         </div>
       </Toolbar>

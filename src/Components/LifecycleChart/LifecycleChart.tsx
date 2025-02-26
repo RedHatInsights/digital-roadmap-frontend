@@ -1,6 +1,14 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
-import { Chart, ChartAxis, ChartBar, ChartGroup, ChartLine, ChartTooltip, ChartVoronoiContainer } from '@patternfly/react-charts';
+import {
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartGroup,
+  ChartLine,
+  ChartTooltip,
+  ChartVoronoiContainer,
+} from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 
@@ -13,6 +21,8 @@ interface ChartDataObject {
   y0: Date;
   y: Date;
   packageType: string;
+  version: string;
+  numSystems: string;
 }
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
@@ -31,13 +41,22 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
 
-  const formatChartData = (name: string, startDate: string, endDate: string, packageType: string) => {
-    updatedLifecycleData.push([
+  const formatChartData = (
+    name: string,
+    startDate: string,
+    endDate: string,
+    packageType: string,
+    version: string,
+    numSystems: string
+  ) => {
+    return updatedLifecycleData.push([
       {
         x: name,
         y0: new Date(startDate),
         y: new Date(endDate),
         packageType,
+        version,
+        numSystems,
       },
     ]);
   };
@@ -87,7 +106,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.rhel_major_version === 8) {
           return;
         }
-        formatChartData(`${item.name} ${item.stream}`, item.start_date, item.end_date, 'Supported');
+        formatChartData(
+          `${item.name} ${item.stream}`,
+          item.start_date,
+          item.end_date,
+          'Supported',
+          `${item.rhel_major_version}`,
+          `${item.systems ?? 'N/A'}`
+        );
         formatYearAxisData(item.start_date, item.end_date);
       });
     } else {
@@ -95,7 +121,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
           return;
         }
-        formatChartData(item.name, item.release_date, item.retirement_date, 'Supported');
+        formatChartData(
+          item.name,
+          item.release_date,
+          item.retirement_date,
+          'Supported',
+          `${item.major}.${item.minor}`,
+          `${item.systems ?? 'N/A'}`
+        );
         formatYearAxisData(item.release_date, item.retirement_date);
       });
     }
@@ -170,11 +203,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         containerComponent={
           <ChartVoronoiContainer
             labelComponent={<ChartTooltip constrainToVisibleArea />}
-            labels={({ datum }) =>
-              `Name: ${datum.name}\nSupport Type: ${datum.packageType}\nStart: ${formatDate(
-                new Date(datum.y0)
-              )}\nEnd: ${formatDate(new Date(datum.y))}`
-            }
+            labels={({ datum }) => {
+              if (datum.name && datum.packageType && datum.y0) {
+                return `Name: ${datum.name}\nRelease: ${datum.version}\nSupport Type: ${datum.packageType}\nSystems: ${
+                  datum.numSystems
+                }\nStart: ${formatDate(new Date(datum.y0))}\nEnd: ${formatDate(new Date(datum.y))}`;
+              }
+              return formatDate(new Date());
+            }}
           />
         }
         legendData={[
@@ -206,10 +242,16 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         )}
         <ChartAxis showGrid tickValues={fetchTicks()} />
         <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
-        <ChartLine y={() => Date.now()} y0={() => Date.now()} style={{
+        <ChartLine
+          y={() => Date.now()}
+          y0={() => Date.now()}
+          style={{
             data: {
-                stroke: 'black',
-                strokeWidth: .5,    }}} />
+              stroke: 'black',
+              strokeWidth: 0.5,
+            },
+          }}
+        />
       </Chart>
     </div>
   );
