@@ -6,8 +6,13 @@ import {
   ChartBar,
   ChartGroup,
   ChartLine,
+  ChartLegend,
   ChartTooltip,
+  ChartLegendTooltip,
+  createContainer,
   ChartVoronoiContainer,
+  getInteractiveLegendEvents,
+  getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -25,6 +30,12 @@ interface ChartDataObject {
   numSystems: string;
 }
 
+interface Datum {
+  childName: string;
+  x: string;
+  y?: Date | null;
+}
+
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -40,6 +51,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
+  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
 
   const formatChartData = (
     name: string,
@@ -137,6 +149,33 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
 
   constructLifecycleData(lifecycleData);
 
+  // get unique package types
+  const uniqueTypes = [...new Set(updatedLifecycleData.flat().map((d) => d.packageType))];
+
+  // group by package type
+  const groupedData = uniqueTypes.map((type) => ({
+    packageType: type,
+    datapoints: updatedLifecycleData
+      .flat()
+      .filter((d) => d.packageType === type)
+      .map((d) => ({ x: d.x, y: d.y, y0: d.y0 })),
+  }));
+
+  const getLegendData = () =>
+    groupedData.map((s, index) => ({
+      childName: `series-${index}`,
+      name: s.packageType,
+      ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
+    }));
+    debugger;
+
+  const handleLegendClick = (props: { index: number }) => {
+    if (!hiddenSeries.delete(props.index)) {
+      hiddenSeries.add(props.index);
+    }
+    setHiddenSeries(new Set(hiddenSeries));
+  };
+
   const formatDate = (date: Date) => {
     const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
     return dateString;
@@ -177,7 +216,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     return (
       <ChartBar
         data={data}
-        key={index}
+        key={`bar-${index}`}
+        name={`series-${index}`}
         style={{
           data: {
             fill: ({ datum }) => datum.fill,
@@ -193,6 +233,31 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       return data[0].x;
     });
   };
+
+  const isHidden = (index: number) => hiddenSeries.has(index);
+  const isDataAvailable = () => hiddenSeries.size !== groupedData.length;
+  
+  console.log(getLegendData);
+  debugger;
+
+  const CursorVoronoiContainer = createContainer('voronoi', 'cursor');
+  const container = React.cloneElement(
+    <CursorVoronoiContainer
+      cursorDimension="x"
+      labels={({ datum }: {datum: Datum}) =>
+        datum.childName.includes('series-') && datum.y !== null
+          ? `${datum.x}: ${datum.y?.toLocaleDateString()}`
+          : null
+      }
+      labelComponent={<ChartLegendTooltip legendData={getLegendData()} title={(datum) => datum.x} />}
+      mouseFollowTooltips
+      voronoiDimension="x"
+      voronoiPadding={50}
+    />,
+    {
+      disable: !isDataAvailable(),
+    }
+  );
 
   return (
     <div className="drf-lifecycle__chart" tabIndex={0}>

@@ -1,0 +1,126 @@
+import { createRoot } from "react-dom/client";
+import "@patternfly/react-core/dist/styles/base.css";
+import './fonts.css';
+
+import React from 'react';
+import {
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartGroup,
+  ChartLegend,
+  ChartLegendTooltip,
+  ChartThemeColor,
+  createContainer,
+  getInteractiveLegendEvents,
+  getInteractiveLegendItemStyles,
+} from '@patternfly/react-charts';
+
+export const InteractiveLegendBarChart = () => {
+  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
+
+  const rawData = [
+    [{ packageType: 'Supported', x: 'nginx 1.22', y: new Date('2025-11-29'), y0: new Date('2023-05-09') }],
+    [{ packageType: 'Supported', x: 'node 18.0', y: new Date('2024-12-15'), y0: new Date('2022-03-01') }],
+    [{ packageType: 'Whatever', x: 'nginx 1.18', y: new Date('2023-01-10'), y0: new Date('2020-06-15') }],
+    [{ packageType: 'Example', x: 'redis 7.0', y: new Date('2025-06-30'), y0: new Date('2024-02-10') }],
+  ];
+
+  // get unique package types
+  const uniqueTypes = [...new Set(rawData.flat().map((d) => d.packageType))];
+
+  // group by package type
+  const groupedData = uniqueTypes.map((type) => ({
+    packageType: type,
+    datapoints: rawData
+      .flat()
+      .filter((d) => d.packageType === type)
+      .map((d) => ({ x: d.x, y: d.y, y0: d.y0 })),
+  }));
+
+  const getLegendData = () =>
+    groupedData.map((s, index) => ({
+      childName: `series-${index}`,
+      name: s.packageType,
+      ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
+    }));
+
+  const handleLegendClick = (props) => {
+    if (!hiddenSeries.delete(props.index)) {
+      hiddenSeries.add(props.index);
+    }
+    setHiddenSeries(new Set(hiddenSeries));
+  };
+
+  const isHidden = (index) => hiddenSeries.has(index);
+  const isDataAvailable = () => hiddenSeries.size !== groupedData.length;
+
+  const CursorVoronoiContainer = createContainer('voronoi', 'cursor');
+  const container = React.cloneElement(
+    <CursorVoronoiContainer
+      cursorDimension="x"
+      labels={({ datum }) =>
+        datum.childName.includes('series-') && datum.y !== null
+          ? `${datum.x}: ${datum.y?.toLocaleDateString()}`
+          : null
+      }
+      labelComponent={<ChartLegendTooltip legendData={getLegendData()} title={(datum) => datum.x} />}
+      mouseFollowTooltips
+      voronoiDimension="x"
+      voronoiPadding={50}
+    />,
+    {
+      disable: !isDataAvailable(),
+    }
+  );
+
+  return (
+    <div>
+      <div className="bar-chart-legend-bottom-responsive">
+        <Chart
+          ariaDesc="Release timelines per package type"
+          ariaTitle="Bar chart with interactive legend"
+          containerComponent={container}
+          events={getInteractiveLegendEvents({
+            chartNames: groupedData.map((_, i) => [`series-${i}`]),
+            isHidden,
+            legendName: 'chart5-ChartLegend',
+            onLegendClick: handleLegendClick,
+          })}
+          height={350}
+          legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} />}
+          legendPosition="bottom-left"
+          name="chart5"
+          padding={{
+            bottom: 90,
+            left: 75,
+            right: 75,
+            top: 50,
+          }}
+          themeColor={ChartThemeColor.multiUnordered}
+        >
+          <ChartAxis  />
+          <ChartAxis
+            dependentAxis
+            tickFormat={(date) => new Date(date).getFullYear()} 
+            showGrid
+          />
+          <ChartGroup horizontal offset={20}>
+            {groupedData.map((s, index) => (
+              <ChartBar
+                data={!hiddenSeries.has(index) ? s.datapoints : s.datapoints.map((d) => ({ ...d, y: null }))}
+                key={`bar-${index}`}
+                name={`series-${index}`}
+                barWidth={20}
+              />
+            ))}
+          </ChartGroup>
+        </Chart>
+      </div>
+    </div>
+  );
+};
+
+
+const container = document.getElementById("root");
+createRoot(container).render(<InteractiveLegendBarChart />);
