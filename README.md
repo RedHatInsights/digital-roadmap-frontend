@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/RedHatInsights/digital-roadmap-frontend/graph/badge.svg?token=BXNOIL8BSS)](https://codecov.io/gh/RedHatInsights/digital-roadmap-frontend)
+
 # Digital Roadmap
 
 The goal of this feature is to provide tailored forward-looking roadmap information to RHEL customers, as well as providing tailored information on how current RHEL minor and major releases will affect the customers environment.
