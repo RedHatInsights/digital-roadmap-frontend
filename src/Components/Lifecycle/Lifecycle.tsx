@@ -31,21 +31,36 @@ import {
   filterChartDataByRetirementDate,
   filterChartDataBySystems,
 } from './filteringUtils';
-const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
-const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
-const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
+const LifecycleChart = lazy(
+  () => import('../../Components/LifecycleChart/LifecycleChart')
+);
+const LifecycleFilters = lazy(
+  () => import('../../Components/LifecycleFilters/LifecycleFilters')
+);
+const LifecycleTable = lazy(
+  () => import('../../Components/LifecycleTable/LifecycleTable')
+);
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
-  const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
-  const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
+  const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<
+    SystemLifecycleChanges[]
+  >([]);
+  const [filteredTableData, setFilteredTableData] = useState<
+    SystemLifecycleChanges[] | Stream[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
-  const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
+  const [filteredChartData, setFilteredChartData] = useState<
+    SystemLifecycleChanges[] | Stream[]
+  >([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
   // drop down menu
-  const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
-  const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+  const [lifecycleDropdownValue, setLifecycleDropdownValue] =
+    React.useState<string>(DEFAULT_DROPDOWN_VALUE);
+  const [chartSortByValue, setChartSortByValue] = React.useState<string>(
+    DEFAULT_CHART_SORTBY_VALUE
+  );
 
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
@@ -55,10 +70,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const onLifecycleDropdownSelect = (value: string) => {
     if (value === DEFAULT_DROPDOWN_VALUE) {
       setFilteredTableData(appLifecycleChanges);
-      setFilteredChartData(filterChartDataByRetirementDate(appLifecycleChanges, DEFAULT_DROPDOWN_VALUE));
+      setFilteredChartData(
+        filterChartDataByRetirementDate(
+          appLifecycleChanges,
+          DEFAULT_DROPDOWN_VALUE
+        )
+      );
     } else {
       setFilteredTableData(systemLifecycleChanges);
-      setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, OTHER_DROPDOWN_VALUE));
+      setFilteredChartData(
+        filterChartDataByRetirementDate(
+          systemLifecycleChanges,
+          OTHER_DROPDOWN_VALUE
+        )
+      );
     }
     setNameFilter('');
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
@@ -69,7 +94,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       case 'EUS':
         return ' EUS';
       case 'ELS':
-          return ' ELS';
+        return ' ELS';
       case 'E4S':
         return ' for SAP';
       default:
@@ -77,14 +102,24 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+  const getNewName = (
+    name: string,
+    major: number,
+    minor: number,
+    lifecycleType: string
+  ) => {
     const lifecycleText = getLifecycleType(lifecycleType);
     return `${name} ${major}.${minor}${lifecycleText}`;
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
     return data.map((datum) => {
-      datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
+      datum.name = getNewName(
+        datum.name,
+        datum.major,
+        datum.minor,
+        datum.lifecycle_type
+      );
       return datum;
     });
   };
@@ -94,7 +129,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       .flatMap((repo) => repo.streams)
       .map((stream) => {
         const version = data.filter((appLifecycleChanges) =>
-          appLifecycleChanges.streams.some((str) => str.context === stream.context)
+          appLifecycleChanges.streams.some(
+            (str) => str.context === stream.context
+          )
         )[0].rhel_major_version;
         stream.rhel_major_version = version;
         return stream;
@@ -113,10 +150,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setSystemLifecycleChanges(updatedSystems);
       if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
         setFilteredTableData(appStreams);
-        setFilteredChartData(filterChartDataByRetirementDate(appStreams, DEFAULT_DROPDOWN_VALUE));
+        setFilteredChartData(
+          filterChartDataByRetirementDate(appStreams, DEFAULT_DROPDOWN_VALUE)
+        );
       } else {
         setFilteredTableData(updatedSystems);
-        setFilteredChartData(filterChartDataByRetirementDate(updatedSystems, OTHER_DROPDOWN_VALUE));
+        setFilteredChartData(
+          filterChartDataByRetirementDate(updatedSystems, OTHER_DROPDOWN_VALUE)
+        );
       }
     } catch (error) {
       console.error('Error fetching lifecycle changes:', error);
@@ -136,7 +177,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilteredChartData(chartData);
     } else {
       setFilteredTableData(systemLifecycleChanges);
-      const chartData = filterChartData(systemLifecycleChanges, chartSortByValue);
+      const chartData = filterChartData(
+        systemLifecycleChanges,
+        chartSortByValue
+      );
       setFilteredChartData(chartData);
     }
   };
@@ -167,11 +211,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
         currentDataSource = appLifecycleChanges.filter((datum) => {
           // also check for streams.stream value
-          return `${datum.name.toLowerCase()} ${datum.stream.toLowerCase()}`.includes(name.toLowerCase());
+          return `${datum.name.toLowerCase()} ${datum.stream.toLowerCase()}`.includes(
+            name.toLowerCase()
+          );
         });
       } else {
         currentDataSource = systemLifecycleChanges.filter((datum) => {
-          const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
+          const product = `${datum.name.toLowerCase()} ${datum.major}.${
+            datum.minor
+          }`;
           return product.includes(name.toLowerCase());
         });
       }
@@ -212,7 +260,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const emptyState = (
     <Bullseye>
       <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader icon={<EmptyStateIcon icon={SearchIcon} />} titleText="No results found" headingLevel="h2" />
+        <EmptyStateHeader
+          icon={<EmptyStateIcon icon={SearchIcon} />}
+          titleText="No results found"
+          headingLevel="h2"
+        />
         <EmptyStateBody>Clear all filters and try again.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -225,7 +277,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
   const renderContent = () => {
-    if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
+    if (
+      nameFilter !== '' &&
+      (filteredTableData.length === 0 || filteredChartData.length === 0)
+    ) {
       return emptyState;
     }
 
@@ -234,7 +289,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         <LifecycleChart lifecycleData={filteredChartData} />
         <LifecycleTable
           data={filteredTableData}
-          type={lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ? 'streams' : 'rhel'}
+          type={
+            lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE
+              ? 'streams'
+              : 'rhel'
+          }
         />
       </>
     );

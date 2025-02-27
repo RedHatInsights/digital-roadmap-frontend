@@ -1,4 +1,3 @@
-
 // add to a type file
 export interface Record {
   name: string;
@@ -24,7 +23,8 @@ export const data: Record[] = [
     date: 'Oct 2024',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -38,7 +38,8 @@ export const data: Record[] = [
     date: 'Nov 2024',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -52,7 +53,8 @@ export const data: Record[] = [
     date: 'Nov 2024',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -66,7 +68,8 @@ export const data: Record[] = [
     date: 'Mar 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -80,7 +83,8 @@ export const data: Record[] = [
     date: 'Apr 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -94,7 +98,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -108,7 +113,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -122,7 +128,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -136,7 +143,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -150,7 +158,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -164,7 +173,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -178,7 +188,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -192,7 +203,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -206,7 +218,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -220,7 +233,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -234,7 +248,8 @@ export const data: Record[] = [
     date: 'May 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',
@@ -248,7 +263,8 @@ export const data: Record[] = [
     date: 'June 2025',
     details: {
       detailFormat: 0,
-      summary: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
+      summary:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida, nulla nunc varius lectus, nec rutrum justo nibh eu lectus. Ut vulputate semper dui. Fusce erat odio, sollicitudin vel erat vel, interdum mattis neque. Sub works as well!',
       potentiallyAffectedSystems: 5,
       trainingTicket: 'No training ticket',
       dateAdded: 'October 29, 2024',

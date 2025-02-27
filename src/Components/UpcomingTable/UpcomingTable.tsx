@@ -36,7 +36,10 @@ interface UpcomingTableProps {
   };
 }
 
-export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ data, columnNames }) => {
+export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
+  data,
+  columnNames,
+}) => {
   const [searchValue, setSearchValue] = useState('');
   const [typeSelections, setTypeSelections] = useState<string[]>([]);
   const [dateSelection, setDateSelection] = useState('');
@@ -69,7 +72,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     setPerPage(newPerPage);
   };
 
-  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
+  const buildPagination = (
+    variant: 'bottom' | 'top' | PaginationVariant,
+    isCompact: boolean
+  ) => (
     <Pagination
       isCompact={isCompact}
       itemCount={filteredData.length}
@@ -90,7 +96,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     try {
       searchValueInput = new RegExp(searchValue, 'i');
     } catch (err) {
-      searchValueInput = new RegExp(searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      searchValueInput = new RegExp(
+        searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'i'
+      );
     }
     const matchesNameValue = repo.name.search(searchValueInput) >= 0;
 
@@ -101,7 +110,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     const matchesTypeValue = typeSelections.includes(repo.type);
 
     // Search date with date selection
-    const matchesDateValue = repo.date.toLowerCase() === dateSelection.toLowerCase();
+    const matchesDateValue =
+      repo.date.toLowerCase() === dateSelection.toLowerCase();
 
     return (
       (searchValue === '' || matchesNameValue) &&
@@ -120,8 +130,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
 
   const emptyState = (
     <EmptyState>
-      <EmptyStateHeader headingLevel="h4" titleText="No results found" icon={<EmptyStateIcon icon={SearchIcon} />} />
-      <EmptyStateBody>No results match the filter criteria. Clear all filters and try again.</EmptyStateBody>
+      <EmptyStateHeader
+        headingLevel="h4"
+        titleText="No results found"
+        icon={<EmptyStateIcon icon={SearchIcon} />}
+      />
+      <EmptyStateBody>
+        No results match the filter criteria. Clear all filters and try again.
+      </EmptyStateBody>
       <EmptyStateFooter>
         <EmptyStateActions>
           <Button variant="link" onClick={resetFilters}>
@@ -146,15 +162,21 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     setPaginatedRows(filteredData.slice(startIndex, endIndex));
   }, [searchValue, typeSelections, dateSelection, releaseSelections]);
 
-  const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
+  const releaseUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.release))
+  ).map((release) => ({
     release: release,
   }));
 
-  const dateUniqueOptions = Array.from(new Set(data.map((repo) => repo.date))).map((date) => ({
+  const dateUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.date))
+  ).map((date) => ({
     date: date,
   }));
 
-  const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
+  const typeUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.type))
+  ).map((type) => ({
     type: type,
   }));
 
@@ -179,7 +201,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
         dateOptions={dateUniqueOptions}
         typeOptions={typeUniqueOptions}
       />
-      <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
+      <Table
+        aria-label="Upcoming changes, deprecations, and additions to your system"
+        variant="compact"
+      >
         <Thead>
           <Tr>
             <Th>

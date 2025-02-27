@@ -33,7 +33,8 @@ export const UPCOMING_COLUMN_NAMES = {
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
+  const [relevantUpcomingChanges, setUpcomingChanges] =
+    React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
@@ -41,7 +42,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [deprecations, setDeprecations] = React.useState<UpcomingChanges[]>([]);
   const [changes, setChanges] = React.useState<UpcomingChanges[]>([]);
   const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
-  const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
+  const [visibleData, setVisibleData] =
+    React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
 
   const fetchData = () => {
     setIsLoading(true);
@@ -49,13 +51,19 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       .then((data) => {
         const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
         setUpcomingChanges(upcomingChangesParagraphs);
-        const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
+        const filteredDeprecations = upcomingChangesParagraphs.filter(
+          (item) => item.type === 'Deprecation'
+        );
         setDeprecations(filteredDeprecations);
         setNumDeprecations(filteredDeprecations.length);
-        const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'Addition');
+        const filteredAdditions = upcomingChangesParagraphs.filter(
+          (item) => item.type === 'Addition'
+        );
         setAdditions(filteredAdditions);
         setNumAdditions(filteredAdditions.length);
-        const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
+        const filteredChanges = upcomingChangesParagraphs.filter(
+          (item) => item.type === 'Change'
+        );
         setChanges(filteredChanges);
         setNumChanges(filteredChanges.length);
         setVisibleData(upcomingChangesParagraphs);
@@ -107,8 +115,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numDeprecations}</span> upcoming{' '}
-                {pluralize(numDeprecations, 'deprecation')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numDeprecations}
+                </span>{' '}
+                upcoming {pluralize(numDeprecations, 'deprecation')} that could
+                affect your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -128,8 +139,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numChanges}</span> upcoming{' '}
-                {pluralize(numChanges, 'change')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numChanges}
+                </span>{' '}
+                upcoming {pluralize(numChanges, 'change')} that could affect
+                your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -149,8 +163,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numAdditions}</span> upcoming{' '}
-                {pluralize(numAdditions, 'addition')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numAdditions}
+                </span>{' '}
+                upcoming {pluralize(numAdditions, 'addition')} that could affect
+                your systems
               </CardBody>
             </Card>
           </GridItem>

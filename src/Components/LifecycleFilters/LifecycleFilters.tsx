@@ -28,9 +28,17 @@ interface LifecycleFiltersProps {
   setSelectedChartSortBy: (name: string) => void;
 }
 
-const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
+const DROPDOWN_ITEMS = [
+  'Retirement date',
+  'Name',
+  'Release version',
+  'Release date',
+  'Systems',
+];
 
-export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = ({
+export const LifecycleFilters: React.FunctionComponent<
+  LifecycleFiltersProps
+> = ({
   nameFilter,
   setNameFilter,
   lifecycleDropdownValue,
@@ -44,7 +52,9 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const selectedToggle = 'installed';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+  const handleItemClick = (
+    event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent
+  ) => {
     const id = event.currentTarget.id;
     //setIsSelected(id);
   };
@@ -53,7 +63,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     setIsOpen(!isOpen);
   };
 
-  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined
+  ) => {
     setIsOpen(false);
     if (value && typeof value == 'string') {
       setSelectedChartSortBy(value);
@@ -66,10 +79,16 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         <ToolbarGroup>
           <ToolbarItem variant="bulk-select">
             <Form>
-              <FormGroup className="drf-lifecycle__filter-formgroup" label="Lifecycle" fieldId="data-switcher">
+              <FormGroup
+                className="drf-lifecycle__filter-formgroup"
+                label="Lifecycle"
+                fieldId="data-switcher"
+              >
                 <LifecycleDropdown
                   currentValue={lifecycleDropdownValue}
-                  setCurrentValue={(value: string) => setLifecycleDropdownValue(value)}
+                  setCurrentValue={(value: string) =>
+                    setLifecycleDropdownValue(value)
+                  }
                   onDropdownSelect={onLifecycleDropdownSelect}
                 />
               </FormGroup>
@@ -89,7 +108,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </ToolbarItem>
             <ToolbarItem>
               <Form>
-                <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
+                <FormGroup
+                  className="drf-lifecycle__filter-formgroup"
+                  label="View"
+                  fieldId="view-filter"
+                >
                   <ToggleGroup aria-label="Whether installed and related or only installed items are displayed">
                     <ToggleGroupItem
                       text="Installed and related"
@@ -111,13 +134,21 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
           <ToolbarGroup>
             <ToolbarItem>
               <Form>
-                <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                <FormGroup
+                  className="drf-lifecycle__filter-formgroup"
+                  label="Sort by"
+                  fieldId="sort-chart-by"
+                >
                   <Dropdown
                     isOpen={isOpen}
                     onSelect={onSelect}
                     onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
                     toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                      <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={onToggleClick}
+                        isExpanded={isOpen}
+                      >
                         {selectedChartSortBy}
                       </MenuToggle>
                     )}
@@ -127,7 +158,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   >
                     <DropdownList>
                       {DROPDOWN_ITEMS.map((item) => (
-                        <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
+                        <DropdownItem
+                          value={item}
+                          key={item}
+                          isSelected={item === selectedChartSortBy}
+                        >
                           {item}
                         </DropdownItem>
                       ))}
