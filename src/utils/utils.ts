@@ -1,4 +1,7 @@
-import { To } from 'react-router-dom';
+import { To, useSearchParams } from 'react-router-dom';
+
+let [searchParams, setSearchParams] = useSearchParams();
+
 
 export const linkBasename = '/insights/digital-roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -26,3 +29,8 @@ export function pluralize(i: number, singular: string, plural?: string) {
   }
   return `${i === 1 ? singular : plural}`;
 }
+
+export const updateSearchQueryData = (nameQueryParam: string) => {
+  searchParams.set('search', nameQueryParam);
+  setSearchParams(searchParams);
+};

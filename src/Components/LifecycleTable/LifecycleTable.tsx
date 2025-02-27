@@ -1,5 +1,4 @@
 import React, {useEffect} from 'react';
-import { useSearchParams } from "react-router-dom";
 import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import Moment from 'moment';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
@@ -44,8 +43,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
-  let [searchParams, setSearchParams] = useSearchParams();
-  const page: any = searchParams.get('page')
 
   useEffect(() => {
     setActiveAppSortDirection(undefined);
@@ -63,14 +60,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     setSortedRows(sortedData);
     setPaginatedRows(sortedData.slice(0, 10));
   }, [data, type]);
-
-  console.log(page, "page")
-  
-  useEffect(() => {
-    if (page !== null){
-      setPage(page)
-    }
-  }, [page])
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
