@@ -121,8 +121,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           appLifecycleChanges.streams.some((str) => str.context === stream.context)
         )[0].rhel_major_version;
         stream.rhel_major_version = version;
+
         return stream;
-      });
+      })
+      .filter((stream) => stream.rhel_major_version === 9);
   };
   const fetchData = async () => {
     setIsLoading(true);
