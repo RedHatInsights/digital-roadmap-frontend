@@ -60,7 +60,9 @@ interface UpcomingTableFiltersProps {
   }[];
 }
 
-export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
+export const UpcomingTableFilters: React.FunctionComponent<
+  UpcomingTableFiltersProps
+> = ({
   itemCount,
   resetFilters,
   searchValue,
@@ -85,7 +87,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const typeToggleRef = React.useRef<HTMLButtonElement>(null);
   const typeMenuRef = React.useRef<HTMLDivElement>(null);
   const typeContainerRef = React.useRef<HTMLDivElement>(null);
-  const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Date'>('Name');
+  const [activeAttributeMenu, setActiveAttributeMenu] = useState<
+    'Name' | 'Type' | 'Release' | 'Date'
+  >('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
   const attributeToggleRef = React.useRef<HTMLButtonElement>(null);
   const attributeMenuRef = React.useRef<HTMLDivElement>(null);
@@ -97,7 +101,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const releaseMenuRef = React.useRef<HTMLDivElement>(null);
   const releaseContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
+  const buildPagination = (
+    variant: 'bottom' | 'top' | PaginationVariant,
+    isCompact: boolean
+  ) => (
     <Pagination
       isCompact={isCompact}
       itemCount={itemCount}
@@ -113,7 +120,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   );
 
   const handleReleaseMenuKeys = (event: KeyboardEvent) => {
-    if (isReleaseMenuOpen && releaseMenuRef.current?.contains(event.target as Node)) {
+    if (
+      isReleaseMenuOpen &&
+      releaseMenuRef.current?.contains(event.target as Node)
+    ) {
       if (event.key === 'Escape' || event.key === 'Tab') {
         setIsReleaseMenuOpen(!isReleaseMenuOpen);
         releaseToggleRef.current?.focus();
@@ -122,7 +132,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   };
 
   const handleReleaseClickOutside = (event: MouseEvent) => {
-    if (isReleaseMenuOpen && !releaseMenuRef.current?.contains(event.target as Node)) {
+    if (
+      isReleaseMenuOpen &&
+      !releaseMenuRef.current?.contains(event.target as Node)
+    ) {
       setIsReleaseMenuOpen(false);
     }
   };
@@ -140,14 +153,19 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (releaseMenuRef.current) {
-        const firstElement = releaseMenuRef.current.querySelector('li > button:not(:disabled)');
+        const firstElement = releaseMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
         firstElement && (firstElement as HTMLElement).focus();
       }
     }, 0);
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
   };
 
-  function onReleaseSelect(event: React.MouseEvent | undefined, releaseId: string | number | undefined) {
+  function onReleaseSelect(
+    event: React.MouseEvent | undefined,
+    releaseId: string | number | undefined
+  ) {
     if (typeof releaseId === 'undefined') {
       return;
     }
@@ -226,7 +244,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   };
 
   const handleDateClickOutside = (event: MouseEvent) => {
-    if (isDateMenuOpen && !dateMenuRef.current?.contains(event.target as Node)) {
+    if (
+      isDateMenuOpen &&
+      !dateMenuRef.current?.contains(event.target as Node)
+    ) {
       setIsDateMenuOpen(false);
     }
   };
@@ -244,14 +265,19 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (dateMenuRef.current) {
-        const firstElement = dateMenuRef.current.querySelector('li > button:not(:disabled)');
+        const firstElement = dateMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
         firstElement && (firstElement as HTMLElement).focus();
       }
     }, 0);
     setIsDateMenuOpen(!isDateMenuOpen);
   };
 
-  function onDateSelect(event: React.MouseEvent | undefined, itemId: string | number | undefined) {
+  function onDateSelect(
+    event: React.MouseEvent | undefined,
+    itemId: string | number | undefined
+  ) {
     if (typeof itemId === 'undefined') {
       return;
     }
@@ -276,11 +302,20 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   );
 
   const dateMenu = (
-    <Menu ref={dateMenuRef} id="attribute-search-status-menu" onSelect={onDateSelect} selected={dateSelection}>
+    <Menu
+      ref={dateMenuRef}
+      id="attribute-search-status-menu"
+      onSelect={onDateSelect}
+      selected={dateSelection}
+    >
       <MenuContent>
         <MenuList>
           {dateOptions.map((option) => (
-            <MenuItem key={option.date} isSelected={dateSelection === option.date} itemId={option.date}>
+            <MenuItem
+              key={option.date}
+              isSelected={dateSelection === option.date}
+              itemId={option.date}
+            >
               {option.date}
             </MenuItem>
           ))}
@@ -312,7 +347,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   };
 
   const handleTypeClickOutside = (event: MouseEvent) => {
-    if (isTypeMenuOpen && !typeMenuRef.current?.contains(event.target as Node)) {
+    if (
+      isTypeMenuOpen &&
+      !typeMenuRef.current?.contains(event.target as Node)
+    ) {
       setIsTypeMenuOpen(false);
     }
   };
@@ -330,14 +368,19 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (typeMenuRef.current) {
-        const firstElement = typeMenuRef.current.querySelector('li > button:not(:disabled)');
+        const firstElement = typeMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
         firstElement && (firstElement as HTMLElement).focus();
       }
     }, 0);
     setIsTypeMenuOpen(!isTypeMenuOpen);
   };
 
-  function onTypeMenuSelect(event: React.MouseEvent | undefined, typeId: string | number | undefined) {
+  function onTypeMenuSelect(
+    event: React.MouseEvent | undefined,
+    typeId: string | number | undefined
+  ) {
     if (typeof typeId === 'undefined') {
       return;
     }
@@ -370,7 +413,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   );
 
   const typeMenu = (
-    <Menu ref={typeMenuRef} id="attribute-search-type-menu" onSelect={onTypeMenuSelect} selected={typeSelections}>
+    <Menu
+      ref={typeMenuRef}
+      id="attribute-search-type-menu"
+      onSelect={onTypeMenuSelect}
+      selected={typeSelections}
+    >
       <MenuContent>
         <MenuList>
           {typeOptions.map((option) => (
@@ -417,7 +465,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   };
 
   const handleAttributeClickOutside = (event: MouseEvent) => {
-    if (isAttributeMenuOpen && !attributeMenuRef.current?.contains(event.target as Node)) {
+    if (
+      isAttributeMenuOpen &&
+      !attributeMenuRef.current?.contains(event.target as Node)
+    ) {
       setIsAttributeMenuOpen(false);
     }
   };
@@ -435,7 +486,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (attributeMenuRef.current) {
-        const firstElement = attributeMenuRef.current.querySelector('li > button:not(:disabled)');
+        const firstElement = attributeMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
         firstElement && (firstElement as HTMLElement).focus();
       }
     }, 0);
@@ -456,7 +509,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     <Menu
       ref={attributeMenuRef}
       onSelect={(_ev, itemId) => {
-        setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date');
+        setActiveAttributeMenu(
+          itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date'
+        );
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
     >
@@ -495,7 +550,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   );
 
   return (
-    <Toolbar id="attribute-search-filter-toolbar" clearAllFilters={resetFilters}>
+    <Toolbar
+      id="attribute-search-filter-toolbar"
+      clearAllFilters={resetFilters}
+    >
       <ToolbarContent>
         <ToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
           <ToolbarGroup variant="filter-group">
@@ -511,7 +569,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             </ToolbarFilter>
             <ToolbarFilter
               chips={typeSelections}
-              deleteChip={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
+              deleteChip={(category, chip) =>
+                onTypeMenuSelect(undefined, chip as string)
+              }
               deleteChipGroup={() => setTypeSelections([])}
               categoryName="Type"
               showToolbarItem={activeAttributeMenu === 'Type'}
@@ -520,7 +580,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             </ToolbarFilter>
             <ToolbarFilter
               chips={releaseSelections}
-              deleteChip={(category, chip) => onReleaseSelect(undefined, chip as string)}
+              deleteChip={(category, chip) =>
+                onReleaseSelect(undefined, chip as string)
+              }
               deleteChipGroup={() => setReleaseSelections([])}
               categoryName="Release"
               showToolbarItem={activeAttributeMenu === 'Release'}
@@ -544,7 +606,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             <ToggleGroupItem text="All" buttonId="toggle2" />
           </ToggleGroup>
         </ToolbarItem>
-        <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
+        <ToolbarItem variant="pagination">
+          {buildPagination('top', true)}
+        </ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );

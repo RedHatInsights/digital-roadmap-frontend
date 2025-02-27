@@ -5,7 +5,10 @@ export const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 export const DEFAULT_CHART_SORTBY_VALUE = 'Retirement date';
 export const OTHER_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 
-export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
+export const filterChartDataByName = (
+  data: Stream[] | SystemLifecycleChanges[],
+  dropdownValue: string
+) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       const aName = `${a.name.toLowerCase()} ${a.stream.toLowerCase()}`;
@@ -24,7 +27,10 @@ export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[],
   });
 };
 
-export const filterChartDataByReleaseDate = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
+export const filterChartDataByReleaseDate = (
+  data: Stream[] | SystemLifecycleChanges[],
+  dropdownValue: string
+) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.start_date > b.start_date) return -1;
@@ -39,7 +45,10 @@ export const filterChartDataByReleaseDate = (data: Stream[] | SystemLifecycleCha
   });
 };
 
-export const filterChartDataByRetirementDate = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
+export const filterChartDataByRetirementDate = (
+  data: Stream[] | SystemLifecycleChanges[],
+  dropdownValue: string
+) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.end_date > b.end_date) return -1;
@@ -54,7 +63,10 @@ export const filterChartDataByRetirementDate = (data: Stream[] | SystemLifecycle
   });
 };
 
-export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
+export const filterChartDataByRelease = (
+  data: Stream[] | SystemLifecycleChanges[],
+  dropdownValue: string
+) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.rhel_major_version > b.rhel_major_version) return -1;
@@ -71,7 +83,10 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
   });
 };
 
-export const filterChartDataBySystems = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
+export const filterChartDataBySystems = (
+  data: Stream[] | SystemLifecycleChanges[],
+  dropdownValue: string
+) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.systems > b.systems) return -1;
