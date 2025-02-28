@@ -102,7 +102,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const toolbar = (
     <Toolbar>
       <ToolbarContent>
-        <ToolbarItem variant="pagination">{buildPagination('top', false)}</ToolbarItem>
+        <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );
@@ -311,11 +311,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   return (
     <>
       {toolbar}
-      <Table aria-label={getAriaLabel()}>
+      <Table aria-label={getAriaLabel()} variant="compact">
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
-      {buildPagination('bottom', true)}
+      {buildPagination('bottom', false)}
     </>
   );
 };

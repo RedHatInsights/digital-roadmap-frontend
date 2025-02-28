@@ -182,9 +182,11 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>
           <Tr>
-            <Th>
-              <span className="pf-v5-u-screen-reader">Row expansion</span>
-            </Th>
+            {filteredData.length > 0 && (
+              <Th>
+                <span className="pf-v5-u-screen-reader">Row expansion</span>
+              </Th>
+            )}
             <Th width={10}>{columnNames.name}</Th>
             <Th width={10}>{columnNames.type}</Th>
             <Th width={10}>{columnNames.release}</Th>
