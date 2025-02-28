@@ -17,6 +17,7 @@ import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
+import { TypeFilter } from '../../types/TypeFilter';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -34,17 +35,34 @@ interface UpcomingTableProps {
     lastModified: string;
     detailFormat: 0 | 1 | 2 | 3;
   };
+  initialFilters: Set<string>;
+  typeOptions: TypeFilter[];
+  resetInitialFilters: () => void;
 }
 
-export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ data, columnNames }) => {
+export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
+  data,
+  columnNames,
+  initialFilters,
+  typeOptions,
+  resetInitialFilters,
+}) => {
   const [searchValue, setSearchValue] = useState('');
-  const [typeSelections, setTypeSelections] = useState<string[]>([]);
+  const [typeSelections, setTypeSelections] = useState<Set<string>>(initialFilters);
   const [dateSelection, setDateSelection] = useState('');
   const [releaseSelections, setReleaseSelections] = useState<string[]>([]);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
   const [filteredData, setFilteredData] = React.useState(data);
+
+  useEffect(() => {
+    if (initialFilters.size === 0) {
+      setTypeSelections(new Set());
+      return;
+    }
+    setTypeSelections(new Set([...initialFilters]));
+  }, [initialFilters]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -98,7 +116,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     const matchesReleaseValue = releaseSelections.includes(repo.release);
 
     // Search type with type selections
-    const matchesTypeValue = typeSelections.includes(repo.type);
+    const matchesTypeValue = typeSelections.has(repo.type);
 
     // Search date with date selection
     const matchesDateValue = repo.date.toLowerCase() === dateSelection.toLowerCase();
@@ -106,16 +124,20 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     return (
       (searchValue === '' || matchesNameValue) &&
       (releaseSelections.length === 0 || matchesReleaseValue) &&
-      (typeSelections.length === 0 || matchesTypeValue) &&
+      (typeSelections.size === 0 || matchesTypeValue) &&
       (dateSelection === '' || matchesDateValue)
     );
   };
 
   const resetFilters = () => {
+    resetInitialFilters(); // resets type and parent data
     setSearchValue('');
     setReleaseSelections([]);
-    setTypeSelections([]);
     setDateSelection('');
+  };
+
+  const resetTypeFilter = () => {
+    resetInitialFilters(); // resets type and parent data
   };
 
   const emptyState = (
@@ -154,10 +176,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
     date: date,
   }));
 
-  const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
-    type: type,
-  }));
-
   return (
     <React.Fragment>
       <UpcomingTableFilters
@@ -177,7 +195,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({ dat
         setReleaseSelections={setReleaseSelections}
         releaseOptions={releaseUniqueOptions}
         dateOptions={dateUniqueOptions}
-        typeOptions={typeUniqueOptions}
+        typeOptions={typeOptions}
+        resetTypeFilter={resetTypeFilter}
       />
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>
