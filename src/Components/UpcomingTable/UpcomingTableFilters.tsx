@@ -538,12 +538,6 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             </ToolbarFilter>
           </ToolbarGroup>
         </ToolbarToggleGroup>
-        <ToolbarItem>
-          <ToggleGroup>
-            <ToggleGroupItem text="Relevant Only" buttonId="toggle1" />
-            <ToggleGroupItem text="All" buttonId="toggle2" />
-          </ToggleGroup>
-        </ToolbarItem>
         <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
       </ToolbarContent>
     </Toolbar>
