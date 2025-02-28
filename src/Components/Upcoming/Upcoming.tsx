@@ -20,7 +20,6 @@ import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclam
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { pluralize } from '../../utils/utils';
-import { TypeFilter } from '../../types/TypeFilter';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -43,7 +42,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
   const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
   const [currentFilters, setCurrentFilters] = React.useState<Set<string>>(new Set());
-  const [types, setTypes] = React.useState<TypeFilter[]>([]);
 
   const fetchData = () => {
     setIsLoading(true);
@@ -61,12 +59,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setChanges(filteredChanges);
         setNumChanges(filteredChanges.length);
         setVisibleData(upcomingChangesParagraphs);
-        const typeUniqueOptions = Array.from(new Set(upcomingChangesParagraphs.map((repo) => repo.type))).map(
-          (type) => ({
-            type: type,
-          })
-        );
-        setTypes(typeUniqueOptions);
         setIsLoading(false);
       })
       .catch(() => {
@@ -191,7 +183,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           data={visibleData}
           columnNames={UPCOMING_COLUMN_NAMES}
           initialFilters={currentFilters}
-          typeOptions={types}
           resetInitialFilters={resetFilters}
         />
       </StackItem>

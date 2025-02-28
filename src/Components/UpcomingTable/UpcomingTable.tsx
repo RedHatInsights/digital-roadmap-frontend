@@ -17,7 +17,6 @@ import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
-import { TypeFilter } from '../../types/TypeFilter';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -36,7 +35,6 @@ interface UpcomingTableProps {
     detailFormat: 0 | 1 | 2 | 3;
   };
   initialFilters: Set<string>;
-  typeOptions: TypeFilter[];
   resetInitialFilters: () => void;
 }
 
@@ -44,7 +42,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   data,
   columnNames,
   initialFilters,
-  typeOptions,
   resetInitialFilters,
 }) => {
   const [searchValue, setSearchValue] = useState('');
@@ -176,6 +173,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     date: date,
   }));
 
+  const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
+    type: type,
+  }));
+
   return (
     <React.Fragment>
       <UpcomingTableFilters
@@ -195,7 +196,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         setReleaseSelections={setReleaseSelections}
         releaseOptions={releaseUniqueOptions}
         dateOptions={dateUniqueOptions}
-        typeOptions={typeOptions}
+        typeOptions={typeUniqueOptions}
         resetTypeFilter={resetTypeFilter}
       />
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
