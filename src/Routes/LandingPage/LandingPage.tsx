@@ -77,7 +77,7 @@ const LandingPage = () => {
             </Suspense>
           </section>
         </Tab>
-        <Tab eventKey={2} title={<TabTitleText>Lifecycle</TabTitleText>}>
+        <Tab eventKey={2} title={<TabTitleText>Life Cycle</TabTitleText>}>
           <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
             <Suspense fallback={<Spinner />}>
               <LifecycleTab />
