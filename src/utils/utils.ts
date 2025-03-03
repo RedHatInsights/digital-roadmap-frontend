@@ -33,4 +33,12 @@ export const formatDate = (date: string) => {
     return 'Not available';
   }
   return Moment(date).format('MMM YYYY');
+}
+
+export const decodeURIComponent = (queryParam: string, query:string) => {
+  switch(query) {
+    case 'page': {
+
+    }
+  }
 };
