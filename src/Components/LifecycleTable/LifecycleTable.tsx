@@ -236,10 +236,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{Moment(repo.release_date).format('MMM YYYY')}</Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>
-            {Moment(repo.retirement_date).format('MMM YYYY')}
-          </Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.release_date)}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.retirement_date)}</Td>
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
         </Tr>
       );
