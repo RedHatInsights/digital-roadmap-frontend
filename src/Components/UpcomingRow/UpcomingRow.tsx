@@ -71,7 +71,10 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
           {repo.name}
         </Td>
         <Td dataLabel={columnNames.type} modifier="truncate">
-          {typeIcon} {repo.type}
+          <span className="drf-lifecycle__upcoming-row-type">
+            {typeIcon}
+            {repo.type}
+          </span>
         </Td>
         <Td dataLabel={columnNames.release} modifier="truncate">
           {repo.release}
