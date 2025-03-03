@@ -69,7 +69,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       case 'EUS':
         return ' EUS';
       case 'ELS':
-          return ' ELS';
+        return ' ELS';
       case 'E4S':
         return ' for SAP';
       default:
