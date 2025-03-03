@@ -35,10 +35,23 @@ export const formatDate = (date: string) => {
   return Moment(date).format('MMM YYYY');
 }
 
-export const decodeURIComponent = (queryParam: string, query:string) => {
-  switch(query) {
-    case 'page': {
+// export const decodeURIComponent = (queryParam: string, query:string) => {
+//   switch(query) {
+//     case 'page': {
 
-    }
+//     }
+//   }
+// };
+
+//will need to pass in the name of the filter and valuw
+
+export const buildURL = (filter1: string, filter1Value: string ,filter2: string = '', filter2Value: string = '') => {
+  let encodedData = '';
+  if (filter1) {
+    encodedData += `${filter1}=${filter1Value}`;
   }
+  if (filter2) {
+    encodedData += `&${filter2}=${filter2Value}`;
+  } 
+  return encodedData;
 };

@@ -8,7 +8,6 @@ import { formatDate } from '../../utils/utils';
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   type: 'streams' | 'rhel';
-  pageQueryParam: string;
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -28,7 +27,7 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 
-export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data, type, pageQueryParam }: LifecycleTableProps) => {
+export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data, type }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
   // as the identifier of the sorted column. See the "Compound expandable" example.
