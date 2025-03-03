@@ -44,10 +44,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const selectedToggle = 'installed';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
-    const id = event.currentTarget.id;
+  /*const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+    // const id = event.currentTarget.id;
     //setIsSelected(id);
-  };
+  };*/
 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
@@ -95,13 +95,13 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                       text="Installed and related"
                       buttonId="toggle-group-related"
                       isDisabled
-                      onChange={handleItemClick}
+                      //onChange={handleItemClick}
                     />
                     <ToggleGroupItem
                       text="Installed only"
                       buttonId="toggle-group-installed"
                       isSelected={selectedToggle === 'installed'}
-                      onChange={handleItemClick}
+                      //onChange={handleItemClick}
                     />
                   </ToggleGroup>
                 </FormGroup>
