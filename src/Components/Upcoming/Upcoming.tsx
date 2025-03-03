@@ -27,7 +27,7 @@ export const UPCOMING_COLUMN_NAMES = {
   name: 'Name',
   type: 'Type',
   release: 'Release',
-  date: 'Date',
+  date: 'Release date',
 };
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
