@@ -80,11 +80,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
           <ToolbarGroup>
             <ToolbarItem>
               <SearchInput
-                placeholder="Find by name"
+                placeholder="Filter by name"
                 value={nameFilter}
                 onChange={(_event, value) => setNameFilter(value)}
                 onClear={() => setNameFilter('')}
-                aria-label="Find by name"
+                aria-label="Filter by name"
               />
             </ToolbarItem>
             <ToolbarItem>

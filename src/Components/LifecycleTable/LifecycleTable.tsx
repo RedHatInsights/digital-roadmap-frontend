@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
+import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import Moment from 'moment';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -31,14 +31,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
   // as the identifier of the sorted column. See the "Compound expandable" example.
-  const [activeSystemSortIndex, setActiveSystemSortIndex] = React.useState<number | undefined>(undefined);
-  const [activeAppSortIndex, setActiveAppSortIndex] = React.useState<number | undefined>(undefined);
+  const [activeSystemSortIndex, setActiveSystemSortIndex] = React.useState<number | undefined>();
+  const [activeAppSortIndex, setActiveAppSortIndex] = React.useState<number | undefined>();
 
   // Sort direction of the currently sorted column
-  const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<'asc' | 'desc' | undefined>(
-    undefined
-  );
-  const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
+  const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<SortByDirection>();
+  const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<SortByDirection>();
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
