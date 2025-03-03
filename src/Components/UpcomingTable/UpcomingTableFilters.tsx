@@ -43,8 +43,8 @@ interface UpcomingTableFiltersProps {
   page: number;
   perPage: number;
   itemCount: number;
-  typeSelections: string[];
-  setTypeSelections: (values: string[]) => void;
+  typeSelections: Set<string>;
+  setTypeSelections: (values: Set<string>) => void;
   dateSelection: string;
   setDateSelection: (value: string) => void;
   releaseSelections: string[];
@@ -58,6 +58,7 @@ interface UpcomingTableFiltersProps {
   typeOptions: {
     type: string;
   }[];
+  resetTypeFilter: () => void;
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -78,6 +79,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   releaseOptions,
   dateOptions,
   typeOptions,
+  resetTypeFilter,
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -345,9 +347,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     const typeStr = typeId.toString();
 
     setTypeSelections(
-      typeSelections.includes(typeStr)
-        ? typeSelections.filter((selection) => selection !== typeStr)
-        : [typeStr, ...typeSelections]
+      typeSelections.has(typeStr)
+        ? new Set([...typeSelections].filter((selection) => selection !== typeStr))
+        : new Set([typeStr, ...typeSelections])
     );
   }
 
@@ -356,8 +358,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       ref={typeToggleRef}
       onClick={onTypeMenuToggleClick}
       isExpanded={isTypeMenuOpen}
-      {...(typeSelections.length > 0 && {
-        badge: <Badge isRead>{typeSelections.length}</Badge>,
+      {...(typeSelections.size > 0 && {
+        badge: <Badge isRead>{typeSelections.size}</Badge>,
       })}
       style={
         {
@@ -374,12 +376,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       <MenuContent>
         <MenuList>
           {typeOptions.map((option) => (
-            <MenuItem
-              hasCheckbox
-              key={option.type}
-              isSelected={typeSelections.includes(option.type)}
-              itemId={option.type}
-            >
+            <MenuItem hasCheckbox key={option.type} isSelected={typeSelections.has(option.type)} itemId={option.type}>
               {option.type}
             </MenuItem>
           ))}
@@ -510,9 +507,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               {searchInput}
             </ToolbarFilter>
             <ToolbarFilter
-              chips={typeSelections}
+              chips={[...typeSelections]}
               deleteChip={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
-              deleteChipGroup={() => setTypeSelections([])}
+              deleteChipGroup={() => resetTypeFilter()}
               categoryName="Type"
               showToolbarItem={activeAttributeMenu === 'Type'}
             >

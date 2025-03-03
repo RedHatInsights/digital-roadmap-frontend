@@ -1,7 +1,6 @@
 import './upcoming.scss';
 import React, { lazy, useEffect } from 'react';
 import {
-  Alert,
   Bullseye,
   Card,
   CardBody,
@@ -42,6 +41,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [changes, setChanges] = React.useState<UpcomingChanges[]>([]);
   const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
   const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
+  const [currentFilters, setCurrentFilters] = React.useState<Set<string>>(new Set());
 
   const fetchData = () => {
     setIsLoading(true);
@@ -77,6 +77,28 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const changeId = 'filter-by-type-change';
   const additionId = 'filter-by-type-addition';
 
+  const resetFilters = () => {
+    setCurrentFilters(new Set());
+    setVisibleData(relevantUpcomingChanges);
+  };
+
+  const handleCardClick = (variant: 'additions' | 'changes' | 'deprecations') => {
+    switch (variant) {
+      case 'additions':
+        setVisibleData(additions);
+        setCurrentFilters(new Set(['Addition']));
+        break;
+      case 'changes':
+        setVisibleData(changes);
+        setCurrentFilters(new Set(['Change']));
+        break;
+      default:
+        setVisibleData(deprecations);
+        setCurrentFilters(new Set(['Deprecation']));
+        break;
+    }
+  };
+
   if (isLoading) {
     return (
       <div>
@@ -95,7 +117,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-deprecations" isClickable>
               <CardHeader
                 selectableActions={{
-                  onClickAction: () => setVisibleData(deprecations),
+                  onClickAction: () => handleCardClick('deprecations'),
                   selectableActionId: deprecationId,
                   selectableActionAriaLabelledby: 'Upcoming deprecations',
                   name: 'filter-by-type',
@@ -116,7 +138,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-changes" isClickable>
               <CardHeader
                 selectableActions={{
-                  onClickAction: () => setVisibleData(changes),
+                  onClickAction: () => handleCardClick('changes'),
                   selectableActionId: changeId,
                   selectableActionAriaLabelledby: 'filter-by-type-2',
                   name: 'filter-by-type',
@@ -137,7 +159,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             <Card ouiaId="upcoming-additions" isClickable>
               <CardHeader
                 selectableActions={{
-                  onClickAction: () => setVisibleData(additions),
+                  onClickAction: () => handleCardClick('additions'),
                   selectableActionId: additionId,
                   selectableActionAriaLabelledby: 'filter-by-type-3',
                   name: 'filter-by-type',
@@ -157,7 +179,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         </Grid>
       </StackItem>
       <StackItem>
-        <UpcomingTable data={visibleData} columnNames={UPCOMING_COLUMN_NAMES} />
+        <UpcomingTable
+          data={visibleData}
+          columnNames={UPCOMING_COLUMN_NAMES}
+          initialFilters={currentFilters}
+          resetInitialFilters={resetFilters}
+        />
       </StackItem>
     </Stack>
   );
