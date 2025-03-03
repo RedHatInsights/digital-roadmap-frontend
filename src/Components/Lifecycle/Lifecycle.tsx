@@ -23,7 +23,6 @@ import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
 import { buildURL } from '../../utils/utils';
-import { decodeURIComponent } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -57,7 +56,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
-  const [pageFilter, setPageFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
