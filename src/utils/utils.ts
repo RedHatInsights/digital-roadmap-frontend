@@ -1,6 +1,6 @@
 import { To } from 'react-router-dom';
 import Moment from 'moment';
-import { Filter } from '../Components/Lifecycle/Lifecycle'
+import { Filter } from '../Components/Lifecycle/Lifecycle';
 
 export const linkBasename = '/insights/digital-roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -34,27 +34,27 @@ export const formatDate = (date: string) => {
     return 'Not available';
   }
   return Moment(date).format('MMM YYYY');
-}
+};
 
-export const decodeURIComponent = (queryParam: string, queryValue:string) => {
-  switch(queryParam) {
+export const decodeURIComponent = (queryParam: string, queryValue: string) => {
+  switch (queryParam) {
     case 'sortByQueryParam': {
-      if (["Release version", "Retirement date", "Name", "Systems"].includes(queryValue)){
+      if (['Release version', 'Retirement date', 'Name', 'Systems'].includes(queryValue)) {
         return true;
       } else {
-          return false;
+        return false;
       }
     }
     case 'dropdownQueryParam': {
-      console.log("hi")
-      if (["Red Hat Enterprise Linux", "RHEL 9 Application Streams"].includes(queryValue)){
+      console.log('hi');
+      if (['Red Hat Enterprise Linux', 'RHEL 9 Application Streams'].includes(queryValue)) {
         return true;
       } else {
-          return false;
+        return false;
       }
     }
   }
-  };
+};
 
 export const buildURL = (filter: Filter) => {
   let encodedData = '';
@@ -63,9 +63,9 @@ export const buildURL = (filter: Filter) => {
   }
   if (filter['lifecycleDropdown']) {
     encodedData += `&lifecycleDropdown=${filter['lifecycleDropdown']}`;
-  } 
+  }
   if (filter['chartSortBy']) {
     encodedData += `&chartSortBy=${filter['chartSortBy']}`;
-  } 
+  }
   return encodedData;
 };

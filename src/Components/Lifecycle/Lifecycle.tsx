@@ -23,6 +23,7 @@ import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
 import { buildURL } from '../../utils/utils';
+import { decodeURIComponent } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -56,6 +57,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
+  const [pageFilter, setPageFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
@@ -172,8 +174,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const dropdownQueryParam = searchParams.get('lifecycleDropdown');
 
   useEffect(() => {
+    //create a read section for name and pagination, validate the value set is correct,
+    //like for page check if the value is a number and within the max range of pages
+    //then we have a function in utils that gets called to setSearchParams
+
+    //build chain of all the filters so we can get them added to a setSearchParams hook outside the useEffect
+    //decode each query param to ensure it's valid
+    //function that gets called with the name of query and value
+
+    if (nameQueryParam != null) {
+      setNameFilter(nameQueryParam);
+    }
+
     fetchData();
   }, []);
+
+  console.log(nameFilter, 'name');
+  console.log(nameQueryParam, 'search');
 
   const resetDataFiltering = () => {
     if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
