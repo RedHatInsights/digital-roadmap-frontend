@@ -131,10 +131,12 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setSearchValue('');
     setReleaseSelections([]);
     setDateSelection('');
+    setPage(1);
   };
 
   const resetTypeFilter = () => {
     resetInitialFilters(); // resets type and parent data
+    setPage(1);
   };
 
   const emptyState = (
@@ -154,15 +156,15 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   useEffect(() => {
     const filteredData = data.filter(onFilter);
     setFilteredData(filteredData);
+    setPage(1);
     setPaginatedRows(filteredData.slice(0, perPage));
   }, [data]);
 
   useEffect(() => {
     const filteredData = data.filter(onFilter);
     setFilteredData(filteredData);
-    const startIndex = (page - 1) * perPage;
-    const endIndex = (page - 1) * perPage + perPage;
-    setPaginatedRows(filteredData.slice(startIndex, endIndex));
+    setPage(1);
+    setPaginatedRows(filteredData.slice(0, perPage));
   }, [searchValue, typeSelections, dateSelection, releaseSelections]);
 
   const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
