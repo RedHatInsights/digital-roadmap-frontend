@@ -10,8 +10,6 @@ import {
   PaginationVariant,
   Popper,
   SearchInput,
-  ToggleGroup,
-  ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarFilter,

@@ -102,7 +102,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
                   </TextListItem>
                   <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
                   <TextListItem component={TextListItemVariants.dd}>{repo.details.trainingTicket}</TextListItem>
-                  <TextListItem component={TextListItemVariants.dt}>Date added {''}</TextListItem>
+                  <TextListItem component={TextListItemVariants.dt}>Date added</TextListItem>
                   <TextListItem component={TextListItemVariants.dd}>{repo.details.dateAdded}</TextListItem>
                   <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
                   <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
