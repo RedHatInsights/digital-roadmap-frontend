@@ -20,6 +20,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
+        downloadCSV={jest.fn()}
       />
     );
     expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
@@ -42,6 +43,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
+        downloadCSV={jest.fn()}
       />
     );
     expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
@@ -61,6 +63,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
+        downloadCSV={jest.fn()}
       />
     );
     const nameFilter = screen.getByRole('textbox', { name: /Filter by name/i });
@@ -80,6 +83,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
+        downloadCSV={jest.fn()}
       />
     );
     const resetBtn = screen.getByRole('button', { name: /Reset/i });
