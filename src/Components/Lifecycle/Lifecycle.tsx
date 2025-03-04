@@ -22,7 +22,7 @@ import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildURL } from '../../utils/utils';
+import { buildURL, decodeURIComponent } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
