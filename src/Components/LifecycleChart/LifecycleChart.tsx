@@ -25,6 +25,12 @@ interface ChartDataObject {
   numSystems: string;
 }
 
+interface BarData extends Omit<ChartDataObject, 'x'> {
+  name: string;
+  x: number;
+  fill: string;
+}
+
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -160,9 +166,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   };
 
   const getChart = (lifecycle: ChartDataObject[], index: number) => {
-    const data: any[] = [];
+    const data: BarData[] = [];
 
-    lifecycle?.forEach((datum: { packageType: string; x: string }) => {
+    lifecycle?.forEach((datum: ChartDataObject) => {
       data.push({
         ...datum,
         name: datum.x,
