@@ -1,4 +1,5 @@
 import { To } from 'react-router-dom';
+import Moment from 'moment';
 
 export const linkBasename = '/insights/digital-roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -26,3 +27,10 @@ export function pluralize(i: number, singular: string, plural?: string) {
   }
   return `${i === 1 ? singular : plural}`;
 }
+
+export const formatDate = (date: string) => {
+  if (date === 'Unknown') {
+    return 'Not available';
+  }
+  return Moment(date).format('MMM YYYY');
+};
