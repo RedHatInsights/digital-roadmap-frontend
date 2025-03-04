@@ -37,6 +37,18 @@ const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/Lifecy
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import { formatDate } from '../../utils/utils';
 
+interface Filter {
+  name: string;
+  chartSortBy: string;
+  lifecycleDropdown: string;
+}
+
+const DEFAULT_FILTERS = {
+  name: '',
+  chartSortBy: DEFAULT_CHART_SORTBY_VALUE,
+  lifecycleDropdown: DEFAULT_DROPDOWN_VALUE,
+};
+
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
@@ -48,12 +60,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+  const [filters, setFilters] = useState<Filter>(DEFAULT_FILTERS);
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
     setFilteredChartData(filterChartData(filteredChartData, value));
+    const newFilters = structuredClone(filters);
+    newFilters['chartSortBy'] = value;
+    setFilters(newFilters);
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -66,6 +82,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
     setNameFilter('');
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
+    const newFilters = structuredClone(filters);
+    newFilters['lifecycleDropdown'] = value;
+    newFilters['chartSortBy'] = DEFAULT_CHART_SORTBY_VALUE;
+    setFilters(newFilters);
   };
 
   const getLifecycleType = (lifecycleType: string) => {
@@ -190,12 +210,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const onNameFilterChange = (name: string) => {
     setNameFilter(name);
     filterData(name);
+    const newFilters = structuredClone(filters);
+    newFilters['name'] = name;
+    setFilters(newFilters);
   };
 
   const resetFilters = () => {
     setNameFilter('');
     setFilteredTableData(systemLifecycleChanges);
     setFilteredChartData(systemLifecycleChanges);
+    setFilters(DEFAULT_FILTERS);
   };
 
   const downloadCSV = () => {
@@ -254,6 +278,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       </EmptyState>
     </Bullseye>
   );
+
   const renderContent = () => {
     if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;
