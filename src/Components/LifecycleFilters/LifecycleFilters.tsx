@@ -1,4 +1,5 @@
 import {
+  Button,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -15,6 +16,7 @@ import {
 import React from 'react';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
+import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
 
 interface LifecycleFiltersProps {
   nameFilter: string;
@@ -26,6 +28,7 @@ interface LifecycleFiltersProps {
   onLifecycleDropdownSelect: (value: string) => void;
   selectedChartSortBy: NamedCurve;
   setSelectedChartSortBy: (name: string) => void;
+  downloadCSV: () => void;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -38,6 +41,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   onLifecycleDropdownSelect,
   selectedChartSortBy,
   setSelectedChartSortBy,
+  downloadCSV,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -106,6 +110,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   </ToggleGroup>
                 </FormGroup>
               </Form>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button
+                className="drf-lifecycle__filter-download"
+                variant="plain"
+                aria-label="Download visible dataset as CSV"
+                onClick={downloadCSV}
+                icon={<ExportIcon />}
+              ></Button>
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarGroup>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
-import Moment from 'moment';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { Pagination, PaginationVariant, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import { formatDate } from '../../utils/utils';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -153,13 +153,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     },
     columnIndex,
   });
-
-  const formatDate = (date: string) => {
-    if (date === 'Unknown') {
-      return 'Not available';
-    }
-    return Moment(date).format('MMM YYYY');
-  };
 
   const sort = (aValue: number | string, bValue: number | string, direction?: string) => {
     if (typeof aValue === 'number') {

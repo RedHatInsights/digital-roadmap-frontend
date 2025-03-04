@@ -34,6 +34,8 @@ import {
 const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/LifecycleChart'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
+import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { formatDate } from '../../utils/utils';
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
@@ -46,6 +48,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+
+  const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
@@ -194,6 +198,32 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilteredChartData(systemLifecycleChanges);
   };
 
+  const downloadCSV = () => {
+    const data: { [key: string]: string | number }[] = [];
+    if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
+      (filteredTableData as Stream[]).forEach((item: Stream) =>
+        data.push({
+          Name: item.name,
+          Release: item.rhel_major_version,
+          'Release date': formatDate(item.start_date),
+          'Retirement date': formatDate(item.end_date),
+          Systems: 'N/A',
+        })
+      );
+    } else {
+      (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) =>
+        data.push({
+          Name: item.name,
+          'Release date': formatDate(item.release_date),
+          'Retirement date': formatDate(item.retirement_date),
+          Systems: item.count,
+        })
+      );
+    }
+    const csv = generateCsv(csvConfig)(data);
+    download(csvConfig)(csv);
+  };
+
   if (isLoading) {
     return (
       <div>
@@ -254,6 +284,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
             setSelectedChartSortBy={updateChartSortValue}
+            downloadCSV={downloadCSV}
           />
           {renderContent()}
         </Card>
