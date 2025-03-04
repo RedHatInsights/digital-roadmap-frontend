@@ -11,7 +11,7 @@ import {
   Pagination,
   PaginationVariant,
 } from '@patternfly/react-core';
-import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { TableRow } from '../../Components/UpcomingRow/UpcomingRow';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import './upcoming-table.scss';
@@ -52,6 +52,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [perPage, setPerPage] = React.useState(10);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
   const [filteredData, setFilteredData] = React.useState(data);
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>();
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
+  const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
 
   useEffect(() => {
     if (initialFilters.size === 0) {
@@ -61,6 +64,55 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setTypeSelections(new Set([...initialFilters]));
   }, [initialFilters]);
 
+  const getSortableRowValues = (repo: UpcomingChanges): (string | number)[] => {
+    const { name, type, release, date } = repo;
+    return [name, type, release, date];
+  };
+
+  const sortFilteredData = (dataToSort: UpcomingChanges[]) => {
+    if (typeof activeSortIndex !== 'undefined' && typeof activeSortDirection !== 'undefined') {
+      return sortData(activeSortIndex, activeSortDirection, dataToSort);
+    }
+    return dataToSort;
+  };
+
+  const sortData = (index: number, direction: SortByDirection, currentData: UpcomingChanges[]) => {
+    return currentData.sort((a, b) => {
+      const aValue = getSortableRowValues(a)[index];
+      const bValue = getSortableRowValues(b)[index];
+      if (typeof aValue === 'number') {
+        // Numeric sort
+        if (direction === 'asc') {
+          return (aValue as number) - (bValue as number);
+        }
+        return (bValue as number) - (aValue as number);
+      } else {
+        // String sort
+        if (direction === 'asc') {
+          return (aValue as string).localeCompare(bValue as string);
+        }
+        return (bValue as string).localeCompare(aValue as string);
+      }
+    });
+  };
+
+  const getSortParams = (columnIndex: number): ThProps['sort'] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      const sortedData = sortData(index, direction, filteredData);
+      const startIndex = (page - 1) * perPage;
+      const endIndex = (page - 1) * perPage + perPage;
+      setPaginatedRows(sortedData.slice(startIndex, endIndex));
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+    },
+    columnIndex,
+  });
+
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
     newPage: number,
@@ -68,7 +120,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     startIdx?: number,
     endIdx?: number
   ) => {
-    setPaginatedRows(filteredData.slice(startIdx, endIdx));
+    setPaginatedRows(sortedFilteredData.slice(startIdx, endIdx));
     setPage(newPage);
   };
 
@@ -79,7 +131,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     startIdx?: number,
     endIdx?: number
   ) => {
-    setPaginatedRows(filteredData.slice(startIdx, endIdx));
+    setPaginatedRows(sortedFilteredData.slice(startIdx, endIdx));
     setPage(newPage);
     setPerPage(newPerPage);
   };
@@ -155,16 +207,20 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
 
   useEffect(() => {
     const filteredData = data.filter(onFilter);
+    const sortedData = sortFilteredData(filteredData);
     setFilteredData(filteredData);
+    setSortedFilteredData(sortedData);
+    setPaginatedRows(sortedData.slice(0, perPage));
     setPage(1);
-    setPaginatedRows(filteredData.slice(0, perPage));
   }, [data]);
 
   useEffect(() => {
     const filteredData = data.filter(onFilter);
     setFilteredData(filteredData);
+    const sortedData = sortFilteredData(filteredData);
     setPage(1);
-    setPaginatedRows(filteredData.slice(0, perPage));
+    setSortedFilteredData(sortedData);
+    setPaginatedRows(sortedData.slice(0, perPage));
   }, [searchValue, typeSelections, dateSelection, releaseSelections]);
 
   const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
@@ -209,10 +265,18 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                 <span className="pf-v5-u-screen-reader">Row expansion</span>
               </Th>
             )}
-            <Th width={10}>{columnNames.name}</Th>
-            <Th width={10}>{columnNames.type}</Th>
-            <Th width={10}>{columnNames.release}</Th>
-            <Th width={10}>{columnNames.date}</Th>
+            <Th width={10} sort={getSortParams(0)}>
+              {columnNames.name}
+            </Th>
+            <Th width={10} sort={getSortParams(1)}>
+              {columnNames.type}
+            </Th>
+            <Th width={10} sort={getSortParams(2)}>
+              {columnNames.release}
+            </Th>
+            <Th width={10} sort={getSortParams(3)}>
+              {columnNames.date}
+            </Th>
           </Tr>
         </Thead>
         {filteredData.length === 0 ? (

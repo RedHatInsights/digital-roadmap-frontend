@@ -68,9 +68,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   useEffect(() => {
-    //update type
-    const apiData: any = fetchData();
-    setUpcomingChanges(apiData);
+    fetchData();
   }, []);
 
   const deprecationId = 'filter-by-type-deprecation';
