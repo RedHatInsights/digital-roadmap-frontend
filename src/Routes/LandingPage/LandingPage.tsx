@@ -9,11 +9,8 @@ import { Tab, TabTitleText, Tabs } from '@patternfly/react-core';
 
 import './landing-page.scss';
 
-const ReleasedTab = lazy(() => import('../../Components/Released/released'));
 const UpcomingTab = lazy(() => import('../../Components/Upcoming/Upcoming'));
 const LifecycleTab = lazy(() => import('../../Components/Lifecycle/Lifecycle'));
-
-const SystemCard = lazy(() => import('../../Components/SystemInfoCard/SystemInfoCard'));
 
 /**
  * A smart component that handles all the api calls and data needed by the dumb components.
@@ -55,29 +52,35 @@ const LandingPage = () => {
     <React.Fragment>
       <PageHeader>
         <PageHeaderTitle title="Digital Roadmap" />
-        <p>
-          Provides tailored forward-looking roadmap information and tailored information on how RHEL minor and major
-          releases will affect the customers environment
-        </p>
-        <SystemCard />
       </PageHeader>
       <Tabs className="pf-c-tabs pf-c-page-header pf-c-table" activeKey={activeTabKey} onSelect={handleTabClick}>
-        <Tab eventKey={0} title={<TabTitleText>Upcoming</TabTitleText>}>
-          <Alert id="changes-warning" variant="warning" title="Upcoming features are subject to change." />
-          <section className="pf-l-page__main-section pf-c-page__main-section" id="upcoming">
+        <Tab eventKey={0} title={<TabTitleText>Roadmap</TabTitleText>}>
+          <Alert
+            id="roadmap-warning"
+            variant="warning"
+            title="Upcoming features are subject to change. All future dates mentioned are close approximations, non definitive, and subject to change."
+            component="h2"
+          />
+          <section className="pf-l-page__main-section pf-c-page__main-section" id="roadmap">
             <Suspense fallback={<Spinner />}>
               <UpcomingTab />
             </Suspense>
           </section>
         </Tab>
-        <Tab eventKey={1} title={<TabTitleText>Released</TabTitleText>}>
+        {/*<Tab eventKey={1} title={<TabTitleText>Released</TabTitleText>}>
           <section className="pf-l-page__main-section pf-c-page__main-section" id="released">
             <Suspense fallback={<Spinner />}>
               <ReleasedTab />
             </Suspense>
           </section>
-        </Tab>
-        <Tab eventKey={2} title={<TabTitleText>Life Cycle</TabTitleText>}>
+        </Tab>*/}
+        <Tab eventKey={2} title={<TabTitleText>Life cycle</TabTitleText>}>
+          <Alert
+            id="lifecycle-warning"
+            variant="warning"
+            title="All future dates mentioned are close approximations, non definitive, and subject to change."
+            component="h2"
+          />
           <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
             <Suspense fallback={<Spinner />}>
               <LifecycleTab />
