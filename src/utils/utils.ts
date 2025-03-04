@@ -1,5 +1,6 @@
 import { To } from 'react-router-dom';
 import Moment from 'moment';
+import { Filter } from '../Components/Lifecycle/Lifecycle'
 
 export const linkBasename = '/insights/digital-roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -35,23 +36,36 @@ export const formatDate = (date: string) => {
   return Moment(date).format('MMM YYYY');
 }
 
-// export const decodeURIComponent = (queryParam: string, query:string) => {
-//   switch(query) {
-//     case 'page': {
-
-//     }
-//   }
-// };
-
-//will need to pass in the name of the filter and valuw
-
-export const buildURL = (filter1: string, filter1Value: string ,filter2: string = '', filter2Value: string = '') => {
-  let encodedData = '';
-  if (filter1) {
-    encodedData += `${filter1}=${filter1Value}`;
+export const decodeURIComponent = (queryParam: string, queryValue:string) => {
+  switch(queryParam) {
+    case 'sortByQueryParam': {
+      if (["Release version", "Retirement date", "Name", "Systems"].includes(queryValue)){
+        return true;
+      } else {
+          return false;
+      }
+    }
+    case 'dropdownQueryParam': {
+      console.log("hi")
+      if (["Red Hat Enterprise Linux", "RHEL 9 Application Streams"].includes(queryValue)){
+        return true;
+      } else {
+          return false;
+      }
+    }
   }
-  if (filter2) {
-    encodedData += `&${filter2}=${filter2Value}`;
+  };
+
+export const buildURL = (filter: Filter) => {
+  let encodedData = '';
+  if (filter['name']) {
+    encodedData += `name=${filter['name']}`;
+  }
+  if (filter['lifecycleDropdown']) {
+    encodedData += `&lifecycleDropdown=${filter['lifecycleDropdown']}`;
+  } 
+  if (filter['chartSortBy']) {
+    encodedData += `&chartSortBy=${filter['chartSortBy']}`;
   } 
   return encodedData;
 };

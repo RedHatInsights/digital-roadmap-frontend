@@ -22,7 +22,7 @@ import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildURL } from '../../utils/utils';
+import { buildURL, decodeURIComponent } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -39,7 +39,7 @@ const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/Lifecy
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import { formatDate } from '../../utils/utils';
 
-interface Filter {
+export interface Filter {
   name: string;
   chartSortBy: string;
   lifecycleDropdown: string;
@@ -73,6 +73,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const newFilters = structuredClone(filters);
     newFilters['chartSortBy'] = value;
     setFilters(newFilters);
+    setSearchParams(buildURL(newFilters))
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -89,6 +90,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     newFilters['lifecycleDropdown'] = value;
     newFilters['chartSortBy'] = DEFAULT_CHART_SORTBY_VALUE;
     setFilters(newFilters);
+    setSearchParams(buildURL(newFilters))
   };
 
   const getLifecycleType = (lifecycleType: string) => {
@@ -165,10 +167,22 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const nameQueryParam: any = searchParams.get('search');
+  const nameQueryParam: any = searchParams.get('name');
+  const dropdownQueryParam: any = searchParams.get('lifecycleDropdown')
+  const sortByQueryParam: any = searchParams.get('chartSortBy')
 
   useEffect(() => {
     fetchData();
+    if (sortByQueryParam != null) {
+        if(decodeURIComponent("sortByQueryParam", sortByQueryParam)) {
+          setChartSortByValue(sortByQueryParam) 
+        }
+    }
+    if (dropdownQueryParam != null){
+        if(decodeURIComponent("dropdownQueryParam", dropdownQueryParam)) {
+          setLifecycleDropdownValue(dropdownQueryParam)
+      }
+    }
   }, []);
 
   const resetDataFiltering = () => {
@@ -257,6 +271,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const newFilters = structuredClone(filters);
     newFilters['name'] = name;
     setFilters(newFilters);
+    setSearchParams(buildURL(newFilters))
   };
 
   const resetFilters = () => {
