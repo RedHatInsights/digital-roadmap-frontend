@@ -7,31 +7,41 @@ objects:
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: Frontend
     metadata:
-      name: digital-roadmap
+      name: roadmap
+
     spec:
+      envName: ${ENV_NAME}
+      title: Roadmap
+      deploymentRepo: https://github.com/RedHatInsights/digital-roadmap
+      image: ${IMAGE}:${IMAGE_TAG}
       API:
         versions:
           - v1
-      envName: ${ENV_NAME}
-      title: Starter App
-      deploymentRepo: https://github.com/RedHatInsights/digital-roadmap
+
       frontend:
         paths:
-          - /apps/digital-roadmap
-      image: ${IMAGE}:${IMAGE_TAG}
+          - /apps/roadmap
+
+      navItems:
+        - appId: "roadmap"
+          title: "Planning"
+          href: "/insights/planning"
+          product: "Red Hat Insights"
 
       module:
-        manifestLocation: '/apps/digital-roadmap/fed-mods.json'
+        manifestLocation: "/apps/roadmap/fed-mods.json"
         modules:
-          - id: 'overview'
-            module: './RootApp'
+          - id: "overview"
+            module: "./RootApp"
             routes:
-              - pathname: /staging/starter
+              - pathname: /insights/planning
 
 parameters:
   - name: ENV_NAME
     required: true
+
+  - name: IMAGE
+    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/digital-roadmap-frontend
+
   - name: IMAGE_TAG
     required: true
-  - name: IMAGE
-    value: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap-frontend
