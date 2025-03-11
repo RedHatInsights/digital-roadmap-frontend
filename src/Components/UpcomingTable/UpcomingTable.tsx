@@ -14,6 +14,7 @@ import {
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { TableRow } from '../../Components/UpcomingRow/UpcomingRow';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
@@ -55,6 +56,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
+  const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
 
   useEffect(() => {
     if (initialFilters.size === 0) {
@@ -235,6 +237,26 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     type: type,
   }));
 
+  const onClickArrow = () => {
+    if (expandedRows.size < paginatedRows.length) {
+      setExpandedRows(new Set(paginatedRows));
+    } else {
+      setExpandedRows(new Set([]));
+    }
+  };
+
+  const removeRepo = (repo: UpcomingChanges) => {
+    const newExpandedRows = new Set([...expandedRows]);
+    newExpandedRows.delete(repo);
+    setExpandedRows(newExpandedRows);
+  };
+
+  const addRepo = (repo: UpcomingChanges) => {
+    const newExpandedRows = new Set([...expandedRows]);
+    newExpandedRows.add(repo);
+    setExpandedRows(newExpandedRows);
+  };
+
   return (
     <React.Fragment>
       <UpcomingTableFilters
@@ -262,7 +284,19 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
           <Tr>
             {filteredData.length > 0 && (
               <Th>
-                <span className="pf-v5-u-screen-reader">Row expansion</span>
+                <span className="pf-v5-c-table__td pf-v5-c-table__toggle">
+                  <Button
+                    aria-expanded={expandedRows.size === paginatedRows.length}
+                    aria-label={expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'}
+                    variant="plain"
+                    onClick={onClickArrow}
+                    className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
+                  >
+                    <div className="pf-v5-c-table__toggle-icon">
+                      <AngleDownIcon />
+                    </div>
+                  </Button>
+                </span>
               </Th>
             )}
             <Th width={10} sort={getSortParams(0)}>
@@ -295,6 +329,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                 repo={repo}
                 columnNames={columnNames}
                 rowIndex={rowIndex}
+                isExpanded={expandedRows.has(repo)}
+                hideRepo={() => removeRepo(repo)}
+                showRepo={() => addRepo(repo)}
               />
             );
           })
