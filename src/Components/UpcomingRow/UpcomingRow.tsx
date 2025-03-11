@@ -3,7 +3,7 @@ import { Record, columnNames } from '../Upcoming/mock_data';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-import React, { useState } from 'react';
+import React from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
 import {
   Icon,
@@ -20,12 +20,29 @@ interface TableRowProps {
   repo: Record;
   columnNames: typeof columnNames;
   rowIndex: number;
+  isExpanded: boolean;
+  hideRepo: () => void;
+  showRepo: () => void;
 }
 
-export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowIndex, columnNames }) => {
-  const [isRepoExpanded, setIsRepoExpanded] = useState(false);
+export const TableRow: React.FunctionComponent<TableRowProps> = ({
+  repo,
+  rowIndex,
+  columnNames,
+  isExpanded,
+  showRepo,
+  hideRepo,
+}) => {
   let childIsFullWidth = false;
   let childHasNoPadding = false;
+
+  const onToggle = () => {
+    if (isExpanded) {
+      hideRepo();
+    } else {
+      showRepo();
+    }
+  };
 
   // Set Icons for the type column
   let typeIcon = null;
@@ -56,14 +73,15 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
     childIsFullWidth = [1, 3].includes(detailFormat);
     childHasNoPadding = [2, 3].includes(detailFormat);
   }
+
   return (
-    <Tbody isExpanded={isRepoExpanded}>
+    <Tbody isExpanded={isExpanded}>
       <Tr>
         <Td
           expand={{
             rowIndex: rowIndex,
-            isExpanded: isRepoExpanded,
-            onToggle: () => setIsRepoExpanded(!isRepoExpanded),
+            isExpanded,
+            onToggle,
             expandId: 'composable-expandable-example',
           }}
         />
@@ -84,7 +102,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({ repo, rowInde
         </Td>
       </Tr>
       {repo.details ? (
-        <Tr isExpanded={isRepoExpanded}>
+        <Tr isExpanded={isExpanded}>
           {!childIsFullWidth ? <Td /> : null}
           <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
             <div className="drf-lifecycle__upcoming-row-text-container">
