@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   Badge,
+  Form,
+  FormGroup,
   Menu,
   MenuContent,
   MenuItem,
@@ -10,6 +12,8 @@ import {
   PaginationVariant,
   Popper,
   SearchInput,
+  ToggleGroup,
+  ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarFilter,
@@ -96,6 +100,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const releaseToggleRef = React.useRef<HTMLButtonElement>(null);
   const releaseMenuRef = React.useRef<HTMLDivElement>(null);
   const releaseContainerRef = React.useRef<HTMLDivElement>(null);
+  const selectedToggle = 'relevant';
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
     <Pagination
@@ -531,6 +536,26 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             >
               {dateSelect}
             </ToolbarFilter>
+            <ToolbarItem> 
+              <Form>
+                <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
+                  <ToggleGroup aria-label="Whether only relevant or all items are displayed">
+                    <ToggleGroupItem
+                      text="Relevant only"
+                      buttonId="toggle-group-relevant"
+                      isSelected={selectedToggle === 'relevant'}
+                      //onChange={handleItemClick}
+                    />
+                    <ToggleGroupItem
+                      text="All"
+                      buttonId="toggle-group-all"
+                      isDisabled
+                      //onChange={handleItemClick}
+                    />
+                  </ToggleGroup>
+                </FormGroup>
+              </Form>
+            </ToolbarItem>
           </ToolbarGroup>
         </ToolbarToggleGroup>
         <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
