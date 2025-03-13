@@ -22,7 +22,7 @@ import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildURL, decodeURIComponent } from '../../utils/utils';
+import { buildURL } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -59,7 +59,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [error, setError] = useState<ErrorObject>();
   const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
-  let [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
@@ -70,10 +70,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
     setFilteredChartData(filterChartData(filteredChartData, value));
-    const newFilters = structuredClone(filters);
-    newFilters['chartSortBy'] = value;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters))
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -88,9 +84,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
     const newFilters = structuredClone(filters);
     newFilters['lifecycleDropdown'] = value;
-    newFilters['chartSortBy'] = DEFAULT_CHART_SORTBY_VALUE;
     setFilters(newFilters);
-    setSearchParams(buildURL(newFilters))
+    setSearchParams(buildURL(newFilters));
   };
 
   const getLifecycleType = (lifecycleType: string) => {
@@ -135,7 +130,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
     if (nameQueryParam !== null) {
       setNameFilter(nameQueryParam);
-      doInitialFilter(nameQueryParam, data);
+      doInitialFilter(nameQueryParam, data, dropdownValue);
     } else {
       setFilteredTableData(data);
       setFilteredChartData(filterChartDataByRetirementDate(data, dropdownValue));
@@ -143,11 +138,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const filterInitialData = (appStreams: Stream[], updatedSystems: SystemLifecycleChanges[]) => {
-    if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    if (dropdownQueryParam && dropdownQueryParam === DEFAULT_DROPDOWN_VALUE) {
       checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-    } else {
-      checkNameQueryParam(updatedSystems, OTHER_DROPDOWN_VALUE);
+      return;
     }
+    if (dropdownQueryParam && dropdownQueryParam === OTHER_DROPDOWN_VALUE) {
+      checkNameQueryParam(updatedSystems, OTHER_DROPDOWN_VALUE);
+      return;
+    }
+    checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
   };
 
   const fetchData = async () => {
@@ -169,22 +168,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const nameQueryParam: any = searchParams.get('name');
-  const dropdownQueryParam: any = searchParams.get('lifecycleDropdown')
-  const sortByQueryParam: any = searchParams.get('chartSortBy')
+  const nameQueryParam = searchParams.get('name');
+  const dropdownQueryParam = searchParams.get('lifecycleDropdown');
 
   useEffect(() => {
     fetchData();
-    if (sortByQueryParam != null) {
-        if(decodeURIComponent("sortByQueryParam", sortByQueryParam)) {
-          setChartSortByValue(sortByQueryParam) 
-        }
-    }
-    if (dropdownQueryParam != null){
-        if(decodeURIComponent("dropdownQueryParam", dropdownQueryParam)) {
-          setLifecycleDropdownValue(dropdownQueryParam)
-      }
-    }
   }, []);
 
   const resetDataFiltering = () => {
@@ -219,13 +207,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  const doInitialFilter = (name: string, data: Stream[] | SystemLifecycleChanges[]) => {
+  const doInitialFilter = (name: string, data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
     let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
 
-    if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
       currentDataSource = (data as Stream[]).filter((datum) => {
         // also check for streams.stream value
-        return `${datum.name.toLowerCase()} ${datum.stream.toLowerCase()}`.includes(name.toLowerCase());
+        return `${datum.name.toLowerCase()} ${datum.stream}`.includes(name.toLowerCase());
       });
     } else {
       currentDataSource = (data as SystemLifecycleChanges[]).filter((datum) => {
@@ -273,7 +261,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const newFilters = structuredClone(filters);
     newFilters['name'] = name;
     setFilters(newFilters);
-    setSearchParams(buildURL(newFilters))
+    setSearchParams(buildURL(newFilters));
   };
 
   const resetFilters = () => {
@@ -348,10 +336,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <>
         <LifecycleChart lifecycleData={filteredChartData} />
-        <LifecycleTable
-          data={filteredTableData}
-          type={lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ? 'streams' : 'rhel'}
-        />
+        <LifecycleTable data={filteredTableData} />
       </>
     );
   };
