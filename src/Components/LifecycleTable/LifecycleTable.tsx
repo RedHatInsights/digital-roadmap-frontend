@@ -126,8 +126,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { name, rhel_major_version, start_date, end_date, systems } = repo;
-    return [name, rhel_major_version, start_date, end_date, systems];
+    const { name, os_major, start_date, end_date, count } = repo;
+    return [name, os_major, start_date, end_date, count];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
@@ -198,20 +198,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
-      if (!repo.name || !repo.stream || !repo.rhel_major_version) {
+      if (!repo.name || !repo.stream || !repo.os_major) {
         return;
       }
       return (
         <Tr
-          key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}
+          key={`${repo.name}-${repo.stream}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}
         >
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name} {repo.stream}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>N/A</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>{repo.count}</Td>
         </Tr>
       );
     });

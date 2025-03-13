@@ -1,44 +1,44 @@
 const VIRT = {
-  arch: 'x86_64',
-  context: '9edba152',
-  description: 'A virtualization module',
   end_date: '2029-06-31',
   name: 'virt',
   profiles: { common: [] },
-  rhel_major_version: 8,
+  os_major: 8,  
+  os_minor: 0,
+  os_lifecycle: "",
+  support_status: "Supported",
   start_date: '2019-05-12',
   stream: 'rhel',
   version: '820190226174025',
-  systems: 3, // this is not really reflective of API
+  count: 3, // this is not really reflective of API
 };
 
 const VARNISH = {
-  arch: 'x86_64',
-  context: '9edba152',
   description: 'Varnish Cache web application accelerator',
   end_date: '2029-05-31',
   name: 'varnish',
   profiles: { common: [] },
-  rhel_major_version: 9,
+  os_major: 9,
+  os_minor: 2,
+  os_lifecycle: "",
+  support_status: "Supported",
   start_date: '2019-05-07',
   stream: '6',
   version: '820181213144015',
-  systems: 1, // this is not really reflective of API
+  count: 1, // this is not really reflective of API
 };
 
 const IDM = {
-  arch: 'x86_64',
-  context: '49cc9d1b',
-  description:
-    'RHEL IdM is an integrated solution to provide centrally managed Identity (users, hosts, services), Authentication (SSO, 2FA), and Authorization (host access control, SELinux user roles, services). The solution provides features for further integration with Linux based clients (SUDO, automount) and integration with Active Directory based infrastructures (Trusts).\nThis module stream supports only client side of RHEL IdM solution',
   end_date: '2029-05-31',
   name: 'idm',
   profiles: { common: [] },
-  rhel_major_version: 8,
+  os_major: 8,
+  os_minor: 4,
+  os_lifecycle: "",
+  support_status: "Supported",
   start_date: '2019-05-07',
   stream: 'client',
   version: '820190227213458',
-  systems: 0, // this is not really reflective of API
+  count: 0, // this is not really reflective of API
 };
 
 const RHEL_NINE_TWO = {

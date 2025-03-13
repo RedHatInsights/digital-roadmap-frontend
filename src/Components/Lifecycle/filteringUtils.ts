@@ -57,8 +57,8 @@ export const filterChartDataByRetirementDate = (data: Stream[] | SystemLifecycle
 export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      if (a.rhel_major_version > b.rhel_major_version) return -1;
-      if (a.rhel_major_version < b.rhel_major_version) return 1;
+      if (a.os_major > b.os_major) return -1;
+      if (a.os_major < b.os_major) return 1;
       return 0;
     });
   }
@@ -74,8 +74,8 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
 export const filterChartDataBySystems = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      if (a.systems > b.systems) return -1;
-      if (a.systems < b.systems) return 1;
+      if (a.count > b.count) return -1;
+      if (a.count < b.count) return 1;
       return 0;
     });
   }

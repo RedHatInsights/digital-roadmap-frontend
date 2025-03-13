@@ -18,7 +18,6 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
-import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
@@ -118,18 +117,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     });
   };
 
-  const updateAppLifecycleData = (data: AppLifecycleChanges[]): Stream[] => {
-    return data
-      .flatMap((repo) => repo.streams)
-      .map((stream) => {
-        const version = data.filter((appLifecycleChanges) =>
-          appLifecycleChanges.streams.some((str) => str.context === stream.context)
-        )[0].rhel_major_version;
-        stream.rhel_major_version = version;
-
-        return stream;
-      })
-      .filter((stream) => stream.rhel_major_version === 9);
+  const updateAppLifecycleData = (data: Stream[]) => {
+    return data.filter((stream) => stream.rolling === false && stream.os_major === 9);
   };
 
   const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
@@ -172,7 +161,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const systemData = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = systemData.data || [];
-      const appStreams = updateAppLifecycleData(appData.data) || [];
+      const appStreams = appData.data || [];
       setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
       const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
@@ -304,7 +293,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       (filteredTableData as Stream[]).forEach((item: Stream) =>
         data.push({
           Name: item.name,
-          Release: item.rhel_major_version,
+          Release: item.os_major,
           'Release date': formatDate(item.start_date),
           'Retirement date': formatDate(item.end_date),
           Systems: 'N/A',
