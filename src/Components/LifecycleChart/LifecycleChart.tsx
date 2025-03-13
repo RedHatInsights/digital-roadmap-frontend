@@ -6,8 +6,11 @@ import {
   ChartBar,
   ChartGroup,
   ChartLine,
+  ChartLegend,
   ChartTooltip,
   ChartVoronoiContainer,
+  getInteractiveLegendEvents,
+  getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -23,12 +26,17 @@ interface ChartDataObject {
   packageType: string;
   version: string;
   numSystems: string;
+  typeID?: number | null;
+  name: string;
 }
 
-interface BarData extends Omit<ChartDataObject, 'x'> {
-  name: string;
-  x: number;
-  fill: string;
+interface Datum {
+  childName: string;
+  x: string;
+  y?: string | null;
+  name?: string | null;
+  packageType?: string | null;
+  y0?: string | null;
 }
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
@@ -46,6 +54,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
+  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
 
   const formatChartData = (
     name: string,
@@ -63,6 +72,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         packageType,
         version,
         numSystems,
+        name: name,
       },
     ]);
   };
@@ -109,7 +119,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
     if (dataType === 'appLifecycle') {
       (lifecycleData as Stream[]).forEach((item) => {
-        if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.rhel_major_version === 8) {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
           return;
         }
         formatChartData(
@@ -143,6 +153,55 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
 
   constructLifecycleData(lifecycleData);
 
+  // get unique package types
+  const uniqueTypes = [...new Set(updatedLifecycleData.flat().map((d) => d.packageType))];
+
+  // Add typeID to updatedLifecycleData
+  updatedLifecycleData.forEach((group) => {
+    group.forEach((data) => {
+      data.typeID = uniqueTypes.indexOf(data.packageType);
+    });
+  });
+
+  // group by package type
+  const groupedData = uniqueTypes
+    .map((type) => ({
+      packageType: type,
+      datapoints: updatedLifecycleData
+        .flat()
+        .filter((d) => d.packageType === type)
+        .map((d) => ({
+          name: d.name,
+          packageType: d.packageType,
+          version: d.version,
+          numSystems: d.numSystems,
+          x: d.x,
+          y: d.y,
+          y0: d.y0,
+        })),
+    }))
+    .concat([
+      { packageType: 'Support ends within 6 months', datapoints: [] },
+      { packageType: 'Retired', datapoints: [] },
+      { packageType: 'Not installed', datapoints: [] },
+      { packageType: 'Upcoming release', datapoints: [] },
+    ]);
+
+  const getLegendData = () =>
+    groupedData.map((s, index) => ({
+      childName: `series-${index}`,
+      name: s.packageType,
+      symbol: { fill: `${getPackageColor(s.packageType)}` },
+      ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
+    }));
+
+  const handleLegendClick = (props: { index: number }) => {
+    if (!hiddenSeries.delete(props.index)) {
+      hiddenSeries.add(props.index);
+    }
+    setHiddenSeries(new Set(hiddenSeries));
+  };
+
   const formatDate = (date: Date) => {
     const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
     return dateString;
@@ -165,40 +224,16 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
   };
 
-  const getChart = (lifecycle: ChartDataObject[], index: number) => {
-    const data: BarData[] = [];
-
-    lifecycle?.forEach((datum: ChartDataObject) => {
-      data.push({
-        ...datum,
-        name: datum.x,
-        x: (index += 1),
-        fill: getPackageColor(datum.packageType),
-      });
-    });
-
-    if (data?.length === 0) {
-      return null;
-    }
-    return (
-      <ChartBar
-        data={data}
-        key={index}
-        style={{
-          data: {
-            fill: ({ datum }) => datum.fill,
-            stroke: ({ datum }) => datum.fill,
-          },
-        }}
-      />
-    );
-  };
-
   const fetchTicks = () => {
     return updatedLifecycleData.map((data) => {
       return data[0].x;
     });
   };
+
+  const isHidden = (index: number) => hiddenSeries.has(index);
+
+  // needs to be a specific tuple format or filter on hover breaks
+  const chartNames = groupedData.map((_, i) => [`series-${i}`]) as [string[]];
 
   return (
     <div className="drf-lifecycle__chart" tabIndex={0}>
@@ -208,8 +243,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         ariaTitle="Lifecycle bar chart"
         containerComponent={
           <ChartVoronoiContainer
-            labelComponent={<ChartTooltip constrainToVisibleArea />}
-            labels={({ datum }) => {
+            labels={({ datum }: { datum: ChartDataObject }) => {
               if (datum.name && datum.packageType && datum.y0) {
                 return `Name: ${datum.name}\nRelease: ${datum.version}\nSupport Type: ${datum.packageType}\nSystems: ${
                   datum.numSystems
@@ -217,15 +251,17 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
               }
               return formatDate(new Date());
             }}
+            labelComponent={<ChartTooltip constrainToVisibleArea />}
+            voronoiPadding={50}
           />
         }
-        legendData={[
-          { name: 'Supported', symbol: { fill: 'var(--pf-v5-global--success-color--100)' } },
-          { name: 'Support ends within 6 months', symbol: { fill: 'var(--pf-v5-global--warning-color--100)' } },
-          { name: 'Retired', symbol: { fill: 'var(--pf-v5-global--danger-color--100)' } },
-          { name: 'Not installed', symbol: { fill: 'var(--pf-v5-global--palette--blue-200)' } },
-          { name: 'Upcoming release', symbol: { fill: 'var(--pf-v5-global--palette--blue-100)' } },
-        ]}
+        events={getInteractiveLegendEvents({
+          chartNames,
+          isHidden,
+          legendName: 'chart5-ChartLegend',
+          onLegendClick: handleLegendClick,
+        })}
+        legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} />}
         legendPosition="bottom-left"
         name="chart5"
         padding={{
@@ -247,7 +283,30 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           />
         )}
         <ChartAxis showGrid tickValues={fetchTicks()} />
-        <ChartGroup horizontal>{updatedLifecycleData.map((data, index) => getChart(data, index))}</ChartGroup>
+        <ChartGroup horizontal>
+          {groupedData.map((s, index) => {
+            return (
+              <ChartBar
+                data={
+                  !hiddenSeries.has(index)
+                    ? s.datapoints
+                    : s.datapoints.map((d) => {
+                        return { ...d, x: null };
+                      })
+                }
+                key={`bar-${index}`}
+                name={`series-${index}`}
+                barWidth={10}
+                style={{
+                  data: {
+                    fill: getPackageColor(s.packageType),
+                    stroke: getPackageColor(s.packageType),
+                  },
+                }}
+              />
+            );
+          })}
+        </ChartGroup>
         <ChartLine
           y={() => Date.now()}
           y0={() => Date.now()}
