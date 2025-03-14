@@ -46,7 +46,7 @@ spec:
     name: pipeline-build
 
   taskRunSpecs:
-    - pipelineTaskNmae: sast-coverity-check
+    - pipelineTaskName: sast-coverity-check
       stepOverrides:
         - name: build
           computeResources:
