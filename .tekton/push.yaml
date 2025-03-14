@@ -18,7 +18,7 @@ metadata:
     pipelines.appstudio.openshift.io/type: build
 
   namespace: rhel-lightspeed-tenant
-  name: digital-roadmap-frontend-push
+  name: digital-roadmap-frontend-on-push
 
 spec:
   params:
@@ -47,15 +47,19 @@ spec:
 
   taskRunSpecs:
     - pipelineTaskName: sast-coverity-check
-      stepOverrides:
+      stepSpecs:
         - name: build
           computeResources:
             requests:
+              memory: 8Gi
+            limits:
               memory: 8Gi
 
         - name: postprocess
           computeResources:
             requests:
+              memory: 8Gi
+            limits:
               memory: 8Gi
 
   workspaces:
