@@ -44,6 +44,19 @@ spec:
   pipelineRef:
     name: pipeline-build
 
+  taskRunSpecs:
+    - pipelineTaskName: sast-coverity-check
+      stepOverrides:
+        - name: build
+          computeResources:
+            requests:
+              memory: 8Gi
+
+        - name: postprocess
+          computeResources:
+            requests:
+              memory: 8Gi
+
   workspaces:
     - name: git-auth
       secret:

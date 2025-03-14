@@ -650,7 +650,8 @@ spec:
     - name: coverity-availability-check
 
       runAfter:
-        - build-image-index
+        - prefetch-dependencies
+        - create-frontend-containerfile
 
       taskRef:
         resolver: bundles
