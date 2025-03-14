@@ -51,7 +51,12 @@ spec:
         - name: build
           computeResources:
             requests:
-              memory: 2Gi
+              memory: 8Gi
+
+        - name: postprocess
+          computeResources:
+            requests:
+              memory: 8Gi
 
   workspaces:
     - name: git-auth
