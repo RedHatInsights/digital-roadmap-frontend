@@ -146,7 +146,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setTimeout(() => {
       if (releaseMenuRef.current) {
         const firstElement = releaseMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
+        (firstElement as HTMLElement | null)?.focus();
       }
     }, 0);
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
@@ -250,7 +250,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setTimeout(() => {
       if (dateMenuRef.current) {
         const firstElement = dateMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
+        (firstElement as HTMLElement | null)?.focus();
       }
     }, 0);
     setIsDateMenuOpen(!isDateMenuOpen);
@@ -336,7 +336,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setTimeout(() => {
       if (typeMenuRef.current) {
         const firstElement = typeMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
+        (firstElement as HTMLElement | null)?.focus();
       }
     }, 0);
     setIsTypeMenuOpen(!isTypeMenuOpen);
@@ -436,7 +436,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setTimeout(() => {
       if (attributeMenuRef.current) {
         const firstElement = attributeMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
+        (firstElement as HTMLElement | null)?.focus();
       }
     }, 0);
     setIsAttributeMenuOpen(!isAttributeMenuOpen);
