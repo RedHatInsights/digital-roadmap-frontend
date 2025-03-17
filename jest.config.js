@@ -13,7 +13,7 @@ module.exports = {
     '\\.(css|scss)$': 'identity-obj-proxy',
   },
   transformIgnorePatterns: ['node_modules/(?!@patternfly)'],
-  setupFilesAfterEnv: ['<rootDir>/config/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
   transform: {
     '^.+\\.(ts|js)x?$': [
       '@swc/jest',
