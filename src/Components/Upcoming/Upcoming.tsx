@@ -15,11 +15,13 @@ import {
 
 import { getUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
+import { ErrorObject } from '../../types/ErrorObject';
 
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { pluralize } from '../../utils/utils';
+import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -42,11 +44,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
   const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
   const [currentFilters, setCurrentFilters] = React.useState<Set<string>>(new Set());
+  const [error, setError] = React.useState<ErrorObject>();
 
-  const fetchData = () => {
+  const fetchData = async () => {
     setIsLoading(true);
-    getUpcomingChanges()
-      .then((data) => {
+    try {
+        const data = await getUpcomingChanges();
         const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
         setUpcomingChanges(upcomingChangesParagraphs);
         const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
@@ -60,11 +63,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setNumChanges(filteredChanges.length);
         setVisibleData(upcomingChangesParagraphs);
         setIsLoading(false);
-      })
-      .catch(() => {
+      }
+      catch(error: any) {
         // Dispatch notif here
+        console.error('Error fetching lifecycle changes:', error);
+        setError({message: error});
+      } finally{
         setIsLoading(false);
-      });
+      }
   };
 
   useEffect(() => {
@@ -105,6 +111,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         </Bullseye>
       </div>
     );
+  }
+
+  if (error) {
+    return <ErrorState errorTitle="Failed to load data" errorDescription={ String(error.message) }/>;
   }
 
   return (
