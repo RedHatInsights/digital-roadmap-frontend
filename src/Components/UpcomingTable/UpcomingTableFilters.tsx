@@ -145,8 +145,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (releaseMenuRef.current) {
-        const firstElement = releaseMenuRef.current.querySelector('li > button:not(:disabled)');
-        (firstElement as HTMLElement | null)?.focus();
+        const firstElement = releaseMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
+        if (firstElement) {
+          (firstElement as HTMLElement).focus();
+        }
       }
     }, 0);
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
@@ -249,8 +253,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (dateMenuRef.current) {
-        const firstElement = dateMenuRef.current.querySelector('li > button:not(:disabled)');
-        (firstElement as HTMLElement | null)?.focus();
+        const firstElement = dateMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
+        if (firstElement) {
+          (firstElement as HTMLElement).focus();
+        }
       }
     }, 0);
     setIsDateMenuOpen(!isDateMenuOpen);
@@ -335,8 +343,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (typeMenuRef.current) {
-        const firstElement = typeMenuRef.current.querySelector('li > button:not(:disabled)');
-        (firstElement as HTMLElement | null)?.focus();
+        const firstElement = typeMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
+        if (firstElement) {
+          (firstElement as HTMLElement).focus();
+        }
       }
     }, 0);
     setIsTypeMenuOpen(!isTypeMenuOpen);
@@ -435,8 +447,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     ev.stopPropagation(); // Stop handleClickOutside from handling
     setTimeout(() => {
       if (attributeMenuRef.current) {
-        const firstElement = attributeMenuRef.current.querySelector('li > button:not(:disabled)');
-        (firstElement as HTMLElement | null)?.focus();
+        const firstElement = attributeMenuRef.current.querySelector(
+          'li > button:not(:disabled)'
+        );
+        if (firstElement) {
+          (firstElement as HTMLElement).focus();
+        }
       }
     }, 0);
     setIsAttributeMenuOpen(!isAttributeMenuOpen);
