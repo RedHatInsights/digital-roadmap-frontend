@@ -7,7 +7,6 @@ import { formatDate } from '../../utils/utils';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
-  type: 'streams' | 'rhel';
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -27,7 +26,7 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 
-export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data, type }: LifecycleTableProps) => {
+export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
   // as the identifier of the sorted column. See the "Compound expandable" example.
@@ -41,6 +40,19 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+
+  //check data type and contruct a chart array
+  const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
+    if (!lifecycleData || lifecycleData.length === 0) {
+      return '';
+    }
+    if ('arch' in lifecycleData[0]) {
+      return 'streams';
+    }
+    return 'rhel';
+  };
+
+  const type = checkDataType(data);
 
   React.useEffect(() => {
     setActiveAppSortDirection(undefined);
@@ -57,7 +69,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     }
     setSortedRows(sortedData);
     setPaginatedRows(sortedData.slice(0, 10));
-  }, [data, type]);
+  }, [data]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -194,7 +206,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}
         >
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
-            {repo.name}
+            {repo.name} {repo.stream}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
