@@ -32,7 +32,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // as the identifier of the sorted column. See the "Compound expandable" example.
   const [activeSystemSortIndex, setActiveSystemSortIndex] = React.useState<number | undefined>();
   const [activeAppSortIndex, setActiveAppSortIndex] = React.useState<number | undefined>();
-
   // Sort direction of the currently sorted column
   const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<SortByDirection>();
   const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<SortByDirection>();

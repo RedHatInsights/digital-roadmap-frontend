@@ -266,7 +266,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         name="chart5"
         padding={{
           bottom: 60, // Adjusted to accommodate legend
-          left: 160,
+          left: 180,
           right: 50, // Adjusted to accommodate tooltip
           top: 20,
         }}

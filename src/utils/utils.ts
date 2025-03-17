@@ -30,7 +30,7 @@ export function pluralize(i: number, singular: string, plural?: string) {
 }
 
 export const formatDate = (date: string) => {
-  if (date === 'Unknown') {
+  if (date === 'Unknown' || date === null) {
     return 'Not available';
   }
   return Moment(date).format('MMM YYYY');
