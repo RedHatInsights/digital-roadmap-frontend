@@ -6,6 +6,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   coverageDirectory: './coverage/',
   collectCoverage: true,
+  coverageProvider: 'v8',
   coverageReporters: ['html-spa', 'text', 'text-summary', 'clover', 'json'],
   collectCoverageFrom: ['src/**/**/*.tsx', 'src/**/**/*.ts', '!src/**/stories/*'],
   roots: ['<rootDir>/src/'],
