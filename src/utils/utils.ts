@@ -36,18 +36,10 @@ export const formatDate = (date: string) => {
   return Moment(date).format('MMM YYYY');
 };
 
-export const decodeURIComponent = (queryParam: string, queryValue: string) => {
+export const checkValidityOfQueryParam = (queryParam: string, queryValue: string) => {
   switch (queryParam) {
     case 'sortByQueryParam': {
-      if (['Release version', 'Retirement date', 'Name', 'Systems'].includes(queryValue)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-    case 'dropdownQueryParam': {
-      console.log('hi');
-      if (['Red Hat Enterprise Linux', 'RHEL 9 Application Streams'].includes(queryValue)) {
+      if (['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'].includes(queryValue)) {
         return true;
       } else {
         return false;
