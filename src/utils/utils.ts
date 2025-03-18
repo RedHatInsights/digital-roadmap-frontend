@@ -1,5 +1,6 @@
 import { To } from 'react-router-dom';
 import Moment from 'moment';
+import { Filter } from '../Components/Lifecycle/Lifecycle';
 
 export const linkBasename = '/insights/digital-roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -33,4 +34,30 @@ export const formatDate = (date: string) => {
     return 'Not available';
   }
   return Moment(date).format('MMM YYYY');
+};
+
+export const checkValidityOfQueryParam = (queryParam: string, queryValue: string) => {
+  switch (queryParam) {
+    case 'sortByQueryParam': {
+      if (['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'].includes(queryValue)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+};
+
+export const buildURL = (filter: Filter) => {
+  let encodedData = '';
+  if (filter['name']) {
+    encodedData += `name=${filter['name']}`;
+  }
+  if (filter['lifecycleDropdown']) {
+    encodedData += `&lifecycleDropdown=${filter['lifecycleDropdown']}`;
+  }
+  if (filter['chartSortBy']) {
+    encodedData += `&chartSortBy=${filter['chartSortBy']}`;
+  }
+  return encodedData;
 };
