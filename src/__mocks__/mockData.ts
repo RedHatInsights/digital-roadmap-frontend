@@ -9,7 +9,8 @@ const VIRT = {
   start_date: '2019-05-12',
   stream: 'rhel',
   version: '820190226174025',
-  count: 3, // this is not really reflective of API
+  count: 3,
+  rolling: false,
 };
 
 const VARNISH = {
@@ -24,7 +25,8 @@ const VARNISH = {
   start_date: '2019-05-07',
   stream: '6',
   version: '820181213144015',
-  count: 1, // this is not really reflective of API
+  count: 1,
+  rolling: false,
 };
 
 const IDM = {
@@ -38,7 +40,8 @@ const IDM = {
   start_date: '2019-05-07',
   stream: 'client',
   version: '820190227213458',
-  count: 0, // this is not really reflective of API
+  count: 0,
+  rolling: false,
 };
 
 const RHEL_NINE_TWO = {

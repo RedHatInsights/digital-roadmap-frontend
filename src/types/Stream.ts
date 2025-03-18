@@ -8,4 +8,5 @@ export interface Stream {
   support_status: string;
   count: number;
   stream: string;
+  rolling : boolean;
 }

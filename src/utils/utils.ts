@@ -29,7 +29,7 @@ export function pluralize(i: number, singular: string, plural?: string) {
   return `${i === 1 ? singular : plural}`;
 }
 
-export const formatDate = (date: string) => {
+export const formatDate = (date: string | undefined) => {
   if (date === 'Unknown' || date === null) {
     return 'Not available';
   }
