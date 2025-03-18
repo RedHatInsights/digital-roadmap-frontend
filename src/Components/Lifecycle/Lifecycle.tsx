@@ -186,6 +186,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   useEffect(() => {
     fetchData();
+    if (sortByQueryParam != null) {
+        if(decodeURIComponent("sortByQueryParam", sortByQueryParam)) {
+          setChartSortByValue(sortByQueryParam) 
+        }
+    }
+    if (dropdownQueryParam != null){
+        if(decodeURIComponent("dropdownQueryParam", dropdownQueryParam)) {
+          setLifecycleDropdownValue(dropdownQueryParam)
+      }
+    }
   }, []);
 
   const resetDataFiltering = () => {
