@@ -70,7 +70,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         <ToolbarGroup>
           <ToolbarItem variant="bulk-select">
             <Form>
-              <FormGroup className="drf-lifecycle__filter-formgroup" label="Life cycle" fieldId="data-switcher">
+              <FormGroup className="drf-lifecycle__filter-formgroup" label="Life Cycle" fieldId="data-switcher">
                 <LifecycleDropdown
                   currentValue={lifecycleDropdownValue}
                   setCurrentValue={(value: string) => setLifecycleDropdownValue(value)}

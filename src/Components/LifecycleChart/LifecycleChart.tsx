@@ -120,7 +120,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
     if (dataType === 'appLifecycle') {
       (lifecycleData as Stream[]).forEach((item) => {
-        if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.os_major === 8 || item.start_date === null || item.end_date === null) {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.start_date === null || item.end_date === null) {
           return;
         }
         formatChartData(
