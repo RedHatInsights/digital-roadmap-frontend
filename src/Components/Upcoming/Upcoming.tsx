@@ -66,7 +66,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
       catch(error: any) {
         // Dispatch notif here
-        console.error('Error fetching lifecycle changes:', error);
+        console.error('Error fetching upcoming changes:', error);
         setError({message: error});
       } finally{
         setIsLoading(false);
