@@ -201,9 +201,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
         return;
       }
       return (
-        <Tr
-          key={`${repo.name}-${repo.stream}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}
-        >
+        <Tr key={`${repo.name}-${repo.stream}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name} {repo.stream}
           </Td>
@@ -230,9 +228,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
-      if (!repo.name || !repo.count) {
+      if (!repo.name || !repo.release_date || !repo.retirement_date || !repo.count) {
         return;
       }
+
       return (
         <Tr key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>

@@ -36,8 +36,8 @@ const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/Lifecy
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 import { download, generateCsv, mkConfig } from 'export-to-csv';
-import { formatDate } from '../../utils/utils';
 import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
+import { formatDate, getLifecycleType, getNewName } from '../../utils/utils';
 
 export interface Filter {
   name: string;
@@ -90,24 +90,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     newFilters['lifecycleDropdown'] = value;
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
-  };
-
-  const getLifecycleType = (lifecycleType: string) => {
-    switch (lifecycleType) {
-      case 'EUS':
-        return ' EUS';
-      case 'ELS':
-        return ' ELS';
-      case 'E4S':
-        return ' for SAP';
-      default:
-        return '';
-    }
-  };
-
-  const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
-    const lifecycleText = getLifecycleType(lifecycleType);
-    return `${name} ${major}.${minor}${lifecycleText}`;
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {

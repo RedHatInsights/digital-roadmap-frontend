@@ -61,3 +61,26 @@ export const buildURL = (filter: Filter) => {
   }
   return encodedData;
 };
+
+export const getLifecycleType = (lifecycleType: string) => {
+  switch (lifecycleType) {
+    case 'EUS':
+      return ' EUS';
+    case 'ELS':
+      return ' ELS';
+    case 'E4S':
+      return ' for SAP';
+    default:
+      return '';
+  }
+};
+
+export const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+  const lifecycleText = getLifecycleType(lifecycleType);
+  return `${name} ${major}.${minor}${lifecycleText}`;
+};
+
+export const getNewChartName = (name: string, major: number, minor: number, lifecycleType: string) => {
+  const lifecycleText = getLifecycleType(lifecycleType);
+  return `${name} ${lifecycleText}`;
+};
