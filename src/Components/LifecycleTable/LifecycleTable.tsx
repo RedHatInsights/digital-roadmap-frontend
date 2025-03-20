@@ -126,7 +126,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
     const { name, os_major, start_date, end_date, count } = repo;
-    return [name, os_major, formatDate(start_date), formatDate(end_date), count];
+    return [name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({

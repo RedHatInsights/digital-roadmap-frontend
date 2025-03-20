@@ -1,5 +1,4 @@
 import { To } from 'react-router-dom';
-import Moment from 'moment';
 import { Filter } from '../Components/Lifecycle/Lifecycle';
 
 export const linkBasename = '/insights/digital-roadmap';
@@ -29,12 +28,13 @@ export function pluralize(i: number, singular: string, plural?: string) {
   return `${i === 1 ? singular : plural}`;
 }
 
-export const formatDate = (date: string | undefined) => {
+export const formatDate = (date: string | null) => {
   if (date === 'Unknown' || date === null) {
     return 'Not available';
   }
-  return Moment(date).format('MMM YYYY');
-};
+  const dateAsDate = new Date(date);
+  return dateAsDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  };
 
 export const checkValidityOfQueryParam = (queryParam: string, queryValue: string) => {
   switch (queryParam) {
