@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Badge,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Form,
   FormGroup,
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuList,
   MenuToggle,
   Pagination,
   PaginationVariant,
-  Popper,
   SearchInput,
   ToggleGroup,
   ToggleGroupItem,
@@ -86,20 +84,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState<boolean>(false);
-  const typeToggleRef = React.useRef<HTMLButtonElement>(null);
-  const typeMenuRef = React.useRef<HTMLDivElement>(null);
-  const typeContainerRef = React.useRef<HTMLDivElement>(null);
   const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Date'>('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
-  const attributeToggleRef = React.useRef<HTMLButtonElement>(null);
-  const attributeMenuRef = React.useRef<HTMLDivElement>(null);
-  const attributeContainerRef = React.useRef<HTMLDivElement>(null);
-  const dateToggleRef = React.useRef<HTMLButtonElement>(null);
-  const dateMenuRef = React.useRef<HTMLDivElement>(null);
-  const dateContainerRef = React.useRef<HTMLDivElement>(null);
-  const releaseToggleRef = React.useRef<HTMLButtonElement>(null);
-  const releaseMenuRef = React.useRef<HTMLDivElement>(null);
-  const releaseContainerRef = React.useRef<HTMLDivElement>(null);
   const selectedToggle = 'relevant';
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
@@ -117,38 +103,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     />
   );
 
-  const handleReleaseMenuKeys = (event: KeyboardEvent) => {
-    if (isReleaseMenuOpen && releaseMenuRef.current?.contains(event.target as Node)) {
-      if (event.key === 'Escape' || event.key === 'Tab') {
-        setIsReleaseMenuOpen(!isReleaseMenuOpen);
-        releaseToggleRef.current?.focus();
-      }
-    }
-  };
-
-  const handleReleaseClickOutside = (event: MouseEvent) => {
-    if (isReleaseMenuOpen && !releaseMenuRef.current?.contains(event.target as Node)) {
-      setIsReleaseMenuOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleReleaseMenuKeys);
-    window.addEventListener('click', handleReleaseClickOutside);
-    return () => {
-      window.removeEventListener('keydown', handleReleaseMenuKeys);
-      window.removeEventListener('click', handleReleaseClickOutside);
-    };
-  }, [isReleaseMenuOpen, releaseMenuRef]);
-
   const onReleaseToggleClick = (ev: React.MouseEvent) => {
-    ev.stopPropagation(); // Stop handleClickOutside from handling
-    setTimeout(() => {
-      if (releaseMenuRef.current) {
-        const firstElement = releaseMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
-      }
-    }, 0);
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
   };
 
@@ -166,93 +121,49 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     );
   }
 
-  const releaseToggle = (
-    <MenuToggle
-      ref={releaseToggleRef}
-      onClick={onReleaseToggleClick}
-      isExpanded={isReleaseMenuOpen}
-      {...(releaseSelections.length > 0 && {
-        badge: <Badge isRead>{releaseSelections.length}</Badge>,
-      })}
-      style={
-        {
-          width: '200px',
-        } as React.CSSProperties
-      }
-    >
-      Filter by release
-    </MenuToggle>
-  );
-
-  const releaseMenu = (
-    <Menu
-      ref={releaseMenuRef}
+  const releaseSelect = (
+    <Dropdown
+      isOpen={isReleaseMenuOpen}
       id="attribute-search-status-menu"
       onSelect={onReleaseSelect}
       selected={releaseSelections}
+      onOpenChange={(isOpen: boolean) => setIsReleaseMenuOpen(isOpen)}
+      toggle={(toggleRef) => (
+        <MenuToggle
+          ref={toggleRef}
+          onClick={onReleaseToggleClick}
+          isExpanded={isReleaseMenuOpen}
+          {...(releaseSelections.length > 0 && {
+            badge: <Badge isRead>{releaseSelections.length}</Badge>,
+          })}
+          style={
+            {
+              width: '200px',
+            } as React.CSSProperties
+          }
+        >
+          Filter by release
+        </MenuToggle>
+      )}
+      ouiaId="attribute-search-type-menu"
+      shouldFocusToggleOnSelect
     >
-      <MenuContent>
-        <MenuList>
-          {releaseOptions.map((option) => (
-            <MenuItem
-              hasCheckbox
-              key={option.release}
-              isSelected={releaseSelections.includes(option.release)}
-              itemId={option.release}
-            >
-              {option.release}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </MenuContent>
-    </Menu>
+      <DropdownList>
+        {releaseOptions.map((option) => (
+          <DropdownItem
+            hasCheckbox
+            key={option.release}
+            isSelected={releaseSelections.includes(option.release)}
+            itemId={option.release}
+          >
+            {option.release}
+          </DropdownItem>
+        ))}
+      </DropdownList>
+    </Dropdown>
   );
-
-  const releaseSelect = (
-    <div ref={releaseContainerRef}>
-      <Popper
-        trigger={releaseToggle}
-        triggerRef={releaseToggleRef}
-        popper={releaseMenu}
-        popperRef={releaseMenuRef}
-        appendTo={releaseContainerRef.current || undefined}
-        isVisible={isReleaseMenuOpen}
-      />
-    </div>
-  );
-
-  const handleDateMenuKeys = (event: KeyboardEvent) => {
-    if (isDateMenuOpen && dateMenuRef.current?.contains(event.target as Node)) {
-      if (event.key === 'Escape' || event.key === 'Tab') {
-        setIsDateMenuOpen(!isDateMenuOpen);
-        dateToggleRef.current?.focus();
-      }
-    }
-  };
-
-  const handleDateClickOutside = (event: MouseEvent) => {
-    if (isDateMenuOpen && !dateMenuRef.current?.contains(event.target as Node)) {
-      setIsDateMenuOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleDateMenuKeys);
-    window.addEventListener('click', handleDateClickOutside);
-    return () => {
-      window.removeEventListener('keydown', handleDateMenuKeys);
-      window.removeEventListener('click', handleDateClickOutside);
-    };
-  }, [isDateMenuOpen, dateMenuRef]);
 
   const onDateToggleClick = (ev: React.MouseEvent) => {
-    ev.stopPropagation(); // Stop handleClickOutside from handling
-    setTimeout(() => {
-      if (dateMenuRef.current) {
-        const firstElement = dateMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
-      }
-    }, 0);
     setIsDateMenuOpen(!isDateMenuOpen);
   };
 
@@ -265,80 +176,41 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setIsDateMenuOpen(!isDateMenuOpen);
   }
 
-  const dateToggle = (
-    <MenuToggle
-      ref={dateToggleRef}
-      onClick={onDateToggleClick}
-      isExpanded={isDateMenuOpen}
-      style={
-        {
-          width: '200px',
-        } as React.CSSProperties
-      }
-    >
-      Filter by date
-    </MenuToggle>
-  );
-
-  const dateMenu = (
-    <Menu ref={dateMenuRef} id="attribute-search-status-menu" onSelect={onDateSelect} selected={dateSelection}>
-      <MenuContent>
-        <MenuList>
-          {dateOptions.map((option) => (
-            <MenuItem key={option.date} isSelected={dateSelection === option.date} itemId={option.date}>
-              {option.date}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </MenuContent>
-    </Menu>
-  );
-
   const dateSelect = (
-    <div ref={dateContainerRef}>
-      <Popper
-        trigger={dateToggle}
-        triggerRef={dateToggleRef}
-        popper={dateMenu}
-        popperRef={dateMenuRef}
-        appendTo={dateContainerRef.current || undefined}
-        isVisible={isDateMenuOpen}
-      />
-    </div>
+    <Dropdown
+      isOpen={isDateMenuOpen}
+      id="attribute-search-status-menu"
+      onSelect={onDateSelect}
+      selected={dateSelection}
+      onOpenChange={(isOpen: boolean) => setIsDateMenuOpen(isOpen)}
+      toggle={(toggleRef) => (
+        <MenuToggle
+          ref={toggleRef}
+          onClick={onDateToggleClick}
+          isExpanded={isDateMenuOpen}
+          style={
+            {
+              width: '200px',
+            } as React.CSSProperties
+          }
+        >
+          Filter by date
+        </MenuToggle>
+      )}
+      ouiaId="attribute-search-type-menu"
+      shouldFocusToggleOnSelect
+    >
+      <DropdownList>
+        {dateOptions.map((option) => (
+          <DropdownItem key={option.date} isSelected={dateSelection === option.date} itemId={option.date}>
+            {option.date}
+          </DropdownItem>
+        ))}
+      </DropdownList>
+    </Dropdown>
   );
-
-  const handleTypeMenuKeys = (event: KeyboardEvent) => {
-    if (isTypeMenuOpen && typeMenuRef.current?.contains(event.target as Node)) {
-      if (event.key === 'Escape' || event.key === 'Tab') {
-        setIsTypeMenuOpen(!isTypeMenuOpen);
-        typeToggleRef.current?.focus();
-      }
-    }
-  };
-
-  const handleTypeClickOutside = (event: MouseEvent) => {
-    if (isTypeMenuOpen && !typeMenuRef.current?.contains(event.target as Node)) {
-      setIsTypeMenuOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleTypeMenuKeys);
-    window.addEventListener('click', handleTypeClickOutside);
-    return () => {
-      window.removeEventListener('keydown', handleTypeMenuKeys);
-      window.removeEventListener('click', handleTypeClickOutside);
-    };
-  }, [isTypeMenuOpen, typeMenuRef]);
 
   const onTypeMenuToggleClick = (ev: React.MouseEvent) => {
-    ev.stopPropagation(); // Stop handleClickOutside from handling
-    setTimeout(() => {
-      if (typeMenuRef.current) {
-        const firstElement = typeMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
-      }
-    }, 0);
     setIsTypeMenuOpen(!isTypeMenuOpen);
   };
 
@@ -356,132 +228,82 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     );
   }
 
-  const typeToggle = (
-    <MenuToggle
-      ref={typeToggleRef}
-      onClick={onTypeMenuToggleClick}
-      isExpanded={isTypeMenuOpen}
-      {...(typeSelections.size > 0 && {
-        badge: <Badge isRead>{typeSelections.size}</Badge>,
-      })}
-      style={
-        {
-          width: '200px',
-        } as React.CSSProperties
-      }
-    >
-      Filter by type
-    </MenuToggle>
-  );
-
   const typeMenu = (
-    <Menu ref={typeMenuRef} id="attribute-search-type-menu" onSelect={onTypeMenuSelect} selected={typeSelections}>
-      <MenuContent>
-        <MenuList>
-          {typeOptions.map((option) => (
-            <MenuItem hasCheckbox key={option.type} isSelected={typeSelections.has(option.type)} itemId={option.type}>
-              {option.type}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </MenuContent>
-    </Menu>
+    <Dropdown
+      isOpen={isTypeMenuOpen}
+      onSelect={onTypeMenuSelect}
+      selected={typeSelections}
+      onOpenChange={(isOpen: boolean) => setIsTypeMenuOpen(isOpen)}
+      toggle={(toggleRef) => (
+        <MenuToggle
+          ref={toggleRef}
+          onClick={onTypeMenuToggleClick}
+          isExpanded={isTypeMenuOpen}
+          {...(typeSelections.size > 0 && {
+            badge: <Badge isRead>{typeSelections.size}</Badge>,
+          })}
+          style={
+            {
+              width: '200px',
+            } as React.CSSProperties
+          }
+        >
+          Filter by type
+        </MenuToggle>
+      )}
+      ouiaId="attribute-search-type-menu"
+      shouldFocusToggleOnSelect
+    >
+      <DropdownList>
+        {typeOptions.map((option) => (
+          <DropdownItem hasCheckbox key={option.type} isSelected={typeSelections.has(option.type)} itemId={option.type}>
+            {option.type}
+          </DropdownItem>
+        ))}
+      </DropdownList>
+    </Dropdown>
   );
-
-  const typeSelect = (
-    <div ref={typeContainerRef}>
-      <Popper
-        trigger={typeToggle}
-        triggerRef={typeToggleRef}
-        popper={typeMenu}
-        popperRef={typeMenuRef}
-        appendTo={typeContainerRef.current || undefined}
-        isVisible={isTypeMenuOpen}
-      />
-    </div>
-  );
-
-  const handleAttribueMenuKeys = (event: KeyboardEvent) => {
-    if (!isAttributeMenuOpen) {
-      return;
-    }
-    if (
-      attributeMenuRef.current?.contains(event.target as Node) ||
-      attributeToggleRef.current?.contains(event.target as Node)
-    ) {
-      if (event.key === 'Escape' || event.key === 'Tab') {
-        setIsAttributeMenuOpen(!isAttributeMenuOpen);
-        attributeToggleRef.current?.focus();
-      }
-    }
-  };
-
-  const handleAttributeClickOutside = (event: MouseEvent) => {
-    if (isAttributeMenuOpen && !attributeMenuRef.current?.contains(event.target as Node)) {
-      setIsAttributeMenuOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleAttribueMenuKeys);
-    window.addEventListener('click', handleAttributeClickOutside);
-    return () => {
-      window.removeEventListener('keydown', handleAttribueMenuKeys);
-      window.removeEventListener('click', handleAttributeClickOutside);
-    };
-  }, [isAttributeMenuOpen, attributeMenuRef]);
 
   const onAttributeToggleClick = (ev: React.MouseEvent) => {
-    ev.stopPropagation(); // Stop handleClickOutside from handling
-    setTimeout(() => {
-      if (attributeMenuRef.current) {
-        const firstElement = attributeMenuRef.current.querySelector('li > button:not(:disabled)');
-        firstElement && (firstElement as HTMLElement).focus();
-      }
-    }, 0);
     setIsAttributeMenuOpen(!isAttributeMenuOpen);
   };
 
-  const attributeToggle = (
-    <MenuToggle
-      ref={attributeToggleRef}
-      onClick={onAttributeToggleClick}
-      isExpanded={isAttributeMenuOpen}
-      icon={<FilterIcon />}
-    >
-      {activeAttributeMenu}
-    </MenuToggle>
-  );
-  const attributeMenu = (
-    <Menu
-      ref={attributeMenuRef}
+  const attributeDropdown = (
+    <Dropdown
+      isOpen={isAttributeMenuOpen}
       onSelect={(_ev, itemId) => {
         setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date');
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
+      onOpenChange={(isOpen: boolean) => setIsAttributeMenuOpen(isOpen)}
+      toggle={(toggleRef) => (
+        <MenuToggle
+          ref={toggleRef}
+          onClick={onAttributeToggleClick}
+          isExpanded={isAttributeMenuOpen}
+          icon={<FilterIcon />}
+        >
+          {activeAttributeMenu}
+        </MenuToggle>
+      )}
+      ouiaId="attribute-dropdown"
+      shouldFocusToggleOnSelect
     >
-      <MenuContent>
-        <MenuList>
-          <MenuItem itemId="Name">Name</MenuItem>
-          <MenuItem itemId="Type">Type</MenuItem>
-          <MenuItem itemId="Release">Release</MenuItem>
-          <MenuItem itemId="Date">Date</MenuItem>
-        </MenuList>
-      </MenuContent>
-    </Menu>
-  );
-
-  const attributeDropdown = (
-    <div ref={attributeContainerRef}>
-      <Popper
-        trigger={attributeToggle}
-        triggerRef={attributeToggleRef}
-        popper={attributeMenu}
-        popperRef={attributeMenuRef}
-        appendTo={attributeContainerRef.current || undefined}
-        isVisible={isAttributeMenuOpen}
-      />
-    </div>
+      <DropdownList>
+        <DropdownItem value="Name" key="name">
+          Name
+        </DropdownItem>
+        <DropdownItem value="Type" key="type">
+          Type
+        </DropdownItem>
+        <DropdownItem value="Release" key="release">
+          Release
+        </DropdownItem>
+        <DropdownItem value="Date" key="date">
+          Date
+        </DropdownItem>
+      </DropdownList>
+    </Dropdown>
   );
 
   // Set up name search input
@@ -516,7 +338,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               categoryName="Type"
               showToolbarItem={activeAttributeMenu === 'Type'}
             >
-              {typeSelect}
+              {typeMenu}
             </ToolbarFilter>
             <ToolbarFilter
               chips={releaseSelections}
@@ -536,7 +358,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             >
               {dateSelect}
             </ToolbarFilter>
-            <ToolbarItem> 
+            <ToolbarItem>
               <Form>
                 <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
