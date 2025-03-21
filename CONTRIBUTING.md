@@ -43,7 +43,7 @@ In the checkout of this repository, do the following:
 
    ```npm install```
 
-1. Start the application. Set `CHROME_SERVICE=[port number]` if the Chrome serivece is listening on a port other than the default of 8000.
+1. Start the application. Set `CHROME_SERVICE=[port number]` if the Chrome service is listening on a port other than the default of 8000.
 
    ```npm run start```
 
