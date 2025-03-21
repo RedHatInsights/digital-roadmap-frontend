@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: digital-roadmap
+  name: roadmap-frontend
 objects:
   - apiVersion: cloud.redhat.com/v1alpha1
     kind: Frontend
