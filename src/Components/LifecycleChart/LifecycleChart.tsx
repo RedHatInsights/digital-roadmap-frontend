@@ -45,7 +45,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('arch' in lifecycleData[0]) {
+    if ('stream' in lifecycleData[0]) {
       return 'appLifecycle';
     }
     return 'lifecycle';
@@ -101,6 +101,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   // Years always start with January, but the end date may be June 2023
   // We want the axis to end with January 1 of the following year if the end date isn't already January
   const formatYearAxisData = (start: string, end: string) => {
+    
     const endDate = new Date(end);
     const startYear = new Date(start).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
     const endYear = endDate.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
@@ -119,16 +120,16 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
     if (dataType === 'appLifecycle') {
       (lifecycleData as Stream[]).forEach((item) => {
-        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown' || item.start_date === null || item.end_date === null) {
           return;
         }
         formatChartData(
           `${item.name} ${item.stream}`,
           item.start_date,
           item.end_date,
-          'Supported',
-          `${item.rhel_major_version}`,
-          `${item.systems ?? 'N/A'}`
+          item.support_status,
+          `${item.os_major}`,
+          `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.start_date, item.end_date);
       });
@@ -150,7 +151,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     }
     addInterstitialYears(years);
   };
-
   constructLifecycleData(lifecycleData);
 
   // get unique package types
@@ -266,7 +266,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         name="chart5"
         padding={{
           bottom: 60, // Adjusted to accommodate legend
-          left: 160,
+          left: 180,
           right: 50, // Adjusted to accommodate tooltip
           top: 20,
         }}

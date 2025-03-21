@@ -18,7 +18,6 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
-import { AppLifecycleChanges } from '../../types/AppLifecycleChanges';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
@@ -37,8 +36,8 @@ const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/Lifecy
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 import { download, generateCsv, mkConfig } from 'export-to-csv';
-import { formatDate } from '../../utils/utils';
 import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
+import { formatDate, getLifecycleType, getNewName } from '../../utils/utils';
 
 export interface Filter {
   name: string;
@@ -93,24 +92,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setSearchParams(buildURL(newFilters));
   };
 
-  const getLifecycleType = (lifecycleType: string) => {
-    switch (lifecycleType) {
-      case 'EUS':
-        return ' EUS';
-      case 'ELS':
-        return ' ELS';
-      case 'E4S':
-        return ' for SAP';
-      default:
-        return '';
-    }
-  };
-
-  const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
-    const lifecycleText = getLifecycleType(lifecycleType);
-    return `${name} ${major}.${minor}${lifecycleText}`;
-  };
-
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
     return data.map((datum) => {
       datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
@@ -118,18 +99,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     });
   };
 
-  const updateAppLifecycleData = (data: AppLifecycleChanges[]): Stream[] => {
-    return data
-      .flatMap((repo) => repo.streams)
-      .map((stream) => {
-        const version = data.filter((appLifecycleChanges) =>
-          appLifecycleChanges.streams.some((str) => str.context === stream.context)
-        )[0].rhel_major_version;
-        stream.rhel_major_version = version;
-
-        return stream;
-      })
-      .filter((stream) => stream.rhel_major_version === 9);
+  const updateAppLifecycleData = (data: Stream[]) => {
+    return data.filter((stream) => stream.rolling === false && stream.os_major === 9);
   };
 
   const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
@@ -304,10 +275,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       (filteredTableData as Stream[]).forEach((item: Stream) =>
         data.push({
           Name: item.name,
-          Release: item.rhel_major_version,
+          Release: item.os_major,
           'Release date': formatDate(item.start_date),
           'Retirement date': formatDate(item.end_date),
-          Systems: 'N/A',
+          Systems: item.count,
         })
       );
     } else {
