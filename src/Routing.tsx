@@ -3,11 +3,26 @@ import { Route as RouterRoute, Routes as RouterRoutes } from 'react-router-dom';
 import { InvalidObject } from '@redhat-cloud-services/frontend-components/InvalidObject';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 
-const UpcomingPage = lazy(() => import(/* webpackChunkName: "UpcomingPage" */ './Routes/UpcomingPage/UpcomingPage'));
-const LifecyclePage = lazy(() => import(/* webpackChunkName: "LifecyclePage" */ './Routes/LifecyclePage/LifecyclePage'));
-const OopsPage = lazy(() => import(/* webpackChunkName: "OopsPage" */ './Routes/OopsPage/OopsPage'));
+const UpcomingPage = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "UpcomingPage" */ './Routes/UpcomingPage/UpcomingPage'
+    )
+);
+const LifecyclePage = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "LifecyclePage" */ './Routes/LifecyclePage/LifecyclePage'
+    )
+);
+const OopsPage = lazy(
+  () => import(/* webpackChunkName: "OopsPage" */ './Routes/OopsPage/OopsPage')
+);
 const NoPermissionsPage = lazy(
-  () => import(/* webpackChunkName: "NoPermissionsPage" */ './Routes/NoPermissionsPage/NoPermissionsPage')
+  () =>
+    import(
+      /* webpackChunkName: "NoPermissionsPage" */ './Routes/NoPermissionsPage/NoPermissionsPage'
+    )
 );
 
 const routes = [

@@ -11,7 +11,16 @@ import {
   Pagination,
   PaginationVariant,
 } from '@patternfly/react-core';
-import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
+import {
+  SortByDirection,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  ThProps,
+  Thead,
+  Tr,
+} from '@patternfly/react-table';
 import { TableRow } from '../../Components/UpcomingRow/UpcomingRow';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
@@ -46,7 +55,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   resetInitialFilters,
 }) => {
   const [searchValue, setSearchValue] = useState('');
-  const [typeSelections, setTypeSelections] = useState<Set<string>>(initialFilters);
+  const [typeSelections, setTypeSelections] =
+    useState<Set<string>>(initialFilters);
   const [dateSelection, setDateSelection] = useState('');
   const [releaseSelections, setReleaseSelections] = useState<string[]>([]);
   const [page, setPage] = React.useState(1);
@@ -54,9 +64,13 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
   const [filteredData, setFilteredData] = React.useState(data);
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>();
-  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
-  const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
-  const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
+  const [activeSortDirection, setActiveSortDirection] =
+    React.useState<SortByDirection>();
+  const [sortedFilteredData, setSortedFilteredData] =
+    React.useState<UpcomingChanges[]>(data);
+  const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(
+    new Set([])
+  );
 
   useEffect(() => {
     if (initialFilters.size === 0) {
@@ -72,13 +86,20 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   };
 
   const sortFilteredData = (dataToSort: UpcomingChanges[]) => {
-    if (typeof activeSortIndex !== 'undefined' && typeof activeSortDirection !== 'undefined') {
+    if (
+      typeof activeSortIndex !== 'undefined' &&
+      typeof activeSortDirection !== 'undefined'
+    ) {
       return sortData(activeSortIndex, activeSortDirection, dataToSort);
     }
     return dataToSort;
   };
 
-  const sortData = (index: number, direction: SortByDirection, currentData: UpcomingChanges[]) => {
+  const sortData = (
+    index: number,
+    direction: SortByDirection,
+    currentData: UpcomingChanges[]
+  ) => {
     return currentData.sort((a, b) => {
       const aValue = getSortableRowValues(a)[index];
       const bValue = getSortableRowValues(b)[index];
@@ -138,7 +159,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setPerPage(newPerPage);
   };
 
-  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
+  const buildPagination = (
+    variant: 'bottom' | 'top' | PaginationVariant,
+    isCompact: boolean
+  ) => (
     <Pagination
       isCompact={isCompact}
       itemCount={filteredData.length}
@@ -159,7 +183,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     try {
       searchValueInput = new RegExp(searchValue, 'i');
     } catch (err) {
-      searchValueInput = new RegExp(searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      searchValueInput = new RegExp(
+        searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'i'
+      );
     }
     const matchesNameValue = repo.name.search(searchValueInput) >= 0;
 
@@ -170,7 +197,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     const matchesTypeValue = typeSelections.has(repo.type);
 
     // Search date with date selection
-    const matchesDateValue = repo.date.toLowerCase() === dateSelection.toLowerCase();
+    const matchesDateValue =
+      repo.date.toLowerCase() === dateSelection.toLowerCase();
 
     return (
       (searchValue === '' || matchesNameValue) &&
@@ -195,8 +223,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
 
   const emptyState = (
     <EmptyState>
-      <EmptyStateHeader headingLevel="h4" titleText="No results found" icon={<EmptyStateIcon icon={SearchIcon} />} />
-      <EmptyStateBody>No results match the filter criteria. Clear all filters and try again.</EmptyStateBody>
+      <EmptyStateHeader
+        headingLevel="h4"
+        titleText="No results found"
+        icon={<EmptyStateIcon icon={SearchIcon} />}
+      />
+      <EmptyStateBody>
+        No results match the filter criteria. Clear all filters and try again.
+      </EmptyStateBody>
       <EmptyStateFooter>
         <EmptyStateActions>
           <Button variant="link" onClick={resetFilters}>
@@ -225,15 +259,21 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setPaginatedRows(sortedData.slice(0, perPage));
   }, [searchValue, typeSelections, dateSelection, releaseSelections]);
 
-  const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
+  const releaseUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.release))
+  ).map((release) => ({
     release: release,
   }));
 
-  const dateUniqueOptions = Array.from(new Set(data.map((repo) => repo.date))).map((date) => ({
+  const dateUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.date))
+  ).map((date) => ({
     date: date,
   }));
 
-  const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
+  const typeUniqueOptions = Array.from(
+    new Set(data.map((repo) => repo.type))
+  ).map((type) => ({
     type: type,
   }));
 
@@ -279,7 +319,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         typeOptions={typeUniqueOptions}
         resetTypeFilter={resetTypeFilter}
       />
-      <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
+      <Table
+        aria-label="Upcoming changes, deprecations, and additions to your system"
+        variant="compact"
+      >
         <Thead>
           <Tr>
             {filteredData.length > 0 && (
@@ -287,10 +330,18 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                 <span className="pf-v5-c-table__td pf-v5-c-table__toggle">
                   <Button
                     aria-expanded={expandedRows.size === paginatedRows.length}
-                    aria-label={expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'}
+                    aria-label={
+                      expandedRows.size === paginatedRows.length
+                        ? 'Collapse all rows'
+                        : 'Expand all rows'
+                    }
                     variant="plain"
                     onClick={onClickArrow}
-                    className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
+                    className={
+                      expandedRows.size === paginatedRows.length
+                        ? 'pf-m-expanded'
+                        : ''
+                    }
                   >
                     <div className="pf-v5-c-table__toggle-icon">
                       <AngleDownIcon />

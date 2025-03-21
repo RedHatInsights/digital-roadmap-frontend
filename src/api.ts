@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosResponse } from 'axios';
 
 import {
   DR_API,
@@ -8,7 +8,7 @@ import {
   DR_UPCOMING,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
-} from "./constants";
+} from './constants';
 
 /* Digital Roadmap */
 
@@ -17,7 +17,7 @@ export const getRelevantReleaseNotes = async (
   minor: number,
   keyword: string
 ) => {
-  const path = DR_API.concat(DR_RELEASE_NOTES).concat("/get-relevant-notes");
+  const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
   const response = await axios
     .get(path.concat(params), {
@@ -101,16 +101,16 @@ export const getLifecycleAppstreams = async () => {
 
 /* Inventory */
 
-export const inventoryFetchSystems = (path: string = "") => {
+export const inventoryFetchSystems = (path: string = '') => {
   return getInventory(INVENTORY_HOSTS_ROOT.concat(path));
 };
 
 export const inventoryFetchSystemsByIds = (
   ids: string[],
-  path: string = ""
+  path: string = ''
 ) => {
   return getInventory(
-    INVENTORY_HOSTS_ROOT.concat("/").concat(ids.join(",")).concat(path)
+    INVENTORY_HOSTS_ROOT.concat('/').concat(ids.join(',')).concat(path)
   );
 };
 
