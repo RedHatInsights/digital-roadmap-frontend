@@ -45,7 +45,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('arch' in lifecycleData[0]) {
+    if ('stream' in lifecycleData[0]) {
       return 'streams';
     }
     return 'rhel';
