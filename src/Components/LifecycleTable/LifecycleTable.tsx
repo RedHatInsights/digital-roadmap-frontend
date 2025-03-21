@@ -21,7 +21,7 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
   release: 'Release',
   release_date: 'Release date',
   retirement_date: 'Retirement date',
-  systems: 'Systems',
+  count: 'Systems',
 };
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
@@ -32,7 +32,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // as the identifier of the sorted column. See the "Compound expandable" example.
   const [activeSystemSortIndex, setActiveSystemSortIndex] = React.useState<number | undefined>();
   const [activeAppSortIndex, setActiveAppSortIndex] = React.useState<number | undefined>();
-
   // Sort direction of the currently sorted column
   const [activeSystemSortDirection, setActiveSystemSortDirection] = React.useState<SortByDirection>();
   const [activeAppSortDirection, setActiveAppSortDirection] = React.useState<SortByDirection>();
@@ -46,7 +45,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('arch' in lifecycleData[0]) {
+    if ('stream' in lifecycleData[0]) {
       return 'streams';
     }
     return 'rhel';
@@ -126,8 +125,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { name, rhel_major_version, start_date, end_date, systems } = repo;
-    return [name, rhel_major_version, start_date, end_date, systems];
+    const { name, os_major, start_date, end_date, count } = repo;
+    return [name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
@@ -198,20 +197,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
-      if (!repo.name || !repo.stream || !repo.rhel_major_version) {
+      if (!repo.name || !repo.stream || !repo.os_major) {
         return;
       }
       return (
-        <Tr
-          key={`${repo.name}-${repo.stream}-${repo.rhel_major_version}-${repo.start_date}-${repo.end_date}-${repo.systems}`}
-        >
+        <Tr key={`${repo.name}-${repo.stream}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name} {repo.stream}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.rhel_major_version}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>N/A</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
         </Tr>
       );
     });
@@ -231,9 +228,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
-      if (!repo.name || !repo.count) {
+      if (!repo.name || !repo.release_date || !repo.retirement_date || !repo.count) {
         return;
       }
+
       return (
         <Tr key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
@@ -264,7 +262,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             <Th modifier="wrap" sort={getAppSortParams(3)}>
               {APP_LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.systems}</Th>
+            <Th modifier="wrap" sort={getAppSortParams(4)}>
+              {APP_LIFECYCLE_COLUMN_NAMES.count}
+            </Th>
           </Tr>
         );
       case 'rhel':

@@ -20,10 +20,10 @@ module.exports = {
   // meaning fed-modules and navigation is updated in chrome-service-backend
   routes: {
     '/api/chrome-service/v1/static': {
-      host: 'http://localhost:8000',
+      host: 'http://localhost:8090',
     },
     '/api/roadmap/v1': {
-      host: 'http://localhost:8066/',
+      host: 'http://localhost:8000/',
     },
   },
 

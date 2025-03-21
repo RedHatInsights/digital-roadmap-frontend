@@ -27,6 +27,10 @@ const routes = [
     path: 'lifecycle',
     element: LifecyclePage,
   },
+  {
+    path: '',
+    element: LifecyclePage,
+  },
   /* Catch all unmatched routes */
   {
     path: 'invalid',
