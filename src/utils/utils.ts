@@ -2,7 +2,7 @@ import { To } from 'react-router-dom';
 import Moment from 'moment';
 import { Filter } from '../Components/Lifecycle/Lifecycle';
 
-export const linkBasename = '/insights/digital-roadmap';
+export const linkBasename = '/insights/roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
   if (typeof to === 'string') {
     // replace possible "//" after basename

@@ -1,5 +1,5 @@
 module.exports = {
-  appUrl: '/insights/digital-roadmap',
+  appUrl: '/insights/roadmap',
   debug: true,
   useProxy: true,
   proxyVerbose: true,
@@ -9,7 +9,7 @@ module.exports = {
    * If the dash character is present, you will have add a camelCase version of it to the sassPrefix.
    * If it does not contain the dash character, remove this configuration.
    */
-  sassPrefix: '.digital-roadmap, .digitalRoadmap',
+  // sassPrefix: '',
   /**
    * Change to false after your app is registered in configuration files
    */
