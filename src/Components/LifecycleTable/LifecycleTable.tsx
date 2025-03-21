@@ -21,7 +21,7 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
   release: 'Release',
   release_date: 'Release date',
   retirement_date: 'Retirement date',
-  systems: 'Systems',
+  count: 'Systems',
 };
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
@@ -208,7 +208,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.systems}>{repo.count}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
         </Tr>
       );
     });
@@ -262,7 +262,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             <Th modifier="wrap" sort={getAppSortParams(3)}>
               {APP_LIFECYCLE_COLUMN_NAMES.retirement_date}
             </Th>
-            <Th>{APP_LIFECYCLE_COLUMN_NAMES.systems}</Th>
+            <Th modifier="wrap" sort={getAppSortParams(4)}>
+              {APP_LIFECYCLE_COLUMN_NAMES.count}
+            </Th>
           </Tr>
         );
       case 'rhel':
