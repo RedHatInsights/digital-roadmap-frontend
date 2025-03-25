@@ -6,4 +6,5 @@ export type SystemLifecycleChanges = {
   retirement_date: string;
   count: number;
   lifecycle_type: string;
+  support_status: string;
 };
