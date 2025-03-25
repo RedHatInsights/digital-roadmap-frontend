@@ -142,7 +142,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           item.name,
           item.release_date,
           item.retirement_date,
-          'Supported',
+          item.support_status,
           `${item.major}.${item.minor}`,
           `${item.count ?? 'N/A'}`
         );
@@ -162,7 +162,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       data.typeID = uniqueTypes.indexOf(data.packageType);
     });
   });
-
+  
   // group by package type
   const groupedData = uniqueTypes
     .map((type) => ({
@@ -179,13 +179,24 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           y: d.y,
           y0: d.y0,
         })),
-    }))
-    .concat([
-      { packageType: 'Support ends within 6 months', datapoints: [] },
-      { packageType: 'Retired', datapoints: [] },
-      { packageType: 'Not installed', datapoints: [] },
-      { packageType: 'Upcoming release', datapoints: [] },
-    ]);
+    }));
+    
+  const legendNames = [
+    { packageType: 'Supported', datapoints: [] },
+    { packageType: 'Support ends within 6 months', datapoints: [] },
+    { packageType: 'Retired', datapoints: [] },
+    { packageType: 'Not installed', datapoints: [] },
+    { packageType: 'Upcoming release', datapoints: [] },
+  ];
+
+  legendNames.forEach((legendName) => {
+    if (!groupedData.some((item) => item.packageType === legendName.packageType)){
+      groupedData.push(legendName);
+    }
+  })
+
+  debugger;
+
 
   const getLegendData = () =>
     groupedData.map((s, index) => ({
