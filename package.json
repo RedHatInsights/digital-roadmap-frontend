@@ -14,7 +14,7 @@
     "lint:js:fix": "eslint src --fix",
     "patch:hosts": "fec patch-etc-hosts",
     "start": "HOT=true fec dev",
-    "test": "jest",
+    "test": "TZ=UTC jest --verbose --no-cache",
     "postinstall": "ts-patch install && rimraf .cache",
     "verify": "npm-run-all build lint test"
   },
