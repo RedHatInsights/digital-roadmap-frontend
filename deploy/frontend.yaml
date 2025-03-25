@@ -23,10 +23,20 @@ objects:
           - /apps/roadmap
 
       navItems:
-        - appId: "roadmap"
-          title: "Planning"
-          href: "/insights/planning"
-          product: "Red Hat Insights"
+        - title: Planning
+          appId: roadmap
+          href: /insights/roadmap
+          product: Red Hat Insights
+          expandable: true
+          routes:
+            - title: Life Cycle
+              appId: roadmap
+              href: /insights/roadmap/lifecycle
+
+            - title: Roadmap
+              appId: roadmap
+              href: /insights/roadmap/roadmap
+
 
       module:
         manifestLocation: "/apps/roadmap/fed-mods.json"
