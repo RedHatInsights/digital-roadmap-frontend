@@ -51,7 +51,7 @@ parameters:
     required: true
 
   - name: IMAGE
-    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/digital-roadmap-frontend
+    value: quay.io/redhat-services-prod/rhel-lightspeed-tenant/roadmap-frontend
 
   - name: IMAGE_TAG
     required: true
