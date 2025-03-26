@@ -1,5 +1,10 @@
 import { To } from 'react-router-dom';
-import { Filter } from '../Components/Lifecycle/Lifecycle';
+import { Filter } from '../types/Filter';
+
+// default for upcoming only
+export const DEFAULT_FILTERS = {
+  name: '',
+};
 
 export const linkBasename = '/insights/roadmap';
 export const mergeToBasename = (to: To, basename: string): To => {
@@ -34,7 +39,7 @@ export const formatDate = (date: string | null) => {
   }
   const dateAsDate = new Date(date);
   return dateAsDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-  };
+};
 
 export const checkValidityOfQueryParam = (queryParam: string, queryValue: string) => {
   switch (queryParam) {
@@ -58,6 +63,15 @@ export const buildURL = (filter: Filter) => {
   }
   if (filter['chartSortBy']) {
     encodedData += `&chartSortBy=${filter['chartSortBy']}`;
+  }
+  if (filter['type'] && filter['type'].size > 0) {
+    encodedData += `&type=${Array.from(filter['type']).join(',')}`;
+  }
+  if (filter['date']) {
+    encodedData += `&date=${filter['date']}`;
+  }
+  if (filter['release'] && filter['release'].length > 0) {
+    encodedData += `&release=${filter['release'].join(',')}`;
   }
   return encodedData;
 };
