@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/RedHatInsights/frontend-components/refs/heads/master/packages/config-utils/src/feo/spec/frontend-crd.schema.json
 ---
 apiVersion: v1
 kind: Template
@@ -11,6 +12,7 @@ objects:
 
     spec:
       envName: ${ENV_NAME}
+      feoConfigEnabled: true # flags a frontend to be ready for FEO feature
       title: Roadmap
       deploymentRepo: https://github.com/RedHatInsights/digital-roadmap
       image: ${IMAGE}:${IMAGE_TAG}
@@ -22,26 +24,27 @@ objects:
         paths:
           - /apps/roadmap
 
-      navItems:
-        - title: Planning
-          appId: roadmap
-          href: /insights/roadmap
-          product: Red Hat Insights
-          expandable: true
-          routes:
-            - title: Life Cycle
-              appId: roadmap
-              href: /insights/roadmap/lifecycle
-
-            - title: Roadmap
-              appId: roadmap
-              href: /insights/roadmap/roadmap
-
+      bundleSegments:
+        - segmentId: roadmap-planning
+          bundleId: planning-bundle
+          position: 2000
+          navItems:
+            - id: planning
+              title: Planning
+              href: /insights/planning
+              expandable: true
+              routes:
+                - id: lifecycle
+                  title: Life Cycle
+                  href: /insights/planning/lifecycle
+                - id: roadmap
+                  title: Roadmap
+                  href: /insights/planning/roadmap
 
       module:
         manifestLocation: "/apps/roadmap/fed-mods.json"
         modules:
-          - id: "overview"
+          - id: "roadmap"
             module: "./RootApp"
             routes:
               - pathname: /insights/planning
