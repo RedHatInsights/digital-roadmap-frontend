@@ -39,6 +39,11 @@ interface Datum {
   y0?: string | null;
 }
 
+interface LegendName {
+  packageType: string;
+  datapoints: any[];
+}
+
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -156,12 +161,30 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   // get unique package types
   const uniqueTypes = [...new Set(updatedLifecycleData.flat().map((d) => d.packageType))];
 
+  const legendNames = [
+    { packageType: 'Supported', datapoints: [] },
+    { packageType: 'Support ends within 6 months', datapoints: [] },
+    { packageType: 'Retired', datapoints: [] },
+    { packageType: 'Not installed', datapoints: [] },
+    { packageType: 'Upcoming release', datapoints: [] },
+  ];
+
+  let default_names: LegendName[] = [];
+  legendNames.forEach((legendName) => {
+    if (uniqueTypes.length !== 0){
+      if (!uniqueTypes.some((item) => item === legendName.packageType)){
+      default_names.push(legendName);
+      }
+    }
+  })
+
   // Add typeID to updatedLifecycleData
   updatedLifecycleData.forEach((group) => {
     group.forEach((data) => {
       data.typeID = uniqueTypes.indexOf(data.packageType);
     });
   });
+
   
   // group by package type
   const groupedData = uniqueTypes
@@ -179,23 +202,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           y: d.y,
           y0: d.y0,
         })),
-    }));
-    
-  const legendNames = [
-    { packageType: 'Supported', datapoints: [] },
-    { packageType: 'Support ends within 6 months', datapoints: [] },
-    { packageType: 'Retired', datapoints: [] },
-    { packageType: 'Not installed', datapoints: [] },
-    { packageType: 'Upcoming release', datapoints: [] },
-  ];
-
-  legendNames.forEach((legendName) => {
-    if (!groupedData.some((item) => item.packageType === legendName.packageType)){
-      groupedData.push(legendName);
-    }
-  })
-
-  debugger;
+    })).concat(default_names);
 
 
   const getLegendData = () =>
