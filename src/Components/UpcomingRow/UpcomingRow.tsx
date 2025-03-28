@@ -104,26 +104,49 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
       {repo.details ? (
         <Tr isExpanded={isExpanded}>
           {!childIsFullWidth ? <Td /> : null}
-          <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
+          <Td
+            className="drf-lifecycle__upcoming-row"
+            dataLabel="Summary"
+            noPadding={childHasNoPadding}
+            colSpan={3}
+          >
             <div className="drf-lifecycle__upcoming-row-text-container">
               <TextContent className="drf-lifecycle__upcoming-row-text">
                 <Text component={TextVariants.p}>{repo.details.summary}</Text>
               </TextContent>
 
               <TextContent className="drf-lifecycle__upcoming-row-text">
-                <TextList component={TextListVariants.dl} style={{ gridRowGap: '0px' }}>
-                  <TextListItem component={TextListItemVariants.dt} style={{ paddingBottom: '16px' }}>
+                <TextList
+                  component={TextListVariants.dl}
+                  style={{ gridRowGap: '0px' }}
+                >
+                  <TextListItem
+                    component={TextListItemVariants.dt}
+                    style={{ paddingBottom: '16px' }}
+                  >
                     Potentially affected systems
                   </TextListItem>
                   <TextListItem component={TextListItemVariants.dd}>
                     {repo.details.potentiallyAffectedSystems}
                   </TextListItem>
-                  <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
-                  <TextListItem component={TextListItemVariants.dd}>{repo.details.trainingTicket}</TextListItem>
-                  <TextListItem component={TextListItemVariants.dt}>Date added</TextListItem>
-                  <TextListItem component={TextListItemVariants.dd}>{repo.details.dateAdded}</TextListItem>
-                  <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
-                  <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
+                  <TextListItem component={TextListItemVariants.dt}>
+                    Training ticket
+                  </TextListItem>
+                  <TextListItem component={TextListItemVariants.dd}>
+                    {repo.details.trainingTicket}
+                  </TextListItem>
+                  <TextListItem component={TextListItemVariants.dt}>
+                    Date added
+                  </TextListItem>
+                  <TextListItem component={TextListItemVariants.dd}>
+                    {repo.details.dateAdded}
+                  </TextListItem>
+                  <TextListItem component={TextListItemVariants.dt}>
+                    Last modified
+                  </TextListItem>
+                  <TextListItem component={TextListItemVariants.dd}>
+                    {repo.details.lastModified}
+                  </TextListItem>
                 </TextList>
               </TextContent>
               {/* 

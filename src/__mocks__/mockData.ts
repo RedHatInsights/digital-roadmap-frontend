@@ -2,10 +2,10 @@ const VIRT = {
   end_date: '2029-06-31',
   name: 'virt',
   profiles: { common: [] },
-  os_major: 8,  
+  os_major: 8,
   os_minor: 0,
-  os_lifecycle: "",
-  support_status: "Supported",
+  os_lifecycle: '',
+  support_status: 'Supported',
   start_date: '2019-05-12',
   stream: 'rhel',
   version: '820190226174025',
@@ -20,8 +20,8 @@ const VARNISH = {
   profiles: { common: [] },
   os_major: 9,
   os_minor: 2,
-  os_lifecycle: "",
-  support_status: "Supported",
+  os_lifecycle: '',
+  support_status: 'Supported',
   start_date: '2019-05-07',
   stream: '6',
   version: '820181213144015',
@@ -35,8 +35,8 @@ const IDM = {
   profiles: { common: [] },
   os_major: 8,
   os_minor: 4,
-  os_lifecycle: "",
-  support_status: "Supported",
+  os_lifecycle: '',
+  support_status: 'Supported',
   start_date: '2019-05-07',
   stream: 'client',
   version: '820190227213458',
@@ -94,20 +94,50 @@ export const ONE_MOCK_STREAM_DATA = [VIRT];
 export const DUPLICATE_RHEL_DATA = [RHEL_NINE_TWO, RHEL_NINE_TWO];
 export const DUPLICATE_STREAMS_DATA = [VIRT, VIRT];
 
-export const MOCK_RHEL_DATA = [RHEL_NINE_TWO, RHEL_EIGHT_THREE, RHEL_EIGHT_SEVEN, RHEL_NINE];
+export const MOCK_RHEL_DATA = [
+  RHEL_NINE_TWO,
+  RHEL_EIGHT_THREE,
+  RHEL_EIGHT_SEVEN,
+  RHEL_NINE,
+];
 export const MOCK_STREAMS_DATA = [VIRT, IDM, VARNISH];
 
-export const MOCK_RHEL_DATA_BY_NAME = [RHEL_NINE_TWO, RHEL_NINE, RHEL_EIGHT_SEVEN, RHEL_EIGHT_THREE];
+export const MOCK_RHEL_DATA_BY_NAME = [
+  RHEL_NINE_TWO,
+  RHEL_NINE,
+  RHEL_EIGHT_SEVEN,
+  RHEL_EIGHT_THREE,
+];
 export const MOCK_STREAMS_DATA_BY_NAME = [VIRT, VARNISH, IDM];
 
-export const MOCK_RHEL_DATA_BY_RELEASE_DATE = [RHEL_NINE_TWO, RHEL_EIGHT_SEVEN, RHEL_NINE, RHEL_EIGHT_THREE];
+export const MOCK_RHEL_DATA_BY_RELEASE_DATE = [
+  RHEL_NINE_TWO,
+  RHEL_EIGHT_SEVEN,
+  RHEL_NINE,
+  RHEL_EIGHT_THREE,
+];
 export const MOCK_STREAMS_DATA_BY_RELEASE_DATE = [VIRT, VARNISH, IDM];
 
-export const MOCK_RHEL_DATA_BY_RETIREMENT_DATE = [RHEL_NINE, RHEL_NINE_TWO, RHEL_EIGHT_SEVEN, RHEL_EIGHT_THREE];
+export const MOCK_RHEL_DATA_BY_RETIREMENT_DATE = [
+  RHEL_NINE,
+  RHEL_NINE_TWO,
+  RHEL_EIGHT_SEVEN,
+  RHEL_EIGHT_THREE,
+];
 export const MOCK_STREAMS_DATA_BY_RETIREMENT_DATE = [VIRT, VARNISH, IDM];
 
-export const MOCK_RHEL_DATA_BY_SYSTEMS = [RHEL_EIGHT_THREE, RHEL_NINE, RHEL_EIGHT_SEVEN, RHEL_NINE_TWO];
+export const MOCK_RHEL_DATA_BY_SYSTEMS = [
+  RHEL_EIGHT_THREE,
+  RHEL_NINE,
+  RHEL_EIGHT_SEVEN,
+  RHEL_NINE_TWO,
+];
 export const MOCK_STREAMS_DATA_BY_SYSTEMS = [VIRT, VARNISH, IDM];
 
-export const MOCK_RHEL_DATA_BY_RELEASE = [RHEL_NINE_TWO, RHEL_NINE, RHEL_EIGHT_SEVEN, RHEL_EIGHT_THREE];
+export const MOCK_RHEL_DATA_BY_RELEASE = [
+  RHEL_NINE_TWO,
+  RHEL_NINE,
+  RHEL_EIGHT_SEVEN,
+  RHEL_EIGHT_THREE,
+];
 export const MOCK_STREAMS_DATA_BY_RELEASE = [VARNISH, VIRT, IDM];

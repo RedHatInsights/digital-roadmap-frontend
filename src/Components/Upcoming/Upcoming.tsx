@@ -36,19 +36,26 @@ export const UPCOMING_COLUMN_NAMES = {
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
+  const [relevantUpcomingChanges, setUpcomingChanges] =
+    React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
   const [numChanges, setNumChanges] = React.useState(0);
-  const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
-  const [currentTypeFilters, setCurrentTypeFilters] = React.useState<Set<string>>(new Set());
+  const [visibleData, setVisibleData] =
+    React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
+  const [currentTypeFilters, setCurrentTypeFilters] = React.useState<
+    Set<string>
+  >(new Set());
   const [currentDateFilter, setCurrentDateFilter] = React.useState('');
   const [currentNameFilter, setCurrentNameFilters] = React.useState('');
-  const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<string[]>([]);
+  const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<
+    string[]
+  >([]);
   const [error, setError] = React.useState<ErrorObject>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
+  const [filtersForURL, setFiltersForURL] =
+    React.useState<Filter>(DEFAULT_FILTERS);
 
   const nameParam = searchParams.get('name');
   const typeParam = searchParams.get('type');
@@ -58,7 +65,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   // Type comes in as Release1,Release2 or Release1 or any other permutation
   const isValidRelease = (data: UpcomingChanges[], release: string) => {
     const releaseAsArr = release.split(',');
-    return releaseAsArr.every((release) => Array.from(new Set(data.map((repo) => repo.release))).includes(release));
+    return releaseAsArr.every((release) =>
+      Array.from(new Set(data.map((repo) => repo.release))).includes(release)
+    );
   };
 
   const isValidDate = (data: UpcomingChanges[], date: string) => {
@@ -81,11 +90,17 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       const data = await getUpcomingChanges();
       const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
       setUpcomingChanges(upcomingChangesParagraphs);
-      const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
+      const filteredDeprecations = upcomingChangesParagraphs.filter(
+        (item) => item.type === 'Deprecation'
+      );
       setNumDeprecations(filteredDeprecations.length);
-      const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'Addition');
+      const filteredAdditions = upcomingChangesParagraphs.filter(
+        (item) => item.type === 'Addition'
+      );
       setNumAdditions(filteredAdditions.length);
-      const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
+      const filteredChanges = upcomingChangesParagraphs.filter(
+        (item) => item.type === 'Change'
+      );
       setNumChanges(filteredChanges.length);
       setVisibleData(upcomingChangesParagraphs);
       const newFilters = structuredClone(filtersForURL);
@@ -94,17 +109,29 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentNameFilters(name);
         newFilters['name'] = name;
       }
-      if (releaseParam && isValidRelease(upcomingChangesParagraphs, decodeURIComponent(releaseParam))) {
+      if (
+        releaseParam &&
+        isValidRelease(
+          upcomingChangesParagraphs,
+          decodeURIComponent(releaseParam)
+        )
+      ) {
         const release = decodeURIComponent(releaseParam).split(',');
         setCurrentReleaseFilters(release);
         newFilters['release'] = release;
       }
-      if (typeParam && isValidType(upcomingChangesParagraphs, decodeURIComponent(typeParam))) {
+      if (
+        typeParam &&
+        isValidType(upcomingChangesParagraphs, decodeURIComponent(typeParam))
+      ) {
         const type = new Set(decodeURIComponent(typeParam).split(','));
         setCurrentTypeFilters(type);
         newFilters['type'] = type;
       }
-      if (dateParam && isValidDate(upcomingChangesParagraphs, decodeURIComponent(dateParam))) {
+      if (
+        dateParam &&
+        isValidDate(upcomingChangesParagraphs, decodeURIComponent(dateParam))
+      ) {
         const date = decodeURIComponent(dateParam);
         setCurrentDateFilter(date);
         newFilters['date'] = date;
@@ -145,7 +172,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setSearchParams(buildURL(filters));
   };
 
-  const handleCardClick = (variant: 'additions' | 'changes' | 'deprecations') => {
+  const handleCardClick = (
+    variant: 'additions' | 'changes' | 'deprecations'
+  ) => {
     switch (variant) {
       case 'additions':
         setCurrentTypeFilters(new Set(['Addition']));
@@ -173,7 +202,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   if (error) {
-    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
+    return (
+      <ErrorState
+        errorTitle="Failed to load data"
+        errorDescription={String(error.message)}
+      />
+    );
   }
 
   return (
@@ -196,8 +230,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numDeprecations}</span> upcoming{' '}
-                {pluralize(numDeprecations, 'deprecation')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numDeprecations}
+                </span>{' '}
+                upcoming {pluralize(numDeprecations, 'deprecation')} that could
+                affect your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -217,8 +254,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numChanges}</span> upcoming{' '}
-                {pluralize(numChanges, 'change')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numChanges}
+                </span>{' '}
+                upcoming {pluralize(numChanges, 'change')} that could affect
+                your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -238,8 +278,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numAdditions}</span> upcoming{' '}
-                {pluralize(numAdditions, 'addition')} that could affect your systems
+                <span className="drf-lifecycle__upcoming-count">
+                  {numAdditions}
+                </span>{' '}
+                upcoming {pluralize(numAdditions, 'addition')} that could affect
+                your systems
               </CardBody>
             </Card>
           </GridItem>

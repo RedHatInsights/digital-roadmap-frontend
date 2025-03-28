@@ -4,9 +4,9 @@ export interface Stream {
   os_minor: number;
   os_lifecycle: string;
   start_date: string;
-  end_date: string;  
+  end_date: string;
   support_status: string;
   count: number;
   stream: string;
-  rolling : boolean;
+  rolling: boolean;
 }

@@ -5,7 +5,11 @@ import App from './App';
 import logger from 'redux-logger';
 
 const AppEntry = () => (
-  <Provider store={init(...(process.env.NODE_ENV !== 'production' ? [logger] : [])).getStore()}>
+  <Provider
+    store={init(
+      ...(process.env.NODE_ENV !== 'production' ? [logger] : [])
+    ).getStore()}
+  >
     <App />
   </Provider>
 );
