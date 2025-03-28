@@ -24,7 +24,6 @@ import { DEFAULT_FILTERS, buildURL, pluralize } from '../../utils/utils';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
 import { Filter } from '../../types/Filter';
-import { filter } from '@redhat-cloud-services/frontend-components-utilities';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -42,9 +41,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
   const [numChanges, setNumChanges] = React.useState(0);
-  const [deprecations, setDeprecations] = React.useState<UpcomingChanges[]>([]);
-  const [changes, setChanges] = React.useState<UpcomingChanges[]>([]);
-  const [additions, setAdditions] = React.useState<UpcomingChanges[]>([]);
   const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
   const [currentTypeFilters, setCurrentTypeFilters] = React.useState<Set<string>>(new Set());
   const [currentDateFilter, setCurrentDateFilter] = React.useState('');
@@ -86,16 +82,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
       setUpcomingChanges(upcomingChangesParagraphs);
       const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
-      setDeprecations(filteredDeprecations);
       setNumDeprecations(filteredDeprecations.length);
       const filteredAdditions = upcomingChangesParagraphs.filter((item) => item.type === 'Addition');
-      setAdditions(filteredAdditions);
       setNumAdditions(filteredAdditions.length);
       const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
-      setChanges(filteredChanges);
       setNumChanges(filteredChanges.length);
       setVisibleData(upcomingChangesParagraphs);
-      let newFilters = structuredClone(filtersForURL);
+      const newFilters = structuredClone(filtersForURL);
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
         setCurrentNameFilters(name);
@@ -155,17 +148,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const handleCardClick = (variant: 'additions' | 'changes' | 'deprecations') => {
     switch (variant) {
       case 'additions':
-        setVisibleData(additions);
         setCurrentTypeFilters(new Set(['Addition']));
         setTypeParam(new Set(['Addition']));
         break;
       case 'changes':
-        setVisibleData(changes);
         setCurrentTypeFilters(new Set(['Change']));
         setTypeParam(new Set(['Change']));
         break;
       default:
-        setVisibleData(deprecations);
         setCurrentTypeFilters(new Set(['Deprecation']));
         setTypeParam(new Set(['Deprecation']));
         break;
