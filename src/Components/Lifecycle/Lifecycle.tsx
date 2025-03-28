@@ -36,14 +36,9 @@ const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/Lifecy
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 import { download, generateCsv, mkConfig } from 'export-to-csv';
-import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
+import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { formatDate, getLifecycleType, getNewName } from '../../utils/utils';
-
-export interface Filter {
-  name: string;
-  chartSortBy: string;
-  lifecycleDropdown: string;
-}
+import { Filter } from '../../types/Filter';
 
 const DEFAULT_FILTERS = {
   name: '',
@@ -151,7 +146,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       filterInitialData(appStreams, updatedSystems);
     } catch (error: any) {
       console.error('Error fetching lifecycle changes:', error);
-      setError({message: error});
+      setError({ message: error });
     } finally {
       setIsLoading(false);
     }
@@ -307,7 +302,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // placeholder for later
   if (error) {
-    return <ErrorState errorTitle="Failed to load data" errorDescription={ String(error.message) }/>;
+    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
   }
 
   const emptyState = (

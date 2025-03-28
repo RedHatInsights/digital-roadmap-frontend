@@ -18,6 +18,8 @@ import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-ico
 import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
+import { Filter } from '../../types/Filter';
+import { DEFAULT_FILTERS } from '../../utils/utils';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -35,20 +37,30 @@ interface UpcomingTableProps {
     lastModified: string;
     detailFormat: 0 | 1 | 2 | 3;
   };
-  initialFilters: Set<string>;
+  initialTypeFilters: Set<string>;
   resetInitialFilters: () => void;
+  initialNameFilter: string;
+  initialDateFilter: string;
+  initialReleaseFilters: string[];
+  filtersForURL: Filter;
+  setFiltersForURL: (filters: Filter) => void;
 }
 
 export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   data,
   columnNames,
-  initialFilters,
+  initialTypeFilters,
   resetInitialFilters,
+  initialNameFilter,
+  initialDateFilter,
+  initialReleaseFilters,
+  filtersForURL,
+  setFiltersForURL,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
-  const [typeSelections, setTypeSelections] = useState<Set<string>>(initialFilters);
-  const [dateSelection, setDateSelection] = useState('');
-  const [releaseSelections, setReleaseSelections] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState(initialNameFilter ?? '');
+  const [typeSelections, setTypeSelections] = useState<Set<string>>(initialTypeFilters);
+  const [dateSelection, setDateSelection] = useState(initialDateFilter ?? '');
+  const [releaseSelections, setReleaseSelections] = useState<string[]>(initialReleaseFilters ?? []);
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
@@ -59,12 +71,24 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
 
   useEffect(() => {
-    if (initialFilters.size === 0) {
+    if (initialTypeFilters.size === 0) {
       setTypeSelections(new Set());
       return;
     }
-    setTypeSelections(new Set([...initialFilters]));
-  }, [initialFilters]);
+    setTypeSelections(new Set([...initialTypeFilters]));
+  }, [initialTypeFilters]);
+
+  useEffect(() => {
+    setSearchValue(initialNameFilter);
+  }, [initialNameFilter]);
+
+  useEffect(() => {
+    setDateSelection(initialDateFilter);
+  }, [initialDateFilter]);
+
+  useEffect(() => {
+    setReleaseSelections(initialReleaseFilters);
+  }, [initialReleaseFilters]);
 
   const getSortableRowValues = (repo: UpcomingChanges): (string | number)[] => {
     const { name, type, release, date } = repo;
@@ -186,6 +210,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setReleaseSelections([]);
     setDateSelection('');
     setPage(1);
+    setFiltersForURL(DEFAULT_FILTERS);
   };
 
   const resetTypeFilter = () => {
@@ -278,6 +303,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         dateOptions={dateUniqueOptions}
         typeOptions={typeUniqueOptions}
         resetTypeFilter={resetTypeFilter}
+        filtersForURL={filtersForURL}
+        setFiltersForURL={setFiltersForURL}
       />
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>
