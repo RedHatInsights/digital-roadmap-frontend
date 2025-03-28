@@ -21,6 +21,7 @@ import {
 } from '@patternfly/react-core';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
+import { Filter } from '../../types/Filter';
 
 interface UpcomingTableFiltersProps {
   resetFilters: () => void;
@@ -59,6 +60,8 @@ interface UpcomingTableFiltersProps {
     type: string;
   }[];
   resetTypeFilter: () => void;
+  filtersForURL: Filter;
+  setFiltersForURL: (filters: Filter) => void;
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -80,6 +83,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   dateOptions,
   typeOptions,
   resetTypeFilter,
+  filtersForURL,
+  setFiltersForURL,
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -113,12 +118,14 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     }
 
     const releaseStr = releaseId.toString();
+    const selections = releaseSelections.includes(releaseStr)
+      ? releaseSelections.filter((selection) => selection !== releaseStr)
+      : [releaseStr, ...releaseSelections];
 
-    setReleaseSelections(
-      releaseSelections.includes(releaseStr)
-        ? releaseSelections.filter((selection) => selection !== releaseStr)
-        : [releaseStr, ...releaseSelections]
-    );
+    setReleaseSelections(selections);
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['release'] = selections;
+    setFiltersForURL(newFilters);
   }
 
   const releaseSelect = (
@@ -171,9 +178,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     if (typeof itemId === 'undefined') {
       return;
     }
-
-    setDateSelection(itemId.toString());
+    const itemIdAsString = itemId.toString();
+    setDateSelection(itemIdAsString);
     setIsDateMenuOpen(!isDateMenuOpen);
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['date'] = itemIdAsString;
+    setFiltersForURL(newFilters);
   }
 
   const dateSelect = (
@@ -220,12 +230,14 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     }
 
     const typeStr = typeId.toString();
+    const selections = typeSelections.has(typeStr)
+      ? new Set([...typeSelections].filter((selection) => selection !== typeStr))
+      : new Set([typeStr, ...typeSelections]);
 
-    setTypeSelections(
-      typeSelections.has(typeStr)
-        ? new Set([...typeSelections].filter((selection) => selection !== typeStr))
-        : new Set([typeStr, ...typeSelections])
-    );
+    setTypeSelections(selections);
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['type'] = selections;
+    setFiltersForURL(newFilters);
   }
 
   const typeMenu = (
@@ -306,13 +318,39 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     </Dropdown>
   );
 
+  const resetName = () => {
+    setSearchValue('');
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['name'] = '';
+    setFiltersForURL(newFilters);
+  };
+
+  const resetRelease = () => {
+    setReleaseSelections([]);
+    const newFilters = structuredClone(filtersForURL);
+    delete newFilters['release'];
+    setFiltersForURL(newFilters);
+  };
+
+  const resetDate = () => {
+    setDateSelection('');
+    const newFilters = structuredClone(filtersForURL);
+    delete newFilters['date'];
+    setFiltersForURL(newFilters);
+  };
+
   // Set up name search input
   const searchInput = (
     <SearchInput
       placeholder="Filter by name"
       value={searchValue}
-      onChange={(_event, value) => setSearchValue(value)}
-      onClear={() => setSearchValue('')}
+      onChange={(_event, value) => {
+        setSearchValue(value);
+        const newFilters = structuredClone(filtersForURL);
+        newFilters['name'] = value;
+        setFiltersForURL(newFilters);
+      }}
+      onClear={resetName}
     />
   );
 
@@ -324,8 +362,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             <ToolbarItem>{attributeDropdown}</ToolbarItem>
             <ToolbarFilter
               chips={searchValue !== '' ? [searchValue] : ([] as string[])}
-              deleteChip={() => setSearchValue('')}
-              deleteChipGroup={() => setSearchValue('')}
+              deleteChip={resetName}
+              deleteChipGroup={resetName}
               categoryName="Name"
               showToolbarItem={activeAttributeMenu === 'Name'}
             >
@@ -334,7 +372,12 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             <ToolbarFilter
               chips={[...typeSelections]}
               deleteChip={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
-              deleteChipGroup={() => resetTypeFilter()}
+              deleteChipGroup={() => {
+                const newFilters = structuredClone(filtersForURL);
+                delete newFilters['type'];
+                setFiltersForURL(newFilters);
+                resetTypeFilter();
+              }}
               categoryName="Type"
               showToolbarItem={activeAttributeMenu === 'Type'}
             >
@@ -343,7 +386,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             <ToolbarFilter
               chips={releaseSelections}
               deleteChip={(category, chip) => onReleaseSelect(undefined, chip as string)}
-              deleteChipGroup={() => setReleaseSelections([])}
+              deleteChipGroup={resetRelease}
               categoryName="Release"
               showToolbarItem={activeAttributeMenu === 'Release'}
             >
@@ -351,8 +394,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             </ToolbarFilter>
             <ToolbarFilter
               chips={dateSelection !== '' ? [dateSelection] : ([] as string[])}
-              deleteChip={() => setDateSelection('')}
-              deleteChipGroup={() => setDateSelection('')}
+              deleteChip={resetDate}
+              deleteChipGroup={resetDate}
               categoryName="Date"
               showToolbarItem={activeAttributeMenu === 'Date'}
             >
