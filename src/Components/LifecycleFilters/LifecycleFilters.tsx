@@ -12,6 +12,7 @@ import {
   Toolbar,
   ToolbarGroup,
   ToolbarItem,
+  Tooltip,
 } from '@patternfly/react-core';
 import React from 'react';
 import { ErrorObject } from '../../types/ErrorObject';
@@ -112,13 +113,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               </Form>
             </ToolbarItem>
             <ToolbarItem>
-              <Button
-                className="drf-lifecycle__filter-download"
-                variant="plain"
-                aria-label="Download visible dataset as CSV"
-                onClick={downloadCSV}
-                icon={<ExportIcon />}
-              ></Button>
+              <Tooltip content="Export data">
+                <Button
+                  className="drf-lifecycle__filter-download"
+                  variant="plain"
+                  aria-label="Download visible dataset as CSV"
+                  onClick={downloadCSV}
+                  icon={<ExportIcon />}
+                ></Button>
+              </Tooltip>
             </ToolbarItem>
           </ToolbarGroup>
           <ToolbarGroup>

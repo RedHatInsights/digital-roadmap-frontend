@@ -100,7 +100,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const updateAppLifecycleData = (data: Stream[]) => {
-    return data.filter((stream) => stream.rolling === false && stream.os_major === 9);
+    return data.filter((stream) => stream?.rolling === false && stream.os_major === 9);
   };
 
   const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
