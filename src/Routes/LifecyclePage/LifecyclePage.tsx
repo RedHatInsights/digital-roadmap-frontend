@@ -1,18 +1,18 @@
-import React, { Suspense, useEffect } from "react";
-import { Alert, Spinner } from "@patternfly/react-core";
+import React, { Suspense, useEffect } from 'react';
+import { Alert, Spinner } from '@patternfly/react-core';
 import {
   PageHeader,
   PageHeaderTitle,
-} from "@redhat-cloud-services/frontend-components/PageHeader";
-import LifecycleTab from "../../Components/Lifecycle/Lifecycle";
-import { useChrome } from "@redhat-cloud-services/frontend-components/useChrome";
+} from '@redhat-cloud-services/frontend-components/PageHeader';
+import LifecycleTab from '../../Components/Lifecycle/Lifecycle';
+import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
-import "./LifecyclePage.scss";
+import './LifecyclePage.scss';
 
 const LifecyclePage = () => {
   const { appAction } = useChrome();
   useEffect(() => {
-    appAction("digital-roadmap");
+    appAction('digital-roadmap');
   }, []);
 
   return (

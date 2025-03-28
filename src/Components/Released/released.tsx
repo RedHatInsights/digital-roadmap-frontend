@@ -13,20 +13,35 @@ import {
 
 import { getRelevantReleaseNotes } from '../../api';
 
-const SelectOptionVariations = lazy(() => import('../FilterComponents/CustomDropdown'));
+const SelectOptionVariations = lazy(
+  () => import('../FilterComponents/CustomDropdown')
+);
 
 const Scrollspy = lazy(() => import('../ReleasedView/ReleasedView'));
 
 type ReleaseNote = {
   title: string;
   text: string;
-  tag: 'small' | 'a' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'pre' | undefined;
+  tag:
+    | 'small'
+    | 'a'
+    | 'blockquote'
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'p'
+    | 'pre'
+    | undefined;
   relevant: boolean;
 };
 
 const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
   const emptyReleaseNotes: ReleaseNote[] = [];
-  const [relevantReleaseNotes, setRelevantReleaseNotes] = React.useState(emptyReleaseNotes);
+  const [relevantReleaseNotes, setRelevantReleaseNotes] =
+    React.useState(emptyReleaseNotes);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const fetchData = (major: number, minor: number, keyword: string) => {
@@ -61,7 +76,10 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
         </Button>
       </ToolbarItem>
       <ToolbarItem>
-        <Button onClick={() => fetchData(9, 6, 'virtualization')} variant="primary">
+        <Button
+          onClick={() => fetchData(9, 6, 'virtualization')}
+          variant="primary"
+        >
           GET 9.6 with virtualization
         </Button>
       </ToolbarItem>

@@ -38,13 +38,27 @@ export const formatDate = (date: string | null) => {
     return 'Not available';
   }
   const dateAsDate = new Date(date);
-  return dateAsDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  return dateAsDate?.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+  });
 };
 
-export const checkValidityOfQueryParam = (queryParam: string, queryValue: string) => {
+export const checkValidityOfQueryParam = (
+  queryParam: string,
+  queryValue: string
+) => {
   switch (queryParam) {
     case 'sortByQueryParam': {
-      if (['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'].includes(queryValue)) {
+      if (
+        [
+          'Retirement date',
+          'Name',
+          'Release version',
+          'Release date',
+          'Systems',
+        ].includes(queryValue)
+      ) {
         return true;
       } else {
         return false;
@@ -89,12 +103,22 @@ export const getLifecycleType = (lifecycleType: string) => {
   }
 };
 
-export const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+export const getNewName = (
+  name: string,
+  major: number,
+  minor: number,
+  lifecycleType: string
+) => {
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${major}.${minor}${lifecycleText}`;
 };
 
-export const getNewChartName = (name: string, major: number, minor: number, lifecycleType: string) => {
+export const getNewChartName = (
+  name: string,
+  major: number,
+  minor: number,
+  lifecycleType: string
+) => {
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${lifecycleText}`;
 };
