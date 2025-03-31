@@ -1,18 +1,18 @@
-import React, { Suspense, useEffect } from "react";
-import { Alert, Spinner } from "@patternfly/react-core";
+import React, { Suspense, useEffect } from 'react';
+import { Alert, Spinner } from '@patternfly/react-core';
 import {
   PageHeader,
   PageHeaderTitle,
-} from "@redhat-cloud-services/frontend-components/PageHeader";
-import UpcomingTab from "../../Components/Upcoming/Upcoming";
-import { useChrome } from "@redhat-cloud-services/frontend-components/useChrome";
+} from '@redhat-cloud-services/frontend-components/PageHeader';
+import UpcomingTab from '../../Components/Upcoming/Upcoming';
+import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
-import "./UpcomingPage.scss";
+import './UpcomingPage.scss';
 
 const UpcomingPage = () => {
   const { appAction } = useChrome();
   useEffect(() => {
-    appAction("digital-roadmap");
+    appAction('digital-roadmap');
   }, []);
 
   return (

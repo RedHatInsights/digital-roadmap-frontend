@@ -3,6 +3,7 @@ module.exports = {
   debug: true,
   useProxy: true,
   proxyVerbose: true,
+  localChrome: process.env.INSIGHTS_CHROME,
   /**
    * Change accordingly to your appname in package.json.
    * The `sassPrefix` attribute is only required if your `appname` includes the dash `-` characters.
@@ -31,7 +32,7 @@ module.exports = {
    * Add additional webpack plugins
    */
   plugins: [],
-  _unstableHotReload: process.env.HOT === 'true',
+  hotReload: process.env.HOT === 'true',
   moduleFederation: {
     exclude: ['react-router-dom'],
     shared: [

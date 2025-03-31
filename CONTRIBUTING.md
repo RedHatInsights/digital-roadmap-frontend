@@ -43,9 +43,13 @@ In the checkout of this repository, do the following:
 
    ```npm install```
 
-1. Start the application. Set `CHROME_SERVICE=[port number]` if the Chrome service is listening on a port other than the default of 8090.
-   Note: The orginal default port of chrome service is 8000 (in case you have to use chrome service in main branch) but this is being used
-   by DR API. The default port of the chrome service is now changed to 8090 due this.
+1. Start the application.
+
+   Set `INSIGHTS_CHROME=[path to the checkout of chrome-service-backend]`
+
+   Set `CHROME_SERVICE=[port number]` if the Chrome service is listening on a port other than the default of `8090`.
+
+   **Note**: The original default port of Chrome service is 8000 (in case you have to use chrome service in main branch) but this is being used by DR API. The default port of the chrome service is now changed to 8090 due this.
 
    ```npm run start```
 
