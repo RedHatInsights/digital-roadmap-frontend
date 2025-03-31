@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import LifecycleFilters from './LifecycleFilters';
 import userEvent from '@testing-library/user-event';
@@ -75,7 +75,7 @@ describe('LifecycleFilters', () => {
       />
     );
     const nameFilter = screen.getByRole('textbox', { name: /Filter by name/i });
-    await userEvent.type(nameFilter, 'RHEL 3.0');
+    await waitFor(() => userEvent.type(nameFilter, 'RHEL 3.0'));
     expect(spy).toHaveBeenCalledTimes(8);
   });
   it('can clear input correctly', async () => {
@@ -95,7 +95,7 @@ describe('LifecycleFilters', () => {
       />
     );
     const resetBtn = screen.getByRole('button', { name: /Reset/i });
-    await userEvent.click(resetBtn);
+    await waitFor(() => userEvent.click(resetBtn));
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('');
   });
