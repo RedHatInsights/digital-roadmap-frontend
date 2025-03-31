@@ -23,8 +23,12 @@ describe('LifecycleFilters', () => {
         downloadCSV={jest.fn()}
       />
     );
-    expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
-    expect(screen.getByRole('textbox', { name: /Filter by name/i })).toHaveValue('');
+    expect(
+      screen.getByRole('textbox', { name: /Filter by name/i })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('textbox', { name: /Filter by name/i })
+    ).toHaveValue('');
     expect(screen.queryByRole('button', { name: /Reset/i })).toBeFalsy();
     expect(screen.getByRole('button', { name: /Installed and related/i }));
     expect(screen.getByRole('button', { name: /Installed only/i }));
@@ -46,8 +50,12 @@ describe('LifecycleFilters', () => {
         downloadCSV={jest.fn()}
       />
     );
-    expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
-    expect(screen.getByRole('textbox', { name: /Filter by name/i })).toHaveValue('RHEL 3.0');
+    expect(
+      screen.getByRole('textbox', { name: /Filter by name/i })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('textbox', { name: /Filter by name/i })
+    ).toHaveValue('RHEL 3.0');
     expect(screen.getByRole('button', { name: /Reset/i })).toBeTruthy();
   });
   it('calls setNameFilter appropriately', async () => {

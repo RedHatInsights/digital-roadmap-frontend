@@ -1,5 +1,10 @@
 import React from 'react';
-import { MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
+import {
+  MenuToggle,
+  Select,
+  SelectList,
+  SelectOption,
+} from '@patternfly/react-core';
 import BellIcon from '@patternfly/react-icons/dist/esm/icons/bell-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
@@ -11,7 +16,10 @@ export const SelectOptionVariations: React.FunctionComponent = () => {
     setIsOpen(!isOpen);
   };
 
-  const onSelect = (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => {
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined
+  ) => {
     setSelected(value as string);
     setIsOpen(false);
   };
@@ -44,7 +52,10 @@ export const SelectOptionVariations: React.FunctionComponent = () => {
     >
       <SelectList>
         <SelectOption value="Basic option">Basic option</SelectOption>
-        <SelectOption value="Option with description" description="This is a description">
+        <SelectOption
+          value="Option with description"
+          description="This is a description"
+        >
           Option with description
         </SelectOption>
         <SelectOption
@@ -62,7 +73,9 @@ export const SelectOptionVariations: React.FunctionComponent = () => {
         <SelectOption value="Disabled option" isDisabled>
           Disabled option
         </SelectOption>
-        <SelectOption value="See Menu for additional variations!">See Menu for additional variations!</SelectOption>
+        <SelectOption value="See Menu for additional variations!">
+          See Menu for additional variations!
+        </SelectOption>
       </SelectList>
     </Select>
   );
