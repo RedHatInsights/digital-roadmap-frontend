@@ -417,9 +417,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       return emptyState;
     }
 
+    // TEMPORARY BUG FIX for https://github.com/patternfly/patternfly-react/issues/11724
+    // RSPEED-908
+    // When the bug is resolved, this can be removed and just the LifecycleChart component can be used.
+    // NOTE: The LifecycleChartSystem is 1:1 copy of LifecycleChart, just needs to be separated.
+    const ChartComponent = lifecycleDropdownValue === OTHER_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
+
     return (
       <>
-        <LifecycleChart lifecycleData={filteredChartData} />
+        <ChartComponent lifecycleData={filteredChartData} />
         <LifecycleTable data={filteredTableData} />
       </>
     );
