@@ -30,20 +30,6 @@ interface ChartDataObject {
   name: string;
 }
 
-interface Datum {
-  childName: string;
-  x: string;
-  y?: string | null;
-  name?: string | null;
-  packageType?: string | null;
-  y0?: string | null;
-}
-
-interface LegendName {
-  packageType: string;
-  datapoints: any[];
-}
-
 const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   //check data type and contruct a chart array
   const checkDataType = (
@@ -178,12 +164,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   };
   constructLifecycleData(lifecycleData);
 
-  // get unique package types
-  const uniqueTypes = [
-    ...new Set(updatedLifecycleData.flat().map((d) => d.packageType)),
-  ];
-
-  const legendNames: LegendName[] = [
+  const DEFAULT_LEGEND_NAMES: { packageType: string; datapoints: ChartDataObject[] }[] = [
     { packageType: 'Supported', datapoints: [] },
     { packageType: 'Support ends within 6 months', datapoints: [] },
     { packageType: 'Retired', datapoints: [] },
@@ -191,27 +172,27 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     { packageType: 'Upcoming release', datapoints: [] },
   ];
 
+  const calculateLegendNames = () => {
+    return DEFAULT_LEGEND_NAMES.map((legend) => {
+      return {
+        packageType: legend.packageType,
+        datapoints: updatedLifecycleData
+          .flat()
+          .filter((d) => d.packageType === legend.packageType)
+          .map((d) => ({
+            name: d.name,
+            packageType: d.packageType,
+            version: d.version,
+            numSystems: d.numSystems,
+            x: d.x,
+            y: d.y,
+            y0: d.y0,
+          })),
+      };
+    });
+  };
 
-  
-  legendNames.forEach((type, index) => {
-    legendNames[index]['datapoints'] = updatedLifecycleData
-      .flat()
-      .filter((d) => d.packageType === type.packageType)
-      .map((d) => ({
-        name: d.name,
-        packageType: d.packageType,
-        version: d.version,
-        numSystems: d.numSystems,
-        x: d.x,
-        y: d.y,
-        y0: d.y0,
-      }));
-  });
-
-  debugger;
-
-  
-
+  const legendNames = React.useMemo(calculateLegendNames, [updatedLifecycleData]);
 
   const getLegendData = () =>
     legendNames.map((s, index) => ({
@@ -259,8 +240,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   const isHidden = (index: number) => hiddenSeries.has(index);
 
   // needs to be a specific tuple format or filter on hover breaks
-  //const chartNames = groupedData.map((_, i) => [`series-${i}`]) as [string[]];
-  const chartNames = legendNames?.map((_, i) => [`series-${i}`]) as [string[]];
+  const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
   return (
     <div className="drf-lifecycle__chart" tabIndex={0}>
@@ -320,6 +300,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
         <ChartAxis showGrid tickValues={fetchTicks()} />
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
+            if (s.datapoints.length === 0) {
+              return;
+            }
             return (
               <ChartBar
                 data={
