@@ -35,6 +35,9 @@ import {
 const LifecycleChart = lazy(
   () => import('../../Components/LifecycleChart/LifecycleChart')
 );
+const LifecycleChartSystem = lazy(
+  () => import('../../Components/LifecycleChartSystem/LifecycleChartSystem')
+);
 const LifecycleFilters = lazy(
   () => import('../../Components/LifecycleFilters/LifecycleFilters')
 );
