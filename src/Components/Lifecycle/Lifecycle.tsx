@@ -424,7 +424,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // RSPEED-908
     // When the bug is resolved, this can be removed and just the LifecycleChart component can be used.
     // NOTE: The LifecycleChartSystem is 1:1 copy of LifecycleChart, just needs to be separated.
-    const ChartComponent = lifecycleDropdownValue === OTHER_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
+    const ChartComponent =
+      lifecycleDropdownValue === OTHER_DROPDOWN_VALUE
+        ? LifecycleChartSystem
+        : LifecycleChart;
 
     return (
       <>
