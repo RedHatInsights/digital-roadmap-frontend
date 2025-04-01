@@ -1,5 +1,5 @@
-import * as React from "react";
-import "@patternfly/react-core/dist/styles/base.css";
+import * as React from 'react';
+import '@patternfly/react-core/dist/styles/base.css';
 import {
   Chart,
   ChartAxis,
@@ -11,9 +11,9 @@ import {
   ChartVoronoiContainer,
   getInteractiveLegendEvents,
   getInteractiveLegendItemStyles,
-} from "@patternfly/react-charts";
-import { SystemLifecycleChanges } from "../../types/SystemLifecycleChanges";
-import { Stream } from "../../types/Stream";
+} from '@patternfly/react-charts';
+import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
+import { Stream } from '../../types/Stream';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
@@ -44,12 +44,12 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     lifecycleData: Stream[] | SystemLifecycleChanges[]
   ) => {
     if (!lifecycleData || lifecycleData.length === 0) {
-      return "";
+      return '';
     }
-    if ("stream" in lifecycleData[0]) {
-      return "appLifecycle";
+    if ('stream' in lifecycleData[0]) {
+      return 'appLifecycle';
     }
-    return "lifecycle";
+    return 'lifecycle';
   };
 
   const dataType = checkDataType(lifecycleData);
@@ -103,21 +103,21 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   // We want the axis to end with January 1 of the following year if the end date isn't already January
   const formatYearAxisData = (start: string, end: string) => {
     const endDate = new Date(end);
-    const startYear = new Date(start).toLocaleDateString("en-US", {
-      timeZone: "UTC",
-      year: "numeric",
+    const startYear = new Date(start).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
     });
-    const endYear = endDate.toLocaleDateString("en-US", {
-      timeZone: "UTC",
-      year: "numeric",
+    const endYear = endDate.toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
     });
     years[startYear] = new Date(`January 1 ${startYear}`);
     years[endYear] = new Date(`January 1 ${endYear}`);
     if (endDate.getMonth() > 0) {
       endDate.setFullYear(endDate.getFullYear() + 1);
-      const endDateAsString = endDate.toLocaleDateString("en-US", {
-        timeZone: "UTC",
-        year: "numeric",
+      const endDateAsString = endDate.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        year: 'numeric',
       });
       years[endDateAsString] = new Date(`January 1 ${endDateAsString}`);
     }
@@ -129,11 +129,11 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     if (!dataType) {
       return;
     }
-    if (dataType === "appLifecycle") {
+    if (dataType === 'appLifecycle') {
       (lifecycleData as Stream[]).forEach((item) => {
         if (
-          item.start_date === "Unknown" ||
-          item.end_date === "Unknown" ||
+          item.start_date === 'Unknown' ||
+          item.end_date === 'Unknown' ||
           item.start_date === null ||
           item.end_date === null
         ) {
@@ -145,15 +145,15 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           item.end_date,
           item.support_status,
           `${item.os_major}`,
-          `${item.count ?? "N/A"}`
+          `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.start_date, item.end_date);
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
         if (
-          item.release_date === "Unknown" ||
-          item.retirement_date === "Unknown"
+          item.release_date === 'Unknown' ||
+          item.retirement_date === 'Unknown'
         ) {
           return;
         }
@@ -163,7 +163,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           item.retirement_date,
           item.support_status,
           `${item.major}.${item.minor}`,
-          `${item.count ?? "N/A"}`
+          `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.release_date, item.retirement_date);
       });
@@ -176,11 +176,11 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     packageType: string;
     datapoints: ChartDataObject[];
   }[] = [
-    { packageType: "Supported", datapoints: [] },
-    { packageType: "Support ends within 6 months", datapoints: [] },
-    { packageType: "Retired", datapoints: [] },
-    { packageType: "Not installed", datapoints: [] },
-    { packageType: "Upcoming release", datapoints: [] },
+    { packageType: 'Supported', datapoints: [] },
+    { packageType: 'Support ends within 6 months', datapoints: [] },
+    { packageType: 'Retired', datapoints: [] },
+    { packageType: 'Not installed', datapoints: [] },
+    { packageType: 'Upcoming release', datapoints: [] },
   ];
 
   const calculateLegendNames = () => {
@@ -223,24 +223,24 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    const dateString = date?.toLocaleDateString("en-US", { timeZone: "UTC" });
+    const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
     return dateString;
   };
 
   const getPackageColor = (datum: string) => {
     switch (datum) {
-      case "Retired":
-        return "var(--pf-v5-global--danger-color--100)";
-      case "Support ends within 6 months":
-        return "var(--pf-v5-global--warning-color--100)";
-      case "Not installed":
-        return "var(--pf-v5-global--palette--blue-200)";
-      case "Supported":
-        return "var(--pf-v5-global--success-color--100)";
-      case "Upcoming release":
-        return "var(--pf-v5-global--palette--blue-100)";
+      case 'Retired':
+        return 'var(--pf-v5-global--danger-color--100)';
+      case 'Support ends within 6 months':
+        return 'var(--pf-v5-global--warning-color--100)';
+      case 'Not installed':
+        return 'var(--pf-v5-global--palette--blue-200)';
+      case 'Supported':
+        return 'var(--pf-v5-global--success-color--100)';
+      case 'Upcoming release':
+        return 'var(--pf-v5-global--palette--blue-100)';
       default:
-        return "var(--pf-v5-global--default-color--300)";
+        return 'var(--pf-v5-global--default-color--300)';
     }
   };
 
@@ -284,15 +284,15 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
       updateDimensions();
     };
 
-    window.addEventListener("resize", updateDimensions);
-    window.addEventListener("zoom", handleZoom);
+    window.addEventListener('resize', updateDimensions);
+    window.addEventListener('zoom', handleZoom);
 
     return () => {
       if (chartContainerRef.current) {
         resizeObserver.unobserve(chartContainerRef.current);
       }
-      window.removeEventListener("resize", updateDimensions);
-      window.removeEventListener("zoom", handleZoom);
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('zoom', handleZoom);
     };
   }, [updatedLifecycleData.length]);
 
@@ -323,7 +323,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
         events={getInteractiveLegendEvents({
           chartNames,
           isHidden,
-          legendName: "chart5-ChartLegend",
+          legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
         legendComponent={
@@ -351,7 +351,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             showGrid
             tickValues={Object.values(years)}
             tickFormat={(t: Date) =>
-              t.toLocaleDateString("en-US", { year: "numeric" })
+              t.toLocaleDateString('en-US', { year: 'numeric' })
             }
           />
         )}
@@ -397,7 +397,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           y0={() => Date.now()}
           style={{
             data: {
-              stroke: "black",
+              stroke: 'black',
               strokeWidth: 0.5,
             },
           }}
