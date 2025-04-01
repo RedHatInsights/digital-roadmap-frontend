@@ -17,6 +17,9 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
+  Modal,
+  ModalVariant,
+  Button
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 
@@ -62,6 +65,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -104,6 +108,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   ) => {
     setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
+  };
+
+  const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
+    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
   const handlePerPageSelect = (
@@ -281,6 +289,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     return sortedRepositories;
   };
 
+
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map(
       (repo: SystemLifecycleChanges) => {
@@ -393,6 +402,25 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
+      <Button variant="primary" onClick={handleModalToggle}>
+        Show modal
+      </Button>
+      <Modal
+        bodyAriaLabel="Scrollable modal content"
+        tabIndex={0}
+        variant={ModalVariant.small}
+        title="Modal with overflowing content"
+        isOpen={isModalOpen}
+        onClose={handleModalToggle}
+        actions={[
+          <Button key="confirm" variant="primary" onClick={handleModalToggle}>
+            Confirm
+          </Button>,
+          <Button key="cancel" variant="link" onClick={handleModalToggle}>
+            Cancel
+          </Button>
+        ]}
+      > ahoj </Modal>
       {buildPagination('bottom', false)}
     </>
   );
