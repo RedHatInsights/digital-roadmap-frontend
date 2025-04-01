@@ -53,7 +53,7 @@ const RHEL_NINE_TWO = {
   release_date: '2023-05-01',
   retirement_date: '2023-11-01',
   count: 5,
-  support_status: "Retired",
+  support_status: 'Retired',
 };
 
 const RHEL_EIGHT_THREE = {
@@ -65,7 +65,7 @@ const RHEL_EIGHT_THREE = {
   release_date: '2020-11-01',
   retirement_date: '2021-05-01',
   count: 50,
-  support_status: "Retired",
+  support_status: 'Retired',
 };
 
 const RHEL_EIGHT_SEVEN = {
@@ -77,7 +77,7 @@ const RHEL_EIGHT_SEVEN = {
   release_date: '2023-05-01',
   retirement_date: '2023-05-01',
   count: 12,
-  support_status: "Retired",
+  support_status: 'Retired',
 };
 
 const RHEL_NINE = {
@@ -89,7 +89,7 @@ const RHEL_NINE = {
   release_date: '2022-05-18',
   retirement_date: '2032-05-01',
   count: 45,
-  support_status: "Supported",
+  support_status: 'Supported',
 };
 
 export const ONE_MOCK_RHEL_DATA = [RHEL_NINE_TWO];
