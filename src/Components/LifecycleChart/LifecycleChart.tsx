@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
@@ -30,7 +31,24 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
+interface Datum {
+  childName: string;
+  x: string;
+  y?: string | null;
+  name?: string | null;
+  packageType?: string | null;
+  y0?: string | null;
+}
+
+const LifecycleChart: React.FC<LifecycleChartProps> = ({
+  lifecycleData,
+}: LifecycleChartProps) => {
+  const chartContainerRef = React.useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = React.useState({
+    width: 900,
+    height: 300,
+  });
+
   //check data type and contruct a chart array
   const checkDataType = (
     lifecycleData: Stream[] | SystemLifecycleChanges[]
@@ -242,8 +260,54 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   // needs to be a specific tuple format or filter on hover breaks
   const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
+  // Handle resize observation
+  React.useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const updateDimensions = () => {
+      if (chartContainerRef.current) {
+        const { width } = chartContainerRef.current.getBoundingClientRect();
+        // Calculate height based on data length
+        const height = Math.max(updatedLifecycleData.length * 15 + 300, 300);
+        
+        setChartDimensions({
+          width: Math.max(width, 400), // Set minimum width
+          height,
+        });
+      }
+    };
+
+    // Initial measurement
+    updateDimensions();
+
+    // Set up resize observer
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(chartContainerRef.current);
+
+    // Handle zoom events
+    const handleZoom = () => {
+      updateDimensions();
+    };
+
+    window.addEventListener('resize', updateDimensions);
+    window.addEventListener('zoom', handleZoom);
+
+    return () => {
+      if (chartContainerRef.current) {
+        resizeObserver.unobserve(chartContainerRef.current);
+      }
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('zoom', handleZoom);
+    };
+  }, [updatedLifecycleData.length]);
+
   return (
-    <div className="drf-lifecycle__chart" tabIndex={0}>
+    <div 
+      className="drf-lifecycle__chart" 
+      tabIndex={0} 
+      ref={chartContainerRef}
+      style={{ width: '100%', height: '100%' }}
+    >
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
@@ -273,7 +337,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           onLegendClick: handleLegendClick,
         })}
         legendComponent={
-          <ChartLegend name="chart5-ChartLegend" data={getLegendData()} />
+          <ChartLegend 
+            name="chart5-ChartLegend" 
+            data={getLegendData()} 
+            height={50}
+            gutter={20}
+          />
         }
         legendPosition="bottom-left"
         name="chart5"
@@ -283,9 +352,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           right: 50, // Adjusted to accommodate tooltip
           top: 20,
         }}
-        // adjust this by number of items
-        height={updatedLifecycleData.length * 15 + 300}
-        width={900}
+        height={chartDimensions.height}
+        width={chartDimensions.width}
       >
         {Object.values(years).length > 0 && (
           <ChartAxis
@@ -297,7 +365,15 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
             }
           />
         )}
-        <ChartAxis showGrid tickValues={fetchTicks()} />
+        <ChartAxis 
+          showGrid 
+          tickValues={fetchTicks()} 
+          style={{
+            tickLabels: {
+              fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60))
+            }
+          }}
+        />
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
             if (s.datapoints.length === 0) {
