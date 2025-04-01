@@ -30,9 +30,19 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
+const LifecycleChart: React.FC<LifecycleChartProps> = ({
+  lifecycleData,
+}: LifecycleChartProps) => {
+  const chartContainerRef = React.useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = React.useState({
+    width: 900,
+    height: 300,
+  });
+
   //check data type and contruct a chart array
-  const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
+  const checkDataType = (
+    lifecycleData: Stream[] | SystemLifecycleChanges[]
+  ) => {
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
@@ -93,18 +103,29 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
   // We want the axis to end with January 1 of the following year if the end date isn't already January
   const formatYearAxisData = (start: string, end: string) => {
     const endDate = new Date(end);
-    const startYear = new Date(start).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
-    const endYear = endDate.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
+    const startYear = new Date(start).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
+    });
+    const endYear = endDate.toLocaleDateString('en-US', {
+      timeZone: 'UTC',
+      year: 'numeric',
+    });
     years[startYear] = new Date(`January 1 ${startYear}`);
     years[endYear] = new Date(`January 1 ${endYear}`);
     if (endDate.getMonth() > 0) {
       endDate.setFullYear(endDate.getFullYear() + 1);
-      const endDateAsString = endDate.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' });
+      const endDateAsString = endDate.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        year: 'numeric',
+      });
       years[endDateAsString] = new Date(`January 1 ${endDateAsString}`);
     }
   };
 
-  const constructLifecycleData = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
+  const constructLifecycleData = (
+    lifecycleData: Stream[] | SystemLifecycleChanges[]
+  ) => {
     if (!dataType) {
       return;
     }
@@ -130,7 +151,10 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+        if (
+          item.release_date === 'Unknown' ||
+          item.retirement_date === 'Unknown'
+        ) {
           return;
         }
         formatChartData(
@@ -226,8 +250,54 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
   // needs to be a specific tuple format or filter on hover breaks
   const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
+  // Handle resize observation
+  React.useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const updateDimensions = () => {
+      if (chartContainerRef.current) {
+        const { width } = chartContainerRef.current.getBoundingClientRect();
+        // Calculate height based on data length
+        const height = Math.max(updatedLifecycleData.length * 15 + 300, 300);
+        
+        setChartDimensions({
+          width: Math.max(width, 400), // Set minimum width
+          height,
+        });
+      }
+    };
+
+    // Initial measurement
+    updateDimensions();
+
+    // Set up resize observer
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(chartContainerRef.current);
+
+    // Handle zoom events
+    const handleZoom = () => {
+      updateDimensions();
+    };
+
+    window.addEventListener('resize', updateDimensions);
+    window.addEventListener('zoom', handleZoom);
+
+    return () => {
+      if (chartContainerRef.current) {
+        resizeObserver.unobserve(chartContainerRef.current);
+      }
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('zoom', handleZoom);
+    };
+  }, [updatedLifecycleData.length]);
+
   return (
-    <div className="drf-lifecycle__chart" tabIndex={0}>
+    <div 
+      className="drf-lifecycle__chart" 
+      tabIndex={0} 
+      ref={chartContainerRef}
+      style={{ width: '100%', height: '100%' }}
+    >
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
@@ -236,9 +306,13 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
           <ChartVoronoiContainer
             labels={({ datum }: { datum: ChartDataObject }) => {
               if (datum.name && datum.packageType && datum.y0) {
-                return `Name: ${datum.name}\nRelease: ${datum.version}\nSupport Type: ${datum.packageType}\nSystems: ${
+                return `Name: ${datum.name}\nRelease: ${
+                  datum.version
+                }\nSupport Type: ${datum.packageType}\nSystems: ${
                   datum.numSystems
-                }\nStart: ${formatDate(new Date(datum.y0))}\nEnd: ${formatDate(new Date(datum.y))}`;
+                }\nStart: ${formatDate(new Date(datum.y0))}\nEnd: ${formatDate(
+                  new Date(datum.y)
+                )}`;
               }
               return formatDate(new Date());
             }}
@@ -252,7 +326,14 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
           legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
-        legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} />}
+        legendComponent={
+          <ChartLegend 
+            name="chart5-ChartLegend" 
+            data={getLegendData()} 
+            height={50}
+            gutter={20}
+          />
+        }
         legendPosition="bottom-left"
         name="chart5"
         padding={{
@@ -261,19 +342,28 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
           right: 50, // Adjusted to accommodate tooltip
           top: 20,
         }}
-        // adjust this by number of items
-        height={updatedLifecycleData.length * 15 + 300}
-        width={900}
+        height={chartDimensions.height}
+        width={chartDimensions.width}
       >
         {Object.values(years).length > 0 && (
           <ChartAxis
             dependentAxis
             showGrid
             tickValues={Object.values(years)}
-            tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
+            tickFormat={(t: Date) =>
+              t.toLocaleDateString('en-US', { year: 'numeric' })
+            }
           />
         )}
-        <ChartAxis showGrid tickValues={fetchTicks()} />
+        <ChartAxis 
+          showGrid 
+          tickValues={fetchTicks()} 
+          style={{
+            tickLabels: {
+              fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60))
+            }
+          }}
+        />
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
             if (s.datapoints.length === 0) {
@@ -316,4 +406,4 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
   );
 };
 
-export default LifecycleChartSystem;
+export default LifecycleChart;

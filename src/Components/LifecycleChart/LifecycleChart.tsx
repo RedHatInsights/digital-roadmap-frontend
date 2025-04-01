@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
@@ -29,15 +28,6 @@ interface ChartDataObject {
   numSystems: string;
   typeID?: number | null;
   name: string;
-}
-
-interface Datum {
-  childName: string;
-  x: string;
-  y?: string | null;
-  name?: string | null;
-  packageType?: string | null;
-  y0?: string | null;
 }
 
 const LifecycleChart: React.FC<LifecycleChartProps> = ({
