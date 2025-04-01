@@ -296,7 +296,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
       className="drf-lifecycle__chart" 
       tabIndex={0} 
       ref={chartContainerRef}
-      style={{ width: '100%', height: '100%' }}
     >
       <Chart
         legendAllowWrap

@@ -30,7 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChart: React.FC<LifecycleChartProps> = ({
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   lifecycleData,
 }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
@@ -296,7 +296,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
       className="drf-lifecycle__chart" 
       tabIndex={0} 
       ref={chartContainerRef}
-      style={{ width: '100%', height: '100%' }}
     >
       <Chart
         legendAllowWrap
@@ -406,4 +405,4 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   );
 };
 
-export default LifecycleChart;
+export default LifecycleChartSystem;
