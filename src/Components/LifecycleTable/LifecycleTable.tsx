@@ -17,11 +17,10 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
-  Modal,
-  ModalVariant,
   Button
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
+import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -66,6 +65,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [modalData, setModalData] = React.useState("empty")
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -245,6 +245,32 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     return sortedRepositories;
   };
 
+  const renderModalWindow = () => {
+
+    return (
+        <Modal
+          variant={ModalVariant.small}
+          isOpen={isModalOpen}
+          onClose={handleModalToggle}
+          aria-labelledby="scrollable-modal-title"
+          aria-describedby="modal-box-body-scrollable"
+        >
+          <ModalHeader title="Systems" labelId="scrollable-modal-title" description={`${modalData} is installed on these sytems. Click on a system name to view system details in Inventory.`}/>
+          <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
+          { modalData }
+          </ModalBody>
+          <ModalFooter>
+            <Button key="confirm" variant="primary" onClick={handleModalToggle}>
+              Confirm
+            </Button>
+            <Button key="cancel" variant="link" onClick={handleModalToggle}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </Modal>
+    )
+  }
+
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
       if (!repo.name || !repo.stream || !repo.os_major) {
@@ -319,7 +345,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
+            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalData(String(repo.name));}}>
               {repo.count}
+            </Button>
             </Td>
           </Tr>
         );
@@ -402,25 +430,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
-      <Button variant="primary" onClick={handleModalToggle}>
-        Show modal
-      </Button>
-      <Modal
-        bodyAriaLabel="Scrollable modal content"
-        tabIndex={0}
-        variant={ModalVariant.small}
-        title="Modal with overflowing content"
-        isOpen={isModalOpen}
-        onClose={handleModalToggle}
-        actions={[
-          <Button key="confirm" variant="primary" onClick={handleModalToggle}>
-            Confirm
-          </Button>,
-          <Button key="cancel" variant="link" onClick={handleModalToggle}>
-            Cancel
-          </Button>
-        ]}
-      > ahoj </Modal>
+      {renderModalWindow()}
       {buildPagination('bottom', false)}
     </>
   );
