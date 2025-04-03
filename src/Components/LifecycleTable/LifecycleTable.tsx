@@ -12,6 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
+import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -48,7 +49,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [modalData, setModalData] = React.useState("empty")
+  const [modalDataName, setModalDataName] = React.useState<String>();
+  const [modalData, setModalData] = React.useState<String[]>();
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -219,9 +221,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           aria-labelledby="scrollable-modal-title"
           aria-describedby="modal-box-body-scrollable"
         >
-          <ModalHeader title="Systems" labelId="scrollable-modal-title" description={`${modalData} is installed on these sytems. Click on a system name to view system details in Inventory.`}/>
+          <ModalHeader title="Systems" labelId="scrollable-modal-title" description={`${modalDataName} is installed on these sytems. Click on a system name to view system details in Inventory.`}/>
           <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
-          { modalData }
+            {renderModalWindowTable(modalData)}
           </ModalBody>
           <ModalFooter>
             <Button key="confirm" variant="primary" onClick={handleModalToggle}>
@@ -235,6 +237,23 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     )
   }
 
+  const renderModalWindowTable = (data: String[] | undefined) => {
+
+    return (
+      <Table>
+        <Thead><Tr><Th>Name</Th></Tr></Thead>
+          <Tbody>{data?.map((item, index) =>
+            <Tr key={index}>
+              <Td dataLabel='Name'>
+                <Button variant='link'>{item}</Button>
+              </Td>
+            </Tr>
+          )}
+        </Tbody>
+      </Table>
+    );
+  }
+
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
       if (!repo.name || !repo.stream || !repo.os_major) {
@@ -245,10 +264,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name} {repo.stream}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>
+            {repo.os_major}
+          </Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>
+            {formatDate(repo.start_date)}
+          </Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>
+            {formatDate(repo.end_date)}
+          </Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
+          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
+              {repo.count}
+            </Button>
+          </Td>
         </Tr>
       );
     });
@@ -268,6 +297,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
 
   const renderSystemLifecycleData = () => {
+    const system_names = SYSTEM_ID;
+
     return (paginatedRows as SystemLifecycleChanges[]).map(
       (repo: SystemLifecycleChanges) => {
         if (
@@ -296,7 +327,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalData(String(repo.name));}}>
+            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
               {repo.count}
             </Button>
             </Td>
