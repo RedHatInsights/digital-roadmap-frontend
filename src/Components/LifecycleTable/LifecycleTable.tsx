@@ -17,8 +17,11 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
+  Button
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
+import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
+import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -62,6 +65,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+  
+  // Modal related
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [modalDataName, setModalDataName] = React.useState<String>();
+  const [modalData, setModalData] = React.useState<String[]>();
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
+  const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -104,6 +114,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   ) => {
     setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
+  };
+
+  const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
+    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
   const handlePerPageSelect = (
@@ -237,6 +251,62 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     return sortedRepositories;
   };
 
+  const renderModalWindow = () => {
+
+    return (
+        <Modal
+          variant={ModalVariant.small}
+          isOpen={isModalOpen}
+          onClose={handleModalToggle}
+          aria-labelledby="scrollable-modal-title"
+          aria-describedby="modal-box-body-scrollable"
+        >
+          <ModalHeader title="Systems" labelId="scrollable-modal-title" description={`${modalDataName} is installed on these sytems. Click on a system name to view system details in Inventory.`}/>
+          <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
+            {renderModalWindowTable(modalData)}
+          </ModalBody>
+          <ModalFooter>
+            <Button key="confirm" variant="primary" onClick={handleModalToggle}>
+              Confirm
+            </Button>
+            <Button key="cancel" variant="link" onClick={handleModalToggle}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </Modal>
+    )
+  }
+
+  const renderModalWindowTable = (data: String[] | undefined) => {
+
+    return (
+      <Table variant='compact'>
+        <Thead><Tr><Th sort={getSortParamsModal(0)}>Name</Th></Tr></Thead>
+          <Tbody>{data?.map((item, index) =>
+            <Tr key={index}>
+              <Td dataLabel='Name'>
+                <Button variant='link'>{item}</Button>
+              </Td>
+            </Tr>
+          )}
+        </Tbody>
+      </Table>
+    );
+  }
+
+  const getSortParamsModal = (columnIndex: number): ThProps['sort'] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: 'asc' // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+    },
+    columnIndex
+  });
+
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
       if (!repo.name || !repo.stream || !repo.os_major) {
@@ -261,7 +331,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>
             {formatDate(repo.end_date)}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
+          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
+              {repo.count}
+            </Button>
+          </Td>
         </Tr>
       );
     });
@@ -280,6 +354,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     }
     return sortedRepositories;
   };
+
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map(
@@ -310,7 +385,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
+            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
               {repo.count}
+            </Button>
             </Td>
           </Tr>
         );
@@ -393,6 +470,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
+      {renderModalWindow()}
       {buildPagination('bottom', false)}
     </>
   );
