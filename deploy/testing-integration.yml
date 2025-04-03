@@ -33,7 +33,7 @@ objects:
             defaultMode: 0400
             optional: true
         containers:
-        - name: digital-roadmap-e2e-iqe-${IMAGE_TAG}-${UID} # ???
+        - name: digital-roadmap-e2e-iqe-${IMAGE_TAG}-${UID}
           image: ${IQE_IMAGE}:${IQE_IMAGE_TAG}
           imagePullPolicy: Always
           args:
@@ -108,17 +108,17 @@ objects:
         - name: iqe-sel-${IMAGE_TAG}-${UID}
           image: ${IQE_SEL_IMAGE}
           env:
-            - name: _JAVA_OPTIONS
-              value: ${SELENIUM_JAVA_OPTS}
             - name: VNC_GEOMETRY
               value: ${VNC_GEOMETRY}
+            - name: SE_NODE_MAX_SESSIONS
+              value: ${SE_NODE_MAX_SESSIONS}
           resources:
             limits:
-              cpu: 500m
-              memory: 1.5Gi
+              cpu: ${SELENIUM_CPU_LIMIT}
+              memory: ${SELENIUM_MEMORY_LIMIT}
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: ${SELENIUM_CPU_REQUEST}
+              memory: ${SELENIUM_MEMORY_REQUEST}
           volumeMounts:
             - name: sel-shm
               mountPath: /dev/shm
