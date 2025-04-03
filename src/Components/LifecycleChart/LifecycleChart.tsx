@@ -223,8 +223,10 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
-    return dateString;
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    return date.toLocaleDateString('en-US', { timeZone: 'UTC' });
   };
 
   const getPackageColor = (datum: string) => {
@@ -296,6 +298,31 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     };
   }, [updatedLifecycleData.length]);
 
+  // Create custom tooltip function that safely handles the data
+  const getTooltipLabel = (point: any, index: number, points: any[]): string => {
+    const datum = point?.datum;
+    
+    // Filter out null or incomplete data points
+    if (!datum || typeof datum !== 'object') {
+      return '';
+    }
+    
+    // Check if this is an actual data point with valid values
+    if (!datum.name || datum.x === null || !datum.packageType) {
+      return '';
+    }
+    
+    try {
+      return `Name: ${datum.name || 'N/A'}\nRelease: ${
+        datum.version || 'N/A'
+      }\nSupport Type: ${datum.packageType || 'N/A'}\nSystems: ${
+        datum.numSystems || 'N/A'
+      }\nStart: ${formatDate(datum.y0)}\nEnd: ${formatDate(datum.y)}`;
+    } catch (e) {
+      return '';
+    }
+  }
+
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
       <Chart
@@ -304,20 +331,24 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         ariaTitle="Lifecycle bar chart"
         containerComponent={
           <ChartVoronoiContainer
-            labels={({ datum }: { datum: ChartDataObject }) => {
-              if (datum.name && datum.packageType && datum.y0) {
-                return `Name: ${datum.name}\nRelease: ${
-                  datum.version
-                }\nSupport Type: ${datum.packageType}\nSystems: ${
-                  datum.numSystems
-                }\nStart: ${formatDate(new Date(datum.y0))}\nEnd: ${formatDate(
-                  new Date(datum.y)
-                )}`;
-              }
-              return formatDate(new Date());
-            }}
-            labelComponent={<ChartTooltip constrainToVisibleArea />}
-            voronoiPadding={50}
+            labels={getTooltipLabel}
+            labelComponent={
+              <ChartTooltip 
+                constrainToVisibleArea 
+                flyoutWidth={240}
+                flyoutStyle={{ 
+                  fill: 'black',
+                  stroke: '#888',
+                  strokeWidth: 1,
+                  opacity: 0.95
+                }}
+              />
+            }
+            // Increase padding to make tooltip detection more generous on all sides
+            voronoiPadding={10}
+            // Ensure tooltip always shows up
+            voronoiDimension="x"
+            activateData
           />
         }
         events={getInteractiveLegendEvents({
@@ -339,8 +370,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         padding={{
           bottom: 60, // Adjusted to accommodate legend
           left: 180,
-          right: 50, // Adjusted to accommodate tooltip
-          top: 20,
+          right: 75,
+          top: 20, 
         }}
         height={chartDimensions.height}
         width={chartDimensions.width}
@@ -368,17 +399,17 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
             if (s.datapoints.length === 0) {
-              return;
+              return null;
             }
+            
+            // Handle hidden series differently - don't include in rendering at all
+            if (hiddenSeries.has(index)) {
+              return null;
+            }
+            
             return (
               <ChartBar
-                data={
-                  !hiddenSeries.has(index)
-                    ? s.datapoints
-                    : s.datapoints.map((d) => {
-                        return { ...d, x: null };
-                      })
-                }
+                data={s.datapoints}
                 key={`bar-${index}`}
                 name={`series-${index}`}
                 barWidth={10}
