@@ -48,9 +48,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [perPage, setPerPage] = React.useState(10);
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
+  
+  // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<String>();
   const [modalData, setModalData] = React.useState<String[]>();
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
+  const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -240,8 +244,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const renderModalWindowTable = (data: String[] | undefined) => {
 
     return (
-      <Table>
-        <Thead><Tr><Th>Name</Th></Tr></Thead>
+      <Table variant='compact'>
+        <Thead><Tr><Th sort={getSortParamsModal(0)}>Name</Th></Tr></Thead>
           <Tbody>{data?.map((item, index) =>
             <Tr key={index}>
               <Td dataLabel='Name'>
@@ -253,6 +257,19 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       </Table>
     );
   }
+
+  const getSortParamsModal = (columnIndex: number): ThProps['sort'] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: 'asc' // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+    },
+    columnIndex
+  });
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
@@ -297,8 +314,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
 
   const renderSystemLifecycleData = () => {
-    const system_names = SYSTEM_ID;
-
     return (paginatedRows as SystemLifecycleChanges[]).map(
       (repo: SystemLifecycleChanges) => {
         if (
