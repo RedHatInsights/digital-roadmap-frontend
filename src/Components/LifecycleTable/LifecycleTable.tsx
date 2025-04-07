@@ -17,11 +17,13 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
-  Button
+  Button, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
 import { SYSTEM_ID } from '../../__mocks__/mockData';
+import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -68,10 +70,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [modalDataName, setModalDataName] = React.useState<String>();
-  const [modalData, setModalData] = React.useState<String[]>();
+  const [modalDataName, setModalDataName] = React.useState<string>();
+  const [modalData, setModalData] = React.useState<string[]>();
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
-  const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | undefined>(undefined);
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
+  const [inputValue, setInputValue] = React.useState('');
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -252,7 +255,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const renderModalWindow = () => {
-
     return (
         <Modal
           variant={ModalVariant.small}
@@ -277,11 +279,16 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     )
   }
 
-  const renderModalWindowTable = (data: String[] | undefined) => {
+  const renderModalWindowTable = (data: string[] | undefined) => {
+    if (data === undefined) {
+      return '';
+    }
 
     return (
+      
       <Table variant='compact'>
-        <Thead><Tr><Th sort={getSortParamsModal(0)}>Name</Th></Tr></Thead>
+        {renderFilterBoxModalWindow()}
+        <Thead><Tr><Th sort={getSortParamsModalWindow(0, data)}>Name</Th></Tr></Thead>
           <Tbody>{data?.map((item, index) =>
             <Tr key={index}>
               <Td dataLabel='Name'>
@@ -294,7 +301,28 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     );
   }
 
-  const getSortParamsModal = (columnIndex: number): ThProps['sort'] => ({
+  const sortModalWindowData = (data: string[] | undefined, direction: String, index:  number) => {
+    if (data === undefined){
+      return undefined;
+    }
+
+    let sortedSystemsModalWindow = data;
+    if (index !== undefined) {
+      sortedSystemsModalWindow = data.sort((a, b) => {
+        const aValue = a;
+        const bValue = b;
+        debugger;
+        // string sort
+        if (direction === 'asc') {
+          return (aValue as string).localeCompare(bValue as string);
+        }
+        return (bValue as string).localeCompare(aValue as string);
+      });
+    }
+    return sortedSystemsModalWindow;
+  }
+
+  const getSortParamsModalWindow = (columnIndex: number, data: string[]): ThProps['sort'] => ({
     sortBy: {
       index: activeSortIndex,
       direction: activeSortDirection,
@@ -303,9 +331,56 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     onSort: (_event, index, direction) => {
       setActiveSortIndex(index);
       setActiveSortDirection(direction);
+      setModalData(sortModalWindowData(data, direction, index));
     },
     columnIndex
   });
+
+  /** callback for updating the inputValue state in this component so that the input can be controlled */
+  const handleInputChange = (_event: React.FormEvent<HTMLInputElement>, value: string) => {
+    setInputValue(value);
+    filterModalWindowData(value);
+  };
+
+  /** show the input clearing button only when the input is not empty */
+  const showClearButton = !!inputValue;
+
+  /** render the utilities component only when a component it contains is being rendered */
+  const showUtilities = showClearButton;
+
+  /** callback for clearing the text input */
+  const clearInput = () => {
+    setInputValue('');
+  };
+
+  const filterModalWindowData = (value: String) => {
+    if (modalData === undefined) {
+      return
+    }
+
+    if (value) {
+      setModalData(modalData.filter(item =>
+        item.toLowerCase().includes(value.toLowerCase())
+      ));
+    }
+  }
+
+  const renderFilterBoxModalWindow = () => {
+    return (
+      <TextInputGroup>
+      <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
+      {showUtilities && (
+        <TextInputGroupUtilities>
+          {showClearButton && (
+            <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
+              <TimesIcon />
+            </Button>
+          )}
+        </TextInputGroupUtilities>
+      )}
+    </TextInputGroup>
+    )
+  }
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
