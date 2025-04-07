@@ -149,11 +149,11 @@ parameters:
 - name: IQE_LOG_LEVEL
   value: info
 - name: IQE_REQUIREMENTS
-  value: ''
+  value: 'DIGITAL_ROADMAP,DIGITAL_ROADMAP-ROADMAP,DIGITAL_ROADMAP-LIFECYCLE'
 - name: IQE_REQUIREMENTS_PRIORITY
   value: ''
 - name: IQE_TEST_IMPORTANCE
-  value: ''
+  value: 'critical,high'
 - name: IQE_SEL_IMAGE
   value: 'quay.io/redhatqe/selenium-standalone:latest'
 - name: IQE_CPU_LIMIT
