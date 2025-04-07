@@ -95,6 +95,7 @@ const RHEL_NINE = {
 export const SYSTEM_ID = [
   "system_name0",
   "system_name1",
+  "system_name8",
   "system_name2",
   "system_name3",
   "system_name4",
