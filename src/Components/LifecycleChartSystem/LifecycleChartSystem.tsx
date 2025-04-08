@@ -223,10 +223,8 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-      return 'Invalid date';
-    }
-    return date.toLocaleDateString('en-US', { timeZone: 'UTC' });
+    const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
+    return dateString;
   };
 
   const getPackageColor = (datum: string) => {
@@ -342,13 +340,16 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
                   strokeWidth: 1,
                   opacity: 0.95
                 }}
+                // Add this to fix top and bottom items tooltip behavior
+                pointerOrientation={"bottom"}
+                dx={10}
+                dy={0}
+                cornerRadius={5}
               />
             }
-            // Increase padding to make tooltip detection more generous on all sides
-            voronoiPadding={10}
-            // Ensure tooltip always shows up
+            // Fixed voronoiPadding to be consistent across entire chart
+            voronoiPadding={25}
             voronoiDimension="x"
-            // Improve mouse tracking
             mouseFollowTooltips
             activateData
           />
@@ -372,8 +373,8 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
         padding={{
           bottom: 60, // Adjusted to accommodate legend
           left: 180,
-          right: 75,
-          top: 20, 
+          right: 75, // Adjusted to accommodate tooltip
+          top: 30,
         }}
         height={chartDimensions.height}
         width={chartDimensions.width}
@@ -401,17 +402,17 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
             if (s.datapoints.length === 0) {
-              return null;
+              return;
             }
-            
-            // Handle hidden series differently - don't include in rendering at all
-            if (hiddenSeries.has(index)) {
-              return null;
-            }
-            
             return (
               <ChartBar
-                data={s.datapoints}
+                data={
+                  !hiddenSeries.has(index)
+                    ? s.datapoints
+                    : s.datapoints.map((d) => {
+                        return { ...d, x: null };
+                      })
+                }
                 key={`bar-${index}`}
                 name={`series-${index}`}
                 barWidth={10}
