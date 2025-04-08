@@ -72,6 +72,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
   const [modalData, setModalData] = React.useState<string[]>();
+  const [modalDataOriginal, setModalDataOriginal] = React.useState<string[]>();
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState('');
@@ -285,19 +286,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     }
 
     return (
-      
-      <Table variant='compact'>
+      <div>
         {renderFilterBoxModalWindow()}
-        <Thead><Tr><Th sort={getSortParamsModalWindow(0, data)}>Name</Th></Tr></Thead>
-          <Tbody>{data?.map((item, index) =>
-            <Tr key={index}>
-              <Td dataLabel='Name'>
-                <Button variant='link'>{item}</Button>
-              </Td>
-            </Tr>
-          )}
-        </Tbody>
-      </Table>
+        <Table variant='compact'>
+          <Thead><Tr><Th sort={getSortParamsModalWindow(0, data)}>Name</Th></Tr></Thead>
+            <Tbody>{data?.map((item, index) =>
+              <Tr key={index}>
+                <Td dataLabel='Name'>
+                  <Button variant='link'>{item}</Button>
+                </Td>
+              </Tr>
+            )}
+          </Tbody>
+        </Table>
+      </div>
     );
   }
 
@@ -354,28 +356,30 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const filterModalWindowData = (value: String) => {
-    if (modalData === undefined) {
+    if (modalDataOriginal === undefined) {
       return
     }
 
     if (value) {
-      setModalData(modalData.filter(item =>
+      setModalData(modalDataOriginal.filter(item =>
         item.toLowerCase().includes(value.toLowerCase())
       ));
+    } else {
+      setModalData(modalDataOriginal);
     }
   }
 
   const renderFilterBoxModalWindow = () => {
     return (
       <TextInputGroup>
-      <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
-      {showUtilities && (
-        <TextInputGroupUtilities>
-          {showClearButton && (
-            <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
-              <TimesIcon />
-            </Button>
-          )}
+        <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
+        {showUtilities && (
+          <TextInputGroupUtilities>
+            {showClearButton && (
+              <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
+                <TimesIcon />
+              </Button>
+            )}
         </TextInputGroupUtilities>
       )}
     </TextInputGroup>
@@ -407,7 +411,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
             {formatDate(repo.end_date)}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
-          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
+          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID); setModalDataOriginal(SYSTEM_ID);}}>
               {repo.count}
             </Button>
           </Td>
@@ -460,7 +464,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID)}}>
+            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID); setModalDataOriginal(SYSTEM_ID);}}>
               {repo.count}
             </Button>
             </Td>
