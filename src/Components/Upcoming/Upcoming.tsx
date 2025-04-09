@@ -1,11 +1,19 @@
 import './upcoming.scss';
-import React, { lazy, useEffect } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import {
   Bullseye,
+  Button,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
+  EmptyState,
+  EmptyStateActions,
+  EmptyStateBody,
+  EmptyStateFooter,
+  EmptyStateHeader,
+  EmptyStateIcon,
+  EmptyStateVariant,
   Grid,
   GridItem,
   Spinner,
@@ -20,6 +28,7 @@ import { ErrorObject } from '../../types/ErrorObject';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
+import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { DEFAULT_FILTERS, buildURL, pluralize } from '../../utils/utils';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
@@ -53,6 +62,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     string[]
   >([]);
   const [error, setError] = React.useState<ErrorObject>();
+  const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersForURL, setFiltersForURL] =
     React.useState<Filter>(DEFAULT_FILTERS);
@@ -86,9 +96,17 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
+    setNoDataAvailable(false);
     try {
       const data = await getUpcomingChanges();
       const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
+
+      // Check if  data source is empty
+      if (upcomingChangesParagraphs.length === 0) {
+        setNoDataAvailable(true);
+        return;
+      }
+      
       setUpcomingChanges(upcomingChangesParagraphs);
       const filteredDeprecations = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Deprecation'
@@ -209,6 +227,31 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       />
     );
   }
+
+    // New error state for when no data is available
+    if (noDataAvailable) {
+      return (
+        <Bullseye>
+          <EmptyState variant={EmptyStateVariant.lg}>
+            <EmptyStateHeader
+              icon={<EmptyStateIcon icon={CubesIcon} />}
+              titleText="No roadmap data available"
+              headingLevel="h2"
+            />
+            <EmptyStateBody>
+              We couldn't find any Roadmap data. Either no data exists in the system or there was a problem retrieving it.
+            </EmptyStateBody>
+            <EmptyStateFooter>
+              <EmptyStateActions>
+                <Button variant="primary" onClick={fetchData}>
+                  Try again
+                </Button>
+              </EmptyStateActions>
+            </EmptyStateFooter>
+          </EmptyState>
+        </Bullseye>
+      );
+    }
 
   return (
     <Stack className="drf-lifecycle__upcoming" hasGutter>
