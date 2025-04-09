@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {lazy} from 'react';
 import {
   SortByDirection,
   Table,
@@ -20,6 +20,7 @@ import {
   Button, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
+const LifecycleModalWindow = lazy(() => import("../../Components/LifecycleModalWindow/LifecycleModalWindow"));
 import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
 import { SYSTEM_ID } from '../../__mocks__/mockData';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
@@ -72,10 +73,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
   const [modalData, setModalData] = React.useState<string[]>();
-  const [modalDataOriginal, setModalDataOriginal] = React.useState<string[]>();
-  const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
-  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
-  const [inputValue, setInputValue] = React.useState('');
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -84,7 +81,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('stream' in lifecycleData[0]) {
+    if ('stream' in lifecycleData[0]) {0
       return 'streams';
     }
     return 'rhel';
@@ -120,9 +117,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     setPage(newPage);
   };
 
-  const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
-    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
-  };
 
   const handlePerPageSelect = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -134,6 +128,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
     setPerPage(newPerPage);
+  };
+
+  const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {
+    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
   const buildPagination = (
@@ -255,136 +253,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     return sortedRepositories;
   };
 
-  const renderModalWindow = () => {
-    return (
-        <Modal
-          variant={ModalVariant.small}
-          isOpen={isModalOpen}
-          onClose={handleModalToggle}
-          aria-labelledby="scrollable-modal-title"
-          aria-describedby="modal-box-body-scrollable"
-        >
-          <ModalHeader title="Systems" labelId="scrollable-modal-title" description={`${modalDataName} is installed on these sytems. Click on a system name to view system details in Inventory.`}/>
-          <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
-            {renderModalWindowTable(modalData)}
-          </ModalBody>
-          <ModalFooter>
-            <Button key="confirm" variant="primary" onClick={handleModalToggle}>
-              Confirm
-            </Button>
-            <Button key="cancel" variant="link" onClick={handleModalToggle}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </Modal>
-    )
-  }
-
-  const renderModalWindowTable = (data: string[] | undefined) => {
-    if (data === undefined) {
-      return '';
-    }
-
-    return (
-      <div>
-        {renderFilterBoxModalWindow()}
-        <Table variant='compact'>
-          <Thead><Tr><Th sort={getSortParamsModalWindow(0, data)}>Name</Th></Tr></Thead>
-            <Tbody>{data?.map((item, index) =>
-              <Tr key={index}>
-                <Td dataLabel='Name'>
-                  <Button variant='link'>{item}</Button>
-                </Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      </div>
-    );
-  }
-
-  const sortModalWindowData = (data: string[] | undefined, direction: String, index:  number) => {
-    if (data === undefined){
-      return undefined;
-    }
-
-    let sortedSystemsModalWindow = data;
-    if (index !== undefined) {
-      sortedSystemsModalWindow = data.sort((a, b) => {
-        const aValue = a;
-        const bValue = b;
-        debugger;
-        // string sort
-        if (direction === 'asc') {
-          return (aValue as string).localeCompare(bValue as string);
-        }
-        return (bValue as string).localeCompare(aValue as string);
-      });
-    }
-    return sortedSystemsModalWindow;
-  }
-
-  const getSortParamsModalWindow = (columnIndex: number, data: string[]): ThProps['sort'] => ({
-    sortBy: {
-      index: activeSortIndex,
-      direction: activeSortDirection,
-      defaultDirection: 'asc' // starting sort direction when first sorting a column. Defaults to 'asc'
-    },
-    onSort: (_event, index, direction) => {
-      setActiveSortIndex(index);
-      setActiveSortDirection(direction);
-      setModalData(sortModalWindowData(data, direction, index));
-    },
-    columnIndex
-  });
-
-  /** callback for updating the inputValue state in this component so that the input can be controlled */
-  const handleInputChange = (_event: React.FormEvent<HTMLInputElement>, value: string) => {
-    setInputValue(value);
-    filterModalWindowData(value);
-  };
-
-  /** show the input clearing button only when the input is not empty */
-  const showClearButton = !!inputValue;
-
-  /** render the utilities component only when a component it contains is being rendered */
-  const showUtilities = showClearButton;
-
-  /** callback for clearing the text input */
-  const clearInput = () => {
-    setInputValue('');
-  };
-
-  const filterModalWindowData = (value: String) => {
-    if (modalDataOriginal === undefined) {
-      return
-    }
-
-    if (value) {
-      setModalData(modalDataOriginal.filter(item =>
-        item.toLowerCase().includes(value.toLowerCase())
-      ));
-    } else {
-      setModalData(modalDataOriginal);
-    }
-  }
-
-  const renderFilterBoxModalWindow = () => {
-    return (
-      <TextInputGroup>
-        <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
-        {showUtilities && (
-          <TextInputGroupUtilities>
-            {showClearButton && (
-              <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
-                <TimesIcon />
-              </Button>
-            )}
-        </TextInputGroupUtilities>
-      )}
-    </TextInputGroup>
-    )
-  }
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
@@ -411,7 +279,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
             {formatDate(repo.end_date)}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
-          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID); setModalDataOriginal(SYSTEM_ID);}}>
+          <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID);}}>
               {repo.count}
             </Button>
           </Td>
@@ -464,7 +332,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID); setModalDataOriginal(SYSTEM_ID);}}>
+            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID);}}>
               {repo.count}
             </Button>
             </Td>
@@ -549,7 +417,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
-      {renderModalWindow()}
+      <LifecycleModalWindow name={modalDataName} data={modalData} isModalOpen={isModalOpen} handleModalToggle={handleModalToggle} ></LifecycleModalWindow>
       {buildPagination('bottom', false)}
     </>
   );
