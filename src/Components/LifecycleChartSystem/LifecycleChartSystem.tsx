@@ -297,19 +297,19 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   }, [updatedLifecycleData.length]);
 
   // Create custom tooltip function that safely handles the data
-  const getTooltipLabel = (point: any, index: number, points: any[]): string => {
+  const getTooltipLabel = (point: any): string => {
     const datum = point?.datum;
-    
+
     // Filter out null or incomplete data points
     if (!datum || typeof datum !== 'object') {
       return '';
     }
-    
+
     // Check if this is an actual data point with valid values
     if (!datum.name || datum.x === null || !datum.packageType) {
       return '';
     }
-    
+
     try {
       return `Name: ${datum.name || 'N/A'}\nRelease: ${
         datum.version || 'N/A'
@@ -319,31 +319,31 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     } catch (e) {
       return '';
     }
-  }
+  };
 
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
-        ariaTitle="Lifecycle bar chart"
         containerComponent={
           <ChartVoronoiContainer
             labels={getTooltipLabel}
             labelComponent={
-              <ChartTooltip 
-                constrainToVisibleArea 
+              <ChartTooltip
+                constrainToVisibleArea
+                centerOffset={{ x: 150, y: 0 }}
                 flyoutWidth={240}
-                flyoutStyle={{ 
+                flyoutStyle={{
                   fill: 'black',
                   stroke: '#888',
                   strokeWidth: 1,
-                  opacity: 0.95
+                  opacity: 0.95,
                 }}
                 // Add this to fix top and bottom items tooltip behavior
-                pointerOrientation={"bottom"}
-                dx={10}
-                dy={0}
+                pointerOrientation={'bottom'}
+                dx={30}
+                dy={-10}
                 cornerRadius={5}
               />
             }
@@ -366,6 +366,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
+            borderPadding={{ top: 10, bottom: 0, left: 10, right: 0 }}
           />
         }
         legendPosition="bottom-left"
