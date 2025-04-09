@@ -326,13 +326,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
-        ariaTitle="Lifecycle bar chart"
         containerComponent={
           <ChartVoronoiContainer
             labels={getTooltipLabel}
             labelComponent={
               <ChartTooltip 
-                constrainToVisibleArea 
+                constrainToVisibleArea
+                centerOffset={{x:150, y:0}} 
                 flyoutWidth={240}
                 flyoutStyle={{ 
                   fill: 'black',
@@ -340,10 +340,11 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
                   strokeWidth: 1,
                   opacity: 0.95
                 }}
+                
                 // Add this to fix top and bottom items tooltip behavior
                 pointerOrientation={"bottom"}
-                dx={10}
-                dy={0}
+                dx={30}
+                dy={-10}
                 cornerRadius={5}
               />
             }
@@ -366,6 +367,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
+            borderPadding={{top:10, bottom:0, left:10, right: 0}}
+
           />
         }
         legendPosition="bottom-left"
