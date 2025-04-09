@@ -106,7 +106,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setNoDataAvailable(true);
         return;
       }
-      
+
       setUpcomingChanges(upcomingChangesParagraphs);
       const filteredDeprecations = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Deprecation'
@@ -228,30 +228,31 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     );
   }
 
-    // New error state for when no data is available
-    if (noDataAvailable) {
-      return (
-        <Bullseye>
-          <EmptyState variant={EmptyStateVariant.lg}>
-            <EmptyStateHeader
-              icon={<EmptyStateIcon icon={CubesIcon} />}
-              titleText="No roadmap data available"
-              headingLevel="h2"
-            />
-            <EmptyStateBody>
-              We couldn't find any Roadmap data. Either no data exists in the system or there was a problem retrieving it.
-            </EmptyStateBody>
-            <EmptyStateFooter>
-              <EmptyStateActions>
-                <Button variant="primary" onClick={fetchData}>
-                  Try again
-                </Button>
-              </EmptyStateActions>
-            </EmptyStateFooter>
-          </EmptyState>
-        </Bullseye>
-      );
-    }
+  // New error state for when no data is available
+  if (noDataAvailable) {
+    return (
+      <Bullseye>
+        <EmptyState variant={EmptyStateVariant.lg}>
+          <EmptyStateHeader
+            icon={<EmptyStateIcon icon={CubesIcon} />}
+            titleText="No roadmap data available"
+            headingLevel="h2"
+          />
+          <EmptyStateBody>
+            We couldn't find any Roadmap data. Either no data exists in the
+            system or there was a problem retrieving it.
+          </EmptyStateBody>
+          <EmptyStateFooter>
+            <EmptyStateActions>
+              <Button variant="primary" onClick={fetchData}>
+                Try again
+              </Button>
+            </EmptyStateActions>
+          </EmptyStateFooter>
+        </EmptyState>
+      </Bullseye>
+    );
+  }
 
   return (
     <Stack className="drf-lifecycle__upcoming" hasGutter>

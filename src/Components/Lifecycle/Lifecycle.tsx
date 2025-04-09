@@ -188,13 +188,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = systemData.data || [];
       const appStreams = updateAppLifecycleData(appData.data) || [];
-      
+
       // Check if both data sources are empty
       if (upcomingChangesParagraphs.length === 0 && appStreams.length === 0) {
         setNoDataAvailable(true);
         return;
       }
-      
+
       setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
       const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
@@ -413,7 +413,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             headingLevel="h2"
           />
           <EmptyStateBody>
-            We couldn't find any Life Cycle data. Either no data exists in the system or there was a problem retrieving it.
+            We couldn't find any Life Cycle data. Either no data exists in the
+            system or there was a problem retrieving it.
           </EmptyStateBody>
           <EmptyStateFooter>
             <EmptyStateActions>
