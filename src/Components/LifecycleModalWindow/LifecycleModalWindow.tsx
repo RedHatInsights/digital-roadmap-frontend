@@ -1,0 +1,221 @@
+import React, { useEffect } from "react";
+import {
+  SortByDirection,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  ThProps,
+  Thead,
+  Tr,
+} from "@patternfly/react-table";
+import {
+  Button,
+  TextInputGroup,
+  TextInputGroupMain,
+  TextInputGroupUtilities,
+} from "@patternfly/react-core";
+import {
+  Modal,
+  ModalBody,
+  ModalHeader,
+  ModalFooter,
+  ModalVariant,
+} from "@patternfly/react-core/next";
+import { SYSTEM_ID } from "../../__mocks__/mockData";
+import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
+import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
+
+interface ModalWindowProps {
+  name: String | undefined;
+  data: string[] | undefined;
+  isModalOpen: boolean;
+  handleModalToggle: (_event: any) => void; // any because <Modal onClose> stops working with anything else
+}
+
+export const LifecycleModalWindow: React.FunctionComponent<
+  ModalWindowProps
+> = ({ name, data, isModalOpen, handleModalToggle }) => {
+
+  const [modalData, setModalData] = React.useState<string[]>();
+  const [modalDataOriginal, setModalDataOriginal] = React.useState<string[]>();
+  const [activeSortIndex, setActiveSortIndex] = React.useState<
+    number | undefined
+  >();
+  const [activeSortDirection, setActiveSortDirection] =
+    React.useState<SortByDirection>();
+  const [inputValue, setInputValue] = React.useState("");
+
+  React.useEffect(() => {
+    setModalDataOriginal(data);
+  }
+  )
+
+  const renderModalWindow = () => {
+    return (
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={isModalOpen}
+        onClose={handleModalToggle} // TODO: problem when handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) this doesn't work
+        aria-labelledby="scrollable-modal-title"
+        aria-describedby="modal-box-body-scrollable"
+      >
+        <ModalHeader
+          title="Systems"
+          labelId="scrollable-modal-title"
+          description={`${name} is installed on these systems. Click on a system name to view system details in Inventory.`}
+        />
+        <ModalBody
+          tabIndex={0}
+          id="modal-box-body-scrollable"
+          aria-label="Scrollable modal content"
+        >
+          {renderModalWindowTable(modalData)}
+        </ModalBody>
+        <ModalFooter>
+          <Button key="confirm" variant="primary" onClick={handleModalToggle}>
+            Confirm
+          </Button>
+          <Button key="cancel" variant="link" onClick={handleModalToggle}>
+            Cancel
+          </Button>
+        </ModalFooter>
+      </Modal>
+    );
+  };
+
+  const renderModalWindowTable = (data: string[] | undefined) => {
+    if (data === undefined) {
+      return "";
+    }
+
+    return (
+      <div>
+        {renderFilterBoxModalWindow()}
+        <Table variant="compact">
+          <Thead>
+            <Tr>
+              <Th sort={getSortParamsModalWindow(0, data)}>Name</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {data?.map((item, index) => (
+              <Tr key={index}>
+                <Td dataLabel="Name">
+                  <Button variant="link">{item}</Button>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
+    );
+  };
+
+  const sortModalWindowData = (
+    data: string[] | undefined,
+    direction: String,
+    index: number
+  ) => {
+    if (data === undefined) {
+      return undefined;
+    }
+
+    let sortedSystemsModalWindow = data;
+    if (index !== undefined) {
+      sortedSystemsModalWindow = data.sort((a, b) => {
+        const aValue = a;
+        const bValue = b;
+        debugger;
+        // string sort
+        if (direction === "asc") {
+          return (aValue as string).localeCompare(bValue as string);
+        }
+        return (bValue as string).localeCompare(aValue as string);
+      });
+    }
+    return sortedSystemsModalWindow;
+  };
+
+  const getSortParamsModalWindow = (
+    columnIndex: number,
+    data: string[]
+  ): ThProps["sort"] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: "asc", // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+      setModalData(sortModalWindowData(data, direction, index));
+    },
+    columnIndex,
+  });
+
+  /** callback for updating the inputValue state in this component so that the input can be controlled */
+  const handleInputChange = (
+    _event: React.FormEvent<HTMLInputElement>,
+    value: string
+  ) => {
+    setInputValue(value);
+    filterModalWindowData(value);
+  };
+
+  /** show the input clearing button only when the input is not empty */
+  const showClearButton = !!inputValue;
+
+  /** render the utilities component only when a component it contains is being rendered */
+  const showUtilities = showClearButton;
+
+  /** callback for clearing the text input */
+  const clearInput = () => {
+    setInputValue("");
+  };
+
+  const filterModalWindowData = (value: String) => {
+    if (modalDataOriginal === undefined) {
+      return;
+    }
+
+    if (value) {
+      setModalData(
+        modalDataOriginal.filter((item) =>
+          item.toLowerCase().includes(value.toLowerCase())
+        )
+      );
+    } else {
+      setModalData(modalDataOriginal);
+    }
+  };
+
+  const renderFilterBoxModalWindow = () => {
+    return (
+      <TextInputGroup>
+        <TextInputGroupMain
+          icon={<SearchIcon />}
+          value={inputValue}
+          onChange={handleInputChange}
+        />
+        {showUtilities && (
+          <TextInputGroupUtilities>
+            {showClearButton && (
+              <Button
+                variant="plain"
+                onClick={clearInput}
+                aria-label="Clear button and input"
+              >
+                <TimesIcon />
+              </Button>
+            )}
+          </TextInputGroupUtilities>
+        )}
+      </TextInputGroup>
+    );
+  };
+
+  return renderModalWindow();
+};
+
+export default LifecycleModalWindow;
