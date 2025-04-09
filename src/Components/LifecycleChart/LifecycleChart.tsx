@@ -297,9 +297,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   }, [updatedLifecycleData.length]);
 
   // Create custom tooltip function that safely handles the data
-  const getTooltipLabel = (
-    point: any,
-  ): string => {
+  const getTooltipLabel = (point: any): string => {
     const datum = point?.datum;
 
     // Filter out null or incomplete data points
