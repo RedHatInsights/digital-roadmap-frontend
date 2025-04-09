@@ -413,7 +413,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             headingLevel="h2"
           />
           <EmptyStateBody>
-            We couldn't find any Life Cycle data. Either no data exists in the
+            We could not find any Life Cycle data. Either no data exists in the
             system or there was a problem retrieving it.
           </EmptyStateBody>
           <EmptyStateFooter>

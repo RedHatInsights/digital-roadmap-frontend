@@ -239,7 +239,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             headingLevel="h2"
           />
           <EmptyStateBody>
-            We couldn't find any Roadmap data. Either no data exists in the
+            We could not find any Roadmap data. Either no data exists in the
             system or there was a problem retrieving it.
           </EmptyStateBody>
           <EmptyStateFooter>
