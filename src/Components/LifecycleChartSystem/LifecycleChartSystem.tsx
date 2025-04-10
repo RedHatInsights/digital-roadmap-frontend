@@ -338,7 +338,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
                   stroke: '#888',
                   strokeWidth: 1,
                   opacity: 0.95,
-
                 }}
                 // Add this to fix top and bottom items tooltip behavior
                 pointerOrientation={'bottom'}
