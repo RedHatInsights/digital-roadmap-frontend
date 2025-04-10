@@ -1,4 +1,4 @@
-import './LifecycleModalWindow.scss';
+import "./LifecycleModalWindow.scss";
 import React, { useEffect } from "react";
 import {
   SortByDirection,
@@ -23,7 +23,6 @@ import {
   ModalFooter,
   ModalVariant,
 } from "@patternfly/react-core/next";
-import { SYSTEM_ID } from "../../__mocks__/mockData";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
 
@@ -33,7 +32,7 @@ The modal window requires following parameters to be set in the parent component
 - modalData - list of the affected systems for the package/system
 - isModalOpen - value managing if modal is open in UI, React.UseState()
 - handleModalToggle - function for handling close/open modal window, _event: React.MouseEvent | React.KeyboardEvent
-*/ 
+*/
 interface ModalWindowProps {
   name: String | undefined;
   modalData: string[] | undefined;
@@ -45,7 +44,9 @@ interface ModalWindowProps {
 export const LifecycleModalWindow: React.FunctionComponent<
   ModalWindowProps
 > = ({ name, modalData, setModalData, isModalOpen, handleModalToggle }) => {
-  const [modalDataFiltered, setModalDataFiltered] = React.useState<string[] | undefined>();
+  const [modalDataFiltered, setModalDataFiltered] = React.useState<
+    string[] | undefined
+  >();
   const [activeSortIndex, setActiveSortIndex] = React.useState<
     number | undefined
   >();
@@ -59,8 +60,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
     setActiveSortIndex(undefined);
     setActiveSortDirection(undefined);
     setInputValue("");
-  }, [isModalOpen]
-  )
+  }, [isModalOpen]);
 
   const renderModalWindow = () => {
     return (
@@ -83,8 +83,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
         >
           {renderModalWindowTable(modalDataFiltered)}
         </ModalBody>
-        <ModalFooter>
-        </ModalFooter>
+        <ModalFooter></ModalFooter>
       </Modal>
     );
   };
@@ -119,7 +118,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <TextInputGroup >
+      <TextInputGroup>
         <TextInputGroupMain
           icon={<SearchIcon />}
           value={inputValue}
@@ -185,8 +184,6 @@ export const LifecycleModalWindow: React.FunctionComponent<
     return sortedSystemsModalWindow;
   };
 
-  
-
   /** callback for updating the inputValue state in this component so that the input can be controlled */
   const handleInputChange = (
     _event: React.FormEvent<HTMLInputElement>,
@@ -223,8 +220,6 @@ export const LifecycleModalWindow: React.FunctionComponent<
       setModalDataFiltered(modalData);
     }
   };
-
-  
 
   return renderModalWindow();
 };

@@ -17,14 +17,11 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
-  Button, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities
+  Button,
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import("../../Components/LifecycleModalWindow/LifecycleModalWindow"));
-import { Modal, ModalBody, ModalHeader, ModalFooter, ModalVariant } from '@patternfly/react-core/next';
 import { SYSTEM_ID } from '../../__mocks__/mockData';
-import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
-import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -301,9 +298,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
               {formatDate(repo.retirement_date)}
             </Td>
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-            <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID);}}>
-              {repo.count}
-            </Button>
+            {repo.count !== 0 ? (
+                <Button variant="link" onClick={(event) =>{ handleModalToggle(event); setModalDataName(String(repo.name)); setModalData(SYSTEM_ID);}}>
+                  {repo.count}
+                </Button>
+              ) : (
+                <>{repo.count}</>
+              )}
             </Td>
           </Tr>
         );
