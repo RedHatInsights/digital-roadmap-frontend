@@ -382,7 +382,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
-      <LifecycleModalWindow name={modalDataName} data={modalData} isModalOpen={isModalOpen} handleModalToggle={handleModalToggle} ></LifecycleModalWindow>
+      <LifecycleModalWindow name={modalDataName} modalData={modalData} setModalData={setModalData} isModalOpen={isModalOpen} handleModalToggle={handleModalToggle} ></LifecycleModalWindow>
       {buildPagination('bottom', false)}
     </>
   );

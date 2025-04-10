@@ -1,3 +1,4 @@
+import './LifecycleModalWindow.scss';
 import React, { useEffect } from "react";
 import {
   SortByDirection,
@@ -26,19 +27,25 @@ import { SYSTEM_ID } from "../../__mocks__/mockData";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
 
+/**
+The modal window requires following parameters to be set in the parent component:
+- name - of the package/system to be shown in the title
+- modalData - list of the affected systems for the package/system
+- isModalOpen - value managing if modal is open in UI, React.UseState()
+- handleModalToggle - function for handling close/open modal window, _event: React.MouseEvent | React.KeyboardEvent
+*/ 
 interface ModalWindowProps {
   name: String | undefined;
-  data: string[] | undefined;
+  modalData: string[] | undefined;
+  setModalData: React.Dispatch<React.SetStateAction<string[] | undefined>>;
   isModalOpen: boolean;
   handleModalToggle: (_event: any) => void; // any because <Modal onClose> stops working with anything else
 }
 
 export const LifecycleModalWindow: React.FunctionComponent<
   ModalWindowProps
-> = ({ name, data, isModalOpen, handleModalToggle }) => {
-
-  const [modalData, setModalData] = React.useState<string[]>();
-  const [modalDataOriginal, setModalDataOriginal] = React.useState<string[]>();
+> = ({ name, modalData, setModalData, isModalOpen, handleModalToggle }) => {
+  const [modalDataFiltered, setModalDataFiltered] = React.useState<string[] | undefined>();
   const [activeSortIndex, setActiveSortIndex] = React.useState<
     number | undefined
   >();
@@ -46,9 +53,13 @@ export const LifecycleModalWindow: React.FunctionComponent<
     React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState("");
 
+  // When the modal window is opened, update it with new data/default values
   React.useEffect(() => {
-    setModalDataOriginal(data);
-  }
+    setModalDataFiltered(modalData);
+    setActiveSortIndex(undefined);
+    setActiveSortDirection(undefined);
+    setInputValue("");
+  }, [isModalOpen]
   )
 
   const renderModalWindow = () => {
@@ -70,15 +81,9 @@ export const LifecycleModalWindow: React.FunctionComponent<
           id="modal-box-body-scrollable"
           aria-label="Scrollable modal content"
         >
-          {renderModalWindowTable(modalData)}
+          {renderModalWindowTable(modalDataFiltered)}
         </ModalBody>
         <ModalFooter>
-          <Button key="confirm" variant="primary" onClick={handleModalToggle}>
-            Confirm
-          </Button>
-          <Button key="cancel" variant="link" onClick={handleModalToggle}>
-            Cancel
-          </Button>
         </ModalFooter>
       </Modal>
     );
@@ -112,6 +117,49 @@ export const LifecycleModalWindow: React.FunctionComponent<
     );
   };
 
+  const renderFilterBoxModalWindow = () => {
+    return (
+      <TextInputGroup >
+        <TextInputGroupMain
+          icon={<SearchIcon />}
+          value={inputValue}
+          onChange={handleInputChange}
+          className="drf-lifecyclemodal__filter-input"
+        />
+        {showUtilities && (
+          <TextInputGroupUtilities>
+            {showClearButton && (
+              <Button
+                variant="plain"
+                onClick={clearInput}
+                aria-label="Clear button and input"
+              >
+                <TimesIcon />
+              </Button>
+            )}
+          </TextInputGroupUtilities>
+        )}
+      </TextInputGroup>
+    );
+  };
+
+  const getSortParamsModalWindow = (
+    columnIndex: number,
+    data: string[]
+  ): ThProps["sort"] => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDirection,
+      defaultDirection: "asc", // starting sort direction when first sorting a column. Defaults to 'asc'
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDirection(direction);
+      setModalData(sortModalWindowData(data, direction, index));
+    },
+    columnIndex,
+  });
+
   const sortModalWindowData = (
     data: string[] | undefined,
     direction: String,
@@ -137,22 +185,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
     return sortedSystemsModalWindow;
   };
 
-  const getSortParamsModalWindow = (
-    columnIndex: number,
-    data: string[]
-  ): ThProps["sort"] => ({
-    sortBy: {
-      index: activeSortIndex,
-      direction: activeSortDirection,
-      defaultDirection: "asc", // starting sort direction when first sorting a column. Defaults to 'asc'
-    },
-    onSort: (_event, index, direction) => {
-      setActiveSortIndex(index);
-      setActiveSortDirection(direction);
-      setModalData(sortModalWindowData(data, direction, index));
-    },
-    columnIndex,
-  });
+  
 
   /** callback for updating the inputValue state in this component so that the input can be controlled */
   const handleInputChange = (
@@ -175,45 +208,23 @@ export const LifecycleModalWindow: React.FunctionComponent<
   };
 
   const filterModalWindowData = (value: String) => {
-    if (modalDataOriginal === undefined) {
+    if (modalData === undefined) {
       return;
     }
 
     if (value) {
-      setModalData(
-        modalDataOriginal.filter((item) =>
+      // For filtering using the original list!
+      setModalDataFiltered(
+        modalData.filter((item) =>
           item.toLowerCase().includes(value.toLowerCase())
         )
       );
     } else {
-      setModalData(modalDataOriginal);
+      setModalDataFiltered(modalData);
     }
   };
 
-  const renderFilterBoxModalWindow = () => {
-    return (
-      <TextInputGroup>
-        <TextInputGroupMain
-          icon={<SearchIcon />}
-          value={inputValue}
-          onChange={handleInputChange}
-        />
-        {showUtilities && (
-          <TextInputGroupUtilities>
-            {showClearButton && (
-              <Button
-                variant="plain"
-                onClick={clearInput}
-                aria-label="Clear button and input"
-              >
-                <TimesIcon />
-              </Button>
-            )}
-          </TextInputGroupUtilities>
-        )}
-      </TextInputGroup>
-    );
-  };
+  
 
   return renderModalWindow();
 };
