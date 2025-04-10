@@ -190,7 +190,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const appStreams = updateAppLifecycleData(appData.data) || [];
 
       // Check if both data sources are empty
-      if (upcomingChangesParagraphs.length === 0 && appStreams.length === 0) {
+      if (upcomingChangesParagraphs.length === 0 || appStreams.length === 0) {
         setNoDataAvailable(true);
         return;
       }
