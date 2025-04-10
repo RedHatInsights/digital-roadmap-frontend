@@ -333,12 +333,12 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
               <ChartTooltip
                 constrainToVisibleArea
                 centerOffset={{ x: 150, y: 0 }}
-                flyoutWidth={240}
                 flyoutStyle={{
                   fill: 'black',
                   stroke: '#888',
                   strokeWidth: 1,
                   opacity: 0.95,
+
                 }}
                 // Add this to fix top and bottom items tooltip behavior
                 pointerOrientation={'bottom'}
