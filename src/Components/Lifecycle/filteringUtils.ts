@@ -19,6 +19,15 @@ export const filterChartDataByName = (
       return 0;
     });
   }
+  if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aName = `${a.name.toLowerCase()}`;
+      const bName = `${b.name.toLowerCase()}`;
+      if (aName > bName) return -1;
+      if (aName < bName) return 1;
+      return 0;
+    });
+  }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aName = getNewChartName(a.name, a.major, a.minor, a.lifecycle_type);
     const bName = getNewChartName(b.name, b.major, b.minor, b.lifecycle_type);
@@ -33,6 +42,16 @@ export const filterChartDataByReleaseDate = (
   dropdownValue: string
 ) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aStart = new Date(a.start_date);
+      const bStart = new Date(b.start_date);
+
+      if (aStart.getTime() > bStart.getTime()) return -1;
+      if (aStart.getTime() < bStart.getTime()) return 1;
+      return 0;
+    });
+  }
+  if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       const aStart = new Date(a.start_date);
       const bStart = new Date(b.start_date);
@@ -65,6 +84,15 @@ export const filterChartDataByRetirementDate = (
       return 0;
     });
   }
+  if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aEnd = new Date(a.end_date);
+      const bEnd = new Date(b.end_date);
+      if (aEnd.getTime() > bEnd.getTime()) return -1;
+      if (aEnd.getTime() < bEnd.getTime()) return 1;
+      return 0;
+    });
+  }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aEnd = new Date(a.retirement_date);
     const bEnd = new Date(b.retirement_date);
@@ -85,6 +113,13 @@ export const filterChartDataByRelease = (
       return 0;
     });
   }
+  if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      if (a.os_major > b.os_major) return -1;
+      if (a.os_major < b.os_major) return 1;
+      return 0;
+    });
+  }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aVer = `${a.major}.${a.minor}`;
     const bVer = `${b.major}.${b.minor}`;
@@ -99,6 +134,13 @@ export const filterChartDataBySystems = (
   dropdownValue: string
 ) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      if (a.count > b.count) return -1;
+      if (a.count < b.count) return 1;
+      return 0;
+    });
+  }
+  if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.count > b.count) return -1;
       if (a.count < b.count) return 1;
