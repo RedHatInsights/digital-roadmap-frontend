@@ -17,6 +17,7 @@ import {
 } from '@patternfly/react-core';
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -65,6 +66,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
+  const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [filteredChartData, setFilteredChartData] = useState<
     SystemLifecycleChanges[] | Stream[]
   >([]);
@@ -180,11 +182,19 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
+    setNoDataAvailable(false);
     try {
       const systemData = await getLifecycleSystems();
       const appData = await getLifecycleAppstreams();
       const upcomingChangesParagraphs = systemData.data || [];
       const appStreams = updateAppLifecycleData(appData.data) || [];
+
+      // Check if both data sources are empty
+      if (upcomingChangesParagraphs.length === 0 || appStreams.length === 0) {
+        setNoDataAvailable(true);
+        return;
+      }
+
       setSystemLifecycleChanges(upcomingChangesParagraphs);
       setAppLifecycleChanges(appStreams);
       const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
@@ -389,6 +399,32 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         errorTitle="Failed to load data"
         errorDescription={String(error.message)}
       />
+    );
+  }
+
+  // New error state for when no data is available
+  if (noDataAvailable) {
+    return (
+      <Bullseye>
+        <EmptyState variant={EmptyStateVariant.lg}>
+          <EmptyStateHeader
+            icon={<EmptyStateIcon icon={CubesIcon} />}
+            titleText="No lifecycle data available"
+            headingLevel="h2"
+          />
+          <EmptyStateBody>
+            We could not find any Life Cycle data. Either no data exists in the
+            system or there was a problem retrieving it.
+          </EmptyStateBody>
+          <EmptyStateFooter>
+            <EmptyStateActions>
+              <Button variant="primary" onClick={fetchData}>
+                Try again
+              </Button>
+            </EmptyStateActions>
+          </EmptyStateFooter>
+        </EmptyState>
+      </Bullseye>
     );
   }
 
