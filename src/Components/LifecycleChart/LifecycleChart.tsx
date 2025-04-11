@@ -332,8 +332,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             labelComponent={
               <ChartTooltip
                 constrainToVisibleArea
-                centerOffset={{ x: 150, y: 0 }}
-                flyoutWidth={240}
+                centerOffset={{ x: 170, y: 0 }}
                 flyoutStyle={{
                   fill: 'black',
                   stroke: '#888',
