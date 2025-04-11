@@ -365,7 +365,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
-            borderPadding={{ top: 10, bottom: 0, left: 10, right: 0 }}
+            borderPadding={{ top: 5, bottom: 0, left: 10, right: 0 }}
           />
         }
         legendPosition="bottom-left"
