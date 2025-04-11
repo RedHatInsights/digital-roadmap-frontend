@@ -296,28 +296,61 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     };
   }, [updatedLifecycleData.length]);
 
+  // Create custom tooltip function that safely handles the data
+  const getTooltipLabel = (point: any): string => {
+    const datum = point?.datum;
+
+    // Filter out null or incomplete data points
+    if (!datum || typeof datum !== 'object') {
+      return '';
+    }
+
+    // Check if this is an actual data point with valid values
+    if (!datum.name || datum.x === null || !datum.packageType) {
+      return '';
+    }
+
+    try {
+      return `Name: ${datum.name || 'N/A'}\nRelease: ${
+        datum.version || 'N/A'
+      }\nSupport Type: ${datum.packageType || 'N/A'}\nSystems: ${
+        datum.numSystems || 'N/A'
+      }\nStart: ${formatDate(datum.y0)}\nEnd: ${formatDate(datum.y)}`;
+    } catch (e) {
+      return '';
+    }
+  };
+
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
-        ariaTitle="Lifecycle bar chart"
         containerComponent={
           <ChartVoronoiContainer
-            labels={({ datum }: { datum: ChartDataObject }) => {
-              if (datum.name && datum.packageType && datum.y0) {
-                return `Name: ${datum.name}\nRelease: ${
-                  datum.version
-                }\nSupport Type: ${datum.packageType}\nSystems: ${
-                  datum.numSystems
-                }\nStart: ${formatDate(new Date(datum.y0))}\nEnd: ${formatDate(
-                  new Date(datum.y)
-                )}`;
-              }
-              return formatDate(new Date());
-            }}
-            labelComponent={<ChartTooltip constrainToVisibleArea />}
-            voronoiPadding={50}
+            labels={getTooltipLabel}
+            labelComponent={
+              <ChartTooltip
+                constrainToVisibleArea
+                centerOffset={{ x: 160, y: 0 }}
+                flyoutStyle={{
+                  fill: 'black',
+                  stroke: '#888',
+                  strokeWidth: 1,
+                  opacity: 0.95,
+                }}
+                // Add this to fix top and bottom items tooltip behavior
+                pointerOrientation={'bottom'}
+                dx={30}
+                dy={-10}
+                cornerRadius={5}
+              />
+            }
+            // Fixed voronoiPadding to be consistent across entire chart
+            voronoiPadding={25}
+            voronoiDimension="x"
+            mouseFollowTooltips
+            activateData
           />
         }
         events={getInteractiveLegendEvents({
@@ -332,6 +365,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
+            borderPadding={{ top: 5, bottom: 0, left: 10, right: 0 }}
           />
         }
         legendPosition="bottom-left"
@@ -339,8 +373,8 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
         padding={{
           bottom: 60, // Adjusted to accommodate legend
           left: 180,
-          right: 50, // Adjusted to accommodate tooltip
-          top: 20,
+          right: 75, // Adjusted to accommodate tooltip
+          top: 30,
         }}
         height={chartDimensions.height}
         width={chartDimensions.width}
