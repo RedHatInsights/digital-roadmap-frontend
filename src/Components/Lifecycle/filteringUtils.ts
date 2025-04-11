@@ -4,7 +4,7 @@ import { getNewChartName } from '../../utils/utils';
 
 export const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 export const DEFAULT_CHART_SORTBY_VALUE = 'Retirement date';
-export const OTHER_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
+export const OTHER_DROPDOWN_VALUES = ['RHEL 8 Application Streams', 'Red Hat Enterprise Linux'];
 
 export const filterChartDataByName = (
   data: Stream[] | SystemLifecycleChanges[],
