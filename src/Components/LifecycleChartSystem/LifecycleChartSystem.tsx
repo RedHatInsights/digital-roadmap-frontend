@@ -392,16 +392,18 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             );
           })}
         </ChartGroup>
-        <ChartLine
-          y={() => Date.now()}
-          y0={() => Date.now()}
-          style={{
-            data: {
-              stroke: 'black',
-              strokeWidth: 0.5,
-            },
-          }}
-        />
+        {updatedLifecycleData.length > 0 && (
+          <ChartLine
+            y={() => Date.now()}
+            y0={() => Date.now()}
+            style={{
+              data: {
+                stroke: 'black',
+                strokeWidth: 0.5,
+              },
+            }}
+          />
+        )}
       </Chart>
     </div>
   );
