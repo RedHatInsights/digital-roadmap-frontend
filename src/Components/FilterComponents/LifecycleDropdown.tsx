@@ -64,6 +64,9 @@ export const LifecycleDropdown: React.FunctionComponent<
         <SelectOption value="RHEL 9 Application Streams">
           RHEL 9 Application Streams
         </SelectOption>
+        <SelectOption value="RHEL 8 Application Streams">
+          RHEL 8 Application Streams
+        </SelectOption>
         <SelectOption value="Red Hat Enterprise Linux">
           Red Hat Enterprise Linux
         </SelectOption>
