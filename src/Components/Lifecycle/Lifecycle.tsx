@@ -71,6 +71,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     SystemLifecycleChanges[] | Stream[]
   >([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
+  // Add a state for the full app lifecycle data
+  const [fullAppLifecycleChanges, setFullAppLifecycleChanges] = useState<
+    Stream[]
+  >([]);
   const [searchParams, setSearchParams] = useSearchParams();
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] =
@@ -105,7 +109,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setNameFilter('');
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
 
-    // Update filtered data based on dropdown selection
+    // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
     if (
       value === DEFAULT_DROPDOWN_VALUE ||
       value === OTHER_DROPDOWN_VALUES[0]
@@ -120,6 +124,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilteredChartData(
         filterChartDataByRetirementDate(filteredAppData, value)
       );
+      // Update filtered data based on dropdown selection of RHEL Systems
     } else if (value === OTHER_DROPDOWN_VALUES[1]) {
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(
@@ -138,19 +143,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       );
       return datum;
     });
-  };
-
-  const updateAppLifecycleData = (data: Stream[]) => {
-    if (lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      return data.filter(
-        (stream) => stream?.rolling === false && stream.os_major === 9
-      );
-    } else if (lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[0]) {
-      return data.filter(
-        (stream) => stream?.rolling === false && stream.os_major === 8
-      );
-    }
-    return data;
   };
 
   const checkNameQueryParam = (
@@ -200,10 +192,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
     setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
   };
-  // Add a state for the full app lifecycle data
-  const [fullAppLifecycleChanges, setFullAppLifecycleChanges] = useState<
-    Stream[]
-  >([]);
 
   const fetchData = async () => {
     setIsLoading(true);
