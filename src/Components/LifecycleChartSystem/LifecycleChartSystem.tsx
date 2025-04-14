@@ -140,7 +140,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           return;
         }
         formatChartData(
-          `${item.name} ${item.stream}`,
+          item.display_name,
           item.start_date,
           item.end_date,
           item.support_status,
@@ -332,7 +332,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             labelComponent={
               <ChartTooltip
                 constrainToVisibleArea
-                centerOffset={{ x: 160, y: 0 }}
+                centerOffset={{ x: 170, y: 0 }}
                 flyoutStyle={{
                   fill: 'black',
                   stroke: '#888',
@@ -350,7 +350,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             voronoiPadding={25}
             voronoiDimension="x"
             mouseFollowTooltips
-            activateData
           />
         }
         events={getInteractiveLegendEvents({

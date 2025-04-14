@@ -140,7 +140,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
           return;
         }
         formatChartData(
-          `${item.name} ${item.stream}`,
+          `${item.display_name}`,
           item.start_date,
           item.end_date,
           item.support_status,

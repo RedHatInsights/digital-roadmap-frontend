@@ -250,7 +250,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
             style={{ paddingRight: '140px', maxWidth: '200px' }}
             dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}
           >
-            {repo.name} {repo.stream}
+            {repo.display_name}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>
             {repo.os_major}
