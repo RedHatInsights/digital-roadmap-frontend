@@ -1,6 +1,7 @@
 const VIRT = {
   end_date: '2029-06-31',
   name: 'virt',
+  display_name: 'virt rhel',
   profiles: { common: [] },
   os_major: 8,
   os_minor: 0,
@@ -17,6 +18,7 @@ const VARNISH = {
   description: 'Varnish Cache web application accelerator',
   end_date: '2029-05-31',
   name: 'varnish',
+  display_name: 'varnish 6',
   profiles: { common: [] },
   os_major: 9,
   os_minor: 2,
@@ -32,6 +34,7 @@ const VARNISH = {
 const IDM = {
   end_date: '2029-05-31',
   name: 'idm',
+  display_name: 'idm client',
   profiles: { common: [] },
   os_major: 8,
   os_minor: 4,
