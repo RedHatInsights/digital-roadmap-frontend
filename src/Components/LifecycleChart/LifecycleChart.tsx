@@ -350,7 +350,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             voronoiPadding={25}
             voronoiDimension="x"
             mouseFollowTooltips
-            activateData
           />
         }
         events={getInteractiveLegendEvents({
