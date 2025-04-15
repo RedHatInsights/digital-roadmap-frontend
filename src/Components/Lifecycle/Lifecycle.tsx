@@ -332,7 +332,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const filterData = (name: string) => {
-    if (nameFilter !== '') {
+    if (name !== '') {
       doFilter(name);
     } else {
       resetDataFiltering();
