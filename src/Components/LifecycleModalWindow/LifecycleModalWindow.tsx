@@ -1,4 +1,3 @@
-import "./LifecycleModalWindow.scss";
 import React, { useEffect } from "react";
 import {
   SortByDirection,
@@ -95,7 +94,8 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
     return (
       <div>
-        {renderFilterBoxModalWindow()}
+        <div style={{ marginTop: "20px" }}>{renderFilterBoxModalWindow()}</div>
+        <div style={{ height: "16px" }}></div>
         <Table variant="compact">
           <Thead>
             <Tr>
@@ -118,12 +118,11 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <TextInputGroup>
+      <TextInputGroup style={{ maxWidth: "140px" }}>
         <TextInputGroupMain
           icon={<SearchIcon />}
           value={inputValue}
           onChange={handleInputChange}
-          className="drf-lifecyclemodal__filter-input"
         />
         {showUtilities && (
           <TextInputGroupUtilities>
