@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   SortByDirection,
   Table,
@@ -8,22 +8,22 @@ import {
   ThProps,
   Thead,
   Tr,
-} from "@patternfly/react-table";
+} from '@patternfly/react-table';
 import {
   Button,
   TextInputGroup,
   TextInputGroupMain,
   TextInputGroupUtilities,
-} from "@patternfly/react-core";
+} from '@patternfly/react-core';
 import {
   Modal,
   ModalBody,
   ModalHeader,
   ModalFooter,
   ModalVariant,
-} from "@patternfly/react-core/next";
-import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
-import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
+} from '@patternfly/react-core/next';
+import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 
 /**
 The modal window requires following parameters to be set in the parent component:
@@ -51,14 +51,14 @@ export const LifecycleModalWindow: React.FunctionComponent<
   >();
   const [activeSortDirection, setActiveSortDirection] =
     React.useState<SortByDirection>();
-  const [inputValue, setInputValue] = React.useState("");
+  const [inputValue, setInputValue] = React.useState('');
 
   // When the modal window is opened, update it with new data/default values
   React.useEffect(() => {
     setModalDataFiltered(modalData);
     setActiveSortIndex(undefined);
     setActiveSortDirection(undefined);
-    setInputValue("");
+    setInputValue('');
   }, [isModalOpen]);
 
   const renderModalWindow = () => {
@@ -89,13 +89,13 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   const renderModalWindowTable = (data: string[] | undefined) => {
     if (data === undefined) {
-      return "";
+      return '';
     }
 
     return (
       <div>
-        <div style={{ marginTop: "20px" }}>{renderFilterBoxModalWindow()}</div>
-        <div style={{ height: "16px" }}></div>
+        <div style={{ marginTop: '20px' }}>{renderFilterBoxModalWindow()}</div>
+        <div style={{ height: '16px' }}></div>
         <Table variant="compact">
           <Thead>
             <Tr>
@@ -118,7 +118,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <TextInputGroup style={{ maxWidth: "140px" }}>
+      <TextInputGroup style={{ maxWidth: '140px' }}>
         <TextInputGroupMain
           icon={<SearchIcon />}
           value={inputValue}
@@ -144,11 +144,11 @@ export const LifecycleModalWindow: React.FunctionComponent<
   const getSortParamsModalWindow = (
     columnIndex: number,
     data: string[]
-  ): ThProps["sort"] => ({
+  ): ThProps['sort'] => ({
     sortBy: {
       index: activeSortIndex,
       direction: activeSortDirection,
-      defaultDirection: "asc", // starting sort direction when first sorting a column. Defaults to 'asc'
+      defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
       setActiveSortIndex(index);
@@ -173,7 +173,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
         const aValue = a;
         const bValue = b;
         // string sort
-        if (direction === "asc") {
+        if (direction === 'asc') {
           return (aValue as string).localeCompare(bValue as string);
         }
         return (bValue as string).localeCompare(aValue as string);
@@ -199,7 +199,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   /** callback for clearing the text input */
   const clearInput = () => {
-    setInputValue("");
+    setInputValue('');
   };
 
   const filterModalWindowData = (value: String) => {
