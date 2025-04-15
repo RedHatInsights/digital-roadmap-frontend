@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   SortByDirection,
   Table,
@@ -33,7 +33,7 @@ The modal window requires following parameters to be set in the parent component
 - handleModalToggle - function for handling close/open modal window, _event: React.MouseEvent | React.KeyboardEvent
 */
 interface ModalWindowProps {
-  name: String | undefined;
+  name: string | undefined;
   modalData: string[] | undefined;
   setModalData: React.Dispatch<React.SetStateAction<string[] | undefined>>;
   isModalOpen: boolean;
@@ -172,7 +172,6 @@ export const LifecycleModalWindow: React.FunctionComponent<
       sortedSystemsModalWindow = data.sort((a, b) => {
         const aValue = a;
         const bValue = b;
-        debugger;
         // string sort
         if (direction === "asc") {
           return (aValue as string).localeCompare(bValue as string);
