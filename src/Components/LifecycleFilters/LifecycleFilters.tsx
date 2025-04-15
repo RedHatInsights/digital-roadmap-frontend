@@ -53,6 +53,7 @@ export const LifecycleFilters: React.FunctionComponent<
   downloadCSV,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const selectedToggle = 'installed';
 
@@ -75,6 +76,24 @@ export const LifecycleFilters: React.FunctionComponent<
       setSelectedChartSortBy(value);
     }
   };
+
+  // Handle paste event in the search input
+  React.useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (document.activeElement === searchInputRef.current) {
+        const pastedText = event.clipboardData?.getData('text') || '';
+        setNameFilter(pastedText);
+      }
+    };
+
+    // Add event listener to the document
+    document.addEventListener('paste', handlePaste);
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [setNameFilter]);
 
   return (
     <div className="drf-lifecycle__filters">
@@ -107,6 +126,13 @@ export const LifecycleFilters: React.FunctionComponent<
                 onChange={(_event, value) => setNameFilter(value)}
                 onClear={() => setNameFilter('')}
                 aria-label="Filter by name"
+                ref={searchInputRef}
+                onPaste={(event) => {
+                  // Prevent default to avoid duplicate handling with the document listener
+                  event.preventDefault();
+                  const pastedText = event.clipboardData?.getData('text') || '';
+                  setNameFilter(pastedText);
+                }}
               />
             </ToolbarItem>
             <ToolbarItem>
