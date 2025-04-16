@@ -26,7 +26,8 @@ import { buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
-  OTHER_DROPDOWN_VALUES,
+  RHEL_8_STREAMS_DROPDOWN_VALUE,
+  RHEL_SYSTEMS_DROPDOWN_VALUE,
   filterChartDataByName,
   filterChartDataByRelease,
   filterChartDataByReleaseDate,
@@ -112,7 +113,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
     if (
       value === DEFAULT_DROPDOWN_VALUE ||
-      value === OTHER_DROPDOWN_VALUES[0]
+      value === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       // Filter from the full dataset each time
       const filteredAppData = filterAppDataByDropdown(
@@ -125,7 +126,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         filterChartDataByRetirementDate(filteredAppData, value)
       );
       // Update filtered data based on dropdown selection of RHEL Systems
-    } else if (value === OTHER_DROPDOWN_VALUES[1]) {
+    } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(
         filterChartDataByRetirementDate(systemLifecycleChanges, value)
@@ -179,14 +180,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
       return;
     }
-    if (dropdownQueryParam && dropdownQueryParam === OTHER_DROPDOWN_VALUES[0]) {
-      checkNameQueryParam(appStreams, OTHER_DROPDOWN_VALUES[0]);
-      setLifecycleDropdownValue(OTHER_DROPDOWN_VALUES[0]);
+    if (
+      dropdownQueryParam &&
+      dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE
+    ) {
+      checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
+      setLifecycleDropdownValue(RHEL_8_STREAMS_DROPDOWN_VALUE);
       return;
     }
-    if (dropdownQueryParam && dropdownQueryParam === OTHER_DROPDOWN_VALUES[1]) {
-      checkNameQueryParam(updatedSystems, OTHER_DROPDOWN_VALUES[1]);
-      setLifecycleDropdownValue(OTHER_DROPDOWN_VALUES[1]);
+    if (
+      dropdownQueryParam &&
+      dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE
+    ) {
+      checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
+      setLifecycleDropdownValue(RHEL_SYSTEMS_DROPDOWN_VALUE);
       return;
     }
     checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
@@ -237,7 +244,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       return data.filter(
         (stream) => stream?.rolling === false && stream.os_major === 9
       );
-    } else if (dropdownValue === OTHER_DROPDOWN_VALUES[0]) {
+    } else if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       return data.filter(
         (stream) => stream?.rolling === false && stream.os_major === 8
       );
@@ -257,7 +264,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const resetDataFiltering = () => {
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[0]
+      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       setFilteredTableData(appLifecycleChanges);
       const chartData = filterChartData(
@@ -266,7 +273,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         lifecycleDropdownValue
       );
       setFilteredChartData(chartData);
-    } else if (lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[1]) {
+    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       setFilteredTableData(systemLifecycleChanges);
       const chartData = filterChartData(
         systemLifecycleChanges,
@@ -307,7 +314,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     if (
       dropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      dropdownValue === OTHER_DROPDOWN_VALUES[0]
+      dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       currentDataSource = (data as Stream[]).filter((datum) => {
         // also check for streams.stream value
@@ -315,7 +322,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           name.toLowerCase()
         );
       });
-    } else if (dropdownValue === OTHER_DROPDOWN_VALUES[1]) {
+    } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       currentDataSource = (data as SystemLifecycleChanges[]).filter((datum) => {
         const product = `${datum.name.toLowerCase()} ${datum.major}.${
           datum.minor
@@ -352,7 +359,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[0]
+      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       currentDataSource = appLifecycleChanges.filter((datum) => {
         // also check for streams.stream value
@@ -360,7 +367,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           name.toLowerCase()
         );
       });
-    } else if (lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[1]) {
+    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       currentDataSource = systemLifecycleChanges.filter((datum) => {
         const product = `${datum.name.toLowerCase()} ${datum.major}.${
           datum.minor
@@ -407,7 +414,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const data: { [key: string]: string | number }[] = [];
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[0]
+      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       (filteredTableData as Stream[]).forEach((item: Stream) =>
         data.push({
@@ -418,7 +425,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           Systems: item.count,
         })
       );
-    } else if (lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[1]) {
+    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       (filteredTableData as SystemLifecycleChanges[]).forEach(
         (item: SystemLifecycleChanges) =>
           data.push({
@@ -512,7 +519,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // When the bug is resolved, this can be removed and just the LifecycleChart component can be used.
     // NOTE: The LifecycleChartSystem is 1:1 copy of LifecycleChart, just needs to be separated.
     const ChartComponent =
-      lifecycleDropdownValue === OTHER_DROPDOWN_VALUES[1]
+      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE
         ? LifecycleChartSystem
         : LifecycleChart;
 
