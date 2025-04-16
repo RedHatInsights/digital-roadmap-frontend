@@ -332,7 +332,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             labelComponent={
               <ChartTooltip
                 constrainToVisibleArea
-                centerOffset={{ x: 160, y: 0 }}
+                centerOffset={{ x: 170, y: 0 }}
                 flyoutStyle={{
                   fill: 'black',
                   stroke: '#888',
@@ -342,7 +342,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
                 // Add this to fix top and bottom items tooltip behavior
                 pointerOrientation={'bottom'}
                 dx={30}
-                dy={-10}
                 cornerRadius={5}
               />
             }
@@ -350,7 +349,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             voronoiPadding={25}
             voronoiDimension="x"
             mouseFollowTooltips
-            activateData
           />
         }
         events={getInteractiveLegendEvents({
@@ -365,7 +363,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
-            borderPadding={{ top: 5, bottom: 0, left: 10, right: 0 }}
           />
         }
         legendPosition="bottom-left"
@@ -376,6 +373,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           right: 75, // Adjusted to accommodate tooltip
           top: 30,
         }}
+        domainPadding={{x:[10,10]}}
         height={chartDimensions.height}
         width={chartDimensions.width}
       >

@@ -342,7 +342,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
                 // Add this to fix top and bottom items tooltip behavior
                 pointerOrientation={'bottom'}
                 dx={30}
-                dy={-10}
                 cornerRadius={5}
               />
             }
@@ -364,7 +363,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             data={getLegendData()}
             height={50}
             gutter={20}
-            borderPadding={{ top: 5, bottom: 0, left: 10, right: 0 }}
           />
         }
         legendPosition="bottom-left"
@@ -375,6 +373,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
           right: 75, // Adjusted to accommodate tooltip
           top: 30,
         }}
+        domainPadding={{x:[10,10]}}
         height={chartDimensions.height}
         width={chartDimensions.width}
       >
