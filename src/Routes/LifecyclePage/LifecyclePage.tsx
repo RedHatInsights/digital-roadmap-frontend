@@ -23,7 +23,7 @@ const LifecyclePage = () => {
       <Alert
         id="lifecycle-warning"
         variant="warning"
-        title="All future dates mentioned are close approximations, non definitive, and subject to change."
+        title="Dates are approximations and subject to change."
         component="h2"
       />
       <section
