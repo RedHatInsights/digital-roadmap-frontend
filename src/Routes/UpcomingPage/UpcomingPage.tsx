@@ -23,7 +23,7 @@ const UpcomingPage = () => {
       <Alert
         id="roadmap-warning"
         variant="warning"
-        title="Upcoming features are subject to change. All future dates mentioned are close approximations, non definitive, and subject to change."
+        title="Upcoming features are subject to change."
         component="h2"
       />
       <section
