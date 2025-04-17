@@ -4,13 +4,23 @@ import { getNewChartName } from '../../utils/utils';
 
 export const DEFAULT_DROPDOWN_VALUE = 'RHEL 9 Application Streams';
 export const DEFAULT_CHART_SORTBY_VALUE = 'Retirement date';
-export const OTHER_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
+export const RHEL_8_STREAMS_DROPDOWN_VALUE = 'RHEL 8 Application Streams';
+export const RHEL_SYSTEMS_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 
 export const filterChartDataByName = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string
 ) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aName = `${a.name.toLowerCase()}`;
+      const bName = `${b.name.toLowerCase()}`;
+      if (aName > bName) return -1;
+      if (aName < bName) return 1;
+      return 0;
+    });
+  }
+  if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       const aName = `${a.name.toLowerCase()}`;
       const bName = `${b.name.toLowerCase()}`;
@@ -33,6 +43,16 @@ export const filterChartDataByReleaseDate = (
   dropdownValue: string
 ) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aStart = new Date(a.start_date);
+      const bStart = new Date(b.start_date);
+
+      if (aStart.getTime() > bStart.getTime()) return -1;
+      if (aStart.getTime() < bStart.getTime()) return 1;
+      return 0;
+    });
+  }
+  if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       const aStart = new Date(a.start_date);
       const bStart = new Date(b.start_date);
@@ -65,6 +85,15 @@ export const filterChartDataByRetirementDate = (
       return 0;
     });
   }
+  if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      const aEnd = new Date(a.end_date);
+      const bEnd = new Date(b.end_date);
+      if (aEnd.getTime() > bEnd.getTime()) return -1;
+      if (aEnd.getTime() < bEnd.getTime()) return 1;
+      return 0;
+    });
+  }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aEnd = new Date(a.retirement_date);
     const bEnd = new Date(b.retirement_date);
@@ -85,6 +114,13 @@ export const filterChartDataByRelease = (
       return 0;
     });
   }
+  if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      if (a.os_major > b.os_major) return -1;
+      if (a.os_major < b.os_major) return 1;
+      return 0;
+    });
+  }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aVer = `${a.major}.${a.minor}`;
     const bVer = `${b.major}.${b.minor}`;
@@ -99,6 +135,13 @@ export const filterChartDataBySystems = (
   dropdownValue: string
 ) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+    return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      if (a.count > b.count) return -1;
+      if (a.count < b.count) return 1;
+      return 0;
+    });
+  }
+  if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       if (a.count > b.count) return -1;
       if (a.count < b.count) return 1;
