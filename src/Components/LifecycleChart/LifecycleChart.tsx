@@ -373,7 +373,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
           right: 75, // Adjusted to accommodate tooltip
           top: 30,
         }}
-        domainPadding={{ x: [1, 1] }}
+        domainPadding={{ x: [13, 13] }}
         height={chartDimensions.height}
         width={chartDimensions.width}
       >
