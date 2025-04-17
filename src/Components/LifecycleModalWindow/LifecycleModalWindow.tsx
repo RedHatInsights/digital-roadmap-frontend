@@ -18,8 +18,8 @@ import {
 import {
   Modal,
   ModalBody,
-  ModalHeader,
   ModalFooter,
+  ModalHeader,
   ModalVariant,
 } from '@patternfly/react-core/next';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
@@ -160,7 +160,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
 
   const sortModalWindowData = (
     data: string[] | undefined,
-    direction: String,
+    direction: string,
     index: number
   ) => {
     if (data === undefined) {
@@ -202,7 +202,7 @@ export const LifecycleModalWindow: React.FunctionComponent<
     setInputValue('');
   };
 
-  const filterModalWindowData = (value: String) => {
+  const filterModalWindowData = (value: string) => {
     if (modalData === undefined) {
       return;
     }

@@ -93,34 +93,34 @@ const RHEL_NINE = {
 };
 
 export const SYSTEM_ID = [
-  "system_name0",
-  "system_name1",
-  "system_name8",
-  "system_name2",
-  "system_name3",
-  "system_name4",
-  "system_name5",
-  "system_name6",
-  "system_name7"
+  'system_name0',
+  'system_name1',
+  'system_name8',
+  'system_name2',
+  'system_name3',
+  'system_name4',
+  'system_name5',
+  'system_name6',
+  'system_name7',
 ];
 
 export const SYSTEM_ID_DUPLICIT = [
-  "system_name0",
-  "system_name1",
-  "system_name2",
-  "system_name3",
-  "system_name4",
-  "system_name5",
-  "system_name6",
-  "system_name7",
-  "system_name0",
-  "system_name1",
-  "system_name2",
-  "system_name3",
-  "system_name4",
-  "system_name5",
-  "system_name6",
-  "system_name7"
+  'system_name0',
+  'system_name1',
+  'system_name2',
+  'system_name3',
+  'system_name4',
+  'system_name5',
+  'system_name6',
+  'system_name7',
+  'system_name0',
+  'system_name1',
+  'system_name2',
+  'system_name3',
+  'system_name4',
+  'system_name5',
+  'system_name6',
+  'system_name7',
 ];
 
 export const ONE_MOCK_RHEL_DATA = [RHEL_NINE_TWO];
