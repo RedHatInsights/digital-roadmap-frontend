@@ -317,8 +317,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       currentDataSource = (data as Stream[]).filter((datum) => {
-        // also check for streams.stream value
-        return `${datum.name.toLowerCase()} ${datum.stream}`.includes(
+        return `${datum.display_name.toLowerCase()}`.includes(
           name.toLowerCase()
         );
       });
@@ -362,8 +361,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       currentDataSource = appLifecycleChanges.filter((datum) => {
-        // also check for streams.stream value
-        return `${datum.name.toLowerCase()} ${datum.stream.toLowerCase()}`.includes(
+        return `${datum.display_name.toLowerCase()}`.includes(
           name.toLowerCase()
         );
       });
