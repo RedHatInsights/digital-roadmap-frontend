@@ -5,6 +5,7 @@ export type UpcomingChanges = {
   date: string;
   details?: {
     summary: string;
+    architecture: string;
     potentiallyAffectedSystems: number;
     trainingTicket: string;
     dateAdded: string;

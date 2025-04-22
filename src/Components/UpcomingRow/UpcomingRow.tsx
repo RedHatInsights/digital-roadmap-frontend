@@ -46,7 +46,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
 
   // Set Icons for the type column
   let typeIcon = null;
-  if (repo.type == 'Addition') {
+  if (repo.type == 'Addition' || repo.type == 'Enhancement') {
     typeIcon = (
       <Icon status="info">
         <InfoCircleIcon />

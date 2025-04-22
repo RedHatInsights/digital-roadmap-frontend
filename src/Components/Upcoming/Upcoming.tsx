@@ -43,6 +43,12 @@ export const UPCOMING_COLUMN_NAMES = {
   date: 'Release date',
 };
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string: string) => {
+  if (!string) return string;
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
   const [relevantUpcomingChanges, setUpcomingChanges] =
@@ -98,28 +104,40 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setIsLoading(true);
     setNoDataAvailable(false);
     try {
-      const data = await getUpcomingChanges();
-      const upcomingChangesParagraphs: UpcomingChanges[] = data || [];
-
-      // Check if  data source is empty
+      const response = await getUpcomingChanges();
+      let upcomingChangesParagraphs: UpcomingChanges[] = 
+        response && response.data ? response.data : [];
+      
+      // Check if data source is empty
       if (upcomingChangesParagraphs.length === 0) {
         setNoDataAvailable(true);
         return;
       }
 
+      // Process the data to capitalize type values
+      upcomingChangesParagraphs = upcomingChangesParagraphs.map(item => ({
+        ...item,
+        type: capitalizeFirstLetter(item.type)
+      }));
+
       setUpcomingChanges(upcomingChangesParagraphs);
+      
+      // Use the capitalized type values for filtering
       const filteredDeprecations = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Deprecation'
       );
       setNumDeprecations(filteredDeprecations.length);
+      
       const filteredAdditions = upcomingChangesParagraphs.filter(
-        (item) => item.type === 'Addition'
+        (item) => item.type === 'Addition' || item.type === 'Enhancement'
       );
       setNumAdditions(filteredAdditions.length);
+      
       const filteredChanges = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Change'
       );
       setNumChanges(filteredChanges.length);
+      
       setVisibleData(upcomingChangesParagraphs);
       const newFilters = structuredClone(filtersForURL);
       if (nameParam) {
@@ -318,7 +336,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <InfoCircleIcon color={'#2B9AF3'} />
-                  Upcoming additions
+                  Upcoming additions and enhancements
                 </CardTitle>
               </CardHeader>
               <CardBody>
