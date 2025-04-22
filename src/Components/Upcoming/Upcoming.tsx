@@ -343,7 +343,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 <span className="drf-lifecycle__upcoming-count">
                   {numAdditions}
                 </span>{' '}
-                upcoming {pluralize(numAdditions, 'addition')} that could affect
+                upcoming {pluralize(numAdditions, 'addition')} and/or {pluralize(numAdditions, 'enhancement')} that could affect
                 your systems
               </CardBody>
             </Card>
