@@ -131,6 +131,12 @@ spec:
         - name: revision
           value: $(params.revision)
 
+        - name: ociStorage
+          value: $(params.output-image).git
+
+        - name: ociArtifactExpiresAfter
+          value: $(params.image-expires-after)
+
       runAfter:
         - init
 
@@ -160,6 +166,15 @@ spec:
       params:
         - name: input
           value: $(params.prefetch-input)
+
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
+
+        - name: ociStorage
+          value: $(params.output-image).git
+
+        - name: ociArtifactExpiresAfter
+          value: $(params.image-expires-after)
 
       runAfter:
         - clone-repository
@@ -218,6 +233,12 @@ spec:
 
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
+
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
 
       runAfter:
         - prefetch-dependencies
@@ -402,6 +423,12 @@ spec:
         - name: image-url
           value: $(tasks.build-image-index.results.IMAGE_URL)
 
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+
         - name: ARGS
           value: "--project-name=digital-roadmap-frontend --report --org=12d05a23-73a7-4a1d-9162-ab12e8c051c4"
 
@@ -514,6 +541,12 @@ spec:
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
 
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+
       runAfter:
         - coverity-availability-check
 
@@ -548,6 +581,12 @@ spec:
         - name: image-url
           value: $(tasks.build-image-index.results.IMAGE_URL)
 
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+
       runAfter:
         - build-image-index
 
@@ -576,6 +615,12 @@ spec:
 
         - name: image-url
           value: $(tasks.build-image-index.results.IMAGE_URL)
+
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
 
       runAfter:
         - build-image-index
@@ -636,6 +681,12 @@ spec:
 
         - name: CONTEXT
           value: $(params.path-context)
+
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+
+        - name: CACHI2_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
 
       runAfter:
         - build-image-index
