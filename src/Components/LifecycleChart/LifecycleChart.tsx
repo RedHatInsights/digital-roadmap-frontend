@@ -532,7 +532,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
                           setTooltipData(null);
                           return {
                             style: {
-                              stroke: 'black',
+                              stroke: '#151515',
                               strokeWidth: 2,
                             },
                           };
