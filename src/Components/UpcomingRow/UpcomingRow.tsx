@@ -46,21 +46,21 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
 
   // Set Icons for the type column
   let typeIcon = null;
-  if (repo.type == 'Addition' || repo.type == 'Enhancement') {
+  if (repo.type === 'Addition' || repo.type === 'Enhancement') {
     typeIcon = (
       <Icon status="info">
         <InfoCircleIcon />
       </Icon>
     );
   }
-  if (repo.type == 'Change') {
+  if (repo.type === 'Change') {
     typeIcon = (
       <Icon status="warning">
         <ExclamationTriangleIcon />
       </Icon>
     );
   }
-  if (repo.type == 'Deprecation') {
+  if (repo.type === 'Deprecation') {
     typeIcon = (
       <Icon status="danger">
         <ExclamationCircleIcon />

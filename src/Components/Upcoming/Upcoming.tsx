@@ -105,9 +105,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(false);
     try {
       const response = await getUpcomingChanges();
-      let upcomingChangesParagraphs: UpcomingChanges[] = 
+      let upcomingChangesParagraphs: UpcomingChanges[] =
         response && response.data ? response.data : [];
-      
+
       // Check if data source is empty
       if (upcomingChangesParagraphs.length === 0) {
         setNoDataAvailable(true);
@@ -115,29 +115,29 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Process the data to capitalize type values
-      upcomingChangesParagraphs = upcomingChangesParagraphs.map(item => ({
+      upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
         ...item,
-        type: capitalizeFirstLetter(item.type)
+        type: capitalizeFirstLetter(item.type),
       }));
 
       setUpcomingChanges(upcomingChangesParagraphs);
-      
+
       // Use the capitalized type values for filtering
       const filteredDeprecations = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Deprecation'
       );
       setNumDeprecations(filteredDeprecations.length);
-      
+
       const filteredAdditions = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Addition' || item.type === 'Enhancement'
       );
       setNumAdditions(filteredAdditions.length);
-      
+
       const filteredChanges = upcomingChangesParagraphs.filter(
         (item) => item.type === 'Change'
       );
       setNumChanges(filteredChanges.length);
-      
+
       setVisibleData(upcomingChangesParagraphs);
       const newFilters = structuredClone(filtersForURL);
       if (nameParam) {
@@ -176,7 +176,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setIsLoading(false);
     } catch (error: any) {
       // Dispatch notif here
-      console.error('Error fetching upcoming changes:', error);
+      console.error('Error fetching changes:', error);
       setError({ message: error });
     } finally {
       setIsLoading(false);
@@ -282,20 +282,20 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 selectableActions={{
                   onClickAction: () => handleCardClick('deprecations'),
                   selectableActionId: deprecationId,
-                  selectableActionAriaLabelledby: 'Upcoming deprecations',
+                  selectableActionAriaLabelledby: 'Deprecations',
                   name: 'filter-by-type',
                 }}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationCircleIcon color={'#C9190B'} />
-                  Upcoming deprecations
+                  Deprecations
                 </CardTitle>
               </CardHeader>
               <CardBody>
                 <span className="drf-lifecycle__upcoming-count">
                   {numDeprecations}
                 </span>{' '}
-                upcoming {pluralize(numDeprecations, 'deprecation')} that could
+                {pluralize(numDeprecations, 'Deprecation')} that could
                 affect your systems
               </CardBody>
             </Card>
@@ -312,14 +312,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationTriangleIcon color={'#FFA500'} />
-                  Upcoming changes
+                  Changes
                 </CardTitle>
               </CardHeader>
               <CardBody>
                 <span className="drf-lifecycle__upcoming-count">
                   {numChanges}
                 </span>{' '}
-                upcoming {pluralize(numChanges, 'change')} that could affect
+                {pluralize(numChanges, 'Change')} that could affect
                 your systems
               </CardBody>
             </Card>
@@ -336,15 +336,16 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <InfoCircleIcon color={'#2B9AF3'} />
-                  Upcoming additions and enhancements
+                  Additions and enhancements
                 </CardTitle>
               </CardHeader>
               <CardBody>
                 <span className="drf-lifecycle__upcoming-count">
                   {numAdditions}
                 </span>{' '}
-                upcoming {pluralize(numAdditions, 'addition')} and/or {pluralize(numAdditions, 'enhancement')} that could affect
-                your systems
+                {pluralize(numAdditions, 'Addition')} and {' '}
+                {pluralize(numAdditions, 'enhancement')} that could affect your
+                systems
               </CardBody>
             </Card>
           </GridItem>
