@@ -295,7 +295,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 <span className="drf-lifecycle__upcoming-count">
                   {numDeprecations}
                 </span>{' '}
-                {pluralize(numDeprecations, 'Deprecation')} that could affect your systems
+                {pluralize(numDeprecations, 'Deprecation')} that could affect
+                your systems
               </CardBody>
             </Card>
           </GridItem>
