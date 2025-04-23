@@ -85,11 +85,11 @@ spec:
   results:
     - name: IMAGE_URL
       description: ""
-      value: $(tasks.build-image-index.results.IMAGE_URL)
+      value: $(tasks.build-container.results.IMAGE_URL)
 
     - name: IMAGE_DIGEST
       description: ""
-      value: $(tasks.build-image-index.results.IMAGE_DIGEST)
+      value: $(tasks.build-container.results.IMAGE_DIGEST)
 
     - name: CHAINS-GIT_URL
       description: ""
@@ -303,10 +303,10 @@ spec:
     - name: deprecated-base-image-check
       params:
         - name: IMAGE_URL
-          value: $(tasks.build-image-index.results.IMAGE_URL)
+          value: $(tasks.build-container.results.IMAGE_URL)
 
         - name: IMAGE_DIGEST
-          value: $(tasks.build-image-index.results.IMAGE_DIGEST)
+          value: $(tasks.build-container.results.IMAGE_DIGEST)
 
       runAfter:
         - build-image-index
@@ -332,10 +332,10 @@ spec:
     - name: clair-scan
       params:
         - name: image-digest
-          value: $(tasks.build-image-index.results.IMAGE_DIGEST)
+          value: $(tasks.build-container.results.IMAGE_DIGEST)
 
         - name: image-url
-          value: $(tasks.build-image-index.results.IMAGE_URL)
+          value: $(tasks.build-container.results.IMAGE_URL)
 
       runAfter:
         - build-image-index
@@ -361,7 +361,7 @@ spec:
     - name: ecosystem-cert-preflight-checks
       params:
         - name: image-url
-          value: $(tasks.build-image-index.results.IMAGE_URL)
+          value: $(tasks.build-container.results.IMAGE_URL)
 
       runAfter:
         - build-image-index
