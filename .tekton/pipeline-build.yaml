@@ -300,37 +300,6 @@ spec:
           values:
             - "true"
 
-    - name: build-source-image
-      params:
-        - name: BINARY_IMAGE
-          value: $(params.output-image)
-
-      runAfter:
-        - build-image-index
-
-      taskRef:
-        resolver: bundles
-        params:
-          - name: name
-            value: source-build-oci-ta
-
-          - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-source-build-oci-ta:0.2@sha256:9fe82c9511f282287686f918bf1a543fcef417848e7a503357e988aab2887cee
-
-          - name: kind
-            value: task
-
-      when:
-        - input: $(tasks.init.results.build)
-          operator: in
-          values:
-            - "true"
-
-        - input: $(params.build-source-image)
-          operator: in
-          values:
-            - "true"
-
     - name: deprecated-base-image-check
       params:
         - name: IMAGE_URL
