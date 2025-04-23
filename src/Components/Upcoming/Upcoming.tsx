@@ -295,7 +295,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 <span className="drf-lifecycle__upcoming-count">
                   {numDeprecations}
                 </span>{' '}
-                {pluralize(numDeprecations, 'Deprecation')} that could affect
+                {pluralize(numDeprecations, 'deprecation')} that could affect
                 your systems
               </CardBody>
             </Card>
@@ -319,7 +319,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 <span className="drf-lifecycle__upcoming-count">
                   {numChanges}
                 </span>{' '}
-                {pluralize(numChanges, 'Change')} that could affect your systems
+                {pluralize(numChanges, 'change')} that could affect your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -342,8 +342,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 <span className="drf-lifecycle__upcoming-count">
                   {numAdditions}
                 </span>{' '}
-                {pluralize(numAdditions, 'Addition')} and{' '}
-                {pluralize(numAdditions, 'enhancement')}that could affect your
+                {pluralize(numAdditions, 'addition')} and{' '}
+                {pluralize(numAdditions, 'enhancement')} that could affect your
                 systems
               </CardBody>
             </Card>
