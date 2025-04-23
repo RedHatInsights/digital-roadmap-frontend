@@ -8,7 +8,6 @@ import {
   ChartLegend,
   ChartLine,
   ChartTooltip,
-  ChartVoronoiContainer,
   getInteractiveLegendEvents,
   getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts';
@@ -38,6 +37,11 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     width: 900,
     height: 300,
   });
+
+  // Tooltip state
+  const [tooltipData, setTooltipData] = React.useState<any>(null);
+  const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
   //check data type and contruct a chart array
   const checkDataType = (
@@ -255,6 +259,62 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   // needs to be a specific tuple format or filter on hover breaks
   const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
+  // Custom tooltip component with fixed positioning
+  const renderTooltip = () => {
+    if (!showTooltip || !tooltipData) return null;
+
+    let content = '';
+    if (tooltipData._name === 'Current-date') {
+      content = `Current Date: ${formatDate(new Date())}`;
+    } else if (tooltipData.packageType && tooltipData.y0) {
+      content = `Name: ${tooltipData.name}\nRelease: ${
+        tooltipData.version
+      }\nSupport Type: ${tooltipData.packageType}\nSystems: ${
+        tooltipData.numSystems
+      }\nStart: ${formatDate(new Date(tooltipData.y0))}\nEnd: ${formatDate(
+        new Date(tooltipData.y)
+      )}`;
+    }
+
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          left: `${mousePosition.x + 15}px`,
+          top: `${mousePosition.y - 15}px`,
+          backgroundColor: 'black',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+          zIndex: 1000,
+          pointerEvents: 'none',
+          whiteSpace: 'pre-line',
+          border: '1px solid #888',
+          maxWidth: '250px',
+          fontSize: '14px',
+          lineHeight: '1.5',
+        }}
+      >
+        {content}
+      </div>
+    );
+  };
+
+  // Update mouse position on move
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
   // Handle resize observation
   React.useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -296,61 +356,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     };
   }, [updatedLifecycleData.length]);
 
-  // Create custom tooltip function that safely handles the data
-  const getTooltipLabel = (point: any): string => {
-    const datum = point?.datum;
-
-    // Filter out null or incomplete data points
-    if (!datum || typeof datum !== 'object') {
-      return '';
-    }
-
-    // Check if this is an actual data point with valid values
-    if (!datum.name || datum.x === null || !datum.packageType) {
-      return '';
-    }
-
-    try {
-      return `Name: ${datum.name || 'N/A'}\nRelease: ${
-        datum.version || 'N/A'
-      }\nSupport Type: ${datum.packageType || 'N/A'}\nSystems: ${
-        datum.numSystems || 'N/A'
-      }\nStart: ${formatDate(datum.y0)}\nEnd: ${formatDate(datum.y)}`;
-    } catch (e) {
-      return '';
-    }
-  };
-
+  // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
+      {showTooltip && renderTooltip()}
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
-        containerComponent={
-          <ChartVoronoiContainer
-            labels={getTooltipLabel}
-            labelComponent={
-              <ChartTooltip
-                constrainToVisibleArea
-                centerOffset={{ x: 170, y: 0 }}
-                flyoutStyle={{
-                  fill: 'black',
-                  stroke: '#888',
-                  strokeWidth: 1,
-                  opacity: 0.95,
-                }}
-                // Add this to fix top and bottom items tooltip behavior
-                pointerOrientation={'bottom'}
-                dx={30}
-                cornerRadius={5}
-              />
-            }
-            // Fixed voronoiPadding to be consistent across entire chart
-            voronoiPadding={25}
-            voronoiDimension="x"
-            mouseFollowTooltips
-          />
-        }
         events={getInteractiveLegendEvents({
           chartNames,
           isHidden,
@@ -377,6 +389,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         height={chartDimensions.height}
         width={chartDimensions.width}
       >
+        {/*X axis with date timeline for the bottom of the chart */}
         {Object.values(years).length > 0 && (
           <ChartAxis
             dependentAxis
@@ -387,6 +400,19 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             }
           />
         )}
+        {/*X axis with date timeline for the top of the chart */}
+        {Object.values(years).length > 0 && (
+          <ChartAxis
+            dependentAxis
+            showGrid={false}
+            orientation="top"
+            tickValues={Object.values(years)}
+            tickFormat={(t: Date) =>
+              t.toLocaleDateString('en-US', { year: 'numeric' })
+            }
+          />
+        )}
+        {/*Y axis with the name of each stream/operating system */}
         <ChartAxis
           showGrid
           tickValues={fetchTicks()}
@@ -400,7 +426,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
             if (s.datapoints.length === 0) {
-              return;
+              return null;
             }
             return (
               <ChartBar
@@ -420,20 +446,105 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
                     stroke: getPackageColor(s.packageType),
                   },
                 }}
+                // Add direct event handlers for tooltips
+                events={[
+                  {
+                    target: 'data',
+                    eventHandlers: {
+                      onMouseOver: () => {
+                        return [
+                          {
+                            target: 'data',
+                            mutation: (props) => {
+                              setTooltipData(props.datum);
+                              setShowTooltip(true);
+                              return {
+                                style: {
+                                  ...props.style,
+                                  strokeWidth: 3,
+                                  stroke: getPackageColor(s.packageType),
+                                  fillOpacity: 0.9,
+                                },
+                              };
+                            },
+                          },
+                        ];
+                      },
+                      onMouseOut: () => {
+                        return [
+                          {
+                            target: 'data',
+                            mutation: () => {
+                              setShowTooltip(false);
+                              setTooltipData(null);
+                              return null;
+                            },
+                          },
+                        ];
+                      },
+                    },
+                  },
+                ]}
+                // Empty tooltip component to satisfy PatternFly requirements
+                labelComponent={<ChartTooltip text={() => ''} active={false} />}
               />
             );
           })}
         </ChartGroup>
         {updatedLifecycleData.length > 0 && (
           <ChartLine
+            name="Current-date"
             y={() => Date.now()}
             y0={() => Date.now()}
             style={{
               data: {
                 stroke: 'black',
-                strokeWidth: 0.5,
+                strokeWidth: 2,
               },
             }}
+            events={[
+              {
+                target: 'data',
+                eventHandlers: {
+                  onMouseOver: () => {
+                    return [
+                      {
+                        target: 'data',
+                        mutation: () => {
+                          setTooltipData({ _name: 'Current-date' });
+                          setShowTooltip(true);
+                          return {
+                            style: {
+                              stroke: 'black',
+                              strokeWidth: 3,
+                            },
+                          };
+                        },
+                      },
+                    ];
+                  },
+                  onMouseOut: () => {
+                    return [
+                      {
+                        target: 'data',
+                        mutation: () => {
+                          setShowTooltip(false);
+                          setTooltipData(null);
+                          return {
+                            style: {
+                              stroke: 'black',
+                              strokeWidth: 2,
+                            },
+                          };
+                        },
+                      },
+                    ];
+                  },
+                },
+              },
+            ]}
+            // Empty tooltip component to satisfy PatternFly requirements
+            labelComponent={<ChartTooltip text={() => ''} active={false} />}
           />
         )}
       </Chart>
