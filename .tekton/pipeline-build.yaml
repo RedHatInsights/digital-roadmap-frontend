@@ -82,56 +82,6 @@ spec:
       type: array
       default: []
 
-    # Default params for building frontend container file
-    # Avoids having to use the parse-build-deploy-script task
-    - name: component
-      type: string
-      default: digital-roadmap-frontend
-
-    - name: image
-      type: string
-      default: quay.io/redhat-user-workloads/rhel-lightspeed-tenant/digital-roadmap
-
-    - name: node-build-version
-      type: string
-      default: "20"
-
-    - name: quay-expire-time
-      type: string
-      default: ""
-
-    - name: npm-build-script
-      type: string
-      default: ""
-
-    - name: yarn-build-script
-      type: string
-      default: ""
-
-    - name: route-path
-      type: string
-      default: ""
-
-    - name: beta-route-path
-      type: string
-      default: ""
-
-    - name: preview-route-path
-      type: string
-      default: ""
-
-    - name: ci-root
-      type: string
-      default: ""
-
-    - name: server-name
-      type: string
-      default: ""
-
-    - name: dist-folder
-      type: string
-      default: "dist"
-
   results:
     - name: IMAGE_URL
       description: ""
@@ -245,66 +195,6 @@ spec:
         - name: netrc
           workspace: netrc
 
-    - name: create-frontend-containerfile
-      params:
-        - name: path-context
-          value: $(params.path-context)
-
-        - name: component
-          value: $(params.component)
-
-        - name: image
-          value: $(params.image)
-
-        - name: node-build-version
-          value: $(params.node-build-version)
-
-        - name: quay-expire-time
-          value: $(params.quay-expire-time)
-
-        - name: npm-build-script
-          value: $(params.npm-build-script)
-
-        - name: yarn-build-script
-          value: $(params.yarn-build-script)
-
-        - name: route-path
-          value: $(params.route-path)
-
-        - name: beta-route-path
-          value: $(params.beta-route-path)
-
-        - name: preview-route-path
-          value: $(params.preview-route-path)
-
-        - name: ci-root
-          value: $(params.ci-root)
-
-        - name: server-name
-          value: $(params.server-name)
-
-        - name: dist-folder
-          value: $(params.dist-folder)
-
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/RedHatInsights/konflux-consoledot-frontend-build
-
-          - name: revision
-            value: 43aa7592b890acf0b48dce86b49267c179a2aca7
-
-          - name: pathInRepo
-            value: tasks/create-frontend-dockerfile/create-frontend-dockerfile.yaml
-
-      workspaces:
-        - name: source
-          workspace: workspace
-
-      runAfter:
-        - clone-repository
-
     - name: build-container
       params:
         - name: IMAGE
@@ -337,7 +227,6 @@ spec:
 
       runAfter:
         - prefetch-dependencies
-        - create-frontend-containerfile
 
       taskRef:
         resolver: bundles
@@ -653,8 +542,7 @@ spec:
     - name: coverity-availability-check
 
       runAfter:
-        - prefetch-dependencies
-        - create-frontend-containerfile
+        - build-image-index
 
       taskRef:
         resolver: bundles
