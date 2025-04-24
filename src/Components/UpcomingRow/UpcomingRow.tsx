@@ -91,15 +91,22 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
     <>
       <Tbody isExpanded={isExpanded}>
         <Tr>
-          <Td
-            expand={{
-              rowIndex: rowIndex,
-              isExpanded,
-              onToggle,
-              expandId: 'composable-expandable-example',
-            }}
-          />
-          <Td dataLabel={columnNames.name} modifier="truncate">
+        <Td
+          expand={{
+            rowIndex: rowIndex,
+            isExpanded,
+            onToggle,
+            expandId: 'composable-expandable-example',
+          }}
+          className="drf-lifecycle__expand-column"
+          style={{ width: '30px' }} /* Control the width of expand column */
+        />
+          <Td 
+            dataLabel={columnNames.name} 
+            modifier="truncate" 
+            width={40} // Increase width of Name column
+            className="drf-lifecycle__name-column"
+          >
             {repo.name}
           </Td>
           <Td dataLabel={columnNames.type} modifier="truncate">
@@ -163,24 +170,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                     <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
                   </TextList>
                 </TextContent>
-                {/* 
-                <TextContent>
-                  <TextList component={TextListVariants.dl}>
-                    <TextListItem component={TextListItemVariants.dt}>Date added                    {""}</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.dateAdded}
-                    </TextListItem>
-                  </TextList>
-                </TextContent>
-
-                <TextContent>
-                 <TextList component={TextListVariants.dl}>
-                  <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
-                  <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.lastModified}
-                  </TextListItem>
-                 </TextList>
-                </TextContent> */}
               </div>
             </Td>
           </Tr>
