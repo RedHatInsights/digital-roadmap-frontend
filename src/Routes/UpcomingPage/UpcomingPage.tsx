@@ -1,9 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { Alert, Spinner } from '@patternfly/react-core';
-import {
-  PageHeader,
-  PageHeaderTitle,
-} from '@redhat-cloud-services/frontend-components/PageHeader';
+import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 import UpcomingTab from '../../Components/Upcoming/Upcoming';
 import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
@@ -26,10 +23,7 @@ const UpcomingPage = () => {
         title="Upcoming features and dates are subject to change."
         component="h2"
       />
-      <section
-        className="pf-l-page__main-section pf-c-page__main-section"
-        id="roadmap"
-      >
+      <section className="pf-l-page__main-section pf-c-page__main-section" id="roadmap">
         <Suspense fallback={<Spinner />}>
           <UpcomingTab />
         </Suspense>
