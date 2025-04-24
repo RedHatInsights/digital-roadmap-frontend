@@ -1,14 +1,5 @@
 import React, { lazy } from 'react';
-import {
-  SortByDirection,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  ThProps,
-  Thead,
-  Tr,
-} from '@patternfly/react-table';
+import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import {
@@ -20,9 +11,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
-const LifecycleModalWindow = lazy(
-  () => import('../../Components/LifecycleModalWindow/LifecycleModalWindow')
-);
+const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
@@ -119,16 +108,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     setPerPage(newPerPage);
   };
 
-  const handleModalToggle = (
-    _event: React.MouseEvent | React.KeyboardEvent
-  ) => {
+  // _event is needed as it's provided by onClick handler
+  // eslint-disable-next-line no-unused-vars
+  const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {
     setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
-  const buildPagination = (
-    variant: 'bottom' | 'top' | PaginationVariant,
-    isCompact: boolean
-  ) => (
+  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
     <Pagination
       isCompact={isCompact}
       itemCount={data.length}
@@ -240,15 +226,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name} {repo.stream}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>
-            {repo.os_major}
-          </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>
-            {formatDate(repo.start_date)}
-          </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>
-            {formatDate(repo.end_date)}
-          </Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
             <Button
               variant="link"
@@ -279,53 +259,42 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   };
 
   const renderSystemLifecycleData = () => {
-    return (paginatedRows as SystemLifecycleChanges[]).map(
-      (repo: SystemLifecycleChanges) => {
-        if (
-          !repo.name ||
-          !repo.release_date ||
-          !repo.retirement_date ||
-          !repo.count
-        ) {
-          return;
-        }
-
-        return (
-          <Tr
-            key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}
-          >
-            <Td
-              style={{ paddingRight: '140px', maxWidth: '200px' }}
-              dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}
-            >
-              {repo.name}
-            </Td>
-            <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>
-              {formatDate(repo.release_date)}
-            </Td>
-            <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>
-              {formatDate(repo.retirement_date)}
-            </Td>
-            <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-              {repo.count !== 0 ? (
-                <Button
-                  variant="link"
-                  onClick={(event) => {
-                    handleModalToggle(event);
-                    setModalDataName(String(repo.name));
-                    setModalData(SYSTEM_ID);
-                  }}
-                >
-                  {repo.count}
-                </Button>
-              ) : (
-                <>{repo.count}</>
-              )}
-            </Td>
-          </Tr>
-        );
+    return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
+      if (!repo.name || !repo.release_date || !repo.retirement_date || !repo.count) {
+        return;
       }
-    );
+
+      return (
+        <Tr key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}>
+          <Td
+            style={{ paddingRight: '140px', maxWidth: '200px' }}
+            dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}
+          >
+            {repo.name}
+          </Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.release_date)}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>
+            {formatDate(repo.retirement_date)}
+          </Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
+            {repo.count !== 0 ? (
+              <Button
+                variant="link"
+                onClick={(event) => {
+                  handleModalToggle(event);
+                  setModalDataName(String(repo.name));
+                  setModalData(SYSTEM_ID);
+                }}
+              >
+                {repo.count}
+              </Button>
+            ) : (
+              <>{repo.count}</>
+            )}
+          </Td>
+        </Tr>
+      );
+    });
   };
 
   const renderHeaders = () => {
