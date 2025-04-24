@@ -53,7 +53,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   };
 
   // _event is needed as it's provided by onClick handler
-  const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {  
+  const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {
     setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
@@ -118,7 +118,12 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
         {repo.details ? (
           <Tr isExpanded={isExpanded}>
             {!childIsFullWidth ? <Td /> : null}
-            <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding={childHasNoPadding} colSpan={3}>
+            <Td
+              className="drf-lifecycle__upcoming-row"
+              dataLabel="Summary"
+              noPadding={childHasNoPadding}
+              colSpan={3}
+            >
               <div className="drf-lifecycle__upcoming-row-text-container">
                 <TextContent className="drf-lifecycle__upcoming-row-text">
                   <Text component={TextVariants.p}>{repo.details.summary}</Text>
