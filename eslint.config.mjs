@@ -28,6 +28,9 @@ export default [
             "sort-imports": [
                 "error", {ignoreDeclarationSort: true}
             ],
+            "max-len": [
+                "error", {"code": 125}
+            ],
 
             "rulesdir/forbid-pf-relative-imports": "off",
         },
