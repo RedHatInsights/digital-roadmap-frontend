@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  MenuToggle,
-  Select,
-  SelectList,
-  SelectOption,
-} from '@patternfly/react-core';
+import { MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
 
 interface LifecycleDropdownProps {
   currentValue: string;
@@ -12,9 +7,7 @@ interface LifecycleDropdownProps {
   onDropdownSelect: (value: string) => void;
 }
 
-export const LifecycleDropdown: React.FunctionComponent<
-  LifecycleDropdownProps
-> = ({
+export const LifecycleDropdown: React.FunctionComponent<LifecycleDropdownProps> = ({
   currentValue,
   setCurrentValue,
   onDropdownSelect,
@@ -61,15 +54,9 @@ export const LifecycleDropdown: React.FunctionComponent<
       shouldFocusToggleOnSelect
     >
       <SelectList>
-        <SelectOption value="RHEL 9 Application Streams">
-          RHEL 9 Application Streams
-        </SelectOption>
-        <SelectOption value="RHEL 8 Application Streams">
-          RHEL 8 Application Streams
-        </SelectOption>
-        <SelectOption value="Red Hat Enterprise Linux">
-          Red Hat Enterprise Linux
-        </SelectOption>
+        <SelectOption value="RHEL 9 Application Streams">RHEL 9 Application Streams</SelectOption>
+        <SelectOption value="RHEL 8 Application Streams">RHEL 8 Application Streams</SelectOption>
+        <SelectOption value="Red Hat Enterprise Linux">Red Hat Enterprise Linux</SelectOption>
       </SelectList>
     </Select>
   );

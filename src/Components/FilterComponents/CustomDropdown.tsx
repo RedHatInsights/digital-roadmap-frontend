@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  MenuToggle,
-  Select,
-  SelectList,
-  SelectOption,
-} from '@patternfly/react-core';
+import { MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
 import BellIcon from '@patternfly/react-icons/dist/esm/icons/bell-icon';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
@@ -52,10 +47,7 @@ export const SelectOptionVariations: React.FunctionComponent = () => {
     >
       <SelectList>
         <SelectOption value="Basic option">Basic option</SelectOption>
-        <SelectOption
-          value="Option with description"
-          description="This is a description"
-        >
+        <SelectOption value="Option with description" description="This is a description">
           Option with description
         </SelectOption>
         <SelectOption
