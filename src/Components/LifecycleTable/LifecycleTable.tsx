@@ -109,7 +109,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   };
 
   // _event is needed as it's provided by onClick handler
-  // eslint-disable-next-line no-unused-vars
   const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {
     setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };

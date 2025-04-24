@@ -18,7 +18,6 @@ interface ModalWindowProps {
   setModalData: React.Dispatch<React.SetStateAction<string[] | undefined>>;
   isModalOpen: boolean;
   // any because <Modal onClose> stops working with anything else (including unknown)
-  // eslint-disable-next-line no-explicit-any
   handleModalToggle: (_event: any) => void;
 }
 
