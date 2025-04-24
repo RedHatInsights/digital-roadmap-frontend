@@ -152,7 +152,11 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                       </Button>
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>{repo.details.trainingTicket}</TextListItem>
+                    <TextListItem component={TextListItemVariants.dd}>
+                      <a href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`} rel="noreferrer">
+                        {repo.details.trainingTicket}
+                      </a>
+                    </TextListItem>
                     <TextListItem component={TextListItemVariants.dt}>Date added</TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>{repo.details.dateAdded}</TextListItem>
                     <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
