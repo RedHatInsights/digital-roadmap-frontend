@@ -91,20 +91,19 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
     <>
       <Tbody isExpanded={isExpanded}>
         <Tr>
-        <Td
-          expand={{
-            rowIndex: rowIndex,
-            isExpanded,
-            onToggle,
-            expandId: 'composable-expandable-example',
-          }}
-          className="drf-lifecycle__expand-column"
-          style={{ width: '30px' }} /* Control the width of expand column */
-        />
-          <Td 
-            dataLabel={columnNames.name} 
-            modifier="truncate" 
-            width={40} // Increase width of Name column
+          <Td
+            expand={{
+              rowIndex: rowIndex,
+              isExpanded,
+              onToggle,
+              expandId: 'composable-expandable-example',
+            }}
+            className="drf-lifecycle__expand-column"
+          />
+          <Td
+            dataLabel={columnNames.name}
+            modifier="truncate"
+            width={15} // Increase width of Name column
             className="drf-lifecycle__name-column"
           >
             {repo.name}

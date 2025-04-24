@@ -20,25 +20,3 @@
   align-items: center;
   gap: 8px;
 }
-
-/* Control the width of the expand column */
-.drf-lifecycle__expand-column {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
-}
-
-/* Ensure Name column has proper width */
-.drf-lifecycle__name-column {
-  min-width: 250px; /* Set a minimum width */
-}
-
-/* Hide any extra dots or visual issues */
-.pf-c-table__toggle-icon {
-  margin-right: 0 !important;
-}
-
-/* Ensure proper spacing in the table */
-.pf-c-table tr > * {
-  vertical-align: middle;
-}
