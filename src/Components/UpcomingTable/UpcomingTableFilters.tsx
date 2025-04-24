@@ -64,9 +64,7 @@ interface UpcomingTableFiltersProps {
   setFiltersForURL: (filters: Filter) => void;
 }
 
-export const UpcomingTableFilters: React.FunctionComponent<
-  UpcomingTableFiltersProps
-> = ({
+export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
   itemCount,
   resetFilters,
   searchValue,
@@ -91,16 +89,11 @@ export const UpcomingTableFilters: React.FunctionComponent<
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState<boolean>(false);
-  const [activeAttributeMenu, setActiveAttributeMenu] = useState<
-    'Name' | 'Type' | 'Release' | 'Date'
-  >('Name');
+  const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Date'>('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
   const selectedToggle = 'relevant';
 
-  const buildPagination = (
-    variant: 'bottom' | 'top' | PaginationVariant,
-    isCompact: boolean
-  ) => (
+  const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
     <Pagination
       isCompact={isCompact}
       itemCount={itemCount}
@@ -119,10 +112,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
   };
 
-  function onReleaseSelect(
-    event: React.MouseEvent | undefined,
-    releaseId: string | number | undefined
-  ) {
+  function onReleaseSelect(event: React.MouseEvent | undefined, releaseId: string | number | undefined) {
     if (typeof releaseId === 'undefined') {
       return;
     }
@@ -184,10 +174,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
     setIsDateMenuOpen(!isDateMenuOpen);
   };
 
-  function onDateSelect(
-    event: React.MouseEvent | undefined,
-    itemId: string | number | undefined
-  ) {
+  function onDateSelect(event: React.MouseEvent | undefined, itemId: string | number | undefined) {
     if (typeof itemId === 'undefined') {
       return;
     }
@@ -225,11 +212,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
     >
       <DropdownList>
         {dateOptions.map((option) => (
-          <DropdownItem
-            key={option.date}
-            isSelected={dateSelection === option.date}
-            itemId={option.date}
-          >
+          <DropdownItem key={option.date} isSelected={dateSelection === option.date} itemId={option.date}>
             {option.date}
           </DropdownItem>
         ))}
@@ -241,19 +224,14 @@ export const UpcomingTableFilters: React.FunctionComponent<
     setIsTypeMenuOpen(!isTypeMenuOpen);
   };
 
-  function onTypeMenuSelect(
-    event: React.MouseEvent | undefined,
-    typeId: string | number | undefined
-  ) {
+  function onTypeMenuSelect(event: React.MouseEvent | undefined, typeId: string | number | undefined) {
     if (typeof typeId === 'undefined') {
       return;
     }
 
     const typeStr = typeId.toString();
     const selections = typeSelections.has(typeStr)
-      ? new Set(
-          [...typeSelections].filter((selection) => selection !== typeStr)
-        )
+      ? new Set([...typeSelections].filter((selection) => selection !== typeStr))
       : new Set([typeStr, ...typeSelections]);
 
     setTypeSelections(selections);
@@ -311,9 +289,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
     <Dropdown
       isOpen={isAttributeMenuOpen}
       onSelect={(_ev, itemId) => {
-        setActiveAttributeMenu(
-          itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date'
-        );
+        setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date');
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
       onOpenChange={(isOpen: boolean) => setIsAttributeMenuOpen(isOpen)}
@@ -384,10 +360,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
   );
 
   return (
-    <Toolbar
-      id="attribute-search-filter-toolbar"
-      clearAllFilters={resetFilters}
-    >
+    <Toolbar id="attribute-search-filter-toolbar" clearAllFilters={resetFilters}>
       <ToolbarContent>
         <ToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
           <ToolbarGroup variant="filter-group">
@@ -403,9 +376,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
             </ToolbarFilter>
             <ToolbarFilter
               chips={[...typeSelections]}
-              deleteChip={(category, chip) =>
-                onTypeMenuSelect(undefined, chip as string)
-              }
+              deleteChip={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
               deleteChipGroup={() => {
                 const newFilters = structuredClone(filtersForURL);
                 delete newFilters['type'];
@@ -419,9 +390,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
             </ToolbarFilter>
             <ToolbarFilter
               chips={releaseSelections}
-              deleteChip={(category, chip) =>
-                onReleaseSelect(undefined, chip as string)
-              }
+              deleteChip={(category, chip) => onReleaseSelect(undefined, chip as string)}
               deleteChipGroup={resetRelease}
               categoryName="Release"
               showToolbarItem={activeAttributeMenu === 'Release'}
@@ -439,11 +408,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
             </ToolbarFilter>
             <ToolbarItem>
               <Form>
-                <FormGroup
-                  className="drf-upcoming__filter-formgroup"
-                  label="View"
-                  fieldId="view-filter"
-                >
+                <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
                     <ToggleGroupItem
                       text="Relevant only"
@@ -463,9 +428,7 @@ export const UpcomingTableFilters: React.FunctionComponent<
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarToggleGroup>
-        <ToolbarItem variant="pagination">
-          {buildPagination('top', true)}
-        </ToolbarItem>
+        <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );

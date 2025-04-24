@@ -1,9 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { Alert, Spinner } from '@patternfly/react-core';
-import {
-  PageHeader,
-  PageHeaderTitle,
-} from '@redhat-cloud-services/frontend-components/PageHeader';
+import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 import LifecycleTab from '../../Components/Lifecycle/Lifecycle';
 import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
@@ -26,10 +23,7 @@ const LifecyclePage = () => {
         title="Dates are approximations and subject to change."
         component="h2"
       />
-      <section
-        className="pf-l-page__main-section pf-c-page__main-section"
-        id="lifecycle"
-      >
+      <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
           <LifecycleTab />
         </Suspense>

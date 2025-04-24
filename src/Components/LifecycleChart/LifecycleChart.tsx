@@ -29,9 +29,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChart: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-}: LifecycleChartProps) => {
+const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -44,9 +42,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
   //check data type and contruct a chart array
-  const checkDataType = (
-    lifecycleData: Stream[] | SystemLifecycleChanges[]
-  ) => {
+  const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
@@ -127,9 +123,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     }
   };
 
-  const constructLifecycleData = (
-    lifecycleData: Stream[] | SystemLifecycleChanges[]
-  ) => {
+  const constructLifecycleData = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!dataType) {
       return;
     }
@@ -155,10 +149,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (
-          item.release_date === 'Unknown' ||
-          item.retirement_date === 'Unknown'
-        ) {
+        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
           return;
         }
         formatChartData(
@@ -207,9 +198,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     });
   };
 
-  const legendNames = React.useMemo(calculateLegendNames, [
-    updatedLifecycleData,
-  ]);
+  const legendNames = React.useMemo(calculateLegendNames, [updatedLifecycleData]);
 
   const getLegendData = () =>
     legendNames.map((s, index) => ({
@@ -267,11 +256,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
     if (tooltipData._name === 'Current-date') {
       content = `Current Date: ${formatDate(new Date())}`;
     } else if (tooltipData.packageType && tooltipData.y0) {
-      content = `Name: ${tooltipData.name}\nRelease: ${
-        tooltipData.version
-      }\nSupport Type: ${tooltipData.packageType}\nSystems: ${
-        tooltipData.numSystems
-      }\nStart: ${formatDate(new Date(tooltipData.y0))}\nEnd: ${formatDate(
+      content = `Name: ${tooltipData.name}\nRelease: ${tooltipData.version}\nSupport Type: ${
+        tooltipData.packageType
+      }\nSystems: ${tooltipData.numSystems}\nStart: ${formatDate(new Date(tooltipData.y0))}\nEnd: ${formatDate(
         new Date(tooltipData.y)
       )}`;
     }
@@ -369,14 +356,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
           legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
-        legendComponent={
-          <ChartLegend
-            name="chart5-ChartLegend"
-            data={getLegendData()}
-            height={50}
-            gutter={20}
-          />
-        }
+        legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} height={50} gutter={20} />}
         legendPosition="bottom-left"
         name="chart5"
         padding={{
@@ -395,9 +375,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             dependentAxis
             showGrid
             tickValues={Object.values(years)}
-            tickFormat={(t: Date) =>
-              t.toLocaleDateString('en-US', { year: 'numeric' })
-            }
+            tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}
         {/*X axis with date timeline for the top of the chart */}
@@ -407,9 +385,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
             showGrid={false}
             orientation="top"
             tickValues={Object.values(years)}
-            tickFormat={(t: Date) =>
-              t.toLocaleDateString('en-US', { year: 'numeric' })
-            }
+            tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}
         {/*Y axis with the name of each stream/operating system */}
@@ -418,8 +394,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({
           tickValues={fetchTicks()}
           style={{
             tickLabels: {
-              fontSize: () =>
-                Math.max(10, Math.min(14, chartDimensions.width / 60)),
+              fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60)),
             },
           }}
         />
