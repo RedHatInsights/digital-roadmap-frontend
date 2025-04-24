@@ -4,25 +4,14 @@ import { InvalidObject } from '@redhat-cloud-services/frontend-components/Invali
 import { Bullseye, Spinner } from '@patternfly/react-core';
 
 const UpcomingPage = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "UpcomingPage" */ './Routes/UpcomingPage/UpcomingPage'
-    )
+  () => import(/* webpackChunkName: "UpcomingPage" */ './Routes/UpcomingPage/UpcomingPage')
 );
 const LifecyclePage = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "LifecyclePage" */ './Routes/LifecyclePage/LifecyclePage'
-    )
+  () => import(/* webpackChunkName: "LifecyclePage" */ './Routes/LifecyclePage/LifecyclePage')
 );
-const OopsPage = lazy(
-  () => import(/* webpackChunkName: "OopsPage" */ './Routes/OopsPage/OopsPage')
-);
+const OopsPage = lazy(() => import(/* webpackChunkName: "OopsPage" */ './Routes/OopsPage/OopsPage'));
 const NoPermissionsPage = lazy(
-  () =>
-    import(
-      /* webpackChunkName: "NoPermissionsPage" */ './Routes/NoPermissionsPage/NoPermissionsPage'
-    )
+  () => import(/* webpackChunkName: "NoPermissionsPage" */ './Routes/NoPermissionsPage/NoPermissionsPage')
 );
 
 const routes = [

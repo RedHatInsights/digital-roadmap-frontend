@@ -51,27 +51,20 @@ const capitalizeFirstLetter = (string: string) => {
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [relevantUpcomingChanges, setUpcomingChanges] =
-    React.useState(emptyUpcomingChanges);
+  const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
   const [numChanges, setNumChanges] = React.useState(0);
-  const [visibleData, setVisibleData] =
-    React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
-  const [currentTypeFilters, setCurrentTypeFilters] = React.useState<
-    Set<string>
-  >(new Set());
+  const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
+  const [currentTypeFilters, setCurrentTypeFilters] = React.useState<Set<string>>(new Set());
   const [currentDateFilter, setCurrentDateFilter] = React.useState('');
   const [currentNameFilter, setCurrentNameFilters] = React.useState('');
-  const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<
-    string[]
-  >([]);
+  const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<string[]>([]);
   const [error, setError] = React.useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filtersForURL, setFiltersForURL] =
-    React.useState<Filter>(DEFAULT_FILTERS);
+  const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
 
   const nameParam = searchParams.get('name');
   const typeParam = searchParams.get('type');
@@ -105,8 +98,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(false);
     try {
       const response = await getUpcomingChanges();
-      let upcomingChangesParagraphs: UpcomingChanges[] =
-        response && response.data ? response.data : [];
+      let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
 
       // Check if data source is empty
       if (upcomingChangesParagraphs.length === 0) {
@@ -123,9 +115,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setUpcomingChanges(upcomingChangesParagraphs);
 
       // Use the capitalized type values for filtering
-      const filteredDeprecations = upcomingChangesParagraphs.filter(
-        (item) => item.type === 'Deprecation'
-      );
+      const filteredDeprecations = upcomingChangesParagraphs.filter((item) => item.type === 'Deprecation');
       setNumDeprecations(filteredDeprecations.length);
 
       const filteredAdditions = upcomingChangesParagraphs.filter(
@@ -133,9 +123,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       );
       setNumAdditions(filteredAdditions.length);
 
-      const filteredChanges = upcomingChangesParagraphs.filter(
-        (item) => item.type === 'Change'
-      );
+      const filteredChanges = upcomingChangesParagraphs.filter((item) => item.type === 'Change');
       setNumChanges(filteredChanges.length);
 
       setVisibleData(upcomingChangesParagraphs);
@@ -145,29 +133,17 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentNameFilters(name);
         newFilters['name'] = name;
       }
-      if (
-        releaseParam &&
-        isValidRelease(
-          upcomingChangesParagraphs,
-          decodeURIComponent(releaseParam)
-        )
-      ) {
+      if (releaseParam && isValidRelease(upcomingChangesParagraphs, decodeURIComponent(releaseParam))) {
         const release = decodeURIComponent(releaseParam).split(',');
         setCurrentReleaseFilters(release);
         newFilters['release'] = release;
       }
-      if (
-        typeParam &&
-        isValidType(upcomingChangesParagraphs, decodeURIComponent(typeParam))
-      ) {
+      if (typeParam && isValidType(upcomingChangesParagraphs, decodeURIComponent(typeParam))) {
         const type = new Set(decodeURIComponent(typeParam).split(','));
         setCurrentTypeFilters(type);
         newFilters['type'] = type;
       }
-      if (
-        dateParam &&
-        isValidDate(upcomingChangesParagraphs, decodeURIComponent(dateParam))
-      ) {
+      if (dateParam && isValidDate(upcomingChangesParagraphs, decodeURIComponent(dateParam))) {
         const date = decodeURIComponent(dateParam);
         setCurrentDateFilter(date);
         newFilters['date'] = date;
@@ -208,9 +184,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setSearchParams(buildURL(filters));
   };
 
-  const handleCardClick = (
-    variant: 'additions' | 'changes' | 'deprecations'
-  ) => {
+  const handleCardClick = (variant: 'additions' | 'changes' | 'deprecations') => {
     switch (variant) {
       case 'additions':
         setCurrentTypeFilters(new Set(['Addition']));
@@ -238,12 +212,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   }
 
   if (error) {
-    return (
-      <ErrorState
-        errorTitle="Failed to load data"
-        errorDescription={String(error.message)}
-      />
-    );
+    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
   }
 
   // New error state for when no data is available
@@ -257,8 +226,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             headingLevel="h2"
           />
           <EmptyStateBody>
-            We could not find any Roadmap data. Either no data exists in the
-            system or there was a problem retrieving it.
+            We could not find any Roadmap data. Either no data exists in the system or there was a problem
+            retrieving it.
           </EmptyStateBody>
           <EmptyStateFooter>
             <EmptyStateActions>
@@ -292,11 +261,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">
-                  {numDeprecations}
-                </span>{' '}
-                {pluralize(numDeprecations, 'deprecation')} that could affect
-                your systems
+                <span className="drf-lifecycle__upcoming-count">{numDeprecations}</span>{' '}
+                {pluralize(numDeprecations, 'deprecation')} that could affect your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -316,9 +282,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">
-                  {numChanges}
-                </span>{' '}
+                <span className="drf-lifecycle__upcoming-count">{numChanges}</span>{' '}
                 {pluralize(numChanges, 'change')} that could affect your systems
               </CardBody>
             </Card>
@@ -339,12 +303,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">
-                  {numAdditions}
-                </span>{' '}
-                {pluralize(numAdditions, 'addition')} and{' '}
-                {pluralize(numAdditions, 'enhancement')} that could affect your
-                systems
+                <span className="drf-lifecycle__upcoming-count">{numAdditions}</span>{' '}
+                {pluralize(numAdditions, 'addition')} and {pluralize(numAdditions, 'enhancement')} that could
+                affect your systems
               </CardBody>
             </Card>
           </GridItem>
