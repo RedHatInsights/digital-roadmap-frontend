@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
-import { Pagination, PaginationVariant, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import {
+  Button,
+  Pagination,
+  PaginationVariant,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+} from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
+const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
+import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -40,12 +49,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   const [sortedRows, setSortedRows] = React.useState(data);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
 
+  // Modal related
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [modalDataName, setModalDataName] = React.useState<string>();
+  const [modalData, setModalData] = React.useState<string[]>();
+
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
     if ('stream' in lifecycleData[0]) {
+      0;
       return 'streams';
     }
     return 'rhel';
@@ -91,6 +106,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     setPaginatedRows(sortedRows.slice(startIdx, endIdx));
     setPage(newPage);
     setPerPage(newPerPage);
+  };
+
+  // _event is needed as it's provided by onClick handler
+  const handleModalToggle = (_event: React.MouseEvent | React.KeyboardEvent) => {
+    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
   };
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
@@ -208,7 +228,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
+            <Button
+              variant="link"
+              onClick={(event) => {
+                handleModalToggle(event);
+                setModalDataName(String(repo.name));
+                setModalData(SYSTEM_ID);
+              }}
+            >
+              {repo.count}
+            </Button>
+          </Td>
         </Tr>
       );
     });
@@ -239,7 +270,22 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           </Td>
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.release_date)}</Td>
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.retirement_date)}</Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>{repo.count}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
+            {repo.count !== 0 ? (
+              <Button
+                variant="link"
+                onClick={(event) => {
+                  handleModalToggle(event);
+                  setModalDataName(String(repo.name));
+                  setModalData(SYSTEM_ID);
+                }}
+              >
+                {repo.count}
+              </Button>
+            ) : (
+              <>{repo.count}</>
+            )}
+          </Td>
         </Tr>
       );
     });
@@ -316,6 +362,13 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
         <Thead>{renderHeaders()}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
+      <LifecycleModalWindow
+        name={modalDataName}
+        modalData={modalData}
+        setModalData={setModalData}
+        isModalOpen={isModalOpen}
+        handleModalToggle={handleModalToggle}
+      ></LifecycleModalWindow>
       {buildPagination('bottom', false)}
     </>
   );
