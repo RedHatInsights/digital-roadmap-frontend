@@ -9,4 +9,5 @@ export interface Stream {
   count: number;
   stream: string;
   rolling: boolean;
+  systems: string[];
 }
