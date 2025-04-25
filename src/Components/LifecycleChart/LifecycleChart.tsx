@@ -46,7 +46,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('stream' in lifecycleData[0]) {
+    if ('application_stream_name' in lifecycleData[0]) {
       return 'appLifecycle';
     }
     return 'lifecycle';
@@ -138,7 +138,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           return;
         }
         formatChartData(
-          `${item.name} ${item.stream}`,
+          `${item.display_name}`,
           item.start_date,
           item.end_date,
           item.support_status,
