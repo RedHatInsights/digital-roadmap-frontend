@@ -222,12 +222,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       }
       return (
         <Tr
-          key={`${repo.name}-${repo.application_stream_name}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}
+          key={`
+            ${repo.name}-${repo.application_stream_name}-
+            ${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}
+          `}
         >
-          <Td
-            style={{ paddingRight: '140px', maxWidth: '200px' }}
-            dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}
-          >
+          <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.display_name}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>

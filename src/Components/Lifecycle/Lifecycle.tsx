@@ -241,9 +241,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     if (dropdownValue === DEFAULT_DROPDOWN_VALUE || dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       currentDataSource = (data as Stream[]).filter((datum) => {
-        return `${datum.display_name.toLowerCase()}`.includes(
-          name.toLowerCase()
-        );
+        return `${datum.display_name.toLowerCase()}`.includes(name.toLowerCase());
       });
     } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       currentDataSource = (data as SystemLifecycleChanges[]).filter((datum) => {
@@ -272,9 +270,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
       currentDataSource = appLifecycleChanges.filter((datum) => {
-        return `${datum.display_name.toLowerCase()}`.includes(
-          name.toLowerCase()
-        );
+        return `${datum.display_name.toLowerCase()}`.includes(name.toLowerCase());
       });
     } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       currentDataSource = systemLifecycleChanges.filter((datum) => {
