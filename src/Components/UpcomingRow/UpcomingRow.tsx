@@ -102,7 +102,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
           />
           <Td
             dataLabel={columnNames.name}
-            modifier="truncate"
             width={15} // Increase width of Name column
             className="drf-lifecycle__name-column"
           >
