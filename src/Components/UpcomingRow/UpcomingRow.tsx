@@ -157,7 +157,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                         {repo.details.potentiallyAffectedSystems}
                       </Button>
                     </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
+                    <TextListItem component={TextListItemVariants.dt}>Tracking ticket</TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
                       <a href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`} rel="noreferrer">
                         {repo.details.trainingTicket}
