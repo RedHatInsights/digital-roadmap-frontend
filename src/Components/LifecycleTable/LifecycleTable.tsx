@@ -59,7 +59,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('stream' in lifecycleData[0]) {
+    if ('application_stream_name' in lifecycleData[0]) {
       0;
       return 'streams';
     }
@@ -217,12 +217,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream) => {
-      if (!repo.name || !repo.stream || !repo.os_major) {
+      if (!repo.name || !repo.application_stream_name || !repo.os_major) {
         return;
       }
       return (
         <Tr
-          key={`${repo.name}-${repo.stream}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}
+          key={`${repo.name}-${repo.application_stream_name}-${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}`}
         >
           <Td
             style={{ paddingRight: '140px', maxWidth: '200px' }}

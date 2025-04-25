@@ -8,6 +8,6 @@ export interface Stream {
   end_date: string;
   support_status: string;
   count: number;
-  stream: string;
+  application_stream_name: string;
   rolling: boolean;
 }
