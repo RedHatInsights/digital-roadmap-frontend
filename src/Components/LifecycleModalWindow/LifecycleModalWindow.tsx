@@ -1,6 +1,12 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
-import { Button, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities } from '@patternfly/react-core';
+import { 
+  Button, 
+  TextInputGroup, 
+  TextInputGroupMain, 
+  TextInputGroupUtilities,
+  Pagination
+} from '@patternfly/react-core';
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core/next';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
@@ -32,6 +38,11 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState('');
+  
+  // Pagination state
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+  const [paginatedData, setPaginatedData] = React.useState<string[] | undefined>();
 
   // When the modal window is opened, update it with new data/default values
   React.useEffect(() => {
@@ -39,7 +50,19 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     setActiveSortIndex(undefined);
     setActiveSortDirection(undefined);
     setInputValue('');
+    setPage(1);
   }, [isModalOpen]);
+
+  // Update paginated data when filtered data or pagination settings change
+  React.useEffect(() => {
+    if (modalDataFiltered) {
+      const startIdx = (page - 1) * perPage;
+      const endIdx = startIdx + perPage;
+      setPaginatedData(modalDataFiltered.slice(startIdx, endIdx));
+    } else {
+      setPaginatedData(undefined);
+    }
+  }, [modalDataFiltered, page, perPage]);
 
   const renderModalWindow = () => {
     return (
@@ -56,9 +79,11 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           description={`${name} is installed on these systems. Click on a system name to view system details in Inventory.`}
         />
         <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
-          {renderModalWindowTable(modalDataFiltered)}
+          {renderModalWindowTable(paginatedData)}
         </ModalBody>
-        <ModalFooter></ModalFooter>
+        <ModalFooter>
+          {renderPagination()}
+        </ModalFooter>
       </Modal>
     );
   };
@@ -93,6 +118,28 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           </Tbody>
         </Table>
       </div>
+    );
+  };
+
+  const renderPagination = () => {
+    if (!modalDataFiltered || modalDataFiltered.length === 0) {
+      return null;
+    }
+
+    return (
+      <Pagination
+        itemCount={modalDataFiltered.length}
+        perPage={perPage}
+        page={page}
+        onSetPage={(_, newPage) => setPage(newPage)}
+        onPerPageSelect={(_, newPerPage) => {
+          setPerPage(newPerPage);
+          setPage(1); // Reset to first page when changing items per page
+        }}
+        widgetId="pagination-options-menu"
+        variant="bottom"
+        isCompact
+      />
     );
   };
 
@@ -151,6 +198,8 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   const handleInputChange = (_event: React.FormEvent<HTMLInputElement>, value: string) => {
     setInputValue(value);
     filterModalWindowData(value);
+    // Reset to first page when filtering
+    setPage(1);
   };
 
   /** show the input clearing button only when the input is not empty */
@@ -162,6 +211,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   /** callback for clearing the text input */
   const clearInput = () => {
     setInputValue('');
+    filterModalWindowData('');
   };
 
   const filterModalWindowData = (value: string) => {
