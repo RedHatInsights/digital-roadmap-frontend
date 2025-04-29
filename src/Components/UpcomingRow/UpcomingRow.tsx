@@ -98,12 +98,10 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
               onToggle,
               expandId: 'composable-expandable-example',
             }}
-            className="drf-lifecycle__expand-column"
           />
           <Td
             dataLabel={columnNames.name}
             width={15} // Increase width of Name column
-            className="drf-lifecycle__name-column"
           >
             {repo.name}
           </Td>
