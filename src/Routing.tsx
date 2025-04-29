@@ -32,7 +32,7 @@ const routes = [
     element: LifecyclePage,
   },
   {
-    path: '',
+    path: '/',
     element: LifecyclePage,
   },
   /* Catch all unmatched routes */
@@ -41,7 +41,9 @@ const routes = [
     element: InvalidObject,
   },
   {
-    path: '*',
+    route: {
+      path: '*',
+    },
     element: InvalidObject,
   },
 ];
