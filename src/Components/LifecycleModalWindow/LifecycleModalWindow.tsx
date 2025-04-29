@@ -5,7 +5,11 @@ import {
   TextInputGroup, 
   TextInputGroupMain, 
   TextInputGroupUtilities,
-  Pagination
+  Pagination,
+  PaginationVariant,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from '@patternfly/react-core';
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core/next';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
@@ -78,11 +82,24 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           labelId="scrollable-modal-title"
           description={`${name} is installed on these systems. Click on a system name to view system details in Inventory.`}
         />
+                
+        {/* Toolbar with filter and pagination */}
+        <div>
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>{renderFilterBoxModalWindow()}</ToolbarItem>
+              <ToolbarItem align={{ default: 'alignRight' }}>
+                {renderPagination('top', true)}
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+        </div>
+        
         <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
           {renderModalWindowTable(paginatedData)}
         </ModalBody>
         <ModalFooter>
-          {renderPagination()}
+          {renderPagination('bottom', false)}
         </ModalFooter>
       </Modal>
     );
@@ -97,8 +114,6 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     return (
       <div>
-        <div style={{ marginTop: '20px' }}>{renderFilterBoxModalWindow()}</div>
-        <div style={{ height: '16px' }}></div>
         <Table variant="compact">
           <Thead>
             <Tr>
@@ -121,7 +136,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     );
   };
 
-  const renderPagination = () => {
+  const renderPagination = ((variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => {
     if (!modalDataFiltered || modalDataFiltered.length === 0) {
       return null;
     }
@@ -137,11 +152,11 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           setPage(1); // Reset to first page when changing items per page
         }}
         widgetId="pagination-options-menu"
-        variant="bottom"
-        isCompact
+        variant={variant}
+        isCompact={isCompact}
       />
     );
-  };
+  });
 
   const renderFilterBoxModalWindow = () => {
     return (
