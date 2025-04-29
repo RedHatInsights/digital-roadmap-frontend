@@ -99,7 +99,10 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
               expandId: 'composable-expandable-example',
             }}
           />
-          <Td dataLabel={columnNames.name} modifier="truncate">
+          <Td
+            dataLabel={columnNames.name}
+            width={15} // Increase width of Name column
+          >
             {repo.name}
           </Td>
           <Td dataLabel={columnNames.type} modifier="truncate">
@@ -151,7 +154,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                         {repo.details.potentiallyAffectedSystems}
                       </Button>
                     </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Training ticket</TextListItem>
+                    <TextListItem component={TextListItemVariants.dt}>Tracking ticket</TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
                       <a href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`} rel="noreferrer">
                         {repo.details.trainingTicket}
@@ -163,24 +166,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                     <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
                   </TextList>
                 </TextContent>
-                {/* 
-                <TextContent>
-                  <TextList component={TextListVariants.dl}>
-                    <TextListItem component={TextListItemVariants.dt}>Date added                    {""}</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.dateAdded}
-                    </TextListItem>
-                  </TextList>
-                </TextContent>
-
-                <TextContent>
-                 <TextList component={TextListVariants.dl}>
-                  <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
-                  <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.lastModified}
-                  </TextListItem>
-                 </TextList>
-                </TextContent> */}
               </div>
             </Td>
           </Tr>
