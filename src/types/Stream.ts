@@ -10,4 +10,5 @@ export interface Stream {
   count: number;
   application_stream_name: string;
   rolling: boolean;
+  systems: string[];
 }

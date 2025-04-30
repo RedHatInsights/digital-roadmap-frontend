@@ -12,6 +12,7 @@ const VIRT = {
   version: '820190226174025',
   count: 3,
   rolling: false,
+  systems: ['system1', 'system2'],
 };
 
 const VARNISH = {
@@ -29,6 +30,7 @@ const VARNISH = {
   version: '820181213144015',
   count: 1,
   rolling: false,
+  systems: ['system1', 'system2'],
 };
 
 const IDM = {
@@ -45,6 +47,7 @@ const IDM = {
   version: '820190227213458',
   count: 0,
   rolling: false,
+  systems: ['system1', 'system2'],
 };
 
 const RHEL_NINE_TWO = {

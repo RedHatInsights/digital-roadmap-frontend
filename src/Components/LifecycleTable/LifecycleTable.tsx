@@ -239,7 +239,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
               onClick={(event) => {
                 handleModalToggle(event);
                 setModalDataName(String(repo.name));
-                setModalData(SYSTEM_ID);
+                setModalData(repo.systems);
               }}
             >
               {repo.count}
