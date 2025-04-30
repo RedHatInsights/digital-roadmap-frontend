@@ -1,9 +1,9 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
-import { 
-  Button, 
-  TextInputGroup, 
-  TextInputGroupMain, 
+import {
+  Button,
+  TextInputGroup,
+  TextInputGroupMain,
   TextInputGroupUtilities,
   Pagination,
   PaginationVariant,
@@ -42,7 +42,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState('');
-  
+
   // Pagination state
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
@@ -68,14 +68,6 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     }
   }, [modalDataFiltered, page, perPage]);
 
-  // Define consistent padding values to use throughout the component
-  const tablePadding = {
-    left: '20px',
-    right: '16px',
-    top: '8px',
-    bottom: '8px'
-  };
-
   const renderModalWindow = () => {
     return (
       <Modal
@@ -93,31 +85,27 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
             <>
               {/* Add spacing between title and description */}
               <div style={{ marginTop: '8px' }}></div>
-              <span><strong>{name}</strong>{` is installed on these systems. Click a system name to view system details in Inventory.`}</span>
+              <span>
+                <strong>{name}</strong>
+                {` is installed on these systems. Click a system name to view system details in Inventory.`}
+              </span>
             </>
           }
         />
         {/* Added padding after the description */}
         <div style={{ padding: '0 0 16px 0' }}></div>
-                
+
         {/* Toolbar with filter and pagination */}
         <div>
           <Toolbar>
             <ToolbarContent>
               <ToolbarItem>{renderFilterBoxModalWindow()}</ToolbarItem>
-              <ToolbarItem align={{ default: 'alignRight' }}>
-                {renderPagination('top', true)}
-              </ToolbarItem>
+              <ToolbarItem align={{ default: 'alignRight' }}>{renderPagination('top', true)}</ToolbarItem>
             </ToolbarContent>
           </Toolbar>
         </div>
-        
-        <ModalBody 
-          tabIndex={0} 
-          id="modal-box-body-scrollable" 
-          aria-label="Scrollable modal content"
-          style={{ padding: '0' }} // Remove default padding
-        >
+
+        <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
           {renderModalWindowTable(paginatedData)}
         </ModalBody>
         <ModalFooter>
@@ -136,31 +124,12 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     const baseUrl = window.location.origin;
 
-    // Custom styles for the table header cell - using consistent padding
-    const headerStyles = {
-      paddingLeft: tablePadding.left,
-      paddingRight: tablePadding.right,
-      paddingTop: tablePadding.top,
-      paddingBottom: tablePadding.bottom,
-      textAlign: 'left' as const,
-      fontWeight: 'bold'
-    };
-
-    // Custom styles for table cells - using consistent padding
-    const cellStyles = {
-      paddingLeft: tablePadding.left,
-      paddingRight: tablePadding.right,
-      paddingTop: tablePadding.top,
-      paddingBottom: tablePadding.bottom,
-      textAlign: 'left' as const
-    };
-
     // Custom styles for the button
     const buttonStyles = {
       padding: '0',
       textAlign: 'left' as const,
       justifyContent: 'flex-start',
-      marginLeft: '0'
+      marginLeft: '-22px',
     };
 
     return (
@@ -168,11 +137,11 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
         <Table variant="compact" ouiaSafe={true} className="pf-u-mb-0">
           <Thead>
             <Tr>
-              <Th 
-                sort={getSortParamsModalWindow(0, data)} 
-                modifier="fitContent" 
+              <Th
+                sort={getSortParamsModalWindow(0, data)}
+                modifier="fitContent"
                 className="pf-m-text-align-left"
-                style={headerStyles}
+                style={{ paddingLeft: '4px' }}
               >
                 Name
               </Th>
@@ -181,9 +150,9 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           <Tbody>
             {data?.map((item, index) => (
               <Tr key={index}>
-                <Td dataLabel="Name" className="pf-m-text-align-left" style={cellStyles}>
-                  <Button 
-                    variant="link" 
+                <Td dataLabel="Name" className="pf-m-text-align-left">
+                  <Button
+                    variant="link"
                     onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}
                     className="pf-u-text-align-left"
                     style={buttonStyles}
@@ -199,7 +168,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     );
   };
 
-  const renderPagination = ((variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => {
+  const renderPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => {
     if (!modalDataFiltered || modalDataFiltered.length === 0) {
       return null;
     }
@@ -219,16 +188,16 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
         isCompact={isCompact}
       />
     );
-  });
+  };
 
   const renderFilterBoxModalWindow = () => {
     return (
       <TextInputGroup style={{ maxWidth: '150px', marginLeft: '5px' }}>
-        <TextInputGroupMain 
-          icon={<SearchIcon />} 
-          value={inputValue} 
+        <TextInputGroupMain
+          icon={<SearchIcon />}
+          value={inputValue}
           onChange={handleInputChange}
-          placeholder="Filter by name" 
+          placeholder="Filter by name"
           aria-label="Filter systems by name"
         />
         {showUtilities && (
