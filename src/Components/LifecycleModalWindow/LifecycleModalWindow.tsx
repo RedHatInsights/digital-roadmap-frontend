@@ -68,6 +68,8 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
       return '';
     }
 
+    const baseUrl = window.location.origin;
+
     return (
       <div>
         <div style={{ marginTop: '20px' }}>{renderFilterBoxModalWindow()}</div>
@@ -82,7 +84,9 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
             {data?.map((item, index) => (
               <Tr key={index}>
                 <Td dataLabel="Name">
-                  <Button variant="link">{item}</Button>
+                  <Button variant="link" onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}>
+                    {item}
+                  </Button>
                 </Td>
               </Tr>
             ))}
