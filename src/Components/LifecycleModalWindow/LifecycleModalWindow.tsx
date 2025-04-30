@@ -68,6 +68,14 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     }
   }, [modalDataFiltered, page, perPage]);
 
+  // Define consistent padding values to use throughout the component
+  const tablePadding = {
+    left: '20px',
+    right: '16px',
+    top: '8px',
+    bottom: '8px'
+  };
+
   const renderModalWindow = () => {
     return (
       <Modal
@@ -76,12 +84,21 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
         onClose={handleModalToggle}
         aria-labelledby="scrollable-modal-title"
         aria-describedby="modal-box-body-scrollable"
+        style={{ padding: '0' }}
       >
         <ModalHeader
           title="Systems"
           labelId="scrollable-modal-title"
-          description={`${name} is installed on these systems. Click on a system name to view system details in Inventory.`}
+          description={
+            <>
+              {/* Add spacing between title and description */}
+              <div style={{ marginTop: '8px' }}></div>
+              <span><strong>{name}</strong>{` is installed on these systems. Click a system name to view system details in Inventory.`}</span>
+            </>
+          }
         />
+        {/* Added padding after the description */}
+        <div style={{ padding: '0 0 16px 0' }}></div>
                 
         {/* Toolbar with filter and pagination */}
         <div>
@@ -95,11 +112,18 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           </Toolbar>
         </div>
         
-        <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
+        <ModalBody 
+          tabIndex={0} 
+          id="modal-box-body-scrollable" 
+          aria-label="Scrollable modal content"
+          style={{ padding: '0' }} // Remove default padding
+        >
           {renderModalWindowTable(paginatedData)}
         </ModalBody>
         <ModalFooter>
-          {renderPagination('bottom', false)}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+            {renderPagination('top', false)}
+          </div>
         </ModalFooter>
       </Modal>
     );
@@ -112,19 +136,58 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     const baseUrl = window.location.origin;
 
+    // Custom styles for the table header cell - using consistent padding
+    const headerStyles = {
+      paddingLeft: tablePadding.left,
+      paddingRight: tablePadding.right,
+      paddingTop: tablePadding.top,
+      paddingBottom: tablePadding.bottom,
+      textAlign: 'left' as const,
+      fontWeight: 'bold'
+    };
+
+    // Custom styles for table cells - using consistent padding
+    const cellStyles = {
+      paddingLeft: tablePadding.left,
+      paddingRight: tablePadding.right,
+      paddingTop: tablePadding.top,
+      paddingBottom: tablePadding.bottom,
+      textAlign: 'left' as const
+    };
+
+    // Custom styles for the button
+    const buttonStyles = {
+      padding: '0',
+      textAlign: 'left' as const,
+      justifyContent: 'flex-start',
+      marginLeft: '0'
+    };
+
     return (
       <div>
-        <Table variant="compact">
+        <Table variant="compact" ouiaSafe={true} className="pf-u-mb-0">
           <Thead>
             <Tr>
-              <Th sort={getSortParamsModalWindow(0, data)}>Name</Th>
+              <Th 
+                sort={getSortParamsModalWindow(0, data)} 
+                modifier="fitContent" 
+                className="pf-m-text-align-left"
+                style={headerStyles}
+              >
+                Name
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
             {data?.map((item, index) => (
               <Tr key={index}>
-                <Td dataLabel="Name">
-                  <Button variant="link" onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}>
+                <Td dataLabel="Name" className="pf-m-text-align-left" style={cellStyles}>
+                  <Button 
+                    variant="link" 
+                    onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}
+                    className="pf-u-text-align-left"
+                    style={buttonStyles}
+                  >
                     {item}
                   </Button>
                 </Td>
@@ -160,8 +223,14 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <TextInputGroup style={{ maxWidth: '140px' }}>
-        <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
+      <TextInputGroup style={{ maxWidth: '150px', marginLeft: '5px' }}>
+        <TextInputGroupMain 
+          icon={<SearchIcon />} 
+          value={inputValue} 
+          onChange={handleInputChange}
+          placeholder="Filter by name" 
+          aria-label="Filter systems by name"
+        />
         {showUtilities && (
           <TextInputGroupUtilities>
             {showClearButton && (
