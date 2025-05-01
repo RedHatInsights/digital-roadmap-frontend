@@ -46,7 +46,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('stream' in lifecycleData[0]) {
+    if ('application_stream_name' in lifecycleData[0]) {
       return 'appLifecycle';
     }
     return 'lifecycle';
@@ -138,7 +138,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
           return;
         }
         formatChartData(
-          item.display_name,
+          `${item.display_name}`,
           item.start_date,
           item.end_date,
           item.support_status,
@@ -343,6 +343,32 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
     };
   }, [updatedLifecycleData.length]);
 
+  // Calculate padding based on the longest name
+  const calculateLeftPadding = () => {
+    if (updatedLifecycleData.length === 0) {
+      return 160; // Default padding if no data
+    }
+
+    // Get all names
+    const names = updatedLifecycleData.map((data) => data[0].x);
+
+    // Find the longest name
+    const longestName = names.reduce(
+      (longest, current) => (current.length > longest.length ? current : longest),
+      ''
+    );
+
+    // Calculate padding: base padding (60) + character count * character width factor
+    const charWidthFactor = 6;
+    const basePadding = 60;
+    const calculatedPadding = basePadding + longestName.length * charWidthFactor;
+
+    // Set a minimum and maximum boundary
+    return Math.max(160, Math.min(calculatedPadding, 250));
+  };
+
+  const leftPadding = calculateLeftPadding();
+
   // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
@@ -361,7 +387,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
         name="chart5"
         padding={{
           bottom: 60, // Adjusted to accommodate legend
-          left: 180,
+          left: leftPadding, // Dynamically calculated based on the longest name
           right: 75, // Adjusted to accommodate tooltip
           top: 30,
         }}
@@ -507,7 +533,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
                           setTooltipData(null);
                           return {
                             style: {
-                              stroke: 'black',
+                              stroke: '#151515',
                               strokeWidth: 2,
                             },
                           };

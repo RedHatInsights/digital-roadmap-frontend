@@ -348,19 +348,21 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     if (updatedLifecycleData.length === 0) {
       return 160; // Default padding if no data
     }
-    
+
     // Get all names
-    const names = updatedLifecycleData.map(data => data[0].x);
-    
+    const names = updatedLifecycleData.map((data) => data[0].x);
+
     // Find the longest name
-    const longestName = names.reduce((longest, current) => 
-      current.length > longest.length ? current : longest, '');
-    
-    // Calculate padding: base padding (120) + character count * character width factor
+    const longestName = names.reduce(
+      (longest, current) => (current.length > longest.length ? current : longest),
+      ''
+    );
+
+    // Calculate padding: base padding (60) + character count * character width factor
     const charWidthFactor = 6;
     const basePadding = 60;
-    const calculatedPadding = basePadding + (longestName.length * charWidthFactor);
-    
+    const calculatedPadding = basePadding + longestName.length * charWidthFactor;
+
     // Set a minimum and maximum boundary
     return Math.max(160, Math.min(calculatedPadding, 250));
   };
