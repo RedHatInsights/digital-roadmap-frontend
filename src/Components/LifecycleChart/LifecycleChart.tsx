@@ -37,10 +37,14 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     height: 300,
   });
 
-  // Tooltip state
+  // Bar tooltip state
   const [tooltipData, setTooltipData] = React.useState<any>(null);
   const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
-  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
+  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
+  
+  // Date line tooltip state - separate from bar tooltip
+  const [showDateTooltip, setShowDateTooltip] = React.useState<boolean>(false);
+  const [dateTooltipX, setDateTooltipX] = React.useState<number>(0);
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -248,27 +252,71 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   // needs to be a specific tuple format or filter on hover breaks
   const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
-  // Custom tooltip component with fixed positioning
+  // Function to position tooltip - always to the right of the bar
+  const calculateTooltipPosition = (x: number): number => {
+    // Always position tooltip to the right of the bar with a consistent offset
+    return x + 20;
+  };
+
+  // Render the regular bar tooltip
   const renderTooltip = () => {
     if (!showTooltip || !tooltipData) return null;
 
-    let content = '';
-    if (tooltipData._name === 'Current-date') {
-      content = `Current Date: ${formatDate(new Date())}`;
-    } else if (tooltipData.packageType && tooltipData.y0) {
-      content = `Name: ${tooltipData.name}\nRelease: ${tooltipData.version}\nSupport Type: ${
-        tooltipData.packageType
-      }\nSystems: ${tooltipData.numSystems}\nStart: ${formatDate(new Date(tooltipData.y0))}\nEnd: ${formatDate(
-        new Date(tooltipData.y)
-      )}`;
-    }
+    const content = `Name: ${tooltipData.name}
+Release: ${tooltipData.version}
+Support Type: ${tooltipData.packageType}
+Systems: ${tooltipData.numSystems}
+Start: ${formatDate(new Date(tooltipData.y0))}
+End: ${formatDate(new Date(tooltipData.y))}`;
 
     return (
       <div
         style={{
-          position: 'fixed',
-          left: `${mousePosition.x + 15}px`,
-          top: `${mousePosition.y - 15}px`,
+          position: 'absolute',
+          left: `${tooltipPosition.x}px`,
+          top: `${tooltipPosition.y}px`,
+          backgroundColor: 'black',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+          zIndex: 1000,
+          pointerEvents: 'none',
+          whiteSpace: 'pre-line',
+          border: '1px solid #888',
+          maxWidth: '250px',
+          fontSize: '14px',
+          lineHeight: '1.5',
+          transform: 'translate(10px, -50%)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            width: 0,
+            height: 0,
+            left: '-10px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            borderTop: '10px solid transparent',
+            borderBottom: '10px solid transparent',
+            borderRight: '10px solid black',
+          }}
+        />
+        {content}
+      </div>
+    );
+  };
+
+  // Render the date line tooltip - only when hovering
+  const renderDateTooltip = () => {
+    if (!showDateTooltip) return null;
+
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          right: '1%', 
+          top: '40px', 
           backgroundColor: 'black',
           color: 'white',
           padding: '10px',
@@ -282,25 +330,25 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
           lineHeight: '1.5',
         }}
       >
-        {content}
+        <div
+          style={{
+            position: 'absolute',
+            width: 0,
+            height: 0,
+            left: '-10px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            borderTop: '10px solid transparent',
+            borderBottom: '10px solid transparent',
+            borderRight: '10px solid black',
+          }}
+        />
+        Current Date: {formatDate(new Date())}
       </div>
     );
   };
 
-  // Update mouse position on move
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
+  const isHiddenSeries = (index: number) => hiddenSeries.has(index);
 
   // Handle resize observation
   React.useEffect(() => {
@@ -371,14 +419,19 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
 
   // Explicitly return the entire div structure
   return (
-    <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
+    <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
+      {/* Regular tooltip for bars */}
       {showTooltip && renderTooltip()}
+      
+      {/* Tooltip for date line - only shows on hover */}
+      {renderDateTooltip()}
+      
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
         events={getInteractiveLegendEvents({
           chartNames,
-          isHidden,
+          isHidden: isHiddenSeries,
           legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
@@ -457,8 +510,21 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
                           {
                             target: 'data',
                             mutation: (props) => {
-                              setTooltipData(props.datum);
+                              const { datum, x, y } = props;
+                              
+                              // Regular bar tooltip positioning
+                              const tooltipX = calculateTooltipPosition(x);
+                              setTooltipPosition({
+                                x: tooltipX,
+                                y: y,
+                              });
+                              
+                              setTooltipData(datum);
                               setShowTooltip(true);
+                              
+                              // Hide date tooltip when hovering over bars
+                              setShowDateTooltip(false);
+                              
                               return {
                                 style: {
                                   ...props.style,
@@ -511,9 +577,13 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
                     return [
                       {
                         target: 'data',
-                        mutation: () => {
-                          setTooltipData({ _name: 'Current-date' });
-                          setShowTooltip(true);
+                        mutation: (props) => {
+                          // Show date tooltip on hover
+                          setShowDateTooltip(true);
+                          
+                          // Hide bar tooltip when hovering over date line
+                          setShowTooltip(false);
+                          
                           return {
                             style: {
                               stroke: 'black',
@@ -529,8 +599,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
                       {
                         target: 'data',
                         mutation: () => {
-                          setShowTooltip(false);
-                          setTooltipData(null);
+                          // Hide date tooltip when not hovering
+                          setShowDateTooltip(false);
+                          
                           return {
                             style: {
                               stroke: '#151515',
