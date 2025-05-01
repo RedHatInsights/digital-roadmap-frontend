@@ -31,12 +31,11 @@ objects:
           navItems:
             - id: planning
               title: Planning
-              href: /insights/planning
               expandable: true
               routes:
                 - id: lifecycle
                   title: Life Cycle
-                  href: /insights/planning/lifecycle
+                  href: /insights/planning
                 - id: roadmap
                   title: Roadmap
                   href: /insights/planning/roadmap
