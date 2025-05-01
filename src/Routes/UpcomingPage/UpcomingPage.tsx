@@ -23,7 +23,7 @@ const UpcomingPage = () => {
         title="Upcoming features and dates are subject to change."
         component="h2"
         className="no-shadow-alert"
-        style={{ 
+        style={{
           boxShadow: 'none',
           borderTop: 'none',
           borderLeft: 'none',

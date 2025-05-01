@@ -23,7 +23,7 @@ const LifecyclePage = () => {
         title="Dates are approximations and subject to change."
         component="h2"
         className="no-shadow-alert"
-        style={{ 
+        style={{
           boxShadow: 'none',
           borderTop: 'none',
           borderLeft: 'none',
