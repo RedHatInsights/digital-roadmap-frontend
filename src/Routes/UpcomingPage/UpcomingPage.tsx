@@ -22,6 +22,9 @@ const UpcomingPage = () => {
         variant="warning"
         title="Upcoming features and dates are subject to change."
         component="h2"
+        isInline
+        isPlain
+        style={{ paddingLeft: '28px' }}
       />
       <section className="pf-l-page__main-section pf-c-page__main-section" id="roadmap">
         <Suspense fallback={<Spinner />}>
