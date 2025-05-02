@@ -41,7 +41,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   const [tooltipData, setTooltipData] = React.useState<any>(null);
   const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
   const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
-  
+
   // Date line tooltip state - separate from bar tooltip
   const [showDateTooltip, setShowDateTooltip] = React.useState<boolean>(false);
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
@@ -454,15 +454,15 @@ End: ${formatDate(new Date(tooltipData.y))}`;
 
   const leftPadding = calculateLeftPadding();
 
-    // Explicitly return the entire div structure
-    return (
-      <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
-        {/* Regular tooltip for bars */}
-        {showTooltip && renderTooltip()}
-      
+  // Explicitly return the entire div structure
+  return (
+    <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
+      {/* Regular tooltip for bars */}
+      {showTooltip && renderTooltip()}
+
       {/* Tooltip for date line - using mouse positioning */}
       {showDateTooltip && renderDateTooltip()}
-      
+
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
