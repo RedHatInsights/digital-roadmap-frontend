@@ -2,11 +2,11 @@ import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import {
   Button,
+  Pagination,
+  PaginationVariant,
   TextInputGroup,
   TextInputGroupMain,
   TextInputGroupUtilities,
-  Pagination,
-  PaginationVariant,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -134,15 +134,10 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     return (
       <div>
-        <Table variant="compact" ouiaSafe={true} className="pf-u-mb-0">
+        <Table variant="compact" ouiaSafe={true}>
           <Thead>
             <Tr>
-              <Th
-                sort={getSortParamsModalWindow(0, data)}
-                modifier="fitContent"
-                className="pf-m-text-align-left"
-                style={{ paddingLeft: '4px' }}
-              >
+              <Th sort={getSortParamsModalWindow(0, data)} modifier="fitContent" style={{ paddingLeft: '4px' }}>
                 Name
               </Th>
             </Tr>
@@ -150,11 +145,10 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           <Tbody>
             {data?.map((item, index) => (
               <Tr key={index}>
-                <Td dataLabel="Name" className="pf-m-text-align-left">
+                <Td dataLabel="Name">
                   <Button
                     variant="link"
                     onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}
-                    className="pf-u-text-align-left"
                     style={buttonStyles}
                   >
                     {item}
