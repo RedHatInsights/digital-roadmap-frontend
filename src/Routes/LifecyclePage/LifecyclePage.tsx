@@ -22,6 +22,9 @@ const LifecyclePage = () => {
         variant="warning"
         title="Dates are approximations and subject to change."
         component="h2"
+        isInline
+        isPlain
+        style={{ paddingLeft: '28px' }}
       />
       <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
