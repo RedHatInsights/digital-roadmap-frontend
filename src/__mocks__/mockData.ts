@@ -108,6 +108,12 @@ export const SYSTEM_ID = [
   'system_name5',
   'system_name6',
   'system_name7',
+  'system_name8',
+  'system_name9',
+  'system_name10',
+  'system_name11',
+  'system_name12',
+  'system_name13',
 ];
 
 export const SYSTEM_ID_DUPLICIT = [

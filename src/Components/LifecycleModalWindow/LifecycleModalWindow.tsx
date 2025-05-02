@@ -1,6 +1,16 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
-import { Button, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities } from '@patternfly/react-core';
+import {
+  Button,
+  Pagination,
+  PaginationVariant,
+  TextInputGroup,
+  TextInputGroupMain,
+  TextInputGroupUtilities,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+} from '@patternfly/react-core';
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core/next';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
@@ -33,13 +43,30 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState('');
 
+  // Pagination state
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(10);
+  const [paginatedData, setPaginatedData] = React.useState<string[] | undefined>();
+
   // When the modal window is opened, update it with new data/default values
   React.useEffect(() => {
     setModalDataFiltered(modalData);
     setActiveSortIndex(undefined);
     setActiveSortDirection(undefined);
     setInputValue('');
+    setPage(1);
   }, [isModalOpen]);
+
+  // Update paginated data when filtered data or pagination settings change
+  React.useEffect(() => {
+    if (modalDataFiltered) {
+      const startIdx = (page - 1) * perPage;
+      const endIdx = startIdx + perPage;
+      setPaginatedData(modalDataFiltered.slice(startIdx, endIdx));
+    } else {
+      setPaginatedData(undefined);
+    }
+  }, [modalDataFiltered, page, perPage]);
 
   const renderModalWindow = () => {
     return (
@@ -49,16 +76,43 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
         onClose={handleModalToggle}
         aria-labelledby="scrollable-modal-title"
         aria-describedby="modal-box-body-scrollable"
+        style={{ padding: '0' }}
       >
         <ModalHeader
           title="Systems"
           labelId="scrollable-modal-title"
-          description={`${name} is installed on these systems. Click on a system name to view system details in Inventory.`}
+          description={
+            <>
+              {/* Add spacing between title and description */}
+              <div style={{ marginTop: '8px' }}></div>
+              <span>
+                <strong>{name}</strong>
+                {` is installed on these systems. Click a system name to view system details in Inventory.`}
+              </span>
+            </>
+          }
         />
+        {/* Added padding after the description */}
+        <div style={{ padding: '0 0 16px 0' }}></div>
+
+        {/* Toolbar with filter and pagination */}
+        <div>
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>{renderFilterBoxModalWindow()}</ToolbarItem>
+              <ToolbarItem align={{ default: 'alignRight' }}>{renderPagination('top', true)}</ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+        </div>
+
         <ModalBody tabIndex={0} id="modal-box-body-scrollable" aria-label="Scrollable modal content">
-          {renderModalWindowTable(modalDataFiltered)}
+          {renderModalWindowTable(paginatedData)}
         </ModalBody>
-        <ModalFooter></ModalFooter>
+        <ModalFooter>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+            {renderPagination('top', false)}
+          </div>
+        </ModalFooter>
       </Modal>
     );
   };
@@ -70,21 +124,33 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     const baseUrl = window.location.origin;
 
+    // Custom styles for the button
+    const buttonStyles = {
+      padding: '0',
+      textAlign: 'left' as const,
+      justifyContent: 'flex-start',
+      marginLeft: '-22px',
+    };
+
     return (
       <div>
-        <div style={{ marginTop: '20px' }}>{renderFilterBoxModalWindow()}</div>
-        <div style={{ height: '16px' }}></div>
-        <Table variant="compact">
+        <Table variant="compact" ouiaSafe={true}>
           <Thead>
             <Tr>
-              <Th sort={getSortParamsModalWindow(0, data)}>Name</Th>
+              <Th sort={getSortParamsModalWindow(0, data)} modifier="fitContent" style={{ paddingLeft: '4px' }}>
+                Name
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
             {data?.map((item, index) => (
               <Tr key={index}>
                 <Td dataLabel="Name">
-                  <Button variant="link" onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}>
+                  <Button
+                    variant="link"
+                    onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}
+                    style={buttonStyles}
+                  >
                     {item}
                   </Button>
                 </Td>
@@ -96,20 +162,50 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     );
   };
 
+  const renderPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => {
+    if (!modalDataFiltered || modalDataFiltered.length === 0) {
+      return null;
+    }
+
+    return (
+      <Pagination
+        itemCount={modalDataFiltered.length}
+        perPage={perPage}
+        page={page}
+        onSetPage={(_, newPage) => setPage(newPage)}
+        onPerPageSelect={(_, newPerPage) => {
+          setPerPage(newPerPage);
+          setPage(1); // Reset to first page when changing items per page
+        }}
+        widgetId="pagination-options-menu"
+        variant={variant}
+        isCompact={isCompact}
+      />
+    );
+  };
+
   const renderFilterBoxModalWindow = () => {
     return (
-      <TextInputGroup style={{ maxWidth: '140px' }}>
-        <TextInputGroupMain icon={<SearchIcon />} value={inputValue} onChange={handleInputChange} />
-        {showUtilities && (
-          <TextInputGroupUtilities>
-            {showClearButton && (
-              <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
-                <TimesIcon />
-              </Button>
-            )}
-          </TextInputGroupUtilities>
-        )}
-      </TextInputGroup>
+      <div style={{ width: '210px', marginLeft: '5px' }}>
+        <TextInputGroup>
+          <TextInputGroupMain
+            icon={<SearchIcon />}
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="Filter by name"
+            aria-label="Filter systems by name"
+          />
+          {showUtilities && (
+            <TextInputGroupUtilities>
+              {showClearButton && (
+                <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
+                  <TimesIcon />
+                </Button>
+              )}
+            </TextInputGroupUtilities>
+          )}
+        </TextInputGroup>
+      </div>
     );
   };
 
@@ -151,6 +247,8 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   const handleInputChange = (_event: React.FormEvent<HTMLInputElement>, value: string) => {
     setInputValue(value);
     filterModalWindowData(value);
+    // Reset to first page when filtering
+    setPage(1);
   };
 
   /** show the input clearing button only when the input is not empty */
@@ -162,6 +260,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   /** callback for clearing the text input */
   const clearInput = () => {
     setInputValue('');
+    filterModalWindowData('');
   };
 
   const filterModalWindowData = (value: string) => {
