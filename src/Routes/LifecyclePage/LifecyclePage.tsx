@@ -14,7 +14,7 @@ const LifecyclePage = () => {
 
   return (
     <React.Fragment>
-      <PageHeader className="pf-u-pb-0">
+      <PageHeader>
         <PageHeaderTitle title="Life Cycle" />
       </PageHeader>
       <Alert
@@ -22,14 +22,9 @@ const LifecyclePage = () => {
         variant="warning"
         title="Dates are approximations and subject to change."
         component="h2"
-        className="no-shadow-alert"
-        style={{
-          boxShadow: 'none',
-          borderTop: 'none',
-          borderLeft: 'none',
-          paddingLeft: '28px',
-          marginTop: '-16px',
-        }}
+        isInline
+        isPlain
+        style={{ paddingLeft: '28px' }}
       />
       <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
