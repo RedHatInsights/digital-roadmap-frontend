@@ -44,7 +44,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
   
   // Date line tooltip state - separate from bar tooltip
   const [showDateTooltip, setShowDateTooltip] = React.useState<boolean>(false);
-  const [dateTooltipX, setDateTooltipX] = React.useState<number>(0);
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -175,12 +175,12 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     packageType: string;
     datapoints: ChartDataObject[];
   }[] = [
-    { packageType: 'Supported', datapoints: [] },
-    { packageType: 'Support ends within 6 months', datapoints: [] },
-    { packageType: 'Retired', datapoints: [] },
-    { packageType: 'Not installed', datapoints: [] },
-    { packageType: 'Upcoming release', datapoints: [] },
-  ];
+      { packageType: 'Supported', datapoints: [] },
+      { packageType: 'Support ends within 6 months', datapoints: [] },
+      { packageType: 'Retired', datapoints: [] },
+      { packageType: 'Not installed', datapoints: [] },
+      { packageType: 'Upcoming release', datapoints: [] },
+    ];
 
   const calculateLegendNames = () => {
     return DEFAULT_LEGEND_NAMES.map((legend) => {
@@ -258,6 +258,21 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     return x + 20;
   };
 
+  // Update mouse position on move for date line tooltip
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
   // Render the regular bar tooltip
   const renderTooltip = () => {
     if (!showTooltip || !tooltipData) return null;
@@ -307,16 +322,20 @@ End: ${formatDate(new Date(tooltipData.y))}`;
     );
   };
 
-  // Render the date line tooltip - only when hovering
+  // Render the date line tooltip using mouse position
   const renderDateTooltip = () => {
     if (!showDateTooltip) return null;
+
+    // Calculate offset for better positioning
+    const xOffset = 15;
+    const yOffset = -15;
 
     return (
       <div
         style={{
-          position: 'absolute',
-          right: '1%', 
-          top: '40px', 
+          position: 'fixed',
+          left: `${mousePosition.x + xOffset}px`,
+          top: `${mousePosition.y + yOffset}px`,
           backgroundColor: 'black',
           color: 'white',
           padding: '10px',
@@ -391,6 +410,24 @@ End: ${formatDate(new Date(tooltipData.y))}`;
     };
   }, [updatedLifecycleData.length]);
 
+  // Clear tooltips when mouse leaves the chart
+  React.useEffect(() => {
+    const handleMouseLeave = () => {
+      setShowTooltip(false);
+      setShowDateTooltip(false);
+    };
+
+    if (chartContainerRef.current) {
+      chartContainerRef.current.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (chartContainerRef.current) {
+        chartContainerRef.current.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, [chartContainerRef.current]);
+
   // Calculate padding based on the longest name
   const calculateLeftPadding = () => {
     if (updatedLifecycleData.length === 0) {
@@ -417,14 +454,14 @@ End: ${formatDate(new Date(tooltipData.y))}`;
 
   const leftPadding = calculateLeftPadding();
 
-  // Explicitly return the entire div structure
-  return (
-    <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
-      {/* Regular tooltip for bars */}
-      {showTooltip && renderTooltip()}
+    // Explicitly return the entire div structure
+    return (
+      <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
+        {/* Regular tooltip for bars */}
+        {showTooltip && renderTooltip()}
       
-      {/* Tooltip for date line - only shows on hover */}
-      {renderDateTooltip()}
+      {/* Tooltip for date line - using mouse positioning */}
+      {showDateTooltip && renderDateTooltip()}
       
       <Chart
         legendAllowWrap
@@ -490,40 +527,40 @@ End: ${formatDate(new Date(tooltipData.y))}`;
                     : s.datapoints.map((d) => {
                         return { ...d, x: null };
                       })
-                }
-                key={`bar-${index}`}
-                name={`series-${index}`}
-                barWidth={10}
-                style={{
-                  data: {
-                    fill: getPackageColor(s.packageType),
-                    stroke: getPackageColor(s.packageType),
-                  },
-                }}
-                // Add direct event handlers for tooltips
-                events={[
-                  {
-                    target: 'data',
-                    eventHandlers: {
-                      onMouseOver: () => {
-                        return [
-                          {
-                            target: 'data',
-                            mutation: (props) => {
-                              const { datum, x, y } = props;
+                  }
+                  key={`bar-${index}`}
+                  name={`series-${index}`}
+                  barWidth={10}
+                  style={{
+                    data: {
+                      fill: getPackageColor(s.packageType),
+                      stroke: getPackageColor(s.packageType),
+                    },
+                  }}
+                  // Add direct event handlers for tooltips
+                  events={[
+                    {
+                      target: 'data',
+                      eventHandlers: {
+                        onMouseOver: () => {
+                          return [
+                            {
+                              target: 'data',
+                              mutation: (props) => {
+                                const { datum, x, y } = props;
                               
-                              // Regular bar tooltip positioning
-                              const tooltipX = calculateTooltipPosition(x);
-                              setTooltipPosition({
-                                x: tooltipX,
-                                y: y,
-                              });
+                                // Regular bar tooltip positioning
+                                const tooltipX = calculateTooltipPosition(x);
+                                setTooltipPosition({
+                                  x: tooltipX,
+                                  y: y,
+                                });
                               
-                              setTooltipData(datum);
-                              setShowTooltip(true);
+                                setTooltipData(datum);
+                                setShowTooltip(true);
                               
-                              // Hide date tooltip when hovering over bars
-                              setShowDateTooltip(false);
+                                // Hide date tooltip when hovering over bars
+                                setShowDateTooltip(false);
                               
                               return {
                                 style: {
@@ -577,51 +614,51 @@ End: ${formatDate(new Date(tooltipData.y))}`;
                     return [
                       {
                         target: 'data',
-                        mutation: (props) => {
-                          // Show date tooltip on hover
+                        mutation: () => {
+                          // Show date tooltip
                           setShowDateTooltip(true);
                           
-                          // Hide bar tooltip when hovering over date line
-                          setShowTooltip(false);
+                            // Hide bar tooltip when hovering over date line
+                            setShowTooltip(false);
                           
-                          return {
-                            style: {
-                              stroke: 'black',
-                              strokeWidth: 3,
-                            },
-                          };
+                            return {
+                              style: {
+                                stroke: 'black',
+                                strokeWidth: 3,
+                              },
+                            };
+                          },
                         },
-                      },
-                    ];
-                  },
-                  onMouseOut: () => {
-                    return [
-                      {
-                        target: 'data',
-                        mutation: () => {
-                          // Hide date tooltip when not hovering
-                          setShowDateTooltip(false);
+                      ];
+                    },
+                    onMouseOut: () => {
+                      return [
+                        {
+                          target: 'data',
+                          mutation: () => {
+                            // Hide date tooltip when not hovering
+                            setShowDateTooltip(false);
                           
-                          return {
-                            style: {
-                              stroke: '#151515',
-                              strokeWidth: 2,
-                            },
-                          };
+                            return {
+                              style: {
+                                stroke: '#151515',
+                                strokeWidth: 2,
+                              },
+                            };
+                          },
                         },
-                      },
-                    ];
+                      ];
+                    },
                   },
                 },
-              },
-            ]}
-            // Empty tooltip component to satisfy PatternFly requirements
-            labelComponent={<ChartTooltip text={() => ''} active={false} />}
-          />
-        )}
-      </Chart>
-    </div>
-  );
-};
+              ]}
+              // Empty tooltip component to satisfy PatternFly requirements
+              labelComponent={<ChartTooltip text={() => ''} active={false} />}
+            />
+          )}
+        </Chart>
+      </div>
+    );
+  };
 
 export default LifecycleChart;
