@@ -22,10 +22,12 @@ export const getRelevantReleaseNotes = async (major: number, minor: number, keyw
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        throw new Error(error.response.data.detail);
+      } else if (error.request.response) {
+        throw new Error(error.request.response);
+      } else if (error.detail) {
+        throw new Error(error.detail);
       } else {
         throw new Error(error.message);
       }
@@ -43,10 +45,12 @@ export const getUpcomingChanges = async () => {
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        throw new Error(error.response.data.detail);
+      } else if (error.request.response) {
+        throw new Error(error.request.response);
+      } else if (error.detail) {
+        throw new Error(error.detail);
       } else {
         throw new Error(error.message);
       }
@@ -64,10 +68,12 @@ export const getLifecycleSystems = async () => {
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        throw new Error(error.response.data.detail);
+      } else if (error.request.response) {
+        throw new Error(error.request.response);
+      } else if (error.detail) {
+        throw new Error(error.detail);
       } else {
         throw new Error(error.message);
       }
@@ -84,10 +90,12 @@ export const getLifecycleAppstreams = async () => {
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        throw new Error(error.response.data.detail);
+      } else if (error.request.response) {
+        throw new Error(error.request.response);
+      } else if (error.detail) {
+        throw new Error(error.detail);
       } else {
         throw new Error(error.message);
       }
