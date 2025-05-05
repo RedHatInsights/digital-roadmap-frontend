@@ -21,6 +21,8 @@ describe('LifecycleFilters', () => {
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
+        onToggleButtonSelect={jest.fn()}
+        selectedToggleButton="toggle-installed"
       />
     );
     expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
@@ -44,6 +46,8 @@ describe('LifecycleFilters', () => {
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
+        onToggleButtonSelect={jest.fn()}
+        selectedToggleButton="toggle-installed"
       />
     );
     expect(screen.getByRole('textbox', { name: /Filter by name/i })).toBeTruthy();
@@ -64,6 +68,8 @@ describe('LifecycleFilters', () => {
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
+        onToggleButtonSelect={jest.fn()}
+        selectedToggleButton="toggle-installed"
       />
     );
     const nameFilter = screen.getByRole('textbox', { name: /Filter by name/i });
@@ -84,6 +90,8 @@ describe('LifecycleFilters', () => {
         selectedChartSortBy="Retirement date"
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
+        onToggleButtonSelect={jest.fn()}
+        selectedToggleButton="toggle-installed"
       />
     );
     const resetBtn = screen.getByRole('button', { name: /Reset/i });

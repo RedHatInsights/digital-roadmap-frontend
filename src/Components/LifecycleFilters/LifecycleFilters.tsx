@@ -30,6 +30,8 @@ interface LifecycleFiltersProps {
   selectedChartSortBy: NamedCurve;
   setSelectedChartSortBy: (name: string) => void;
   downloadCSV: () => void;
+  onToggleButtonSelect: (value: string) => void;
+  selectedToggleButton: string;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -43,16 +45,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedChartSortBy,
   setSelectedChartSortBy,
   downloadCSV,
+  onToggleButtonSelect,
+  selectedToggleButton,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const selectedToggle = 'installed';
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  /*const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
-    // const id = event.currentTarget.id;
-    //setIsSelected(id);
-  };*/
+  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+    const id = event.currentTarget.id;
+    onToggleButtonSelect(id);
+  };
 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
@@ -101,15 +102,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   <ToggleGroup aria-label="Whether installed and related or only installed items are displayed">
                     <ToggleGroupItem
                       text="Installed and related"
-                      buttonId="toggle-group-related"
-                      isDisabled
-                      //onChange={handleItemClick}
+                      buttonId="toggle-related"
+                      isSelected={selectedToggleButton === 'toggle-related'}
+                      onChange={handleItemClick}
                     />
                     <ToggleGroupItem
                       text="Installed only"
-                      buttonId="toggle-group-installed"
-                      isSelected={selectedToggle === 'installed'}
-                      //onChange={handleItemClick}
+                      buttonId="toggle-installed"
+                      isSelected={selectedToggleButton === 'toggle-installed'}
+                      onChange={handleItemClick}
                     />
                   </ToggleGroup>
                 </FormGroup>

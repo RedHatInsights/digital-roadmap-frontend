@@ -65,6 +65,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
   const [filters, setFilters] = useState<Filter>(DEFAULT_FILTERS);
+  // toggle button
+  const [selectedToggleButton, setSelectedToggleButton] = React.useState('toggle-installed');
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
@@ -101,6 +103,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
     }
+  };
+
+  const onToggleButtonSelect = (value: string) => {
+    setSelectedToggleButton(value);
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
@@ -434,6 +440,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedChartSortBy={chartSortByValue}
             setSelectedChartSortBy={updateChartSortValue}
             downloadCSV={downloadCSV}
+            onToggleButtonSelect={onToggleButtonSelect}
+            selectedToggleButton={selectedToggleButton}
           />
           {renderContent()}
         </Card>
