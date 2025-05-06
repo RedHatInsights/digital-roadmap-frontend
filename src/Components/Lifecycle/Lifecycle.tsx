@@ -114,7 +114,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
 
     // Choose data to be displayed based on Life Cycle dropdown value (systems or app streams)
-    let outputData: Stream[] | SystemLifecycleChanges[] = [];
+    let outputData: any[] = []; // TODO use better typing
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
@@ -124,8 +124,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       outputData = systemLifecycleChanges;
     }
 
+    outputData = filterRelatedData(outputData, value === 'toggle-related');
+
     setFilteredChartData(filterChartDataByRetirementDate(outputData, lifecycleDropdownValue));
-    setFilteredTableData(outputData);
+    setFilteredTableData(filterChartDataByRetirementDate(outputData, lifecycleDropdownValue));
   };
 
   const filterRelatedData = (data: Stream[] | SystemLifecycleChanges[], related: boolean) => {
