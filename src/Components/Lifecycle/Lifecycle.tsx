@@ -106,7 +106,34 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const onToggleButtonSelect = (value: string) => {
+    // value is the id of the toggle button
     setSelectedToggleButton(value);
+
+    // Reset fitering
+    setNameFilter('');
+    setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
+
+    // Choose data to be displayed based on Life Cycle dropdown value (systems or app streams)
+    let outputData: Stream[] | SystemLifecycleChanges[] = [];
+    if (
+      lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
+      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
+    ) {
+      outputData = filterAppDataByDropdown(fullAppLifecycleChanges, lifecycleDropdownValue);
+    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      outputData = systemLifecycleChanges;
+    }
+
+    setFilteredChartData(filterChartDataByRetirementDate(outputData, lifecycleDropdownValue));
+    setFilteredTableData(outputData);
+  };
+
+  const filterRelatedData = (data: Stream[] | SystemLifecycleChanges[], related: boolean) => {
+    if (related) {
+      return data;
+    } else {
+      return data.filter((datum) => datum.related === false);
+    }
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
