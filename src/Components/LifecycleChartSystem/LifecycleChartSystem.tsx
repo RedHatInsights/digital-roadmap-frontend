@@ -16,6 +16,7 @@ import { Stream } from '../../types/Stream';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
+  viewFilter?: string;
 }
 
 interface ChartDataObject {

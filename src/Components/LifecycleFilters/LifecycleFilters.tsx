@@ -27,9 +27,11 @@ interface LifecycleFiltersProps {
   lifecycleDropdownValue: string;
   setLifecycleDropdownValue: (value: string) => void;
   onLifecycleDropdownSelect: (value: string) => void;
-  selectedChartSortBy: NamedCurve;
+  selectedChartSortBy: string;
   setSelectedChartSortBy: (name: string) => void;
   downloadCSV: () => void;
+  selectedViewFilter: string;
+  setSelectedViewFilter: (filter: string) => void;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -43,16 +45,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedChartSortBy,
   setSelectedChartSortBy,
   downloadCSV,
+  selectedViewFilter,
+  setSelectedViewFilter,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const selectedToggle = 'installed';
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  /*const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
-    // const id = event.currentTarget.id;
-    //setIsSelected(id);
-  };*/
+  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+    const id = event.currentTarget.id;
+    setSelectedViewFilter(id);
+  };
 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
@@ -98,18 +99,25 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
-                  <ToggleGroup aria-label="Whether installed and related or only installed items are displayed">
+                  <ToggleGroup aria-label="Whether installed and related, only installed or all items are displayed">
                     <ToggleGroupItem
                       text="Installed and related"
-                      buttonId="toggle-group-related"
+                      buttonId="installed-and-related"
+                      isSelected={selectedViewFilter === 'installed-and-related'}
                       isDisabled
-                      //onChange={handleItemClick}
+                      onChange={handleItemClick}
                     />
                     <ToggleGroupItem
                       text="Installed only"
-                      buttonId="toggle-group-installed"
-                      isSelected={selectedToggle === 'installed'}
-                      //onChange={handleItemClick}
+                      buttonId="installed-only"
+                      isSelected={selectedViewFilter === 'installed-only'}
+                      onChange={handleItemClick}
+                    />
+                    <ToggleGroupItem
+                      text="All"
+                      buttonId="all"
+                      isSelected={selectedViewFilter === 'all'}
+                      onChange={handleItemClick}
                     />
                   </ToggleGroup>
                 </FormGroup>

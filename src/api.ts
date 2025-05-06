@@ -2,8 +2,10 @@ import axios, { AxiosResponse } from 'axios';
 
 import {
   DR_API,
-  DR_LIFECYCLE_APPSTREAMS,
-  DR_LIFECYCLE_SYSTEMS,
+  DR_RELEVANT_LIFECYCLE_APPSTREAMS,
+  DR_ALL_LIFECYCLE_APPSTREAMS,
+  DR_RELEVANT_LIFECYCLE_SYSTEMS,
+  DR_ALL_LIFECYCLE_SYSTEMS,
   DR_RELEASE_NOTES,
   DR_UPCOMING,
   INVENTORY_API_ROOT,
@@ -59,8 +61,8 @@ export const getUpcomingChanges = async () => {
   return getResponseOrError(response);
 };
 
-export const getLifecycleSystems = async () => {
-  const path = DR_API.concat(DR_LIFECYCLE_SYSTEMS);
+export const getRelevantLifecycleSystems = async () => {
+  const path = DR_API.concat(DR_RELEVANT_LIFECYCLE_SYSTEMS);
   const response = await axios
     .get(path, {
       validateStatus: function (status) {
@@ -81,8 +83,48 @@ export const getLifecycleSystems = async () => {
   return getResponseOrError(response);
 };
 
-export const getLifecycleAppstreams = async () => {
-  const path = DR_API.concat(DR_LIFECYCLE_APPSTREAMS);
+export const getAllLifecycleSystems = async () => {
+  const path = DR_API.concat(DR_ALL_LIFECYCLE_SYSTEMS);
+  const response = await axios
+    .get(path, {
+      validateStatus: function (status) {
+        return status === 200;
+      },
+    })
+    .catch(function (error) {
+      if (error.response) {
+        throw new Error(error.response.data);
+      } else if (error.request) {
+        throw new Error(error.response.data);
+      } else {
+        throw new Error(error.message);
+      }
+    });
+  return getResponseOrError(response);
+};
+
+export const getRelevantLifecycleAppstreams = async () => {
+  const path = DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS);
+  const response = await axios
+    .get(path, {
+      validateStatus: function (status) {
+        return status === 200;
+      },
+    })
+    .catch(function (error) {
+      if (error.response) {
+        throw new Error(error.response.data);
+      } else if (error.request) {
+        throw new Error(error.response.data);
+      } else {
+        throw new Error(error.message);
+      }
+    });
+  return getResponseOrError(response);
+};
+
+export const getAllLifecycleAppstreams = async () => {
+  const path = DR_API.concat(DR_ALL_LIFECYCLE_APPSTREAMS);
   const response = await axios
     .get(path, {
       validateStatus: function (status) {

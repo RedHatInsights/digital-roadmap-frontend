@@ -18,7 +18,12 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
-import { getLifecycleAppstreams, getLifecycleSystems } from '../../api';
+import { 
+  getRelevantLifecycleAppstreams, 
+  getRelevantLifecycleSystems,
+  getAllLifecycleAppstreams,  // Import the new API functions
+  getAllLifecycleSystems
+} from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
@@ -40,13 +45,19 @@ const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/Li
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
-import { formatDate, getLifecycleType, getNewName } from '../../utils/utils';
+import { formatDate, getNewName } from '../../utils/utils';
 import { Filter } from '../../types/Filter';
 
-const DEFAULT_FILTERS = {
+interface ExtendedFilter extends Filter {
+  viewFilter: string;
+}
+
+// Define DEFAULT_FILTERS with the ExtendedFilter type
+const DEFAULT_FILTERS: ExtendedFilter = {
   name: '',
   chartSortBy: DEFAULT_CHART_SORTBY_VALUE,
   lifecycleDropdown: DEFAULT_DROPDOWN_VALUE,
+  viewFilter: 'installed-only',
 };
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
@@ -64,7 +75,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
-  const [filters, setFilters] = useState<Filter>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
+  // Add state for view filter (all, installed only, etc.)
+  const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
@@ -101,6 +114,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
     }
+  };
+
+  const handleViewFilterChange = (filter: string) => {
+    setSelectedViewFilter(filter);
+    const newFilters = structuredClone(filters) as ExtendedFilter;
+    newFilters.viewFilter = filter;
+    setFilters(newFilters);
+    setSearchParams(buildURL(newFilters));
+    
+    // Refetch the data based on the selected view filter
+    fetchData(filter);
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
@@ -149,12 +173,21 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
   };
 
-  const fetchData = async () => {
+  const fetchData = async (viewFilter = selectedViewFilter) => {
     setIsLoading(true);
     setNoDataAvailable(false);
     try {
-      const systemData = await getLifecycleSystems();
-      const appData = await getLifecycleAppstreams();
+      let systemData, appData;
+
+      // Select the appropriate API functions based on the view filter
+      if (viewFilter === 'all') {
+        systemData = await getAllLifecycleSystems();
+        appData = await getAllLifecycleAppstreams();
+      } else {
+        systemData = await getRelevantLifecycleSystems();
+        appData = await getRelevantLifecycleAppstreams();
+      }
+
       const upcomingChangesParagraphs = systemData.data || [];
       // Store the full data set
       const allAppStreams = appData.data || [];
@@ -194,9 +227,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const nameQueryParam = searchParams.get('name');
   const dropdownQueryParam = searchParams.get('lifecycleDropdown');
   const sortByParam = searchParams.get('chartSortBy');
+  const viewFilterParam = searchParams.get('viewFilter');
 
   useEffect(() => {
-    fetchData();
+    // Check for viewFilter in URL params
+    if (viewFilterParam && (viewFilterParam === 'all' || viewFilterParam === 'installed-only' || viewFilterParam === 'installed-and-related')) {
+      setSelectedViewFilter(viewFilterParam);
+      fetchData(viewFilterParam);
+    } else {
+      fetchData();
+    }
   }, []);
 
   // Update resetDataFiltering to use the properly filtered app data
@@ -307,6 +347,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilteredTableData(systemLifecycleChanges);
     setFilteredChartData(systemLifecycleChanges);
     setFilters(DEFAULT_FILTERS);
+    setSelectedViewFilter('installed-only');
+    fetchData('installed-only');
   };
 
   const downloadCSV = () => {
@@ -369,7 +411,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           </EmptyStateBody>
           <EmptyStateFooter>
             <EmptyStateActions>
-              <Button variant="primary" onClick={fetchData}>
+              <Button variant="primary" onClick={() => fetchData(selectedViewFilter)}>
                 Try again
               </Button>
             </EmptyStateActions>
@@ -413,8 +455,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     return (
       <>
-        <ChartComponent lifecycleData={filteredChartData} />
-        <LifecycleTable data={filteredTableData} />
+        <ChartComponent lifecycleData={filteredChartData} viewFilter={selectedViewFilter} />
+        <LifecycleTable data={filteredTableData} viewFilter={selectedViewFilter}/>
       </>
     );
   };
@@ -434,6 +476,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedChartSortBy={chartSortByValue}
             setSelectedChartSortBy={updateChartSortValue}
             downloadCSV={downloadCSV}
+            selectedViewFilter={selectedViewFilter}
+            setSelectedViewFilter={handleViewFilterChange}
           />
           {renderContent()}
         </Card>
