@@ -50,6 +50,12 @@ objects:
             - app streams
             - application stream
             - application streams
+            - application streams
+             - application streams
+             - lifecycle
+             - Lifecycle
+             - appstream
+             - appstreams
         - id: roadmap.roadmap
           title: Roadmap
           href: /insights/planning/roadmap
