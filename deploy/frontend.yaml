@@ -28,7 +28,7 @@ objects:
           description: View tailored life cycle data for Red Hat Enterprise Linux and RHEL application streams.
           icon: InsightsIcon
         - section: observe
-          group: roadmap
+          group: rhel
           id: observe.roadmap
           href: /insights/planning/roadmap
           title: Roadmap
