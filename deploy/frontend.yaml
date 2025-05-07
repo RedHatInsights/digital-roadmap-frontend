@@ -20,16 +20,23 @@ objects:
         versions:
           - v1
       serviceTiles:
-        - section: planning
-          group: roadmap
-          id: lifecycle-planning
+        - section: observe
+          group: rhel
+          id: observe.lifecycle
           href: /insights/planning/lifecycle
           title: Life Cycle
           description: View tailored life cycle data for Red Hat Enterprise Linux and RHEL application streams.
           icon: InsightsIcon
-        - section: planning
+        - section: observe
           group: roadmap
-          id: roadmap-planning
+          id: observe.roadmap
+          href: /insights/planning/roadmap
+          title: Roadmap
+          description: View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems.
+          icon: InsightsIcon
+        - section: security 
+          group: rhel
+          id: security-roadmap
           href: /insights/planning/roadmap
           title: Roadmap
           description: View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems.
