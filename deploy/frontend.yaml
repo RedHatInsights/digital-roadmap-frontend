@@ -36,7 +36,7 @@ objects:
           icon: InsightsIcon
         - section: security 
           group: rhel
-          id: security-roadmap
+          id: security.roadmap
           href: /insights/planning/roadmap
           title: Roadmap
           description: View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems.
