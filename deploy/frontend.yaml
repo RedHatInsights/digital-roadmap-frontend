@@ -37,7 +37,7 @@ objects:
 
       searchEntries:
         - id: roadmap.lifecycle
-          title: Lifecycle
+          title: Life Cycle
           href: /insights/planning/lifecycle
           description: View tailored life cycle data for Red Hat Enterprise Linux and RHEL application streams.
           alt_title:
