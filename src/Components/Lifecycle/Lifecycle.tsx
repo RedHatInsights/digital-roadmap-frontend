@@ -18,11 +18,11 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
-import { 
-  getRelevantLifecycleAppstreams, 
+import {
+  getRelevantLifecycleAppstreams,
   getRelevantLifecycleSystems,
-  getAllLifecycleAppstreams,  // Import the new API functions
-  getAllLifecycleSystems
+  getAllLifecycleAppstreams, // Import the new API functions
+  getAllLifecycleSystems,
 } from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -101,20 +101,18 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // Reset other filters when changing dropdown
     setNameFilter('');
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
-    // fetchData(selectedViewFilter);
 
     // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
     if (value === DEFAULT_DROPDOWN_VALUE || value === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       // Filter from the full dataset each time
       const filteredAppData = filterAppDataByDropdown(fullAppLifecycleChanges, value);
-      setAppLifecycleChanges(filteredAppData); // Update the app lifecycle data state
+      setAppLifecycleChanges(filteredAppData); // Update the app lifecycle data state 
       setFilteredTableData(filteredAppData);
       setFilteredChartData(filterChartDataByRetirementDate(filteredAppData, value));
       // Update filtered data based on dropdown selection of RHEL Systems
     } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      console.log("hi")
-      console.log(systemLifecycleChanges)
-      setSystemLifecycleChanges(systemLifecycleChanges); // Update the system lifecycle data state
+      console.log('hi');
+      console.log(systemLifecycleChanges);
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
     }
@@ -126,7 +124,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     newFilters.viewFilter = filter;
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
-    
+
     // Refetch the data based on the selected view filter
     fetchData(filter);
   };
@@ -182,19 +180,21 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(false);
     try {
       let systemData, appData;
-  
+
       // Check if relevant data exists first, regardless of current view
       const relevantSystemData = await getRelevantLifecycleSystems();
       const relevantAppData = await getRelevantLifecycleAppstreams();
-      
+
       // Check if relevant data is empty
-      const hasRelevantData = 
-        (relevantSystemData.data && relevantSystemData.data.length > 0) && 
-        (relevantAppData.data && relevantAppData.data.length > 0);
-      
+      const hasRelevantData =
+        relevantSystemData.data &&
+        relevantSystemData.data.length > 0 &&
+        relevantAppData.data &&
+        relevantAppData.data.length > 0;
+
       // Set flag for disabling buttons based on relevant data
       setNoDataAvailable(!hasRelevantData);
-      
+
       // If no relevant data exists and we're not already in "all" view,
       // switch to "all" view automatically
       if (!hasRelevantData && viewFilter !== 'all') {
@@ -205,7 +205,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         setFilters(newFilters);
         setSearchParams(buildURL(newFilters));
       }
-      
+
       // Now fetch the data for the current (possibly changed) view
       if (viewFilter === 'all') {
         systemData = await getAllLifecycleSystems();
@@ -214,23 +214,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         systemData = relevantSystemData;
         appData = relevantAppData;
       }
-  
+
       const upcomingChangesParagraphs = systemData.data || [];
       // Store the full data set
       const allAppStreams = appData.data || [];
       setFullAppLifecycleChanges(allAppStreams);
-  
+
       // Filter based on current dropdown value
       const appStreams = filterAppDataByDropdown(allAppStreams, dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
       setAppLifecycleChanges(appStreams);
-      
+
       // If no data in the current view, return early
       if (upcomingChangesParagraphs.length === 0 || appStreams.length === 0) {
         return;
       }
-      
+
       setSystemLifecycleChanges(upcomingChangesParagraphs);
-  
+
       const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
       setSystemLifecycleChanges(updatedSystems);
       filterInitialData(appStreams, updatedSystems);
@@ -258,7 +258,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   useEffect(() => {
     // Check for viewFilter in URL params
-    if (viewFilterParam && (viewFilterParam === 'all' || viewFilterParam === 'installed-only' || viewFilterParam === 'installed-and-related')) {
+    if (
+      viewFilterParam &&
+      (viewFilterParam === 'all' ||
+        viewFilterParam === 'installed-only' ||
+        viewFilterParam === 'installed-and-related')
+    ) {
       setSelectedViewFilter(viewFilterParam);
       fetchData(viewFilterParam);
     } else {
@@ -397,8 +402,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) =>
         data.push({
           Name: item.name,
-          'Release date': formatDate(item.release_date),
-          'Retirement date': formatDate(item.retirement_date),
+          'Start date': formatDate(item.start_date),
+          'End date': formatDate(item.end_date),
           Systems: item.count,
         })
       );
@@ -457,7 +462,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <>
         <ChartComponent lifecycleData={filteredChartData} viewFilter={selectedViewFilter} />
-        <LifecycleTable data={filteredTableData} viewFilter={selectedViewFilter}/>
+        <LifecycleTable data={filteredTableData} viewFilter={selectedViewFilter} />
       </>
     );
   };

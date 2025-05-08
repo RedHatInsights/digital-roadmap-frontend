@@ -71,6 +71,27 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     }
   };
 
+  // Helper function to determine tooltip content based on lifecycleDropdownValue
+  const getTooltipContent = (buttonId: string) => {
+    const isRHEL = lifecycleDropdownValue === "Red Hat Enterprise Linux";
+    const isAppStream = lifecycleDropdownValue === "RHEL 8 Application Streams" || 
+                        lifecycleDropdownValue === "RHEL 9 Application Streams";
+    
+    if (buttonId === "installed-and-related") {
+      if (isRHEL) {
+        return "Add systems to Inventory to view only RHEL releases installed on or related to those systems.";
+      } else if (isAppStream) {
+        return "Add systems to Inventory to view only application streams installed on or related to those systems.";
+      }
+    } else if (buttonId === "installed-only") {
+      if (isRHEL) {
+        return "Add systems to Inventory to view only RHEL releases installed on those systems.";
+      } else if (isAppStream) {
+        return "Add systems to Inventory to view only application streams installed on those systems.";
+      }
+    }
+  };
+
   return (
     <div className="drf-lifecycle__filters">
       <Toolbar className="drf-lifecycle__filters-toolbar">
@@ -103,7 +124,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether installed and related, only installed or all items are displayed">
                     <Tooltip
-                      content="Add systems to Inventory to view only application streams and RHEL versions installed."
+                      content={getTooltipContent("installed-and-related")}
                       trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                     >
                       <ToggleGroupItem
@@ -115,7 +136,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                       />
                     </Tooltip>
                     <Tooltip
-                      content="No data available to filter installed items"
+                      content={getTooltipContent("installed-only")}
                       trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                     >
                       <ToggleGroupItem

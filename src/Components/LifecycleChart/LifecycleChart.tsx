@@ -97,7 +97,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
 
     return yearsObject;
   };
-  console.log(updatedLifecycleData, "dada")
+  console.log(updatedLifecycleData, 'dada');
 
   // We use this to deduplicate years and add on the last year as a data point
   // Years always start with January, but the end date may be June 2023
@@ -150,18 +150,18 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
           return;
         }
         formatChartData(
           item.name,
-          item.release_date,
-          item.retirement_date,
+          item.start_date,
+          item.end_date,
           item.support_status,
           `${item.major}.${item.minor}`,
           `${item.count ?? 'N/A'}`
         );
-        formatYearAxisData(item.release_date, item.retirement_date);
+        formatYearAxisData(item.start_date, item.end_date);
       });
     }
     addInterstitialYears(years);
