@@ -97,7 +97,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
 
     return yearsObject;
   };
-  console.log(updatedLifecycleData, 'dada');
 
   // We use this to deduplicate years and add on the last year as a data point
   // Years always start with January, but the end date may be June 2023

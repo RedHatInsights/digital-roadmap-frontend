@@ -17,11 +17,10 @@ import {
 } from '@patternfly/react-core';
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
-import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
 import {
   getRelevantLifecycleAppstreams,
   getRelevantLifecycleSystems,
-  getAllLifecycleAppstreams, // Import the new API functions
+  getAllLifecycleAppstreams,
   getAllLifecycleSystems,
 } from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
@@ -106,13 +105,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (value === DEFAULT_DROPDOWN_VALUE || value === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       // Filter from the full dataset each time
       const filteredAppData = filterAppDataByDropdown(fullAppLifecycleChanges, value);
-      setAppLifecycleChanges(filteredAppData); // Update the app lifecycle data state 
+      setAppLifecycleChanges(filteredAppData); // Update the app lifecycle data state
       setFilteredTableData(filteredAppData);
       setFilteredChartData(filterChartDataByRetirementDate(filteredAppData, value));
       // Update filtered data based on dropdown selection of RHEL Systems
     } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      console.log('hi');
-      console.log(systemLifecycleChanges);
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
     }
