@@ -78,7 +78,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       },
     ]);
   };
-  console.log(updatedLifecycleData, "dada")
   const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
     const years = Object.keys(yearsObject).sort();
     if (years.length < 2) {
@@ -98,6 +97,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
 
     return yearsObject;
   };
+  console.log(updatedLifecycleData, "dada")
 
   // We use this to deduplicate years and add on the last year as a data point
   // Years always start with January, but the end date may be June 2023

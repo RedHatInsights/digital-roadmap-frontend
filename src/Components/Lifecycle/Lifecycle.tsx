@@ -101,6 +101,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // Reset other filters when changing dropdown
     setNameFilter('');
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
+    // fetchData(selectedViewFilter);
 
     // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
     if (value === DEFAULT_DROPDOWN_VALUE || value === RHEL_8_STREAMS_DROPDOWN_VALUE) {
@@ -111,6 +112,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilteredChartData(filterChartDataByRetirementDate(filteredAppData, value));
       // Update filtered data based on dropdown selection of RHEL Systems
     } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      console.log("hi")
+      console.log(systemLifecycleChanges)
+      setSystemLifecycleChanges(systemLifecycleChanges); // Update the system lifecycle data state
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
     }
@@ -178,31 +182,55 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(false);
     try {
       let systemData, appData;
-
-      // Select the appropriate API functions based on the view filter
+  
+      // Check if relevant data exists first, regardless of current view
+      const relevantSystemData = await getRelevantLifecycleSystems();
+      const relevantAppData = await getRelevantLifecycleAppstreams();
+      
+      // Check if relevant data is empty
+      const hasRelevantData = 
+        (relevantSystemData.data && relevantSystemData.data.length > 0) && 
+        (relevantAppData.data && relevantAppData.data.length > 0);
+      
+      // Set flag for disabling buttons based on relevant data
+      setNoDataAvailable(!hasRelevantData);
+      
+      // If no relevant data exists and we're not already in "all" view,
+      // switch to "all" view automatically
+      if (!hasRelevantData && viewFilter !== 'all') {
+        viewFilter = 'all';
+        setSelectedViewFilter('all');
+        const newFilters = structuredClone(filters) as ExtendedFilter;
+        newFilters.viewFilter = 'all';
+        setFilters(newFilters);
+        setSearchParams(buildURL(newFilters));
+      }
+      
+      // Now fetch the data for the current (possibly changed) view
       if (viewFilter === 'all') {
         systemData = await getAllLifecycleSystems();
         appData = await getAllLifecycleAppstreams();
       } else {
-        systemData = await getRelevantLifecycleSystems();
-        appData = await getRelevantLifecycleAppstreams();
+        systemData = relevantSystemData;
+        appData = relevantAppData;
       }
-
+  
       const upcomingChangesParagraphs = systemData.data || [];
       // Store the full data set
       const allAppStreams = appData.data || [];
       setFullAppLifecycleChanges(allAppStreams);
-
+  
       // Filter based on current dropdown value
       const appStreams = filterAppDataByDropdown(allAppStreams, dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
       setAppLifecycleChanges(appStreams);
-      // Check if both data sources are empty
+      
+      // If no data in the current view, return early
       if (upcomingChangesParagraphs.length === 0 || appStreams.length === 0) {
-        setNoDataAvailable(true);
         return;
       }
+      
       setSystemLifecycleChanges(upcomingChangesParagraphs);
-
+  
       const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
       setSystemLifecycleChanges(updatedSystems);
       filterInitialData(appStreams, updatedSystems);
@@ -213,7 +241,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setIsLoading(false);
     }
   };
-
   // Helper function to filter app data based on dropdown value
   const filterAppDataByDropdown = (data: Stream[], dropdownValue: string): Stream[] => {
     if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
@@ -395,32 +422,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
   }
 
-  // New error state for when no data is available
-  if (noDataAvailable) {
-    return (
-      <Bullseye>
-        <EmptyState variant={EmptyStateVariant.lg}>
-          <EmptyStateHeader
-            icon={<EmptyStateIcon icon={CubesIcon} />}
-            titleText="No lifecycle data available"
-            headingLevel="h2"
-          />
-          <EmptyStateBody>
-            We could not find any Life Cycle data. Either no data exists in the system or there was a problem
-            retrieving it.
-          </EmptyStateBody>
-          <EmptyStateFooter>
-            <EmptyStateActions>
-              <Button variant="primary" onClick={() => fetchData(selectedViewFilter)}>
-                Try again
-              </Button>
-            </EmptyStateActions>
-          </EmptyStateFooter>
-        </EmptyState>
-      </Bullseye>
-    );
-  }
-
   const emptyState = (
     <Bullseye>
       <EmptyState variant={EmptyStateVariant.sm}>
@@ -478,6 +479,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             downloadCSV={downloadCSV}
             selectedViewFilter={selectedViewFilter}
             setSelectedViewFilter={handleViewFilterChange}
+            noDataAvailable={noDataAvailable}
           />
           {renderContent()}
         </Card>

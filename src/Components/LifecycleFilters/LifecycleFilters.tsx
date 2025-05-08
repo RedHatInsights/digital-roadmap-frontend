@@ -32,6 +32,7 @@ interface LifecycleFiltersProps {
   downloadCSV: () => void;
   selectedViewFilter: string;
   setSelectedViewFilter: (filter: string) => void;
+  noDataAvailable: boolean;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -47,6 +48,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   downloadCSV,
   selectedViewFilter,
   setSelectedViewFilter,
+  noDataAvailable,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -100,19 +102,30 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether installed and related, only installed or all items are displayed">
-                    <ToggleGroupItem
-                      text="Installed and related"
-                      buttonId="installed-and-related"
-                      isSelected={selectedViewFilter === 'installed-and-related'}
-                      isDisabled
-                      onChange={handleItemClick}
-                    />
-                    <ToggleGroupItem
-                      text="Installed only"
-                      buttonId="installed-only"
-                      isSelected={selectedViewFilter === 'installed-only'}
-                      onChange={handleItemClick}
-                    />
+                    <Tooltip
+                      content="Add systems to Inventory to view only application streams and RHEL versions installed."
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <ToggleGroupItem
+                        text="Installed and related"
+                        buttonId="installed-and-related"
+                        isSelected={selectedViewFilter === 'installed-and-related'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
+                    <Tooltip
+                      content="No data available to filter installed items"
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <ToggleGroupItem
+                        text="Installed only"
+                        buttonId="installed-only"
+                        isSelected={selectedViewFilter === 'installed-only'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                     <ToggleGroupItem
                       text="All"
                       buttonId="all"

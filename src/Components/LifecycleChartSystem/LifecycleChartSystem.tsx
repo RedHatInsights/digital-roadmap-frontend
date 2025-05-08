@@ -78,7 +78,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       },
     ]);
   };
-
   const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
     const years = Object.keys(yearsObject).sort();
     if (years.length < 2) {
@@ -98,6 +97,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
 
     return yearsObject;
   };
+  console.log(updatedLifecycleData, 'dada');
 
   // We use this to deduplicate years and add on the last year as a data point
   // Years always start with January, but the end date may be June 2023
@@ -344,32 +344,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
     };
   }, [updatedLifecycleData.length]);
 
-  // Calculate padding based on the longest name
-  const calculateLeftPadding = () => {
-    if (updatedLifecycleData.length === 0) {
-      return 160; // Default padding if no data
-    }
-
-    // Get all names
-    const names = updatedLifecycleData.map((data) => data[0].x);
-
-    // Find the longest name
-    const longestName = names.reduce(
-      (longest, current) => (current.length > longest.length ? current : longest),
-      ''
-    );
-
-    // Calculate padding: base padding (60) + character count * character width factor
-    const charWidthFactor = 6;
-    const basePadding = 60;
-    const calculatedPadding = basePadding + longestName.length * charWidthFactor;
-
-    // Set a minimum and maximum boundary
-    return Math.max(160, Math.min(calculatedPadding, 250));
-  };
-
-  const leftPadding = calculateLeftPadding();
-
   // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef}>
@@ -388,7 +362,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
         name="chart5"
         padding={{
           bottom: 60, // Adjusted to accommodate legend
-          left: leftPadding, // Dynamically calculated based on the longest name
+          left: 180,
           right: 75, // Adjusted to accommodate tooltip
           top: 30,
         }}
