@@ -70,7 +70,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const type = checkDataType(data);
-
+  
   React.useEffect(() => {
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
@@ -208,7 +208,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const sortAppLifecycleData = (index?: number, direction?: string) => {
     // Create a copy of the data
     let sortedRepositories = [...(data as Stream[])];
-
     if (typeof index !== 'undefined') {
       sortedRepositories = sortedRepositories.sort((a: Stream, b: Stream) => {
         const aValue = getAppSortableRowValues(a)[index];
@@ -216,7 +215,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         return sort(aValue, bValue, direction);
       });
     }
-
+  
     return sortedRepositories;
   };
 
@@ -260,7 +259,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const sortSystemLifecycleData = (index?: number, direction?: string) => {
     // Create a copy of the data
     let sortedRepositories = [...(data as SystemLifecycleChanges[])];
-
     if (typeof index !== 'undefined') {
       sortedRepositories = sortedRepositories.sort((a: SystemLifecycleChanges, b: SystemLifecycleChanges) => {
         const aValue = getSystemSortableRowValues(a)[index];
