@@ -18,10 +18,10 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import {
-  getRelevantLifecycleAppstreams,
-  getRelevantLifecycleSystems,
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
+  getRelevantLifecycleAppstreams,
+  getRelevantLifecycleSystems,
 } from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
