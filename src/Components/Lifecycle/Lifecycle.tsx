@@ -65,6 +65,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
   const [filters, setFilters] = useState<Filter>(DEFAULT_FILTERS);
+  // toggle button
+  const [selectedToggleButton, setSelectedToggleButton] = React.useState('toggle-installed');
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
@@ -100,6 +102,39 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       setFilteredTableData(systemLifecycleChanges);
       setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
+    }
+  };
+
+  const onToggleButtonSelect = (value: string) => {
+    // value is the id of the toggle button
+    setSelectedToggleButton(value);
+
+    // Reset fitering
+    setNameFilter('');
+    setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
+
+    // Choose data to be displayed based on Life Cycle dropdown value (systems or app streams)
+    let outputData: any[] = []; // TODO use better typing
+    if (
+      lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
+      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
+    ) {
+      outputData = filterAppDataByDropdown(fullAppLifecycleChanges, lifecycleDropdownValue);
+    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      outputData = systemLifecycleChanges;
+    }
+
+    outputData = filterRelatedData(outputData, value === 'toggle-related');
+
+    setFilteredChartData(filterChartDataByRetirementDate(outputData, lifecycleDropdownValue));
+    setFilteredTableData(filterChartDataByRetirementDate(outputData, lifecycleDropdownValue));
+  };
+
+  const filterRelatedData = (data: Stream[] | SystemLifecycleChanges[], related: boolean) => {
+    if (related) {
+      return data;
+    } else {
+      return data.filter((datum) => datum.related === false);
     }
   };
 
@@ -434,6 +469,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedChartSortBy={chartSortByValue}
             setSelectedChartSortBy={updateChartSortValue}
             downloadCSV={downloadCSV}
+            onToggleButtonSelect={onToggleButtonSelect}
+            selectedToggleButton={selectedToggleButton}
           />
           {renderContent()}
         </Card>
