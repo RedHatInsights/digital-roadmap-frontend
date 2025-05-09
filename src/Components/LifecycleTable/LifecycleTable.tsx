@@ -70,7 +70,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const type = checkDataType(data);
-
+  
   React.useEffect(() => {
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
@@ -215,7 +215,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         return sort(aValue, bValue, direction);
       });
     }
-
+  
     return sortedRepositories;
   };
 
