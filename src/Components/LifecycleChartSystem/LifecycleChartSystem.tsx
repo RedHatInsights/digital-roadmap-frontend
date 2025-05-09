@@ -364,7 +364,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
     const calculatedPadding = basePadding + longestName.length * charWidthFactor;
 
     // Set a minimum and maximum boundary
-    return Math.max(160, Math.min(calculatedPadding, 250));
+    return Math.max(160, Math.min(calculatedPadding, 400));
   };
 
   const leftPadding = calculateLeftPadding();
