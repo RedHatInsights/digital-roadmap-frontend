@@ -67,6 +67,9 @@ export const buildURL = (filter: Filter) => {
   if (filter['chartSortBy']) {
     encodedData += `&chartSortBy=${filter['chartSortBy']}`;
   }
+  if (filter['viewFilter']) {
+    encodedData += `&viewFilter=${filter['viewFilter']}`;
+  }
   if (filter['type'] && filter['type'].size > 0) {
     encodedData += `&type=${Array.from(filter['type']).join(',')}`;
   }

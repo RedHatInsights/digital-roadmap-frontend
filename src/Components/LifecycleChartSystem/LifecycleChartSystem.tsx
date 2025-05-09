@@ -16,6 +16,7 @@ import { Stream } from '../../types/Stream';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
+  viewFilter?: string;
 }
 
 interface ChartDataObject {
@@ -77,7 +78,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       },
     ]);
   };
-
   const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
     const years = Object.keys(yearsObject).sort();
     if (years.length < 2) {
@@ -149,18 +149,18 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
           return;
         }
         formatChartData(
           item.name,
-          item.release_date,
-          item.retirement_date,
+          item.start_date,
+          item.end_date,
           item.support_status,
           `${item.major}.${item.minor}`,
           `${item.count ?? 'N/A'}`
         );
-        formatYearAxisData(item.release_date, item.retirement_date);
+        formatYearAxisData(item.start_date, item.end_date);
       });
     }
     addInterstitialYears(years);
@@ -364,7 +364,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
     const calculatedPadding = basePadding + longestName.length * charWidthFactor;
 
     // Set a minimum and maximum boundary
-    return Math.max(160, Math.min(calculatedPadding, 250));
+    return Math.max(160, Math.min(calculatedPadding, 400));
   };
 
   const leftPadding = calculateLeftPadding();

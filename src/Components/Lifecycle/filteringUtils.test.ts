@@ -11,16 +11,16 @@ import {
   DUPLICATE_RHEL_DATA,
   DUPLICATE_STREAMS_DATA,
   MOCK_RHEL_DATA,
+  MOCK_RHEL_DATA_BY_END_DATE,
   MOCK_RHEL_DATA_BY_NAME,
   MOCK_RHEL_DATA_BY_RELEASE,
-  MOCK_RHEL_DATA_BY_RELEASE_DATE,
-  MOCK_RHEL_DATA_BY_RETIREMENT_DATE,
+  MOCK_RHEL_DATA_BY_START_DATE,
   MOCK_RHEL_DATA_BY_SYSTEMS,
   MOCK_STREAMS_DATA,
+  MOCK_STREAMS_DATA_BY_END_DATE,
   MOCK_STREAMS_DATA_BY_NAME,
   MOCK_STREAMS_DATA_BY_RELEASE,
-  MOCK_STREAMS_DATA_BY_RELEASE_DATE,
-  MOCK_STREAMS_DATA_BY_RETIREMENT_DATE,
+  MOCK_STREAMS_DATA_BY_START_DATE,
   MOCK_STREAMS_DATA_BY_SYSTEMS,
   ONE_MOCK_RHEL_DATA,
   ONE_MOCK_STREAM_DATA,
@@ -64,7 +64,7 @@ describe('Name filtering', () => {
 describe('Release date filtering', () => {
   it('works as expected for streams', () => {
     const result = filterChartDataByReleaseDate(MOCK_STREAMS_DATA, DEFAULT_DROPDOWN_VALUE);
-    expect(result).toEqual(MOCK_STREAMS_DATA_BY_RELEASE_DATE);
+    expect(result).toEqual(MOCK_STREAMS_DATA_BY_START_DATE);
   });
   it('works as expected for one stream value', () => {
     const result = filterChartDataByReleaseDate(ONE_MOCK_STREAM_DATA, DEFAULT_DROPDOWN_VALUE);
@@ -76,7 +76,7 @@ describe('Release date filtering', () => {
   });
   it('works as expected for RHEL', () => {
     const result = filterChartDataByReleaseDate(MOCK_RHEL_DATA, RHEL_SYSTEMS_DROPDOWN_VALUE);
-    expect(result).toEqual(MOCK_RHEL_DATA_BY_RELEASE_DATE);
+    expect(result).toEqual(MOCK_RHEL_DATA_BY_START_DATE);
   });
   it('works as expected for one RHEL value', () => {
     const result = filterChartDataByReleaseDate(ONE_MOCK_RHEL_DATA, RHEL_SYSTEMS_DROPDOWN_VALUE);
@@ -91,7 +91,7 @@ describe('Release date filtering', () => {
 describe('Retirement date filtering', () => {
   it('works as expected for streams', () => {
     const result = filterChartDataByRetirementDate(MOCK_STREAMS_DATA, DEFAULT_DROPDOWN_VALUE);
-    expect(result).toEqual(MOCK_STREAMS_DATA_BY_RETIREMENT_DATE);
+    expect(result).toEqual(MOCK_STREAMS_DATA_BY_END_DATE);
   });
   it('works as expected for one stream value', () => {
     const result = filterChartDataByRetirementDate(ONE_MOCK_STREAM_DATA, DEFAULT_DROPDOWN_VALUE);
@@ -107,7 +107,7 @@ describe('Retirement date filtering', () => {
   });
   it('works as expected for RHEL', () => {
     const result = filterChartDataByRetirementDate(MOCK_RHEL_DATA, RHEL_SYSTEMS_DROPDOWN_VALUE);
-    expect(result).toEqual(MOCK_RHEL_DATA_BY_RETIREMENT_DATE);
+    expect(result).toEqual(MOCK_RHEL_DATA_BY_END_DATE);
   });
   it('works as expected for one RHEL value', () => {
     const result = filterChartDataByRetirementDate(ONE_MOCK_RHEL_DATA, RHEL_SYSTEMS_DROPDOWN_VALUE);

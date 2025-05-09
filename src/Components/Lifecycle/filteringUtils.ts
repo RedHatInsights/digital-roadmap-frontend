@@ -57,8 +57,8 @@ export const filterChartDataByReleaseDate = (data: Stream[] | SystemLifecycleCha
     });
   }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
-    const aStart = new Date(a.release_date);
-    const bStart = new Date(b.release_date);
+    const aStart = new Date(a.start_date);
+    const bStart = new Date(b.start_date);
 
     if (aStart.getTime() > bStart.getTime()) return -1;
     if (aStart.getTime() < bStart.getTime()) return 1;
@@ -89,8 +89,8 @@ export const filterChartDataByRetirementDate = (
     });
   }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
-    const aEnd = new Date(a.retirement_date);
-    const bEnd = new Date(b.retirement_date);
+    const aEnd = new Date(a.end_date);
+    const bEnd = new Date(b.end_date);
     if (aEnd.getTime() > bEnd.getTime()) return -1;
     if (aEnd.getTime() < bEnd.getTime()) return 1;
     return 0;
