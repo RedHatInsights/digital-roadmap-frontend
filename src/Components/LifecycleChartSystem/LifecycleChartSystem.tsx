@@ -82,6 +82,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       },
     ]);
   };
+
   const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
     const years = Object.keys(yearsObject).sort();
     if (years.length < 2) {
@@ -153,7 +154,12 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData }: 
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
+        if (
+          item.start_date === 'Unknown' ||
+          item.end_date === 'Unknown' ||
+          item.start_date === null ||
+          item.end_date === null
+        ) {
           return;
         }
         formatChartData(
