@@ -45,11 +45,7 @@ const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/Lifecy
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { formatDate, getNewName } from '../../utils/utils';
-import { Filter } from '../../types/Filter';
-
-interface ExtendedFilter extends Filter {
-  viewFilter: string;
-}
+import { ExtendedFilter } from '../../types/Filter';
 
 // Define DEFAULT_FILTERS with the ExtendedFilter type
 const DEFAULT_FILTERS: ExtendedFilter = {
@@ -77,6 +73,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
   // Add state for view filter (all, installed only, etc.)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
+
+  // Add state variables to store cached API responses
+  const [allSystemData, setAllSystemData] = useState<SystemLifecycleChanges[]>([]);
+  const [allAppData, setAllAppData] = useState<Stream[]>([]);
+  const [relevantSystemData, setRelevantSystemData] = useState<SystemLifecycleChanges[]>([]);
+  const [relevantAppData, setRelevantAppData] = useState<Stream[]>([]);
+  const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
@@ -115,21 +118,176 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
+  // First data fetch - called only once
+  const initializeData = async (viewFilter: string) => {
+    setIsLoading(true);
+    setNoDataAvailable(false);
+
+    try {
+      // Fetch all data sets once
+      const relevantSystemResponse = await getRelevantLifecycleSystems();
+      const relevantAppResponse = await getRelevantLifecycleAppstreams();
+      const allSystemResponse = await getAllLifecycleSystems();
+      const allAppResponse = await getAllLifecycleAppstreams();
+
+      // Store all fetched data in state
+      const relevantSystems = relevantSystemResponse.data || [];
+      const relevantApps = relevantAppResponse.data || [];
+      const allSystems = allSystemResponse.data || [];
+      const allApps = allAppResponse.data || [];
+
+      // Store the data in state
+      setRelevantSystemData(relevantSystems);
+      setRelevantAppData(relevantApps);
+      setAllSystemData(allSystems);
+      setAllAppData(allApps);
+
+      // Mark data as initialized
+      setDataInitialized(true);
+
+      // Check if relevant data is empty
+      const hasRelevantData = relevantSystems.length > 0 && relevantApps.length > 0;
+      setNoDataAvailable(!hasRelevantData);
+
+      // Use the explicitly passed viewFilter or default to selectedViewFilter
+      let currentViewFilter = viewFilter || selectedViewFilter;
+
+      // If no relevant data exists and we're not already in "all" view,
+      // switch to "all" view automatically
+      if (!hasRelevantData && currentViewFilter !== 'all') {
+        currentViewFilter = 'all';
+        setSelectedViewFilter('all');
+        const newFilters = structuredClone(filters) as ExtendedFilter;
+        newFilters.viewFilter = 'all';
+        setFilters(newFilters);
+        setSearchParams(buildURL(newFilters));
+      }
+
+      // Directly use the fetched data to process without relying on state updates
+      const systemData = currentViewFilter === 'all' ? allSystems : relevantSystems;
+      const appData = currentViewFilter === 'all' ? allApps : relevantApps;
+
+      // Store the full app data set
+      setFullAppLifecycleChanges([...appData]);
+
+      // Filter based on current dropdown value
+      const appStreams = filterAppDataByDropdown([...appData], dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
+      setAppLifecycleChanges(appStreams);
+
+      // Process the data without waiting for state updates
+      if (systemData.length > 0 || appStreams.length > 0) {
+        // Update and set the system lifecycle data
+        const updatedSystems = updateLifecycleData(systemData);
+        setSystemLifecycleChanges(updatedSystems);
+
+        // Apply filters based on URL parameters
+        // Directly using the data we already have instead of relying on state variables
+        if (dropdownQueryParam && dropdownQueryParam === DEFAULT_DROPDOWN_VALUE) {
+          checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
+          setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
+        } else if (dropdownQueryParam && dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE) {
+          checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
+          setLifecycleDropdownValue(RHEL_8_STREAMS_DROPDOWN_VALUE);
+        } else if (dropdownQueryParam && dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
+          setLifecycleDropdownValue(RHEL_SYSTEMS_DROPDOWN_VALUE);
+        } else {
+          checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
+          setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
+        }
+      } else {
+        // If no data, at least initialize empty arrays
+        setFilteredTableData([]);
+        setFilteredChartData([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching lifecycle changes:', error);
+      setError({ message: error });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Process the cached data without making API calls
+  const processData = (viewFilter: string) => {
+    // Use the appropriate cached data based on the current view filter
+    const systemData = viewFilter === 'all' ? [...allSystemData] : [...relevantSystemData];
+    const appData = viewFilter === 'all' ? [...allAppData] : [...relevantAppData];
+
+    // Store the full app data set
+    setFullAppLifecycleChanges([...appData]);
+
+    // Filter based on current dropdown value
+    const appStreams = filterAppDataByDropdown([...appData], dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
+    setAppLifecycleChanges(appStreams);
+
+    // Exit early if no data in the current view
+    if (systemData.length === 0 || appStreams.length === 0) {
+      setFilteredTableData([]);
+      setFilteredChartData([]);
+      return;
+    }
+
+    // Update and set the system lifecycle data (without modifying original data)
+    const updatedSystems = updateLifecycleData(systemData);
+    setSystemLifecycleChanges(updatedSystems);
+
+    // Apply filters based on URL parameters
+    filterInitialData(appStreams, updatedSystems);
+  };
+
+  // Updated fetchData that uses cached data
+  const fetchData = (viewFilter = selectedViewFilter) => {
+    // Store the view filter we'll be using (for debugging and to ensure consistency)
+
+    if (!dataInitialized) {
+      // First load - initialize all data with the explicit viewFilter
+      initializeData(viewFilter);
+    } else {
+      // Already have data - just process with current filter
+      setIsLoading(true);
+
+      // Check if relevant data is available
+      const hasRelevantData = relevantSystemData.length > 0 && relevantAppData.length > 0;
+      setNoDataAvailable(!hasRelevantData);
+
+      // Auto-switch to "all" view if needed
+      if (!hasRelevantData && viewFilter !== 'all') {
+        viewFilter = 'all';
+        setSelectedViewFilter('all');
+        const newFilters = structuredClone(filters) as ExtendedFilter;
+        newFilters.viewFilter = 'all';
+        setFilters(newFilters);
+        setSearchParams(buildURL(newFilters));
+      }
+
+      // Process cached data with the explicit viewFilter
+      processData(viewFilter);
+      setIsLoading(false);
+    }
+  };
+
+  // Update the view filter handler to use cached data
   const handleViewFilterChange = (filter: string) => {
+    console.log('View filter changed to:', filter);
     setSelectedViewFilter(filter);
     const newFilters = structuredClone(filters) as ExtendedFilter;
     newFilters.viewFilter = filter;
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
 
-    // Refetch the data based on the selected view filter
+    // Process data with the new filter - no API call
     fetchData(filter);
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
+    // Create a new array with new objects to avoid modifying the original data
     return data.map((datum) => {
-      datum.name = getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type);
-      return datum;
+      // Create a new object instead of modifying the original
+      return {
+        ...datum,
+        name: getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type),
+      };
     });
   };
 
@@ -172,100 +330,35 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
   };
 
-  const fetchData = async (viewFilter = selectedViewFilter) => {
-    setIsLoading(true);
-    setNoDataAvailable(false);
-    try {
-      let systemData, appData;
-
-      // Check if relevant data exists first, regardless of current view
-      const relevantSystemData = await getRelevantLifecycleSystems();
-      const relevantAppData = await getRelevantLifecycleAppstreams();
-
-      // Check if relevant data is empty
-      const hasRelevantData =
-        relevantSystemData.data &&
-        relevantSystemData.data.length > 0 &&
-        relevantAppData.data &&
-        relevantAppData.data.length > 0;
-
-      // Set flag for disabling buttons based on relevant data
-      setNoDataAvailable(!hasRelevantData);
-
-      // If no relevant data exists and we're not already in "all" view,
-      // switch to "all" view automatically
-      if (!hasRelevantData && viewFilter !== 'all') {
-        viewFilter = 'all';
-        setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
-      }
-
-      // Now fetch the data for the current (possibly changed) view
-      if (viewFilter === 'all') {
-        systemData = await getAllLifecycleSystems();
-        appData = await getAllLifecycleAppstreams();
-      } else {
-        systemData = relevantSystemData;
-        appData = relevantAppData;
-      }
-
-      const upcomingChangesParagraphs = systemData.data || [];
-      // Store the full data set
-      const allAppStreams = appData.data || [];
-      setFullAppLifecycleChanges(allAppStreams);
-
-      // Filter based on current dropdown value
-      const appStreams = filterAppDataByDropdown(allAppStreams, dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
-      setAppLifecycleChanges(appStreams);
-
-      // If no data in the current view, return early
-      if (upcomingChangesParagraphs.length === 0 || appStreams.length === 0) {
-        return;
-      }
-
-      setSystemLifecycleChanges(upcomingChangesParagraphs);
-
-      const updatedSystems = updateLifecycleData(upcomingChangesParagraphs);
-      setSystemLifecycleChanges(updatedSystems);
-      filterInitialData(appStreams, updatedSystems);
-    } catch (error: any) {
-      console.error('Error fetching lifecycle changes:', error);
-      setError({ message: error });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // Helper function to filter app data based on dropdown value
-  const filterAppDataByDropdown = (data: Stream[], dropdownValue: string): Stream[] => {
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      return data.filter((stream) => stream?.rolling === false && stream.os_major === 9);
-    } else if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      return data.filter((stream) => stream?.rolling === false && stream.os_major === 8);
-    }
-    return data;
-  };
-
   const nameQueryParam = searchParams.get('name');
   const dropdownQueryParam = searchParams.get('lifecycleDropdown');
   const sortByParam = searchParams.get('chartSortBy');
   const viewFilterParam = searchParams.get('viewFilter');
 
   useEffect(() => {
-    // Check for viewFilter in URL params
+    // Get view filter from URL params
+    let initialViewFilter = 'installed-only';
+
     if (
       viewFilterParam &&
       (viewFilterParam === 'all' ||
         viewFilterParam === 'installed-only' ||
         viewFilterParam === 'installed-and-related')
     ) {
+      initialViewFilter = viewFilterParam;
       setSelectedViewFilter(viewFilterParam);
-      fetchData(viewFilterParam);
-    } else {
-      fetchData();
     }
+
+    // Set the initial filter state from URL params
+    const initialFilters = structuredClone(DEFAULT_FILTERS) as ExtendedFilter;
+    if (nameQueryParam) initialFilters.name = nameQueryParam;
+    if (dropdownQueryParam) initialFilters.lifecycleDropdown = dropdownQueryParam;
+    if (sortByParam) initialFilters.chartSortBy = sortByParam;
+    initialFilters.viewFilter = initialViewFilter;
+    setFilters(initialFilters);
+
+    // Initialize data with the correct view filter
+    fetchData(initialViewFilter);
   }, []);
 
   // Update resetDataFiltering to use the properly filtered app data
@@ -371,13 +464,26 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setSearchParams(buildURL(newFilters));
   };
 
+  // Update resetFilters to use cached data
   const resetFilters = () => {
     setNameFilter('');
     setFilteredTableData(systemLifecycleChanges);
     setFilteredChartData(systemLifecycleChanges);
     setFilters(DEFAULT_FILTERS);
     setSelectedViewFilter('installed-only');
+
+    // Use the cached data
     fetchData('installed-only');
+  };
+
+  // Helper function to filter app data based on dropdown value
+  const filterAppDataByDropdown = (data: Stream[], dropdownValue: string): Stream[] => {
+    if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
+      return data.filter((stream) => stream?.rolling === false && stream.os_major === 9);
+    } else if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
+      return data.filter((stream) => stream?.rolling === false && stream.os_major === 8);
+    }
+    return data;
   };
 
   const downloadCSV = () => {

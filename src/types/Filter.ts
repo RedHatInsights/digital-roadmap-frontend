@@ -7,3 +7,7 @@ export interface Filter {
   release?: string[];
   date?: string;
 }
+
+export interface ExtendedFilter extends Filter {
+  viewFilter?: string;
+}
