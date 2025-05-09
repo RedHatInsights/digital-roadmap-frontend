@@ -27,9 +27,12 @@ interface LifecycleFiltersProps {
   lifecycleDropdownValue: string;
   setLifecycleDropdownValue: (value: string) => void;
   onLifecycleDropdownSelect: (value: string) => void;
-  selectedChartSortBy: NamedCurve;
+  selectedChartSortBy: string;
   setSelectedChartSortBy: (name: string) => void;
   downloadCSV: () => void;
+  selectedViewFilter: string;
+  setSelectedViewFilter: (filter: string) => void;
+  noDataAvailable: boolean;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -43,16 +46,16 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedChartSortBy,
   setSelectedChartSortBy,
   downloadCSV,
+  selectedViewFilter,
+  setSelectedViewFilter,
+  noDataAvailable,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const selectedToggle = 'installed';
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  /*const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
-    // const id = event.currentTarget.id;
-    //setIsSelected(id);
-  };*/
+  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+    const id = event.currentTarget.id;
+    setSelectedViewFilter(id);
+  };
 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
@@ -65,6 +68,28 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     setIsOpen(false);
     if (value && typeof value == 'string') {
       setSelectedChartSortBy(value);
+    }
+  };
+
+  // Helper function to determine tooltip content based on lifecycleDropdownValue
+  const getTooltipContent = (buttonId: string) => {
+    const isRHEL = lifecycleDropdownValue === 'Red Hat Enterprise Linux';
+    const isAppStream =
+      lifecycleDropdownValue === 'RHEL 8 Application Streams' ||
+      lifecycleDropdownValue === 'RHEL 9 Application Streams';
+
+    if (buttonId === 'installed-and-related') {
+      if (isRHEL) {
+        return 'Add systems to Inventory to view only RHEL releases installed on or related to those systems.';
+      } else if (isAppStream) {
+        return 'Add systems to Inventory to view only application streams installed on or related to those systems.';
+      }
+    } else if (buttonId === 'installed-only') {
+      if (isRHEL) {
+        return 'Add systems to Inventory to view only RHEL releases installed on those systems.';
+      } else if (isAppStream) {
+        return 'Add systems to Inventory to view only application streams installed on those systems.';
+      }
     }
   };
 
@@ -98,18 +123,36 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
-                  <ToggleGroup aria-label="Whether installed and related or only installed items are displayed">
+                  <ToggleGroup aria-label="Whether installed and related, only installed or all items are displayed">
+                    <Tooltip
+                      content={getTooltipContent('installed-and-related')}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <ToggleGroupItem
+                        text="Installed and related"
+                        buttonId="installed-and-related"
+                        isSelected={selectedViewFilter === 'installed-and-related'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
+                    <Tooltip
+                      content={getTooltipContent('installed-only')}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <ToggleGroupItem
+                        text="Installed only"
+                        buttonId="installed-only"
+                        isSelected={selectedViewFilter === 'installed-only'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                     <ToggleGroupItem
-                      text="Installed and related"
-                      buttonId="toggle-group-related"
-                      isDisabled
-                      //onChange={handleItemClick}
-                    />
-                    <ToggleGroupItem
-                      text="Installed only"
-                      buttonId="toggle-group-installed"
-                      isSelected={selectedToggle === 'installed'}
-                      //onChange={handleItemClick}
+                      text="All"
+                      buttonId="all"
+                      isSelected={selectedViewFilter === 'all'}
+                      onChange={handleItemClick}
                     />
                   </ToggleGroup>
                 </FormGroup>

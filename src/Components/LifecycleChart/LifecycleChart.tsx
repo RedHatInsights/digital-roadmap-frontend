@@ -16,6 +16,7 @@ import { Stream } from '../../types/Stream';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
+  viewFilter?: string;
 }
 
 interface ChartDataObject {
@@ -77,7 +78,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       },
     ]);
   };
-
   const addInterstitialYears = (yearsObject: { [key: string]: Date }) => {
     const years = Object.keys(yearsObject).sort();
     if (years.length < 2) {
@@ -149,18 +149,18 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
       });
     } else {
       (lifecycleData as SystemLifecycleChanges[]).forEach((item) => {
-        if (item.release_date === 'Unknown' || item.retirement_date === 'Unknown') {
+        if (item.start_date === 'Unknown' || item.end_date === 'Unknown') {
           return;
         }
         formatChartData(
           item.name,
-          item.release_date,
-          item.retirement_date,
+          item.start_date,
+          item.end_date,
           item.support_status,
           `${item.major}.${item.minor}`,
           `${item.count ?? 'N/A'}`
         );
-        formatYearAxisData(item.release_date, item.retirement_date);
+        formatYearAxisData(item.start_date, item.end_date);
       });
     }
     addInterstitialYears(years);

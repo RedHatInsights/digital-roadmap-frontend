@@ -16,26 +16,30 @@ import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
+  viewFilter?: string;
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
-  release_date: 'Release date',
-  retirement_date: 'Retirement date',
+  start_date: 'Release date',
+  end_date: 'Retirement date',
   count: 'Systems',
 };
 
 const APP_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
   release: 'Release',
-  release_date: 'Release date',
-  retirement_date: 'Retirement date',
+  start_date: 'Release date',
+  end_date: 'Retirement date',
   count: 'Systems',
 };
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 
-export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ data }: LifecycleTableProps) => {
+export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
+  data,
+  viewFilter,
+}: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
   // as the identifier of the sorted column. See the "Compound expandable" example.
@@ -60,7 +64,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
       return '';
     }
     if ('application_stream_name' in lifecycleData[0]) {
-      0;
       return 'streams';
     }
     return 'rhel';
@@ -140,8 +143,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
   const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number)[] => {
-    const { name, release_date, retirement_date, count } = repo;
-    return [name, release_date, retirement_date, count];
+    const { name, start_date, end_date, count } = repo;
+    return [name, start_date, end_date, count];
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
@@ -231,20 +234,22 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
             {repo.display_name}
           </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.start_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.end_date)}</Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count}>
-            <Button
-              variant="link"
-              onClick={(event) => {
-                handleModalToggle(event);
-                setModalDataName(String(repo.name));
-                setModalData(repo.systems);
-              }}
-            >
-              {repo.count}
-            </Button>
-          </Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.start_date}>{formatDate(repo.start_date)}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
+          {viewFilter !== 'all' && (
+            <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count ?? 'N/A'}>
+              <Button
+                variant="link"
+                onClick={(event) => {
+                  handleModalToggle(event);
+                  setModalDataName(String(repo.name));
+                  setModalData(repo.systems);
+                }}
+              >
+                {repo.count}
+              </Button>
+            </Td>
+          )}
         </Tr>
       );
     });
@@ -264,54 +269,69 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
-      if (!repo.name || !repo.release_date || !repo.retirement_date || !repo.count) {
+      if (!repo.name || !repo.start_date || !repo.end_date) {
         return;
       }
-
       return (
-        <Tr key={`${repo.name}-${repo.release_date}-${repo.retirement_date}-${repo.count}`}>
+        <Tr key={`${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}>{formatDate(repo.release_date)}</Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}>{formatDate(repo.retirement_date)}</Td>
-          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-            {repo.count !== 0 ? (
-              <Button
-                variant="link"
-                onClick={(event) => {
-                  handleModalToggle(event);
-                  setModalDataName(String(repo.name));
-                  setModalData(SYSTEM_ID);
-                }}
-              >
-                {repo.count}
-              </Button>
-            ) : (
-              <>{repo.count}</>
-            )}
-          </Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.start_date}>{formatDate(repo.start_date)}</Td>
+          <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
+          {viewFilter !== 'all' && (
+            <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
+              {repo.count !== 0 ? (
+                <Button
+                  variant="link"
+                  onClick={(event) => {
+                    handleModalToggle(event);
+                    setModalDataName(String(repo.name));
+                    setModalData(SYSTEM_ID);
+                  }}
+                >
+                  {repo.count}
+                </Button>
+              ) : (
+                <>{repo.count}</>
+              )}
+            </Td>
+          )}
         </Tr>
       );
     });
   };
 
-  const renderHeaders = () => {
+  const renderHeaders = (viewFilter?: string) => {
     switch (type) {
       case 'streams':
+        if (viewFilter === 'all') {
+          return (
+            <Tr key={APP_LIFECYCLE_COLUMN_NAMES.name}>
+              <Th sort={getAppSortParams(0)}>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
+              <Th modifier="wrap" sort={getAppSortParams(1)}>
+                {APP_LIFECYCLE_COLUMN_NAMES.release}
+              </Th>
+              <Th modifier="wrap" sort={getAppSortParams(2)}>
+                {APP_LIFECYCLE_COLUMN_NAMES.start_date}
+              </Th>
+              <Th modifier="wrap" sort={getAppSortParams(3)}>
+                {APP_LIFECYCLE_COLUMN_NAMES.end_date}
+              </Th>
+            </Tr>
+          );
+        }
         return (
           <Tr key={APP_LIFECYCLE_COLUMN_NAMES.name}>
             <Th sort={getAppSortParams(0)}>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
-
             <Th modifier="wrap" sort={getAppSortParams(1)}>
               {APP_LIFECYCLE_COLUMN_NAMES.release}
             </Th>
             <Th modifier="wrap" sort={getAppSortParams(2)}>
-              {APP_LIFECYCLE_COLUMN_NAMES.release_date}
+              {APP_LIFECYCLE_COLUMN_NAMES.start_date}
             </Th>
-
             <Th modifier="wrap" sort={getAppSortParams(3)}>
-              {APP_LIFECYCLE_COLUMN_NAMES.retirement_date}
+              {APP_LIFECYCLE_COLUMN_NAMES.end_date}
             </Th>
             <Th modifier="wrap" sort={getAppSortParams(4)}>
               {APP_LIFECYCLE_COLUMN_NAMES.count}
@@ -319,14 +339,27 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
           </Tr>
         );
       case 'rhel':
+        if (viewFilter === 'all') {
+          return (
+            <Tr key={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
+              <Th sort={getSystemSortParams(0)}>{SYSTEM_LIFECYCLE_COLUMN_NAMES.name}</Th>
+              <Th modifier="wrap" sort={getSystemSortParams(1)}>
+                {SYSTEM_LIFECYCLE_COLUMN_NAMES.start_date}
+              </Th>
+              <Th modifier="wrap" sort={getSystemSortParams(2)}>
+                {SYSTEM_LIFECYCLE_COLUMN_NAMES.end_date}
+              </Th>
+            </Tr>
+          );
+        }
         return (
           <Tr key={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             <Th sort={getSystemSortParams(0)}>{SYSTEM_LIFECYCLE_COLUMN_NAMES.name}</Th>
             <Th modifier="wrap" sort={getSystemSortParams(1)}>
-              {SYSTEM_LIFECYCLE_COLUMN_NAMES.release_date}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.start_date}
             </Th>
             <Th modifier="wrap" sort={getSystemSortParams(2)}>
-              {SYSTEM_LIFECYCLE_COLUMN_NAMES.retirement_date}
+              {SYSTEM_LIFECYCLE_COLUMN_NAMES.end_date}
             </Th>
             <Th modifier="wrap" sort={getSystemSortParams(3)}>
               {SYSTEM_LIFECYCLE_COLUMN_NAMES.count}
@@ -338,7 +371,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     }
   };
 
-  const renderData = (): React.ReactNode => {
+  const renderData = () => {
     switch (type) {
       case 'streams':
         return renderAppLifecycleData();
@@ -364,7 +397,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({ d
     <>
       {toolbar}
       <Table aria-label={getAriaLabel()} variant="compact">
-        <Thead>{renderHeaders()}</Thead>
+        <Thead>{renderHeaders(viewFilter)}</Thead>
         <Tbody>{renderData()}</Tbody>
       </Table>
       <LifecycleModalWindow
