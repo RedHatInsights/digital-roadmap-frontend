@@ -12,7 +12,6 @@ import {
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
-import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -70,7 +69,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const type = checkDataType(data);
-  
+
   React.useEffect(() => {
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
@@ -215,7 +214,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         return sort(aValue, bValue, direction);
       });
     }
-  
+
     return sortedRepositories;
   };
 
