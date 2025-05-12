@@ -22,7 +22,7 @@ describe('LifecycleFilters', () => {
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
         selectedViewFilter="all"
-        setSelectedViewFilter={jest.fn()}
+        handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
       />
     );
@@ -48,7 +48,7 @@ describe('LifecycleFilters', () => {
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
         selectedViewFilter="all"
-        setSelectedViewFilter={jest.fn()}
+        handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
       />
     );
@@ -71,7 +71,7 @@ describe('LifecycleFilters', () => {
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
         selectedViewFilter="all"
-        setSelectedViewFilter={jest.fn()}
+        handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
       />
     );
@@ -94,7 +94,7 @@ describe('LifecycleFilters', () => {
         setSelectedChartSortBy={jest.fn()}
         downloadCSV={jest.fn()}
         selectedViewFilter="all"
-        setSelectedViewFilter={jest.fn()}
+        handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
       />
     );

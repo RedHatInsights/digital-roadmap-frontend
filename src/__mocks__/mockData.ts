@@ -13,6 +13,7 @@ const VIRT = {
   count: 3,
   rolling: false,
   systems: ['system1', 'system2'],
+  related: false,
 };
 
 const VARNISH = {
@@ -31,6 +32,7 @@ const VARNISH = {
   count: 1,
   rolling: false,
   systems: ['system1', 'system2'],
+  related: false,
 };
 
 const IDM = {
@@ -48,6 +50,7 @@ const IDM = {
   count: 0,
   rolling: false,
   systems: ['system1', 'system2'],
+  related: false,
 };
 
 const RHEL_NINE_TWO = {
@@ -61,6 +64,7 @@ const RHEL_NINE_TWO = {
   end_date: '2023-11-01',
   count: 5,
   support_status: 'Retired',
+  related: false,
 };
 
 const RHEL_EIGHT_THREE = {
@@ -74,6 +78,7 @@ const RHEL_EIGHT_THREE = {
   end_date: '2021-05-01',
   count: 50,
   support_status: 'Retired',
+  related: false,
 };
 
 const RHEL_EIGHT_SEVEN = {
@@ -87,6 +92,7 @@ const RHEL_EIGHT_SEVEN = {
   end_date: '2023-05-01',
   count: 12,
   support_status: 'Retired',
+  related: false,
 };
 
 const RHEL_NINE = {
@@ -100,6 +106,7 @@ const RHEL_NINE = {
   end_date: '2032-05-01',
   count: 45,
   support_status: 'Supported',
+  related: false,
 };
 
 export const SYSTEM_ID = [
