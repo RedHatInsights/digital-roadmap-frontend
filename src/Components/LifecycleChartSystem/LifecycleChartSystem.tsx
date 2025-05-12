@@ -382,16 +382,23 @@ End: ${formatDate(new Date(tooltipData.y))}`;
     const updateDimensions = () => {
       if (chartContainerRef.current) {
         const { width } = chartContainerRef.current.getBoundingClientRect();
-        // Calculate height based on data length
-        const height = Math.max(updatedLifecycleData.length * 15 + 300, 300);
+
+        const itemCount = updatedLifecycleData.length;
+        let currentHeight = 0;
+
+        // Adjust height per item based on total count to prevent excessive gaps
+        if (itemCount > 40) {
+          currentHeight = Math.max(updatedLifecycleData.length * 3 + 300, 300);
+        } else {
+          currentHeight = Math.max(updatedLifecycleData.length * 15 + 300, 300);
+        }
 
         setChartDimensions({
           width: Math.max(width, 400), // Set minimum width
-          height,
+          height: currentHeight,
         });
       }
     };
-
     // Initial measurement
     updateDimensions();
 
