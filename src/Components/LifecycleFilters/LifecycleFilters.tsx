@@ -31,7 +31,7 @@ interface LifecycleFiltersProps {
   setSelectedChartSortBy: (name: string) => void;
   downloadCSV: () => void;
   selectedViewFilter: string;
-  setSelectedViewFilter: (filter: string) => void;
+  handleViewFilterChange: (filter: string) => void;
   noDataAvailable: boolean;
 }
 
@@ -47,14 +47,14 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   setSelectedChartSortBy,
   downloadCSV,
   selectedViewFilter,
-  setSelectedViewFilter,
+  handleViewFilterChange,
   noDataAvailable,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
-    setSelectedViewFilter(id);
+    handleViewFilterChange(id);
   };
 
   const onToggleClick = () => {
