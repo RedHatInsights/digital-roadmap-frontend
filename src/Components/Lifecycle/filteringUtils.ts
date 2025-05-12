@@ -10,8 +10,9 @@ export const RHEL_SYSTEMS_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      const aName = `${a.name.toLowerCase()}`;
-      const bName = `${b.name.toLowerCase()}`;
+      // Updated to use display_name for consistency with filtering
+      const aName = `${a.display_name.toLowerCase()}`;
+      const bName = `${b.display_name.toLowerCase()}`;
       if (aName > bName) return -1;
       if (aName < bName) return 1;
       return 0;
@@ -19,8 +20,9 @@ export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[],
   }
   if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      const aName = `${a.name.toLowerCase()}`;
-      const bName = `${b.name.toLowerCase()}`;
+      // Updated to use display_name for consistency with filtering
+      const aName = `${a.display_name.toLowerCase()}`;
+      const bName = `${b.display_name.toLowerCase()}`;
       if (aName > bName) return -1;
       if (aName < bName) return 1;
       return 0;
