@@ -126,21 +126,21 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
 export const filterChartDataBySystems = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      if (a.count > b.count) return -1;
-      if (a.count < b.count) return 1;
+      if (a.count < b.count) return -1;
+      if (a.count > b.count) return 1;
       return 0;
     });
   }
   if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      if (a.count > b.count) return -1;
-      if (a.count < b.count) return 1;
+      if (a.count < b.count) return -1;
+      if (a.count > b.count) return 1;
       return 0;
     });
   }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
-    if (a.count > b.count) return -1;
-    if (a.count < b.count) return 1;
+    if (a.count < b.count) return -1;
+    if (a.count > b.count) return 1;
     return 0;
   });
 };
