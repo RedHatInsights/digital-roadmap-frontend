@@ -379,19 +379,28 @@ End: ${formatDate(new Date(tooltipData.y))}`;
   React.useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const updateDimensions = () => {
-      if (chartContainerRef.current) {
-        const { width } = chartContainerRef.current.getBoundingClientRect();
-        // Calculate height based on data length
-        const height = Math.max(updatedLifecycleData.length * 15 + 300, 300);
-
-        setChartDimensions({
-          width: Math.max(width, 400), // Set minimum width
-          height,
-        });
+  const updateDimensions = () => {
+    if (chartContainerRef.current) {
+      const { width } = chartContainerRef.current.getBoundingClientRect();
+      
+      const itemCount = updatedLifecycleData.length;
+      let currentHeight = 0;
+      
+      // Adjust height per item based on total count to prevent excessive gaps
+      if (itemCount > 50) {
+        currentHeight = Math.max(updatedLifecycleData.length * 2 + 300, 300);
+      } else if (itemCount > 25) {
+        currentHeight = Math.max(updatedLifecycleData.length * 3.5 + 300, 300);
+      } else {
+        currentHeight = Math.max(updatedLifecycleData.length * 15 + 300, 300);
       }
-    };
-
+  
+      setChartDimensions({
+        width: Math.max(width, 400), // Set minimum width
+        height: currentHeight,
+      });
+    }
+  };
     // Initial measurement
     updateDimensions();
 
