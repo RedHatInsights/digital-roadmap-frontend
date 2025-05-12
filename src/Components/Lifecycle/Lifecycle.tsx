@@ -82,7 +82,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [relatedSystemData, setRelatedSystemData] = useState<SystemLifecycleChanges[]>([]);
   const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
-  
+
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const updateChartSortValue = (value: string) => {
@@ -632,7 +632,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   return (
     <React.Fragment>
       <Stack hasGutter>
-        <Card>         
+        <Card>
           <LifecycleFilters
             nameFilter={nameFilter}
             setNameFilter={(name: string) => onNameFilterChange(name)}
@@ -653,5 +653,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       </Stack>
     </React.Fragment>
   );
-}
+};
+
 export default LifecycleTab;
