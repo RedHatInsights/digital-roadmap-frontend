@@ -387,9 +387,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
       let currentHeight = 0;
       
       // Adjust height per item based on total count to prevent excessive gaps
-      if (itemCount > 50) {
-        currentHeight = Math.max(updatedLifecycleData.length * 2 + 300, 300);
-      } else if (itemCount > 25) {
+      if (itemCount > 40) {
         currentHeight = Math.max(updatedLifecycleData.length * 3.5 + 300, 300);
       } else {
         currentHeight = Math.max(updatedLifecycleData.length * 15 + 300, 300);
