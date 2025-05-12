@@ -80,9 +80,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     setPerPage(10);
     let sortedData;
     if (type === 'streams') {
-      sortedData = sortAppLifecycleData();
+      sortedData = sortAppLifecycleData(0, 'asc');
     } else {
-      sortedData = sortSystemLifecycleData();
+      sortedData = sortSystemLifecycleData(0, 'asc');
     }
     setSortedRows(sortedData);
     setPaginatedRows(sortedData.slice(0, 10));
@@ -148,8 +148,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { name, os_major, start_date, end_date, count } = repo;
-    return [name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count];
+    const { display_name, os_major, start_date, end_date, count } = repo;
+    return [display_name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
