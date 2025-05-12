@@ -138,8 +138,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const allSystems = allSystemResponse.data || [];
       const allApps = allAppResponse.data || [];
 
-      // Filter out from the instlled&related list of Stream and SystemLifecycleChanges only the installed ones
-      // API is set to provide instlled&related and by this filter we can lower the number of API requests
+      // Filter out from the instlled & related list of Stream and SystemLifecycleChanges only the installed ones
+      // API is set to provide instlled & related and by this filter we can lower the number of API requests
       const installedSystems = [
         ...relatedInstalledSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
       ];
