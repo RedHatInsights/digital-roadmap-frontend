@@ -516,11 +516,10 @@ End: ${formatDate(new Date(tooltipData.y))}`;
           tickValues={fetchTicks()} // Keep all ticks
           tickFormat={(tick) => {
             // Check if this tick should be visible
-            const isVisible = legendNames.some((series, index) => 
-              !hiddenSeries.has(index) && 
-              series.datapoints.some(d => d.x === tick)
+            const isVisible = legendNames.some(
+              (series, index) => !hiddenSeries.has(index) && series.datapoints.some((d) => d.x === tick)
             );
-            return isVisible ? tick : ""; // Return empty string for hidden ticks
+            return isVisible ? tick : ''; // Return empty string for hidden ticks
           }}
           style={{
             tickLabels: {
