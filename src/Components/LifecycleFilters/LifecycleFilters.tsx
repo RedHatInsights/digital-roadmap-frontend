@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Dropdown,
   DropdownItem,
@@ -117,6 +118,24 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </Form>
           </ToolbarItem>
         </ToolbarGroup>
+        <Alert
+          variant="info"
+          isInline
+          title="Rolling application streams are not shown"
+          isExpandable
+          toggleAriaLabel="Rolling application streams are not shown"
+        >
+          <p>
+            Rolling application streams are fully supported for the full life of the Red Hat Enterprise Linux major
+            release, with new versions made available within the latest minor release of RHEL and replacing support
+            for prior application versions. Like all application streams, rolling application streams do not
+            receive Extended Update Support (EUS) or Extended Life Cycle Support (ELS) coverage.{' '}
+            <a href="https://access.redhat.com/support/policy/updates/rhel-app-streams-life-cycle">
+              Learn more about the application streams life cycle.
+            </a>
+          </p>
+        </Alert>
+
         <div className="drf-lifecycle__filters-toolbar-group">
           <ToolbarGroup>
             <ToolbarItem>
@@ -213,6 +232,19 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </ToolbarItem>
           </ToolbarGroup>
         </div>
+        {selectedViewFilter === 'all' && !noDataAvailable && (
+          <Alert
+            variant="info"
+            isInline
+            title="Connected systems are not considered in this view"
+            style={{ marginBottom: '32px' }}
+          >
+            <p>
+              This chart differs from the other views, as the color-coding below applies to all releases and not
+              just those installed on the systems in your inventory.
+            </p>
+          </Alert>
+        )}
       </Toolbar>
     </div>
   );
