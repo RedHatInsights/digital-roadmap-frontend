@@ -12,7 +12,6 @@ import {
 } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
-import { SYSTEM_ID } from '../../__mocks__/mockData';
 
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
@@ -289,7 +288,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                   onClick={(event) => {
                     handleModalToggle(event);
                     setModalDataName(String(repo.name));
-                    setModalData(SYSTEM_ID);
+                    setModalData(repo.systems);
                   }}
                 >
                   {repo.count}

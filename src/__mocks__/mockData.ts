@@ -65,6 +65,7 @@ const RHEL_NINE_TWO = {
   count: 5,
   support_status: 'Retired',
   related: false,
+  systems: ['system1', 'system2'],
 };
 
 const RHEL_EIGHT_THREE = {
@@ -79,6 +80,7 @@ const RHEL_EIGHT_THREE = {
   count: 50,
   support_status: 'Retired',
   related: false,
+  systems: ['system1', 'system2'],
 };
 
 const RHEL_EIGHT_SEVEN = {
@@ -93,6 +95,7 @@ const RHEL_EIGHT_SEVEN = {
   count: 12,
   support_status: 'Retired',
   related: false,
+  systems: ['system1', 'system2'],
 };
 
 const RHEL_NINE = {
@@ -107,6 +110,7 @@ const RHEL_NINE = {
   count: 45,
   support_status: 'Supported',
   related: false,
+  systems: ['system1', 'system2'],
 };
 
 export const SYSTEM_ID = [
