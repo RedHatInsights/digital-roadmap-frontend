@@ -71,7 +71,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
-  // Add state for view filter (all, installed only, etc.)
+  // Add state for view filter (all, installed-only, installed-and-related)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
 
   // Add state variables to store cached API responses
@@ -133,29 +133,31 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const allAppResponse = await getAllLifecycleAppstreams();
 
       // Store all fetched data in state
-      const relevantSystems = relevantSystemResponse.data || [];
-      const relevantApps = relevantAppResponse.data || [];
+      const relatedInstalledSystems = relevantSystemResponse.data || [];
+      const relatedInstalledApps = relevantAppResponse.data || [];
       const allSystems = allSystemResponse.data || [];
       const allApps = allAppResponse.data || [];
 
-      // Store the data in state
-      setRelatedSystemData(relevantSystems);
-      setRelatedAppData(relevantApps);
-      setAllSystemData(allSystems);
-      setAllAppData(allApps);
-
       // Filter out from the instlled&related list of Stream and SystemLifecycleChanges only the installed ones
       // API is set to provide instlled&related and by this filter we can lower the number of API requests
-      setInstalledAppData([...relevantApps.filter((datum: Stream) => datum.related === false)]);
-      setInstalledSystemData([
-        ...relevantSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
-      ]);
+      const installedSystems = [
+        ...relatedInstalledSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
+      ];
+      const installedApps = [...relatedInstalledApps.filter((datum: Stream) => datum.related === false)];
+
+      // Store the data in state
+      setRelatedSystemData(relatedInstalledSystems);
+      setRelatedAppData(relatedInstalledApps);
+      setAllSystemData(allSystems);
+      setAllAppData(allApps);
+      setInstalledAppData(installedApps);
+      setInstalledSystemData(installedSystems);
 
       // Mark data as initialized
       setDataInitialized(true);
 
       // Check if relevant data is empty
-      const hasRelevantData = relevantSystems.length > 0 && relevantApps.length > 0;
+      const hasRelevantData = relatedInstalledSystems.length > 0 && relatedInstalledApps.length > 0;
       setNoDataAvailable(!hasRelevantData);
 
       // Use the explicitly passed viewFilter or default to selectedViewFilter
@@ -173,8 +175,30 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Directly use the fetched data to process without relying on state updates
-      const systemData = selectSystemDataSource(currentViewFilter);
-      const appData = selectAppDataSource(currentViewFilter);
+      const systemData = (() => {
+        switch (currentViewFilter) {
+          case 'all':
+            return allSystems;
+          case 'installed-only':
+            return installedSystems;
+          case 'installed-and-related':
+            return relatedInstalledSystems;
+          default:
+            return installedSystems;
+        }
+      })();
+      const appData = (() => {
+        switch (currentViewFilter) {
+          case 'all':
+            return allApps;
+          case 'installed-only':
+            return installedApps;
+          case 'installed-and-related':
+            return relatedInstalledApps;
+          default:
+            return installedApps;
+        }
+      })();
 
       // Store the full app data set
       setFullAppLifecycleChanges([...appData]);
