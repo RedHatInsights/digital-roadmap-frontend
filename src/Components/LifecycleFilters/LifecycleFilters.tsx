@@ -189,7 +189,12 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   >
                     <DropdownList>
                       {DROPDOWN_ITEMS.map((item) => (
-                        <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
+                        <DropdownItem 
+                          value={item} 
+                          key={item} 
+                          isSelected={item === selectedChartSortBy}
+                          isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
+                        >
                           {item}
                         </DropdownItem>
                       ))}
