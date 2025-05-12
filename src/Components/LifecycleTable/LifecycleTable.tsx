@@ -80,7 +80,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     setPerPage(10);
     let sortedData;
     if (type === 'streams') {
-    // Pass default index and direction for consistent initial sorting
+      // Pass default index and direction for consistent initial sorting
       sortedData = sortAppLifecycleData(0, 'asc');
     } else {
       sortedData = sortSystemLifecycleData(0, 'asc');
