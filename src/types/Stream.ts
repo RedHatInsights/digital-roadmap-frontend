@@ -11,4 +11,5 @@ export interface Stream {
   application_stream_name: string;
   rolling: boolean;
   systems: string[];
+  related: boolean;
 }

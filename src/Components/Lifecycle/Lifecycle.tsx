@@ -77,8 +77,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // Add state variables to store cached API responses
   const [allSystemData, setAllSystemData] = useState<SystemLifecycleChanges[]>([]);
   const [allAppData, setAllAppData] = useState<Stream[]>([]);
-  const [relevantSystemData, setRelevantSystemData] = useState<SystemLifecycleChanges[]>([]);
-  const [relevantAppData, setRelevantAppData] = useState<Stream[]>([]);
+  const [installedSystemData, setInstalledSystemData] = useState<SystemLifecycleChanges[]>([]);
+  const [installedAppData, setInstalledAppData] = useState<Stream[]>([]);
+  const [relatedSystemData, setRelatedSystemData] = useState<SystemLifecycleChanges[]>([]);
+  const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
@@ -137,10 +139,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const allApps = allAppResponse.data || [];
 
       // Store the data in state
-      setRelevantSystemData(relevantSystems);
-      setRelevantAppData(relevantApps);
+      setRelatedSystemData(relevantSystems);
+      setRelatedAppData(relevantApps);
       setAllSystemData(allSystems);
       setAllAppData(allApps);
+
+      // Filter out from the instlled&related list of Stream and SystemLifecycleChanges only the installed ones
+      // API is set to provide instlled&related and by this filter we can lower the number of API requests
+      setInstalledAppData([...relevantApps.filter((datum: Stream) => datum.related === false)]);
+      setInstalledSystemData([
+        ...relevantSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
+      ]);
 
       // Mark data as initialized
       setDataInitialized(true);
@@ -164,8 +173,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Directly use the fetched data to process without relying on state updates
-      const systemData = currentViewFilter === 'all' ? allSystems : relevantSystems;
-      const appData = currentViewFilter === 'all' ? allApps : relevantApps;
+      const systemData = selectSystemDataSource(currentViewFilter);
+      const appData = selectAppDataSource(currentViewFilter);
 
       // Store the full app data set
       setFullAppLifecycleChanges([...appData]);
@@ -211,8 +220,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // Process the cached data without making API calls
   const processData = (viewFilter: string) => {
     // Use the appropriate cached data based on the current view filter
-    const systemData = viewFilter === 'all' ? [...allSystemData] : [...relevantSystemData];
-    const appData = viewFilter === 'all' ? [...allAppData] : [...relevantAppData];
+    const systemData = selectSystemDataSource(viewFilter);
+    const appData = selectAppDataSource(viewFilter);
 
     // Store the full app data set
     setFullAppLifecycleChanges([...appData]);
@@ -236,6 +245,32 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     filterInitialData(appStreams, updatedSystems);
   };
 
+  const selectSystemDataSource = (filter: string) => {
+    switch (filter) {
+      case 'all':
+        return allSystemData;
+      case 'installed-only':
+        return installedSystemData;
+      case 'installed-and-related':
+        return relatedSystemData;
+      default:
+        return installedSystemData;
+    }
+  };
+
+  const selectAppDataSource = (filter: string) => {
+    switch (filter) {
+      case 'all':
+        return allAppData;
+      case 'installed-only':
+        return installedAppData;
+      case 'installed-and-related':
+        return relatedAppData;
+      default:
+        return installedAppData;
+    }
+  };
+
   // Updated fetchData that uses cached data
   const fetchData = (viewFilter = selectedViewFilter) => {
     // Store the view filter we'll be using (for debugging and to ensure consistency)
@@ -248,7 +283,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setIsLoading(true);
 
       // Check if relevant data is available
-      const hasRelevantData = relevantSystemData.length > 0 && relevantAppData.length > 0;
+      const hasRelevantData = installedSystemData.length > 0 && installedAppData.length > 0;
       setNoDataAvailable(!hasRelevantData);
 
       // Auto-switch to "all" view if needed
@@ -586,7 +621,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             setSelectedChartSortBy={updateChartSortValue}
             downloadCSV={downloadCSV}
             selectedViewFilter={selectedViewFilter}
-            setSelectedViewFilter={handleViewFilterChange}
+            handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}
           />
           {renderContent()}

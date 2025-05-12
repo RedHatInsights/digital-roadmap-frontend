@@ -8,4 +8,5 @@ export type SystemLifecycleChanges = {
   count: number;
   lifecycle_type: string;
   support_status: string;
+  related: boolean;
 };
