@@ -32,3 +32,13 @@
   padding-left: 8px;
   padding-right: 8px;
 }
+
+.drf-lifecycle__equal-width-toggles {
+  display: flex;
+}
+
+.drf-lifecycle__equal-width-toggles .pf-c-toggle-group__button {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
