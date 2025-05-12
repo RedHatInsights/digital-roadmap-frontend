@@ -513,7 +513,14 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         {/*Y axis with the name of each stream/operating system */}
         <ChartAxis
           showGrid
-          tickValues={fetchTicks()}
+          tickValues={fetchTicks()} // Keep all ticks
+          tickFormat={(tick) => {
+            // Check if this tick should be visible
+            const isVisible = legendNames.some(
+              (series, index) => !hiddenSeries.has(index) && series.datapoints.some((d) => d.x === tick)
+            );
+            return isVisible ? tick : ''; // Return empty string for hidden ticks
+          }}
           style={{
             tickLabels: {
               fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60)),
