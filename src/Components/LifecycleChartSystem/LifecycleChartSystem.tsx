@@ -383,14 +383,29 @@ End: ${formatDate(new Date(tooltipData.y))}`;
       if (chartContainerRef.current) {
         const { width } = chartContainerRef.current.getBoundingClientRect();
 
-        const itemCount = updatedLifecycleData.length;
+        // Get unique display names that are currently visible
+        // This can be removed once we remove duplicates from the backend api
+        const visibleNames = new Set<string>();
+
+        legendNames.forEach((series, index) => {
+          if (!hiddenSeries.has(index)) {
+            series.datapoints.forEach((datapoint) => {
+              visibleNames.add(datapoint.name);
+            });
+          }
+        });
+
+        const uniqueItemCount = visibleNames.size;
+
         let currentHeight = 0;
 
         // Adjust height per item based on total count to prevent excessive gaps
-        if (itemCount > 40) {
-          currentHeight = Math.max(updatedLifecycleData.length * 3 + 300, 300);
+        if (uniqueItemCount > 100) {
+          currentHeight = Math.max(uniqueItemCount * 3 + 300, 600);
+        } else if (uniqueItemCount > 30) {
+          currentHeight = Math.max(uniqueItemCount * 15 + 400, 300);
         } else {
-          currentHeight = Math.max(updatedLifecycleData.length * 15 + 300, 300);
+          currentHeight = Math.max(uniqueItemCount * 15 + 300, 300);
         }
 
         setChartDimensions({
@@ -399,6 +414,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         });
       }
     };
+
     // Initial measurement
     updateDimensions();
 
