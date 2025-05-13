@@ -30,7 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: LifecycleChartProps) => {
+const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -188,8 +188,15 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData }: Lifecy
     { packageType: 'Upcoming release', datapoints: [] },
   ];
 
+  const getFilteredLegendNames = () => {
+    if (viewFilter === 'all') {
+      return DEFAULT_LEGEND_NAMES.filter((legend) => legend.packageType !== 'Not installed');
+    }
+    return DEFAULT_LEGEND_NAMES;
+  };
+
   const calculateLegendNames = () => {
-    return DEFAULT_LEGEND_NAMES.map((legend) => {
+    return getFilteredLegendNames().map((legend) => {
       return {
         packageType: legend.packageType,
         datapoints: updatedLifecycleData
