@@ -52,6 +52,14 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  // Handle switching to "all" view when sort is set to "Systems"
+  React.useEffect(() => {
+    if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
+      // Default to the first available option when "Systems" becomes disabled
+      setSelectedChartSortBy('Retirement date');
+    }
+  }, [selectedViewFilter, selectedChartSortBy, setSelectedChartSortBy]);
+
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
     handleViewFilterChange(id);
@@ -189,7 +197,12 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                   >
                     <DropdownList>
                       {DROPDOWN_ITEMS.map((item) => (
-                        <DropdownItem value={item} key={item} isSelected={item === selectedChartSortBy}>
+                        <DropdownItem
+                          value={item}
+                          key={item}
+                          isSelected={item === selectedChartSortBy}
+                          isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
+                        >
                           {item}
                         </DropdownItem>
                       ))}
