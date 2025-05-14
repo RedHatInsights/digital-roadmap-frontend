@@ -99,26 +99,22 @@ export const filterChartDataByRetirementDate = (
   });
 };
 
-// Using display name comparison instead of major and minor so we can also take into account the lifecycle type
 export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      const aName = `${a.display_name.toLowerCase()}`;
-      const bName = `${b.display_name.toLowerCase()}`;
-      if (aName > bName) return -1;
-      if (aName < bName) return 1;
+      if (a.os_major > b.os_major) return -1;
+      if (a.os_major < b.os_major) return 1;
       return 0;
     });
   }
   if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
-      const aName = `${a.display_name.toLowerCase()}`;
-      const bName = `${b.display_name.toLowerCase()}`;
-      if (aName > bName) return -1;
-      if (aName < bName) return 1;
+      if (a.os_major > b.os_major) return -1;
+      if (a.os_major < b.os_major) return 1;
       return 0;
     });
   }
+  // Using full RHEL name comparison instead of major and minor so we can also take into account the lifecycle type
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
     const aName = getNewChartName(a.name, a.major, a.minor, a.lifecycle_type);
     const bName = getNewChartName(b.name, b.major, b.minor, b.lifecycle_type);
@@ -127,7 +123,6 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
     return 0;
   });
 };
-
 
 export const filterChartDataBySystems = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
