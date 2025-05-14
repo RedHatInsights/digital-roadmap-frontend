@@ -31,7 +31,7 @@ const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
 
 const APP_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
-  release: 'Release',
+  release: 'Initial release',
   start_date: 'Release date',
   end_date: 'Retirement date',
   count: 'Systems',
@@ -149,7 +149,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       }}
     />
   );
-
+  console.log(data, "data")
   const toolbar = (
     <Toolbar>
       <ToolbarContent>
@@ -260,7 +260,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.display_name}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}.{repo.os_minor}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.start_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
