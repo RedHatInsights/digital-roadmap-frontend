@@ -156,8 +156,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup
+                    className="drf-lifecycle__toggle-group-fixed-height"
                     aria-label="Whether installed and related, only installed or all items are displayed"
-                    className="drf-lifecycle__equal-width-toggles"
                   >
                     <Tooltip
                       content={getTooltipContent('installed-and-related')}
