@@ -44,11 +44,11 @@ const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ supportStatus }) => {
   switch (supportStatus) {
     case 'Supported':
-      return <CheckCircleIcon color='var(--pf-v5-global--success-color--100)'/>;
+      return <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />;
     case 'Support ends within 6 months':
-      return <ExclamationTriangleIcon color='var(--pf-v5-global--warning-color--100)' />;
+      return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
     case 'Retired':
-      return <ExclamationCircleIcon color='var(--pf-v5-global--danger-color--100)'/>;
+      return <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />;
     default:
       return null;
   }
@@ -168,7 +168,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
     const { display_name, os_major, start_date, end_date, count, support_status } = repo;
-    return [display_name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count, support_status || ''];
+    return [
+      display_name,
+      os_major,
+      start_date ?? 'Not available',
+      end_date ?? 'Not available',
+      count,
+      support_status || '',
+    ];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
@@ -242,7 +249,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.name || !repo.application_stream_name || !repo.os_major) {
         return;
       }
-      
+
       return (
         <Tr
           key={`
@@ -262,12 +269,15 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                 <StatusIcon supportStatus={repo.support_status || ''} />
                 <Button
                   variant="link"
-                  style={{ 
-                    margin: 0, 
+                  style={{
+                    margin: 0,
                     padding: 0,
-                    paddingLeft: (repo.support_status === 'Supported' || 
-                      repo.support_status === 'Support ends within 6 months' || 
-                      repo.support_status === 'Retired') ? '0' : '18px'
+                    paddingLeft:
+                      repo.support_status === 'Supported' ||
+                      repo.support_status === 'Support ends within 6 months' ||
+                      repo.support_status === 'Retired'
+                        ? '0'
+                        : '18px',
                   }}
                   onClick={(event) => {
                     handleModalToggle(event);
@@ -303,7 +313,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.name || !repo.start_date || !repo.end_date) {
         return;
       }
-      
+
       return (
         <Tr key={`${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
@@ -318,12 +328,15 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                   <StatusIcon supportStatus={repo.support_status || ''} />
                   <Button
                     variant="link"
-                    style={{ 
-                      margin: 0, 
+                    style={{
+                      margin: 0,
                       padding: 0,
-                      paddingLeft: (repo.support_status === 'Supported' || 
-                        repo.support_status === 'Support ends within 6 months' || 
-                        repo.support_status === 'Retired') ? '0' : '18px'
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
                     }}
                     onClick={(event) => {
                       handleModalToggle(event);
@@ -337,13 +350,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <StatusIcon supportStatus={repo.support_status || ''} />
-                  <span style={{ 
-                    margin: 0, 
-                    padding: 0,
-                    paddingLeft: (repo.support_status === 'Supported' || 
-                      repo.support_status === 'Support ends within 6 months' || 
-                      repo.support_status === 'Retired') ? '0' : '18px'
-                  }}>
+                  <span
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
+                    }}
+                  >
                     {repo.count}
                   </span>
                 </div>
