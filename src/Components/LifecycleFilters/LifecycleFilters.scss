@@ -32,3 +32,23 @@
   padding-left: 8px;
   padding-right: 8px;
 }
+
+/* Fix toggle group height consistency */
+.drf-lifecycle__toggle-group-fixed-height {
+  display: flex;
+  align-items: stretch; /* This ensures all children have the same height */
+}
+
+.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__item {
+  flex: 1; /* makes all items equally wide */
+  display: flex;
+}
+
+.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__button {
+  min-height: 40px; /* Set a minimum height for consistency */
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap; /* Prevents text wrapping */
+}

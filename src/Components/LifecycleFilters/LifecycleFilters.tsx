@@ -155,7 +155,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
-                  <ToggleGroup aria-label="Whether installed and related, only installed or all items are displayed">
+                  <ToggleGroup
+                    className="drf-lifecycle__toggle-group-fixed-height"
+                    aria-label="Whether installed and related, only installed or all items are displayed"
+                  >
                     <Tooltip
                       content={getTooltipContent('installed-and-related')}
                       trigger={noDataAvailable ? 'mouseenter' : 'manual'}
