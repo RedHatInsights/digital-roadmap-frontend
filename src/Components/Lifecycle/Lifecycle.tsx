@@ -102,10 +102,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
 
-    // Reset other filters when changing dropdown
-    setNameFilter('');
-    setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
-
     // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
     if (value === DEFAULT_DROPDOWN_VALUE || value === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       // Filter from the full dataset each time
@@ -135,7 +131,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       // Store all fetched data in state
       const relatedInstalledSystems = relevantSystemResponse.data || [];
       const relatedInstalledApps = relevantAppResponse.data || [];
-      const allSystems = allSystemResponse.data || [];
+      // filter out system data with null minor field
+      const allSystems = (allSystemResponse.data || []).filter(
+        (datum: SystemLifecycleChanges) => datum.minor !== null
+      );
       const allApps = allAppResponse.data || [];
 
       // Filter out from the instlled & related list of Stream and SystemLifecycleChanges only the installed ones
