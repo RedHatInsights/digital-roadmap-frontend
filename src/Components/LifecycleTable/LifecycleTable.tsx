@@ -265,29 +265,49 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
             <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count ?? 'N/A'}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-                <StatusIcon supportStatus={repo.support_status || ''} />
-                <Button
-                  variant="link"
-                  style={{
-                    margin: 0,
-                    padding: 0,
-                    paddingLeft:
-                      repo.support_status === 'Supported' ||
-                      repo.support_status === 'Support ends within 6 months' ||
-                      repo.support_status === 'Retired'
-                        ? '0'
-                        : '18px',
-                  }}
-                  onClick={(event) => {
-                    handleModalToggle(event);
-                    setModalDataName(String(repo.display_name));
-                    setModalData(repo.systems);
-                  }}
-                >
-                  {repo.count}
-                </Button>
-              </div>
+              {repo.count !== 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <StatusIcon supportStatus={repo.support_status || ''} />
+                  <Button
+                    variant="link"
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
+                    }}
+                    onClick={(event) => {
+                      handleModalToggle(event);
+                      setModalDataName(String(repo.display_name));
+                      setModalData(repo.systems);
+                    }}
+                  >
+                    {repo.count}
+                  </Button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <StatusIcon supportStatus={repo.support_status || ''} />
+                  <span
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
+                    }}
+                  >
+                    {repo.count}
+                  </span>
+                </div>
+              )}
             </Td>
           )}
         </Tr>
