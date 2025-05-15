@@ -30,10 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -150,7 +147,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           item.start_date,
           item.end_date,
           item.support_status,
-          `${item.os_major}`,
+          `${item.os_major}.${item.os_minor ?? 0}`,
           `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.start_date, item.end_date);
