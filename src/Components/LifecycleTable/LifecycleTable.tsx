@@ -6,10 +6,10 @@ import {
   Button,
   Pagination,
   PaginationVariant,
+  Popover,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
-  Popover,
 } from '@patternfly/react-core';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
@@ -378,8 +378,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const renderHeaders = (viewFilter?: string) => {
     const popoverContent = (
       <div>
-        This is the version of RHEL the application stream was initially released for, which is
-        the minimum RHEL version required for installation.
+        This is the version of RHEL the application stream was initially released for, which is the minimum RHEL
+        version required for installation.
       </div>
     );
 
@@ -387,22 +387,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     const initialReleaseHeader = (
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span>{APP_LIFECYCLE_COLUMN_NAMES.release}</span>
-        <Popover
-          headerContent="Initial release"
-          bodyContent={popoverContent}
-          position="right"
-        >
+        <Popover headerContent="Initial release" bodyContent={popoverContent} position="right">
           <Button
             variant="plain"
             aria-label="More info for initial release"
-            style={{ 
-              padding: 0, 
+            style={{
+              padding: 0,
               minHeight: 'auto',
               height: '16px',
               width: '16px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             <OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />
@@ -410,7 +406,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         </Popover>
       </div>
     );
-  
+
     switch (type) {
       case 'streams':
         if (viewFilter === 'all') {
