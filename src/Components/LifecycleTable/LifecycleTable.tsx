@@ -10,6 +10,9 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
+import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
+import CheckCircleIcon from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
@@ -23,6 +26,7 @@ const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
   start_date: 'Release date',
   end_date: 'Retirement date',
   count: 'Systems',
+  status: 'Status',
 };
 
 const APP_LIFECYCLE_COLUMN_NAMES = {
@@ -31,9 +35,24 @@ const APP_LIFECYCLE_COLUMN_NAMES = {
   start_date: 'Release date',
   end_date: 'Retirement date',
   count: 'Systems',
+  status: 'Status',
 };
 
 const DEFAULT_ARIA_LABEL = 'Lifecycle information';
+
+// Component to render status icon based on support_status field
+const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ supportStatus }) => {
+  switch (supportStatus) {
+    case 'Supported':
+      return <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />;
+    case 'Support ends within 6 months':
+      return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
+    case 'Retired':
+      return <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />;
+    default:
+      return null;
+  }
+};
 
 export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   data,
@@ -143,13 +162,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   // This example is trivial since our data objects just contain strings, but if the data was more complex
   // this would be a place to return simplified string or number versions of each column to sort by.
   const getSystemSortableRowValues = (repo: SystemLifecycleChanges): (string | number)[] => {
-    const { name, start_date, end_date, count } = repo;
-    return [name, start_date, end_date, count];
+    const { name, start_date, end_date, count, support_status } = repo;
+    return [name, start_date, end_date, count, support_status || ''];
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { display_name, os_major, start_date, end_date, count } = repo;
-    return [display_name, os_major, start_date ?? 'Not available', end_date ?? 'Not available', count];
+    const { display_name, os_major, start_date, end_date, count, support_status } = repo;
+    return [
+      display_name,
+      os_major,
+      start_date ?? 'Not available',
+      end_date ?? 'Not available',
+      count,
+      support_status || '',
+    ];
   };
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
@@ -223,6 +249,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.name || !repo.application_stream_name || !repo.os_major) {
         return;
       }
+
       return (
         <Tr
           key={`
@@ -238,16 +265,35 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
             <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.count ?? 'N/A'}>
-              <Button
-                variant="link"
-                onClick={(event) => {
-                  handleModalToggle(event);
-                  setModalDataName(String(repo.name));
-                  setModalData(repo.systems);
-                }}
-              >
-                {repo.count}
-              </Button>
+              {repo.count !== 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <StatusIcon supportStatus={repo.support_status || ''} />
+                  <Button
+                    variant="link"
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
+                    }}
+                    onClick={(event) => {
+                      handleModalToggle(event);
+                      setModalDataName(String(repo.display_name));
+                      setModalData(repo.systems);
+                    }}
+                  >
+                    {repo.count}
+                  </Button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '18px' }}>
+                  {repo.count}
+                </div>
+              )}
             </Td>
           )}
         </Tr>
@@ -273,6 +319,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.name || !repo.start_date || !repo.end_date) {
         return;
       }
+
       return (
         <Tr key={`${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
@@ -283,18 +330,33 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           {viewFilter !== 'all' && (
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
               {repo.count !== 0 ? (
-                <Button
-                  variant="link"
-                  onClick={(event) => {
-                    handleModalToggle(event);
-                    setModalDataName(String(repo.name));
-                    setModalData(repo.systems);
-                  }}
-                >
-                  {repo.count}
-                </Button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <StatusIcon supportStatus={repo.support_status || ''} />
+                  <Button
+                    variant="link"
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      paddingLeft:
+                        repo.support_status === 'Supported' ||
+                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Retired'
+                          ? '0'
+                          : '18px',
+                    }}
+                    onClick={(event) => {
+                      handleModalToggle(event);
+                      setModalDataName(String(repo.display_name));
+                      setModalData(repo.systems);
+                    }}
+                  >
+                    {repo.count}
+                  </Button>
+                </div>
               ) : (
-                <>{repo.count}</>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '18px' }}>
+                  {repo.count}
+                </div>
               )}
             </Td>
           )}
