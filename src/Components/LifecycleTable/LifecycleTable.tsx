@@ -224,9 +224,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     } else {
       // String sort
       if (direction === 'asc') {
-        return (aValue as string).localeCompare(bValue as string);
+        return (aValue as string).localeCompare(bValue as string, undefined, { numeric: true });
       }
-      return (bValue as string).localeCompare(aValue as string);
+      return (bValue as string).localeCompare(aValue as string, undefined, { numeric: true });
     }
   };
 
