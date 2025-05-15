@@ -151,7 +151,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       }}
     />
   );
-  console.log(data, 'data');
   const toolbar = (
     <Toolbar>
       <ToolbarContent>
