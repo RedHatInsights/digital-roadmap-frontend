@@ -150,7 +150,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
           item.start_date,
           item.end_date,
           item.support_status,
-          `${item.os_major}`,
+          `${item.os_major}.${item.os_minor ?? 0}`,
           `${item.count ?? 'N/A'}`
         );
         formatYearAxisData(item.start_date, item.end_date);
