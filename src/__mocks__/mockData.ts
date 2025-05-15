@@ -113,43 +113,6 @@ const RHEL_NINE = {
   systems: ['system1', 'system2'],
 };
 
-export const SYSTEM_ID = [
-  'system_name0',
-  'system_name1',
-  'system_name8',
-  'system_name2',
-  'system_name3',
-  'system_name4',
-  'system_name5',
-  'system_name6',
-  'system_name7',
-  'system_name8',
-  'system_name9',
-  'system_name10',
-  'system_name11',
-  'system_name12',
-  'system_name13',
-];
-
-export const SYSTEM_ID_DUPLICIT = [
-  'system_name0',
-  'system_name1',
-  'system_name2',
-  'system_name3',
-  'system_name4',
-  'system_name5',
-  'system_name6',
-  'system_name7',
-  'system_name0',
-  'system_name1',
-  'system_name2',
-  'system_name3',
-  'system_name4',
-  'system_name5',
-  'system_name6',
-  'system_name7',
-];
-
 export const ONE_MOCK_RHEL_DATA = [RHEL_NINE_TWO];
 export const ONE_MOCK_STREAM_DATA = [VIRT];
 
