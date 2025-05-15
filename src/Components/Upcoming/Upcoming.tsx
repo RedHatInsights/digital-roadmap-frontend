@@ -21,7 +21,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
-import { getUpcomingChanges } from '../../api';
+import { getAllUpcomingChanges, getRelevantUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 
@@ -51,7 +51,7 @@ const capitalizeFirstLetter = (string: string) => {
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [relevantUpcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
+  const [upcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
@@ -66,10 +66,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
 
+  // Add view filter state
+  const [selectedViewFilter, setSelectedViewFilter] = useState<string>('relevant');
+
   const nameParam = searchParams.get('name');
   const typeParam = searchParams.get('type');
   const releaseParam = searchParams.get('release');
   const dateParam = searchParams.get('date');
+  const viewFilterParam = searchParams.get('viewFilter');
 
   // Type comes in as Release1,Release2 or Release1 or any other permutation
   const isValidRelease = (data: UpcomingChanges[], release: string) => {
@@ -93,11 +97,28 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     );
   };
 
-  const fetchData = async () => {
+  // Handle view filter changes
+  const handleViewFilterChange = (filter: string) => {
+    setSelectedViewFilter(filter);
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['viewFilter'] = filter;
+    setFiltersForURL(newFilters);
+    setSearchParams(buildURL(newFilters));
+
+    // Fetch data with new view filter
+    fetchData(filter);
+  };
+
+  const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
     setNoDataAvailable(false);
+    const currentViewFilter = viewFilter || selectedViewFilter;
+
     try {
-      const response = await getUpcomingChanges();
+      // Choose API based on view filter
+      const response =
+        currentViewFilter === 'all' ? await getAllUpcomingChanges() : await getRelevantUpcomingChanges();
+
       let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
 
       // Check if data source is empty
@@ -128,6 +149,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       setVisibleData(upcomingChangesParagraphs);
       const newFilters = structuredClone(filtersForURL);
+
+      // Apply URL parameters if this is the initial load
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
         setCurrentNameFilters(name);
@@ -148,6 +171,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentDateFilter(date);
         newFilters['date'] = date;
       }
+
+      // Include view filter in URL
+      newFilters['viewFilter'] = currentViewFilter;
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {
@@ -160,7 +186,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    // Get view filter from URL params or use default
+    let initialViewFilter = 'relevant';
+    if (viewFilterParam && (viewFilterParam === 'relevant' || viewFilterParam === 'all')) {
+      initialViewFilter = viewFilterParam;
+      setSelectedViewFilter(viewFilterParam);
+    }
+
+    fetchData(initialViewFilter);
   }, []);
 
   const deprecationId = 'filter-by-type-deprecation';
@@ -169,7 +202,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const resetFilters = () => {
     setCurrentTypeFilters(new Set());
-    setVisibleData(relevantUpcomingChanges);
+    setCurrentDateFilter('');
+    setCurrentNameFilters('');
+    setCurrentReleaseFilters([]);
+    setSelectedViewFilter('relevant');
+    setVisibleData(upcomingChanges);
+    setFiltersForURL(DEFAULT_FILTERS);
+    setSearchParams(buildURL(DEFAULT_FILTERS));
+    fetchData('relevant');
   };
 
   const setTypeParam = (type: Set<string>) => {
@@ -231,7 +271,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           </EmptyStateBody>
           <EmptyStateFooter>
             <EmptyStateActions>
-              <Button variant="primary" onClick={fetchData}>
+              <Button variant="primary" onClick={() => fetchData()}>
                 Try again
               </Button>
             </EmptyStateActions>
@@ -322,6 +362,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           initialReleaseFilters={currentReleaseFilters}
           filtersForURL={filtersForURL}
           setFiltersForURL={updateChildFilters}
+          selectedViewFilter={selectedViewFilter}
+          handleViewFilterChange={handleViewFilterChange}
         />
       </StackItem>
     </Stack>

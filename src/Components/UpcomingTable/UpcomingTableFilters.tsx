@@ -62,6 +62,8 @@ interface UpcomingTableFiltersProps {
   resetTypeFilter: () => void;
   filtersForURL: Filter;
   setFiltersForURL: (filters: Filter) => void;
+  selectedViewFilter: string;
+  handleViewFilterChange: (filter: string) => void;
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -85,13 +87,14 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   resetTypeFilter,
   filtersForURL,
   setFiltersForURL,
+  selectedViewFilter,
+  handleViewFilterChange,
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState<boolean>(false);
   const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Date'>('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
-  const selectedToggle = 'relevant';
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
     <Pagination
@@ -107,6 +110,11 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       }}
     />
   );
+
+  const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
+    const id = event.currentTarget.id;
+    handleViewFilterChange(id);
+  };
 
   const onReleaseToggleClick = (ev: React.MouseEvent) => {
     setIsReleaseMenuOpen(!isReleaseMenuOpen);
@@ -412,15 +420,15 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
                     <ToggleGroupItem
                       text="Relevant only"
-                      buttonId="toggle-group-relevant"
-                      isSelected={selectedToggle === 'relevant'}
-                      //onChange={handleItemClick}
+                      buttonId="relevant"
+                      isSelected={selectedViewFilter === 'relevant'}
+                      onChange={handleItemClick}
                     />
                     <ToggleGroupItem
                       text="All"
-                      buttonId="toggle-group-all"
-                      isDisabled
-                      //onChange={handleItemClick}
+                      buttonId="all"
+                      isSelected={selectedViewFilter === 'all'}
+                      onChange={handleItemClick}
                     />
                   </ToggleGroup>
                 </FormGroup>
