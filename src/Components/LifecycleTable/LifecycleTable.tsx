@@ -165,12 +165,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     const { name, start_date, end_date, count, support_status } = repo;
     return [name, start_date, end_date, count, support_status || ''];
   };
-
+  
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { display_name, os_major, start_date, end_date, count, support_status } = repo;
+    const { display_name, os_major, os_minor, start_date, end_date, count, support_status } = repo;
+    
+    // Create a sortable version number by combining major and minor
+    // Multiply major by 1000 and add minor to create a numeric value for sorting
+    // Handle null/undefined os_minor by defaulting to 0
+    const sortableVersion = (os_major * 1000) + (os_minor ?? 0);
+    
     return [
       display_name,
-      os_major,
+      sortableVersion, // This will sort properly: 9000, 9001, 9002, etc.
       start_date ?? 'Not available',
       end_date ?? 'Not available',
       count,
@@ -260,7 +266,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.display_name}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}.{repo.os_minor}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}.{repo.os_minor ?? 0}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.start_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
