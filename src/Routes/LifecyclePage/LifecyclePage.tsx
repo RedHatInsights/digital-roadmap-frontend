@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
-import { Alert, Spinner } from '@patternfly/react-core';
+import { Alert, Button, Popover, Spinner } from '@patternfly/react-core';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 import LifecycleTab from '../../Components/Lifecycle/Lifecycle';
 import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
@@ -12,10 +13,27 @@ const LifecyclePage = () => {
     appAction('digital-roadmap');
   }, []);
 
+  const popoverContent = (
+    <div>
+      View tailored life cycle data for Red Hat Enterprise Linux and RHEL application streams. Add systems to{' '}
+      <a href="https://console.redhat.com/insights/inventory" target="_blank" rel="noopener noreferrer">
+        Inventory
+      </a>{' '}
+      to view only releases installed on those systems.
+    </div>
+  );
+
   return (
     <React.Fragment>
       <PageHeader>
-        <PageHeaderTitle title="Life Cycle" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
+          <PageHeaderTitle title="Life Cycle" />
+          <Popover headerContent="About life cycle" bodyContent={popoverContent} position="right">
+            <Button variant="plain" aria-label="Life cycle information">
+              <OutlinedQuestionCircleIcon />
+            </Button>
+          </Popover>
+        </div>
       </PageHeader>
       <Alert
         id="lifecycle-warning"
