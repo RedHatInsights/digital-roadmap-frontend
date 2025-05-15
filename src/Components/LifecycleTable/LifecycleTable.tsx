@@ -6,6 +6,7 @@ import {
   Button,
   Pagination,
   PaginationVariant,
+  Popover,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -13,6 +14,7 @@ import {
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import CheckCircleIcon from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
+import OutlinedQuestionCircleIcon from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
@@ -31,7 +33,7 @@ const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
 
 const APP_LIFECYCLE_COLUMN_NAMES = {
   name: 'Name',
-  release: 'Release',
+  release: 'Initial release',
   start_date: 'Release date',
   end_date: 'Retirement date',
   count: 'Systems',
@@ -149,7 +151,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       }}
     />
   );
-
   const toolbar = (
     <Toolbar>
       <ToolbarContent>
@@ -167,10 +168,16 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const getAppSortableRowValues = (repo: Stream): (string | number)[] => {
-    const { display_name, os_major, start_date, end_date, count, support_status } = repo;
+    const { display_name, os_major, os_minor, start_date, end_date, count, support_status } = repo;
+
+    // Create a sortable version number by combining major and minor
+    // Multiply major by 1000 and add minor to create a numeric value for sorting
+    // Handle null/undefined os_minor by defaulting to 0
+    const sortableVersion = os_major * 1000 + (os_minor ?? 0);
+
     return [
       display_name,
-      os_major,
+      sortableVersion, // This will sort properly: 9000, 9001, 9002, etc.
       start_date ?? 'Not available',
       end_date ?? 'Not available',
       count,
@@ -260,7 +267,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.display_name}
           </Td>
-          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>{repo.os_major}</Td>
+          <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.release}>
+            {repo.os_major}.{repo.os_minor ?? 0}
+          </Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.start_date}>{formatDate(repo.start_date)}</Td>
           <Td dataLabel={APP_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
@@ -366,6 +375,37 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const renderHeaders = (viewFilter?: string) => {
+    const popoverContent = (
+      <div>
+        This is the version of RHEL the application stream was initially released for, which is the minimum RHEL
+        version required for installation.
+      </div>
+    );
+
+    // Reusable header content for the "Initial release" column
+    const initialReleaseHeader = (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span>{APP_LIFECYCLE_COLUMN_NAMES.release}</span>
+        <Popover headerContent="Initial release" bodyContent={popoverContent} position="right">
+          <Button
+            variant="plain"
+            aria-label="More info for initial release"
+            style={{
+              padding: 0,
+              minHeight: 'auto',
+              height: '16px',
+              width: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />
+          </Button>
+        </Popover>
+      </div>
+    );
+
     switch (type) {
       case 'streams':
         if (viewFilter === 'all') {
@@ -373,7 +413,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
             <Tr key={APP_LIFECYCLE_COLUMN_NAMES.name}>
               <Th sort={getAppSortParams(0)}>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
               <Th modifier="wrap" sort={getAppSortParams(1)}>
-                {APP_LIFECYCLE_COLUMN_NAMES.release}
+                {initialReleaseHeader}
               </Th>
               <Th modifier="wrap" sort={getAppSortParams(2)}>
                 {APP_LIFECYCLE_COLUMN_NAMES.start_date}
@@ -388,7 +428,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Tr key={APP_LIFECYCLE_COLUMN_NAMES.name}>
             <Th sort={getAppSortParams(0)}>{APP_LIFECYCLE_COLUMN_NAMES.name}</Th>
             <Th modifier="wrap" sort={getAppSortParams(1)}>
-              {APP_LIFECYCLE_COLUMN_NAMES.release}
+              {initialReleaseHeader}
             </Th>
             <Th modifier="wrap" sort={getAppSortParams(2)}>
               {APP_LIFECYCLE_COLUMN_NAMES.start_date}

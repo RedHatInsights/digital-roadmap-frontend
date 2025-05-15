@@ -88,9 +88,10 @@ export const filterChartDataByRetirementDate = (
 export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      // Compare major versions first
       if (a.os_major > b.os_major) return -1;
       if (a.os_major < b.os_major) return 1;
-      // If os_major is equal, compare os_minor
+      // If major versions are equal, compare minor versions
       if (a.os_minor > b.os_minor) return -1;
       if (a.os_minor < b.os_minor) return 1;
       return 0;
@@ -98,9 +99,10 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
   }
   if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
+      // Compare major versions first
       if (a.os_major > b.os_major) return -1;
       if (a.os_major < b.os_major) return 1;
-      // If os_major is equal, compare os_minor
+      // If major versions are equal, compare minor versions
       if (a.os_minor > b.os_minor) return -1;
       if (a.os_minor < b.os_minor) return 1;
       return 0;
