@@ -368,22 +368,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                   </Button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <StatusIcon supportStatus={repo.support_status || ''} />
-                  <span
-                    style={{
-                      margin: 0,
-                      padding: 0,
-                      paddingLeft:
-                        repo.support_status === 'Supported' ||
-                        repo.support_status === 'Support ends within 6 months' ||
-                        repo.support_status === 'Retired'
-                          ? '0'
-                          : '18px',
-                    }}
-                  >
-                    {repo.count}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '18px' }}>
+                  {repo.count}
                 </div>
               )}
             </Td>
