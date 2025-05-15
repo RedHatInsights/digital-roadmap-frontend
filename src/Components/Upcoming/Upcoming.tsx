@@ -65,7 +65,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
-  
+
   // Add view filter state
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('relevant');
 
@@ -104,7 +104,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     newFilters['viewFilter'] = filter;
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
-    
+
     // Fetch data with new view filter
     fetchData(filter);
   };
@@ -113,13 +113,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setIsLoading(true);
     setNoDataAvailable(false);
     const currentViewFilter = viewFilter || selectedViewFilter;
-    
+
     try {
       // Choose API based on view filter
-      const response = currentViewFilter === 'all' 
-        ? await getAllUpcomingChanges()
-        : await getRelevantUpcomingChanges();
-        
+      const response =
+        currentViewFilter === 'all' ? await getAllUpcomingChanges() : await getRelevantUpcomingChanges();
+
       let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
 
       // Check if data source is empty
@@ -150,7 +149,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       setVisibleData(upcomingChangesParagraphs);
       const newFilters = structuredClone(filtersForURL);
-      
+
       // Apply URL parameters if this is the initial load
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
@@ -172,7 +171,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentDateFilter(date);
         newFilters['date'] = date;
       }
-      
+
       // Include view filter in URL
       newFilters['viewFilter'] = currentViewFilter;
       setFiltersForURL(newFilters);
@@ -193,7 +192,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       initialViewFilter = viewFilterParam;
       setSelectedViewFilter(viewFilterParam);
     }
-    
+
     fetchData(initialViewFilter);
   }, []);
 

@@ -144,7 +144,8 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                       Potentially affected systems
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
-                      {repo.details.potentiallyAffectedSystemsCount && repo.details.potentiallyAffectedSystemsCount > 0 ? (
+                      {repo.details.potentiallyAffectedSystemsCount &&
+                      repo.details.potentiallyAffectedSystemsCount > 0 ? (
                         <Button
                           variant="link"
                           onClick={(event) => {

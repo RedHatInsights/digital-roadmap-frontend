@@ -8,6 +8,5 @@ export const DR_ALL_LIFECYCLE_APPSTREAMS = '/lifecycle/app-streams?related=true'
 export const DR_ALL_UPCOMING = '/relevant/upcoming-changes?all=true';
 export const DR_RELEVANT_UPCOMING = '/relevant/upcoming-changes';
 
-
 export const INVENTORY_API_ROOT = '/api/inventory/v1';
 export const INVENTORY_HOSTS_ROOT = '/hosts';
