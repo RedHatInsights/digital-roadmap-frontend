@@ -1,10 +1,10 @@
 import '@patternfly/react-core/dist/styles/base.css';
-import { Record, columnNames } from '../Upcoming/mock_data';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import React, { lazy } from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
+import { UpcomingChanges } from '../../types/UpcomingChanges';
 import {
   Button,
   Icon,
@@ -17,10 +17,16 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
-import { SYSTEM_ID } from '../../__mocks__/mockData';
+
+export const columnNames = {
+  name: 'Name',
+  type: 'Type',
+  release: 'Release',
+  date: 'Date',
+};
 
 interface TableRowProps {
-  repo: Record;
+  repo: UpcomingChanges;
   columnNames: typeof columnNames;
   rowIndex: number;
   isExpanded: boolean;
@@ -138,21 +144,33 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                       Potentially affected systems
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
-                      <Button
-                        variant="link"
-                        onClick={(event) => {
-                          handleModalToggle(event);
-                          setModalDataName(String(repo.name));
-                          setModalData(SYSTEM_ID);
-                        }}
-                        style={{
-                          marginTop: '-4px',
-                          fontSize: '14px',
-                          marginLeft: '-16px',
-                        }}
-                      >
-                        {repo.details.potentiallyAffectedSystems}
-                      </Button>
+                      {repo.details.potentiallyAffectedSystemsCount &&
+                      repo.details.potentiallyAffectedSystemsCount > 0 ? (
+                        <Button
+                          variant="link"
+                          onClick={(event) => {
+                            handleModalToggle(event);
+                            setModalDataName(String(repo.package));
+                            setModalData(repo.details?.potentiallyAffectedSystems);
+                          }}
+                          style={{
+                            marginTop: '-4px',
+                            fontSize: '14px',
+                            marginLeft: '-16px',
+                          }}
+                        >
+                          {repo.details.potentiallyAffectedSystemsCount}
+                        </Button>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            marginLeft: '-2px',
+                          }}
+                        >
+                          {repo.details.potentiallyAffectedSystemsCount}
+                        </span>
+                      )}
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dt}>Tracking ticket</TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
