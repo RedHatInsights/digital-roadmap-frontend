@@ -29,11 +29,7 @@ export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[],
     });
   }
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
-    const aName = getNewChartName(a.name, a.major, a.minor, a.lifecycle_type);
-    const bName = getNewChartName(b.name, b.major, b.minor, b.lifecycle_type);
-    if (aName > bName) return -1;
-    if (aName < bName) return 1;
-    return 0;
+    return b.display_name.localeCompare(a.display_name, undefined, { numeric: true });
   });
 };
 
@@ -116,11 +112,7 @@ export const filterChartDataByRelease = (data: Stream[] | SystemLifecycleChanges
   }
   // Using full RHEL name comparison instead of major and minor so we can also take into account the lifecycle type
   return (data as SystemLifecycleChanges[]).sort((a, b) => {
-    const aName = getNewChartName(a.name, a.major, a.minor, a.lifecycle_type);
-    const bName = getNewChartName(b.name, b.major, b.minor, b.lifecycle_type);
-    if (aName > bName) return -1;
-    if (aName < bName) return 1;
-    return 0;
+    return b.display_name.localeCompare(a.display_name, undefined, { numeric: true });
   });
 };
 
