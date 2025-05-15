@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
-import { Alert, Spinner } from '@patternfly/react-core';
+import { Alert, Spinner, Popover, Button } from '@patternfly/react-core';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 import UpcomingTab from '../../Components/Upcoming/Upcoming';
 import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
@@ -12,10 +13,28 @@ const UpcomingPage = () => {
     appAction('digital-roadmap');
   }, []);
 
+  const popoverContent = (
+    <div>
+      View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems. Add systems
+      to{' '}
+      <a href="https://console.redhat.com/insights/inventory" target="_blank" rel="noopener noreferrer">
+        Inventory
+      </a>{' '}
+      to view only upcoming features relevant to your organization.
+    </div>
+  );
+
   return (
     <React.Fragment>
       <PageHeader>
-        <PageHeaderTitle title="Roadmap" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
+          <PageHeaderTitle title="Roadmap" />
+          <Popover headerContent="About roadmap" bodyContent={popoverContent} position="right">
+            <Button variant="plain" aria-label="Roadmap information">
+              <OutlinedQuestionCircleIcon style={{ color: '#6a6e73' }} />
+            </Button>
+          </Popover>
+        </div>
       </PageHeader>
       <Alert
         id="roadmap-warning"
