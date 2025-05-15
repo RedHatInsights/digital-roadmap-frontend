@@ -1,6 +1,7 @@
 export type UpcomingChanges = {
   name: string;
   type: string;
+  package: string;
   release: string;
   date: string;
   details?: {

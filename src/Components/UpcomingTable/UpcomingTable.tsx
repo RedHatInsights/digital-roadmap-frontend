@@ -44,6 +44,8 @@ interface UpcomingTableProps {
   initialReleaseFilters: string[];
   filtersForURL: Filter;
   setFiltersForURL: (filters: Filter) => void;
+  selectedViewFilter: string;
+  handleViewFilterChange: (filter: string) => void;
 }
 
 export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
@@ -56,6 +58,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   initialReleaseFilters,
   filtersForURL,
   setFiltersForURL,
+  selectedViewFilter,
+  handleViewFilterChange,
 }) => {
   const [searchValue, setSearchValue] = useState(initialNameFilter ?? '');
   const [typeSelections, setTypeSelections] = useState<Set<string>>(initialTypeFilters);
@@ -309,6 +313,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         resetTypeFilter={resetTypeFilter}
         filtersForURL={filtersForURL}
         setFiltersForURL={setFiltersForURL}
+        selectedViewFilter={selectedViewFilter}
+        handleViewFilterChange={handleViewFilterChange}
       />
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>

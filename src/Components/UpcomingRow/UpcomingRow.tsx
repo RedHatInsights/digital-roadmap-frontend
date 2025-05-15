@@ -144,21 +144,32 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                       Potentially affected systems
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
-                      <Button
-                        variant="link"
-                        onClick={(event) => {
-                          handleModalToggle(event);
-                          setModalDataName(String(repo.name));
-                          setModalData(repo.details?.potentiallyAffectedSystems);
-                        }}
-                        style={{
-                          marginTop: '-4px',
-                          fontSize: '14px',
-                          marginLeft: '-16px',
-                        }}
-                      >
-                        {repo.details.potentiallyAffectedSystemsCount}
-                      </Button>
+                      {repo.details.potentiallyAffectedSystemsCount && repo.details.potentiallyAffectedSystemsCount > 0 ? (
+                        <Button
+                          variant="link"
+                          onClick={(event) => {
+                            handleModalToggle(event);
+                            setModalDataName(String(repo.package));
+                            setModalData(repo.details?.potentiallyAffectedSystems);
+                          }}
+                          style={{
+                            marginTop: '-4px',
+                            fontSize: '14px',
+                            marginLeft: '-16px',
+                          }}
+                        >
+                          {repo.details.potentiallyAffectedSystemsCount}
+                        </Button>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            marginLeft: '-2px',
+                          }}
+                        >
+                          {repo.details.potentiallyAffectedSystemsCount}
+                        </span>
+                      )}
                     </TextListItem>
                     <TextListItem component={TextListItemVariants.dt}>Tracking ticket</TextListItem>
                     <TextListItem component={TextListItemVariants.dd}>
