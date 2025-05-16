@@ -256,10 +256,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.name || !repo.application_stream_name || !repo.os_major) {
         return;
       }
-  
-      // Create a clean, unique key 
-      const cleanKey = `${repo.display_name}-${repo.os_major}-${repo.os_minor ?? 0}-${repo.start_date}-${repo.end_date}-${repo.count}-${index}`;
-  
+
+      // Create a clean, unique key
+      const cleanKey = `${repo.display_name}-${repo.os_major}-${repo.os_minor ?? 0}-${repo.start_date}-${
+        repo.end_date
+      }-${repo.count}-${index}`;
+
       return (
         <Tr key={cleanKey}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
