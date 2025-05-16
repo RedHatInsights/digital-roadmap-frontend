@@ -252,18 +252,16 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   };
 
   const renderAppLifecycleData = () => {
-    return (paginatedRows as Stream[]).map((repo: Stream) => {
+    return (paginatedRows as Stream[]).map((repo: Stream, index: number) => {
       if (!repo.name || !repo.application_stream_name || !repo.os_major) {
         return;
       }
-
+  
+      // Create a clean, unique key 
+      const cleanKey = `${repo.display_name}-${repo.os_major}-${repo.os_minor ?? 0}-${repo.start_date}-${repo.end_date}-${repo.count}-${index}`;
+  
       return (
-        <Tr
-          key={`
-            ${repo.name}-${repo.application_stream_name}-
-            ${repo.os_major}-${repo.start_date}-${repo.end_date}-${repo.count}
-          `}
-        >
+        <Tr key={cleanKey}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={APP_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.display_name}
           </Td>
@@ -325,12 +323,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
 
   const renderSystemLifecycleData = () => {
     return (paginatedRows as SystemLifecycleChanges[]).map((repo: SystemLifecycleChanges) => {
-      if (!repo.name || !repo.start_date || !repo.end_date) {
+      if (!repo.display_name || !repo.start_date || !repo.end_date) {
         return;
       }
 
       return (
-        <Tr key={`${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
+        <Tr key={`${repo.display_name}-${repo.start_date}-${repo.end_date}-${repo.count}`}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
             {repo.name}
           </Td>
