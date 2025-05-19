@@ -18,6 +18,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
   ToolbarToggleGroup,
+  Tooltip,
 } from '@patternfly/react-core';
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
@@ -64,6 +65,7 @@ interface UpcomingTableFiltersProps {
   setFiltersForURL: (filters: Filter) => void;
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
+  noDataAvailable?: boolean; // Add noDataAvailable prop with optional flag
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -89,6 +91,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   setFiltersForURL,
   selectedViewFilter,
   handleViewFilterChange,
+  noDataAvailable = false, // Default to false if not provided
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -114,6 +117,11 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
     handleViewFilterChange(id);
+  };
+
+  // Helper function to get tooltip content for relevant only view
+  const getTooltipContent = () => {
+    return 'Add systems to Inventory to view only upcoming features relevant to your organization.';
   };
 
   const onReleaseToggleClick = (ev: React.MouseEvent) => {
@@ -418,12 +426,18 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               <Form>
                 <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
-                    <ToggleGroupItem
-                      text="Relevant only"
-                      buttonId="relevant"
-                      isSelected={selectedViewFilter === 'relevant'}
-                      onChange={handleItemClick}
-                    />
+                    <Tooltip
+                      content={getTooltipContent()}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <ToggleGroupItem
+                        text="Relevant only"
+                        buttonId="relevant"
+                        isSelected={selectedViewFilter === 'relevant'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                     <ToggleGroupItem
                       text="All"
                       buttonId="all"
