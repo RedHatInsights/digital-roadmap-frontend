@@ -499,7 +499,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // Use the unified filter function
   const doFilter = (name: string) => {
     if (name !== '') {
-      let dataSource =
+      const dataSource =
         lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
 
       applyAllActiveFilters(dataSource, lifecycleDropdownValue, name);
