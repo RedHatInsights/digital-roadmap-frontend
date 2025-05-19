@@ -85,6 +85,35 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
+  // Unified filter application to ensure consistent filtering
+  const applyAllActiveFilters = (
+    data: Stream[] | SystemLifecycleChanges[],
+    dropdownValue: string,
+    nameFilterValue: string
+  ) => {
+    let filteredData = data;
+
+    if (nameFilterValue) {
+      if (dropdownValue === DEFAULT_DROPDOWN_VALUE || dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
+        filteredData = (data as Stream[]).filter((datum) => {
+          return `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase());
+        });
+      } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+        filteredData = (data as SystemLifecycleChanges[]).filter((datum) => {
+          const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
+          return product.includes(nameFilterValue.toLowerCase());
+        });
+      }
+    }
+
+    setFilteredTableData(filteredData);
+
+    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue);
+    setFilteredChartData(chartData);
+
+    return filteredData;
+  };
+
   const updateChartSortValue = (value: string) => {
     setChartSortByValue(value);
     const newFilters = structuredClone(filters);
@@ -94,7 +123,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue));
   };
 
-  // Update the dropdown handler to use the full dataset each time
+  // Update the dropdown handler to apply all filters
   const onLifecycleDropdownSelect = (value: string) => {
     setLifecycleDropdownValue(value);
     const newFilters = structuredClone(filters);
@@ -102,18 +131,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
 
-    // Update filtered data based on dropdown selection between RHEL 8 and 9 Application Streams
+    // Filter from the full dataset each time
+    let dataToProcess: Stream[] | SystemLifecycleChanges[] = [];
     if (value === DEFAULT_DROPDOWN_VALUE || value === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      // Filter from the full dataset each time
-      const filteredAppData = filterAppDataByDropdown(fullAppLifecycleChanges, value);
-      setAppLifecycleChanges(filteredAppData); // Update the app lifecycle data state
-      setFilteredTableData(filteredAppData);
-      setFilteredChartData(filterChartDataByRetirementDate(filteredAppData, value));
-      // Update filtered data based on dropdown selection of RHEL Systems
+      dataToProcess = filterAppDataByDropdown(fullAppLifecycleChanges, value);
+      setAppLifecycleChanges(dataToProcess);
     } else if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      setFilteredTableData(systemLifecycleChanges);
-      setFilteredChartData(filterChartDataByRetirementDate(systemLifecycleChanges, value));
+      dataToProcess = systemLifecycleChanges;
+    } else {
+      // Fallback for any unexpected dropdown value - use app streams as default
+      dataToProcess = filterAppDataByDropdown(fullAppLifecycleChanges, DEFAULT_DROPDOWN_VALUE);
     }
+
+    // Apply all current filters to the new data, including name filter
+    applyAllActiveFilters(dataToProcess, value, nameFilter);
   };
 
   // First data fetch - called only once
@@ -214,19 +245,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
         // Apply filters based on URL parameters
         // Directly using the data we already have instead of relying on state variables
-        if (dropdownQueryParam && dropdownQueryParam === DEFAULT_DROPDOWN_VALUE) {
-          checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-          setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
-        } else if (dropdownQueryParam && dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-          checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
-          setLifecycleDropdownValue(RHEL_8_STREAMS_DROPDOWN_VALUE);
-        } else if (dropdownQueryParam && dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-          checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
-          setLifecycleDropdownValue(RHEL_SYSTEMS_DROPDOWN_VALUE);
-        } else {
-          checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-          setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
-        }
+        filterInitialData(appStreams, updatedSystems);
       } else {
         // If no data, at least initialize empty arrays
         setFilteredTableData([]);
@@ -250,11 +269,18 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFullAppLifecycleChanges([...appData]);
 
     // Filter based on current dropdown value
-    const appStreams = filterAppDataByDropdown([...appData], dropdownQueryParam || DEFAULT_DROPDOWN_VALUE);
+    const appStreams = filterAppDataByDropdown([...appData], lifecycleDropdownValue);
     setAppLifecycleChanges(appStreams);
 
     // Exit early if no data in the current view
-    if (systemData.length === 0 || appStreams.length === 0) {
+    const hasAppData = appStreams.length > 0;
+    const hasSystemData = systemData.length > 0;
+
+    if (
+      (viewFilter !== 'all' && !hasSystemData && !hasAppData) ||
+      (lifecycleDropdownValue !== RHEL_SYSTEMS_DROPDOWN_VALUE && !hasAppData) ||
+      (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE && !hasSystemData)
+    ) {
       setFilteredTableData([]);
       setFilteredChartData([]);
       return;
@@ -264,8 +290,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const updatedSystems = updateLifecycleData(systemData);
     setSystemLifecycleChanges(updatedSystems);
 
-    // Apply filters based on URL parameters
-    filterInitialData(appStreams, updatedSystems);
+    // Apply ALL filters including the current name filter
+    let dataToFilter: Stream[] | SystemLifecycleChanges[] = [];
+    if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      dataToFilter = updatedSystems;
+    } else {
+      dataToFilter = appStreams;
+    }
+
+    applyAllActiveFilters(dataToFilter, lifecycleDropdownValue, nameFilter);
   };
 
   const selectSystemDataSource = (filter: string) => {
@@ -296,8 +329,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // Updated fetchData that uses cached data
   const fetchData = (viewFilter = selectedViewFilter) => {
-    // Store the view filter we'll be using (for debugging and to ensure consistency)
-
     if (!dataInitialized) {
       // First load - initialize all data with the explicit viewFilter
       initializeData(viewFilter);
@@ -310,8 +341,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setNoDataAvailable(!hasRelevantData);
 
       // Auto-switch to "all" view if needed
+      let effectiveViewFilter = viewFilter;
       if (!hasRelevantData && viewFilter !== 'all') {
-        viewFilter = 'all';
+        effectiveViewFilter = 'all';
         setSelectedViewFilter('all');
         const newFilters = structuredClone(filters) as ExtendedFilter;
         newFilters.viewFilter = 'all';
@@ -320,7 +352,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Process cached data with the explicit viewFilter
-      processData(viewFilter);
+      processData(effectiveViewFilter);
       setIsLoading(false);
     }
   };
@@ -349,10 +381,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     });
   };
 
+  // Updated to use unified filtering
   const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
     if (nameQueryParam !== null) {
       setNameFilter(nameQueryParam);
-      doInitialFilter(nameQueryParam, data, dropdownValue);
+      // Use our unified filter function
+      applyAllActiveFilters(data, dropdownValue, nameQueryParam);
     } else {
       let chartData;
       if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
@@ -368,24 +402,22 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
+  // Use checkNameQueryParam for URL parameter handling
   const filterInitialData = (appStreams: Stream[], updatedSystems: SystemLifecycleChanges[]) => {
+    // Set the correct dropdown value first
     if (dropdownQueryParam && dropdownQueryParam === DEFAULT_DROPDOWN_VALUE) {
-      checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
       setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
-      return;
-    }
-    if (dropdownQueryParam && dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
+      checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
+    } else if (dropdownQueryParam && dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       setLifecycleDropdownValue(RHEL_8_STREAMS_DROPDOWN_VALUE);
-      return;
-    }
-    if (dropdownQueryParam && dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
+      checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
+    } else if (dropdownQueryParam && dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       setLifecycleDropdownValue(RHEL_SYSTEMS_DROPDOWN_VALUE);
-      return;
+      checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
+    } else {
+      setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
+      checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
     }
-    checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-    setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
   };
 
   const nameQueryParam = searchParams.get('name');
@@ -421,18 +453,22 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // Update resetDataFiltering to use the properly filtered app data
   const resetDataFiltering = () => {
+    let currentData: Stream[] | SystemLifecycleChanges[] = [];
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
     ) {
-      setFilteredTableData(appLifecycleChanges);
-      const chartData = filterChartData(appLifecycleChanges, chartSortByValue, lifecycleDropdownValue);
-      setFilteredChartData(chartData);
+      currentData = appLifecycleChanges;
     } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      setFilteredTableData(systemLifecycleChanges);
-      const chartData = filterChartData(systemLifecycleChanges, chartSortByValue, lifecycleDropdownValue);
-      setFilteredChartData(chartData);
+      currentData = systemLifecycleChanges;
+    } else {
+      // Fallback to app lifecycle changes if no valid dropdown value
+      currentData = appLifecycleChanges;
     }
+
+    setFilteredTableData(currentData);
+    const chartData = filterChartData(currentData, chartSortByValue, lifecycleDropdownValue);
+    setFilteredChartData(chartData);
   };
 
   const filterChartData = (
@@ -440,6 +476,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     sortBy: string,
     dropdownValue: string
   ): Stream[] | SystemLifecycleChanges[] => {
+    if (!data || data.length === 0) {
+      return [];
+    }
+
     switch (sortBy) {
       case 'Name':
         return filterChartDataByName(data, dropdownValue);
@@ -452,57 +492,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       case 'Systems':
         return filterChartDataBySystems(data, dropdownValue);
       default:
-        return filteredChartData;
+        return filterChartDataByRetirementDate(data, dropdownValue);
     }
   };
 
-  const doInitialFilter = (name: string, data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
-
-    if (dropdownValue === DEFAULT_DROPDOWN_VALUE || dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      currentDataSource = (data as Stream[]).filter((datum) => {
-        return `${datum.display_name.toLowerCase()}`.includes(name.toLowerCase());
-      });
-    } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      currentDataSource = (data as SystemLifecycleChanges[]).filter((datum) => {
-        const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
-        return product.includes(name.toLowerCase());
-      });
-    }
-    setFilteredTableData(currentDataSource);
-    let chartData;
-
-    if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
-      chartData = filterChartData(currentDataSource, sortByParam, dropdownValue);
-      setChartSortByValue(sortByParam);
-    } else {
-      chartData = filterChartData(currentDataSource, chartSortByValue, dropdownValue);
-    }
-    setFilteredChartData(chartData);
-    return currentDataSource;
-  };
-
+  // Use the unified filter function
   const doFilter = (name: string) => {
-    let currentDataSource: Stream[] | SystemLifecycleChanges[] = [];
+    if (name !== '') {
+      const dataSource =
+        lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
 
-    if (
-      lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE
-    ) {
-      currentDataSource = appLifecycleChanges.filter((datum) => {
-        return `${datum.display_name.toLowerCase()}`.includes(name.toLowerCase());
-      });
-    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      currentDataSource = systemLifecycleChanges.filter((datum) => {
-        const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
-        return product.includes(name.toLowerCase());
-      });
+      applyAllActiveFilters(dataSource, lifecycleDropdownValue, name);
+    } else {
+      resetDataFiltering();
     }
-
-    setFilteredTableData(currentDataSource);
-    const chartData = filterChartData(currentDataSource, chartSortByValue, lifecycleDropdownValue);
-    setFilteredChartData(chartData);
-    return currentDataSource;
   };
 
   const filterData = (name: string) => {
@@ -525,8 +528,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // Update resetFilters to use cached data
   const resetFilters = () => {
     setNameFilter('');
-    setFilteredTableData(systemLifecycleChanges);
-    setFilteredChartData(systemLifecycleChanges);
+    setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
+    setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
     setFilters(DEFAULT_FILTERS);
     setSelectedViewFilter('installed-only');
 
