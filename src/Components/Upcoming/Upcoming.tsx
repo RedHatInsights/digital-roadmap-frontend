@@ -68,6 +68,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [currentNameFilter, setCurrentNameFilters] = React.useState('');
   const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<string[]>([]);
   const [error, setError] = React.useState<ErrorObject>();
+  const [noAllDataAvailable, setNoAllDataAvailable] = useState<boolean>(false);
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
@@ -120,6 +121,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   // Handle view filter changes
   const handleViewFilterChange = (filter: string) => {
+    // Don't allow switching to relevant if no relevant data available
+    if (filter === 'relevant' && noDataAvailable) {
+      return;
+    }
+
     setSelectedViewFilter(filter);
     const newFilters = structuredClone(filtersForURL);
     newFilters['viewFilter'] = filter;
@@ -141,6 +147,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         // Use cached data
         setUpcomingChanges(relevantUpcomingChangesData);
         processData(relevantUpcomingChangesData);
+        // Set noDataAvailable based on cached data
+        setNoDataAvailable(relevantUpcomingChangesData.length === 0);
       } else {
         // Fetch data
         fetchData(filter);
@@ -148,9 +156,42 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
+  useEffect(() => {
+    // If we've loaded relevant data and it's empty, and all data is available and not empty
+    // then automatically switch to "all" view regardless of current view
+    if (
+      dataFetchStatus.relevant &&
+      relevantUpcomingChangesData.length === 0 &&
+      dataFetchStatus.all &&
+      allUpcomingChangesData.length > 0 &&
+      selectedViewFilter === 'relevant'
+    ) {
+      console.log('Auto-switching to "all" view due to empty relevant data');
+
+      // Force the view to "all"
+      setSelectedViewFilter('all');
+
+      // Update URL and filters
+      const newFilters = structuredClone(filtersForURL);
+      newFilters['viewFilter'] = 'all';
+      setFiltersForURL(newFilters);
+      setSearchParams(buildURL(newFilters));
+
+      // Use the all data
+      setUpcomingChanges(allUpcomingChangesData);
+      processData(allUpcomingChangesData);
+    }
+  }, [
+    dataFetchStatus.relevant,
+    dataFetchStatus.all,
+    relevantUpcomingChangesData.length,
+    allUpcomingChangesData.length,
+  ]);
+
   const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
-    setNoDataAvailable(false);
+    setNoAllDataAvailable(false);
+    setNoDataAvailable(false); // Reset noDataAvailable when starting to fetch
     const currentViewFilter = viewFilter || selectedViewFilter;
 
     try {
@@ -161,7 +202,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
         // Check if ALL data source is empty - only then show no data state
         if (upcomingChangesParagraphs.length === 0) {
-          setNoDataAvailable(true);
+          setNoAllDataAvailable(true);
           setIsLoading(false);
           return;
         }
@@ -177,6 +218,35 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setDataFetchStatus((prev) => ({ ...prev, all: true }));
         setUpcomingChanges(upcomingChangesParagraphs);
         processData(upcomingChangesParagraphs);
+
+        // Check if relevant data is already fetched
+        if (dataFetchStatus.relevant) {
+          // Use cached data to determine if relevant data is empty
+          setNoDataAvailable(relevantUpcomingChangesData.length === 0);
+        } else {
+          // Fetch relevant data to check if it's empty
+          try {
+            const relevantResponse = await getRelevantUpcomingChanges();
+            let relevantData: UpcomingChanges[] =
+              relevantResponse && relevantResponse.data ? relevantResponse.data : [];
+
+            // Process the relevant data
+            relevantData = relevantData.map((item) => ({
+              ...item,
+              type: capitalizeFirstLetter(item.type),
+            }));
+
+            // Store the relevant data
+            setRelevantUpcomingChangesData(relevantData);
+            setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
+
+            // Set noDataAvailable based on whether relevant data exists
+            setNoDataAvailable(relevantData.length === 0);
+          } catch (error) {
+            console.error('Error fetching relevant changes:', error);
+            // Don't set error state here as we already have all data
+          }
+        }
       } else {
         // For relevant view, first check if we need to fetch "all" data to verify emptiness
         if (!dataFetchStatus.all) {
@@ -195,13 +265,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
           // If all data is empty, show no data state regardless of current view
           if (allData.length === 0) {
-            setNoDataAvailable(true);
+            setNoAllDataAvailable(true);
             setIsLoading(false);
             return;
           }
         } else if (allUpcomingChangesData.length === 0) {
           // We already know "all" data is empty
-          setNoDataAvailable(true);
+          setNoAllDataAvailable(true);
           setIsLoading(false);
           return;
         }
@@ -209,6 +279,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         // Now fetch relevant data
         const response = await getRelevantUpcomingChanges();
         let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
+
+        // Check if relevant data is empty
+        if (upcomingChangesParagraphs.length === 0) {
+          setNoDataAvailable(true);
+        } else {
+          setNoDataAvailable(false);
+        }
 
         // Process the data to capitalize type values
         upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
@@ -249,7 +326,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Include view filter in URL
-      newFilters['viewFilter'] = currentViewFilter;
+      newFilters['viewFilter'] = selectedViewFilter; // Use the potentially updated view filter
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {
@@ -281,19 +358,35 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setCurrentDateFilter('');
     setCurrentNameFilters('');
     setCurrentReleaseFilters([]);
-    setSelectedViewFilter('relevant');
+
+    // Don't reset to relevant if no relevant data available
+    if (!noDataAvailable) {
+      setSelectedViewFilter('relevant');
+    }
 
     // Use cached relevant data if available
     if (dataFetchStatus.relevant) {
-      setUpcomingChanges(relevantUpcomingChangesData);
-      setVisibleData(relevantUpcomingChangesData);
+      if (relevantUpcomingChangesData.length === 0 && allUpcomingChangesData.length > 0) {
+        // If relevant data is empty but all data exists, use all data
+        setUpcomingChanges(allUpcomingChangesData);
+        setVisibleData(allUpcomingChangesData);
+        setSelectedViewFilter('all');
+      } else {
+        setUpcomingChanges(relevantUpcomingChangesData);
+        setVisibleData(relevantUpcomingChangesData);
+      }
+      // Update noDataAvailable based on cached relevant data
+      setNoDataAvailable(relevantUpcomingChangesData.length === 0);
     } else {
       setVisibleData(upcomingChanges);
-      fetchData('relevant');
+      fetchData(noDataAvailable ? 'all' : 'relevant');
     }
 
-    setFiltersForURL(DEFAULT_FILTERS);
-    setSearchParams(buildURL(DEFAULT_FILTERS));
+    // Update filters for URL
+    const newFilters: any = structuredClone(DEFAULT_FILTERS);
+    newFilters['viewFilter'] = noDataAvailable ? 'all' : 'relevant';
+    setFiltersForURL(newFilters);
+    setSearchParams(buildURL(newFilters));
   };
 
   const setTypeParam = (type: Set<string>) => {
@@ -339,8 +432,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
   }
 
-  // New error state for when no data is available
-  if (noDataAvailable) {
+  // New error state for when no all data is available
+  if (noAllDataAvailable) {
     return (
       <Bullseye>
         <EmptyState variant={EmptyStateVariant.lg}>
@@ -447,6 +540,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           setFiltersForURL={updateChildFilters}
           selectedViewFilter={selectedViewFilter}
           handleViewFilterChange={handleViewFilterChange}
+          noDataAvailable={noDataAvailable}
         />
       </StackItem>
     </Stack>
