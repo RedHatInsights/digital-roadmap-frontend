@@ -328,8 +328,10 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       if (!repo.display_name || !repo.start_date || !repo.end_date) {
         return;
       }
-      const cleanKey = `${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}-${repo.support_status ?? ''}-${index}`;
-  
+      const cleanKey = `${repo.name}-${repo.start_date}-${repo.end_date}-${repo.count}-${
+        repo.support_status ?? ''
+      }-${index}`;
+
       return (
         <Tr key={cleanKey}>
           <Td style={{ paddingRight: '140px', maxWidth: '200px' }} dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.name}>
@@ -339,7 +341,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
           <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.end_date}>{formatDate(repo.end_date)}</Td>
           {viewFilter !== 'all' && (
             <Td dataLabel={SYSTEM_LIFECYCLE_COLUMN_NAMES.count}>
-                {repo.count !== 0 ? (
+              {repo.count !== 0 ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <StatusIcon supportStatus={repo.support_status || ''} />
                   <Button
