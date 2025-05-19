@@ -52,12 +52,12 @@ const capitalizeFirstLetter = (string: string) => {
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
   const [upcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
-  
+
   // Add new state variables to store both API responses
   const [allUpcomingChangesData, setAllUpcomingChangesData] = React.useState(emptyUpcomingChanges);
   const [relevantUpcomingChangesData, setRelevantUpcomingChangesData] = React.useState(emptyUpcomingChanges);
   const [dataFetchStatus, setDataFetchStatus] = React.useState({ all: false, relevant: false });
-  
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
@@ -108,15 +108,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     // Calculate counts for different types
     const filteredDeprecations = data.filter((item) => item.type === 'Deprecation');
     setNumDeprecations(filteredDeprecations.length);
-  
-    const filteredAdditions = data.filter(
-      (item) => item.type === 'Addition' || item.type === 'Enhancement'
-    );
+
+    const filteredAdditions = data.filter((item) => item.type === 'Addition' || item.type === 'Enhancement');
     setNumAdditions(filteredAdditions.length);
-  
+
     const filteredChanges = data.filter((item) => item.type === 'Change');
     setNumChanges(filteredChanges.length);
-  
+
     setVisibleData(data);
   };
 
@@ -154,29 +152,29 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setIsLoading(true);
     setNoDataAvailable(false);
     const currentViewFilter = viewFilter || selectedViewFilter;
-  
+
     try {
       // Choose API based on view filter
       if (currentViewFilter === 'all') {
         const response = await getAllUpcomingChanges();
         let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
-    
+
         // Check if ALL data source is empty - only then show no data state
         if (upcomingChangesParagraphs.length === 0) {
           setNoDataAvailable(true);
           setIsLoading(false);
           return;
         }
-        
+
         // Process the data to capitalize type values
         upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
           ...item,
           type: capitalizeFirstLetter(item.type),
         }));
-        
+
         // Store the all data in state
         setAllUpcomingChangesData(upcomingChangesParagraphs);
-        setDataFetchStatus(prev => ({ ...prev, all: true }));
+        setDataFetchStatus((prev) => ({ ...prev, all: true }));
         setUpcomingChanges(upcomingChangesParagraphs);
         processData(upcomingChangesParagraphs);
       } else {
@@ -185,16 +183,16 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           // We need to check if "all" data is empty
           const allResponse = await getAllUpcomingChanges();
           const allData: UpcomingChanges[] = allResponse && allResponse.data ? allResponse.data : [];
-          
+
           // Store the all data in state
           const processedAllData = allData.map((item) => ({
             ...item,
             type: capitalizeFirstLetter(item.type),
           }));
-          
+
           setAllUpcomingChangesData(processedAllData);
-          setDataFetchStatus(prev => ({ ...prev, all: true }));
-          
+          setDataFetchStatus((prev) => ({ ...prev, all: true }));
+
           // If all data is empty, show no data state regardless of current view
           if (allData.length === 0) {
             setNoDataAvailable(true);
@@ -207,27 +205,27 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           setIsLoading(false);
           return;
         }
-        
+
         // Now fetch relevant data
         const response = await getRelevantUpcomingChanges();
         let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
-      
-        // Process the data to capitalize type values  
+
+        // Process the data to capitalize type values
         upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
           ...item,
           type: capitalizeFirstLetter(item.type),
         }));
-        
+
         // Store the relevant data in state
         setRelevantUpcomingChangesData(upcomingChangesParagraphs);
-        setDataFetchStatus(prev => ({ ...prev, relevant: true }));
+        setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
         setUpcomingChanges(upcomingChangesParagraphs);
         processData(upcomingChangesParagraphs);
       }
-  
+
       // Apply URL parameters
       const newFilters = structuredClone(filtersForURL);
-  
+
       // Apply URL parameters if this is the initial load
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
@@ -249,7 +247,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentDateFilter(date);
         newFilters['date'] = date;
       }
-  
+
       // Include view filter in URL
       newFilters['viewFilter'] = currentViewFilter;
       setFiltersForURL(newFilters);
@@ -284,7 +282,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setCurrentNameFilters('');
     setCurrentReleaseFilters([]);
     setSelectedViewFilter('relevant');
-    
+
     // Use cached relevant data if available
     if (dataFetchStatus.relevant) {
       setUpcomingChanges(relevantUpcomingChangesData);
@@ -293,7 +291,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setVisibleData(upcomingChanges);
       fetchData('relevant');
     }
-    
+
     setFiltersForURL(DEFAULT_FILTERS);
     setSearchParams(buildURL(DEFAULT_FILTERS));
   };
