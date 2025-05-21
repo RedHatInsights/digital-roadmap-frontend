@@ -17,6 +17,7 @@ import {
 } from '@patternfly/react-core';
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
+import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import {
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
@@ -586,9 +587,40 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     );
   }
 
-  // placeholder for later
+  const redirectToDashboard = () => {
+    // get the base url and append the dashboard path
+    const dashUrl = `${window.location.origin}/insights/dashboard`;
+    // redirect to the dash board
+    window.location.href = dashUrl;
+  };
+
+  const lockedState = (
+    <Bullseye>
+      <EmptyState variant={EmptyStateVariant.sm}>
+        <EmptyStateHeader
+          icon={<EmptyStateIcon icon={LockIcon} />}
+          titleText="Planning is not yet enabled for your organization"
+          headingLevel="h2"
+        />
+        <EmptyStateBody>Workspace filtering has not been implemented.</EmptyStateBody>
+        <EmptyStateFooter>
+          <EmptyStateActions>
+            <Button variant="primary" onClick={redirectToDashboard}>
+              Return to home page
+            </Button>
+          </EmptyStateActions>
+        </EmptyStateFooter>
+      </EmptyState>
+    </Bullseye>
+  );
+
   if (error) {
-    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
+    if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
+      // corner case with workspace filtering, we need different error message
+      return lockedState;
+    } else {
+      return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
+    }
   }
 
   const emptyState = (
