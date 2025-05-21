@@ -456,7 +456,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   );
 
   if (error) {
-    debugger;
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
