@@ -30,10 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -49,6 +46,10 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const [showDateTooltip, setShowDateTooltip] = React.useState<boolean>(false);
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
+  // Hidden series state with forced re-render counter
+  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
+  const [renderKey, setRenderKey] = React.useState(0);
+
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
     if (!lifecycleData || lifecycleData.length === 0) {
@@ -63,7 +64,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
-  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
 
   const formatChartData = (
     name: string,
@@ -229,10 +229,56 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     }));
 
   const handleLegendClick = (props: { index: number }) => {
-    if (!hiddenSeries.delete(props.index)) {
-      hiddenSeries.add(props.index);
-    }
-    setHiddenSeries(new Set(hiddenSeries));
+    setHiddenSeries((prevHiddenSeries) => {
+      const newHiddenSeries = new Set(prevHiddenSeries);
+
+      // Get the count of series that have actual data
+      const totalVisibleSeries = legendNames.filter((s) => s.datapoints.length > 0).length;
+
+      // Convert Set to Array with proper typing
+      const hiddenIndices = Array.from(prevHiddenSeries) as number[];
+      const currentlyHiddenCount = hiddenIndices.filter((index: number) => {
+        return (
+          typeof index === 'number' &&
+          index >= 0 &&
+          index < legendNames.length &&
+          legendNames[index] &&
+          legendNames[index].datapoints.length > 0
+        );
+      }).length;
+
+      const isCurrentlyHidden = newHiddenSeries.has(props.index);
+
+      // If we're trying to hide the last visible series, don't allow it
+      if (!isCurrentlyHidden && currentlyHiddenCount >= totalVisibleSeries - 1) {
+        // Optionally show a message or just ignore the click
+        console.log('Cannot hide all series - at least one must remain visible');
+        return prevHiddenSeries; // Return unchanged state
+      }
+
+      // If we're trying to show a series when all are hidden, show this one and clear others
+      if (isCurrentlyHidden && currentlyHiddenCount === totalVisibleSeries) {
+        // Clear all hidden series to show everything
+        return new Set<number>();
+      }
+
+      // Normal toggle behavior
+      if (isCurrentlyHidden) {
+        newHiddenSeries.delete(props.index);
+      } else {
+        newHiddenSeries.add(props.index);
+      }
+
+      return newHiddenSeries;
+    });
+
+    // Force a re-render by updating the render key
+    setRenderKey((prev) => prev + 1);
+
+    // Clear any active tooltips when legend is clicked
+    setShowTooltip(false);
+    setShowDateTooltip(false);
+    setTooltipData(null);
   };
 
   const formatDate = (date: Date) => {
@@ -257,10 +303,20 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     }
   };
 
-  const fetchTicks = () => {
-    return updatedLifecycleData.map((data) => {
-      return data[0].x;
+  // Get only the visible ticks based on hidden series
+  const getVisibleTicks = () => {
+    const visibleNames = new Set<string>();
+
+    legendNames.forEach((series, index) => {
+      if (!hiddenSeries.has(index)) {
+        series.datapoints.forEach((datapoint) => {
+          visibleNames.add(datapoint.x);
+        });
+      }
     });
+
+    // Maintain the original order from updatedLifecycleData
+    return updatedLifecycleData.map((data) => data[0].x).filter((name) => visibleNames.has(name));
   };
 
   const isHidden = (index: number) => hiddenSeries.has(index);
@@ -394,7 +450,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         const { width } = chartContainerRef.current.getBoundingClientRect();
 
         // Get unique display names that are currently visible
-        // This can be removed once we remove duplicates from the backend api
+         // This can be removed once we remove duplicates from the backend api
         const visibleNames = new Set<string>();
 
         legendNames.forEach((series, index) => {
@@ -447,7 +503,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
       window.removeEventListener('resize', updateDimensions);
       window.removeEventListener('zoom', handleZoom);
     };
-  }, [updatedLifecycleData.length]);
+  }, [updatedLifecycleData.length, hiddenSeries, renderKey]);
 
   // Clear tooltips when mouse leaves the chart
   React.useEffect(() => {
@@ -467,17 +523,16 @@ End: ${formatDate(new Date(tooltipData.y))}`;
     };
   }, [chartContainerRef.current]);
 
-  // Calculate padding based on the longest name
+  // Calculate padding based on the longest visible name
   const calculateLeftPadding = () => {
-    if (updatedLifecycleData.length === 0) {
+    const visibleTicks = getVisibleTicks();
+
+    if (visibleTicks.length === 0) {
       return 160; // Default padding if no data
     }
 
-    // Get all names
-    const names = updatedLifecycleData.map((data) => data[0].x);
-
-    // Find the longest name
-    const longestName = names.reduce(
+    // Find the longest visible name
+    const longestName = visibleTicks.reduce(
       (longest, current) => (current.length > longest.length ? current : longest),
       ''
     );
@@ -503,6 +558,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
       {showDateTooltip && renderDateTooltip()}
 
       <Chart
+        key={renderKey} // Force re-render when renderKey changes
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
         events={getInteractiveLegendEvents({
@@ -546,14 +602,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         {/*Y axis with the name of each stream/operating system */}
         <ChartAxis
           showGrid
-          tickValues={fetchTicks()} // Keep all ticks
-          tickFormat={(tick) => {
-            // Check if this tick should be visible
-            const isVisible = legendNames.some(
-              (series, index) => !hiddenSeries.has(index) && series.datapoints.some((d) => d.x === tick)
-            );
-            return isVisible ? tick : ''; // Return empty string for hidden ticks
-          }}
+          tickValues={getVisibleTicks()}
           style={{
             tickLabels: {
               fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60)),
@@ -562,25 +611,21 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         />
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
-            if (s.datapoints.length === 0) {
+            // Skip rendering entirely if the series is hidden
+            if (hiddenSeries.has(index) || s.datapoints.length === 0) {
               return null;
             }
             return (
               <ChartBar
-                data={
-                  !hiddenSeries.has(index)
-                    ? s.datapoints
-                    : s.datapoints.map((d) => {
-                        return { ...d, x: null };
-                      })
-                }
-                key={`bar-${index}`}
+                data={s.datapoints}
+                key={`bar-${index}-${renderKey}`} // Include renderKey for forced re-render
                 name={`series-${index}`}
                 barWidth={10}
                 style={{
                   data: {
                     fill: getPackageColor(s.packageType),
                     stroke: getPackageColor(s.packageType),
+                    fillOpacity: hiddenSeries.has(index) ? 0.3 : 1, // Ensure proper opacity based on hidden state
                   },
                 }}
                 // Add direct event handlers for tooltips
@@ -594,6 +639,11 @@ End: ${formatDate(new Date(tooltipData.y))}`;
                             target: 'data',
                             mutation: (props) => {
                               const { datum, x, y } = props;
+
+                              // Don't show tooltip if series is hidden
+                              if (hiddenSeries.has(index)) {
+                                return null;
+                              }
 
                               // Regular bar tooltip positioning
                               const tooltipX = calculateTooltipPosition(x);

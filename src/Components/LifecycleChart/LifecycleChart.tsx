@@ -450,6 +450,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         const { width } = chartContainerRef.current.getBoundingClientRect();
 
         // Get unique display names that are currently visible
+         // This can be removed once we remove duplicates from the backend api
         const visibleNames = new Set<string>();
 
         legendNames.forEach((series, index) => {
