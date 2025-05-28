@@ -71,6 +71,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+  const [tableSortByValue, setTableSortByValue] = React.useState<string>('');
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
   // Add state for view filter (all, installed-only, installed-and-related)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
@@ -539,6 +540,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     fetchData(initialViewFilter);
   }, []);
 
+  useEffect(() => {
+    setChartSortByValue(tableSortByValue);
+  });
+
   // Update resetDataFiltering to use the properly filtered app data
   const resetDataFiltering = () => {
     let currentData: Stream[] | SystemLifecycleChanges[] = [];
@@ -749,6 +754,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           data={filteredTableData}
           viewFilter={selectedViewFilter}
           chartSortByValue={chartSortByValue}
+          setTableSortByValue={setTableSortByValue}
         />
       </>
     );
