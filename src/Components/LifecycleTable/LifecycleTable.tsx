@@ -23,6 +23,7 @@ interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   viewFilter?: string;
   chartSortByValue?: string;
+  setTableSortByValue: (tableSortByValue: string) => void;
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -62,6 +63,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   data,
   viewFilter,
   chartSortByValue,
+  setTableSortByValue,
 }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -113,32 +115,78 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   }, [data]);
 
   React.useEffect(() => {
+    // Synchronize sorting from chart dropdown to table
     if (chartSortByValue) {
       // Order match with headers in Lifecycle table, names match with sorting dropdown which is above chart.
       // This contains also specification for sorting - if the SortBy is sorted in ascending or descending way.
-      const chartSortByDefaultValues = {
+      const chartSortByDefaultValuesStreams = {
         Name: SortByDirection.asc,
         'Release version': SortByDirection.asc,
         'Release date': SortByDirection.asc,
         'Retirement date': SortByDirection.asc,
         Systems: SortByDirection.desc,
       };
-      // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
-      const indexChartSortBy = Object.keys(chartSortByDefaultValues).indexOf(chartSortByValue);
-
-      if (indexChartSortBy === -1) {
-        // Not found
-        console.error('Cannot find matching name. Failed to synchronize sorting between chart and table.');
-        return;
-      }
+      const chartSortByDefaultValuesSystems = {
+        Name: SortByDirection.asc,
+        'Release date': SortByDirection.asc,
+        'Retirement date': SortByDirection.asc,
+        Systems: SortByDirection.desc,
+      };
 
       if (type === 'streams') {
-        sortAppStreamsWithPagination(indexChartSortBy, Object.values(chartSortByDefaultValues)[indexChartSortBy]);
+        // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
+        const indexChartSortBy = Object.keys(chartSortByDefaultValuesStreams).indexOf(chartSortByValue);
+
+        if (indexChartSortBy === -1) {
+          // Not found
+          console.debug('Cannot find matching name. Failed to synchronize sorting between chart and table.');
+          return;
+        }
+        sortAppStreamsWithPagination(
+          indexChartSortBy,
+          Object.values(chartSortByDefaultValuesStreams)[indexChartSortBy]
+        );
       } else {
-        sortSystemsWithPagination(indexChartSortBy, Object.values(chartSortByDefaultValues)[indexChartSortBy]);
+        // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
+        const indexChartSortBy = Object.keys(chartSortByDefaultValuesSystems).indexOf(chartSortByValue);
+
+        if (indexChartSortBy === -1) {
+          // Not found
+          console.debug('Cannot find matching name. Failed to synchronize sorting between chart and table.');
+          return;
+        }
+        sortSystemsWithPagination(
+          indexChartSortBy,
+          Object.values(chartSortByDefaultValuesSystems)[indexChartSortBy]
+        );
       }
     }
   }, [chartSortByValue]);
+
+  React.useEffect(() => {
+    // Set the table sort to be able to synchronize chart sorting with table
+    // Mapping index into name of the selected key for sorting
+    const tableIndexToChartMappingStreams = [
+      'Name',
+      'Release version',
+      'Release date',
+      'Retirement date',
+      'Systems',
+    ];
+    const tableIndexToChartMappingSystems = [
+      'Name',
+      'Release version',
+      'Release date',
+      'Retirement date',
+      'Systems',
+    ];
+
+    if (type === 'streams' && activeAppSortIndex !== undefined) {
+      setTableSortByValue(tableIndexToChartMappingStreams[activeAppSortIndex]);
+    } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
+      setTableSortByValue(tableIndexToChartMappingSystems[activeSystemSortIndex]);
+    }
+  }, [activeAppSortIndex, activeSystemSortIndex]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
