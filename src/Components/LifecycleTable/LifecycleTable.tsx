@@ -49,6 +49,8 @@ const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ suppor
       return <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />;
     case 'Support ends within 6 months':
       return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
+    case 'Support ends within 3 months':
+      return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
     case 'Retired':
       return <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />;
     default:
@@ -351,7 +353,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                       padding: 0,
                       paddingLeft:
                         repo.support_status === 'Supported' ||
-                        repo.support_status === 'Support ends within 6 months' ||
+                        repo.support_status === 'Support ends within 3 months' ||
                         repo.support_status === 'Retired'
                           ? '0'
                           : '18px',

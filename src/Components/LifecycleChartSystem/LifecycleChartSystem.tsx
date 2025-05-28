@@ -180,11 +180,13 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
   constructLifecycleData(lifecycleData);
 
+  // Updated default legend names to include both 3-month and 6-month support types
   const DEFAULT_LEGEND_NAMES: {
     packageType: string;
     datapoints: ChartDataObject[];
   }[] = [
     { packageType: 'Supported', datapoints: [] },
+    { packageType: 'Support ends within 3 months', datapoints: [] },
     { packageType: 'Support ends within 6 months', datapoints: [] },
     { packageType: 'Retired', datapoints: [] },
     { packageType: 'Not installed', datapoints: [] },
@@ -192,10 +194,25 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   ];
 
   const getFilteredLegendNames = () => {
+    let filteredLegends = DEFAULT_LEGEND_NAMES;
+
+    // Filter out "Not installed" for 'all' view
     if (viewFilter === 'all') {
-      return DEFAULT_LEGEND_NAMES.filter((legend) => legend.packageType !== 'Not installed');
+      filteredLegends = filteredLegends.filter((legend) => legend.packageType !== 'Not installed');
     }
-    return DEFAULT_LEGEND_NAMES;
+
+    // Filter legend based on data type:
+    // - For RHEL Systems: show "Support ends within 3 months", hide "Support ends within 6 months"
+    // - For Appstreams: show "Support ends within 6 months", hide "Support ends within 3 months"
+    if (dataType === 'lifecycle') {
+      // RHEL Systems - use 3-month support type
+      filteredLegends = filteredLegends.filter((legend) => legend.packageType !== 'Support ends within 6 months');
+    } else if (dataType === 'appLifecycle') {
+      // Appstreams - use 6-month support type
+      filteredLegends = filteredLegends.filter((legend) => legend.packageType !== 'Support ends within 3 months');
+    }
+
+    return filteredLegends;
   };
 
   const calculateLegendNames = () => {
@@ -244,6 +261,8 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     switch (datum) {
       case 'Retired':
         return 'var(--pf-v5-global--danger-color--100)';
+      case 'Support ends within 3 months':
+        return 'var(--pf-v5-global--warning-color--100)';
       case 'Support ends within 6 months':
         return 'var(--pf-v5-global--warning-color--100)';
       case 'Not installed':
