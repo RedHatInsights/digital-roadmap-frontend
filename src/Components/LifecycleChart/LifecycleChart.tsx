@@ -30,10 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChart: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
