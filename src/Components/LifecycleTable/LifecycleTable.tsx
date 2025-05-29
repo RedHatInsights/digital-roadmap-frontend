@@ -22,7 +22,7 @@ interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   viewFilter?: string;
   chartSortByValue?: string;
-  setTableSortByValue: (tableSortByValue: string) => void;
+  updateChartSortValue: (tableSortByValue: string) => void; // used for synchronize sorting between chart and table
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -64,7 +64,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   data,
   viewFilter,
   chartSortByValue,
-  setTableSortByValue,
+  updateChartSortValue,
 }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -183,9 +183,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     ];
 
     if (type === 'streams' && activeAppSortIndex !== undefined) {
-      setTableSortByValue(tableIndexToChartMappingStreams[activeAppSortIndex]);
+      updateChartSortValue(tableIndexToChartMappingStreams[activeAppSortIndex]);
     } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
-      setTableSortByValue(tableIndexToChartMappingSystems[activeSystemSortIndex]);
+      updateChartSortValue(tableIndexToChartMappingSystems[activeSystemSortIndex]);
     }
   }, [activeAppSortIndex, activeSystemSortIndex]);
 

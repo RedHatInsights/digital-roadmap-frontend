@@ -793,7 +793,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           data={filteredTableData}
           viewFilter={selectedViewFilter}
           chartSortByValue={chartSortByValue}
-          setTableSortByValue={setChartSortByValue}
+          updateChartSortValue={updateChartSortValue}
         />
       </>
     );
@@ -812,7 +812,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             setLifecycleDropdownValue={setLifecycleDropdownValue}
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
-            setSelectedChartSortBy={updateChartSortValue}
+            updateChartSortValue={updateChartSortValue}
             downloadCSV={downloadCSV}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
