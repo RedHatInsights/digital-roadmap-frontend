@@ -30,7 +30,10 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
+  lifecycleData,
+  viewFilter,
+}: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -450,7 +453,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
         const { width } = chartContainerRef.current.getBoundingClientRect();
 
         // Get unique display names that are currently visible
-         // This can be removed once we remove duplicates from the backend api
+        // This can be removed once we remove duplicates from the backend api
         const visibleNames = new Set<string>();
 
         legendNames.forEach((series, index) => {
