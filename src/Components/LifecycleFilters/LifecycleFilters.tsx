@@ -34,7 +34,7 @@ interface LifecycleFiltersProps {
   setLifecycleDropdownValue: (value: string) => void;
   onLifecycleDropdownSelect: (value: string) => void;
   selectedChartSortBy: string;
-  setSelectedChartSortBy: (name: string) => void;
+  updateChartSortValue: (name: string) => void;
   downloadCSV: () => void;
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
@@ -50,7 +50,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   setLifecycleDropdownValue,
   onLifecycleDropdownSelect,
   selectedChartSortBy,
-  setSelectedChartSortBy,
+  updateChartSortValue,
   downloadCSV,
   selectedViewFilter,
   handleViewFilterChange,
@@ -62,9 +62,9 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   React.useEffect(() => {
     if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
       // Default to the first available option when "Systems" becomes disabled
-      setSelectedChartSortBy('Retirement date');
+      updateChartSortValue('Retirement date');
     }
-  }, [selectedViewFilter, selectedChartSortBy, setSelectedChartSortBy]);
+  }, [selectedViewFilter, selectedChartSortBy, updateChartSortValue]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
@@ -87,7 +87,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   ) => {
     setIsOpen(false);
     if (value && typeof value == 'string') {
-      setSelectedChartSortBy(value);
+      updateChartSortValue(value);
     }
   };
 
