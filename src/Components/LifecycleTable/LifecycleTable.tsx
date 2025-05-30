@@ -133,6 +133,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         Systems: SortByDirection.desc,
       };
 
+      debugger;
+
       if (type === 'streams') {
         // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
         const indexChartSortBy = Object.keys(chartSortByDefaultValuesStreams).indexOf(chartSortByValue);
@@ -173,13 +175,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       'Retirement date',
       'Systems',
     ];
-    const tableIndexToChartMappingSystems = [
-      'Name',
-      'Release version',
-      'Release date',
-      'Retirement date',
-      'Systems',
-    ];
+    const tableIndexToChartMappingSystems = ['Name', 'Release date', 'Retirement date', 'Systems'];
 
     if (type === 'streams' && activeAppSortIndex !== undefined) {
       updateChartSortValue(tableIndexToChartMappingStreams[activeAppSortIndex]);
