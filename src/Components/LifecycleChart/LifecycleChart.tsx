@@ -13,6 +13,7 @@ import {
 } from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
+import { mapSupportTypeToDisplayName } from '../../utils/utils';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
@@ -73,12 +74,15 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
     version: string,
     numSystems: string
   ) => {
+    // Map the support type to display name based on data type
+    const displayPackageType = mapSupportTypeToDisplayName(packageType, dataType);
+
     return updatedLifecycleData.push([
       {
         x: name,
         y0: new Date(startDate),
         y: new Date(endDate),
-        packageType,
+        packageType: displayPackageType,
         version,
         numSystems,
         name: name,
