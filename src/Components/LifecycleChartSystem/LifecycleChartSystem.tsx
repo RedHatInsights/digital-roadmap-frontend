@@ -252,33 +252,28 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     setHiddenSeries((prevHiddenSeries) => {
       const newHiddenSeries = new Set(prevHiddenSeries);
 
-      // Get the count of series that have actual data
-      const totalVisibleSeries = legendNames.filter((s) => s.datapoints.length > 0).length;
+      // Get only series that have actual data
+      const seriesWithData = legendNames
+        .map((series, index) => ({ series, index }))
+        .filter(({ series }) => series.datapoints.length > 0);
 
-      // Convert Set to Array with proper typing
-      const hiddenIndices = Array.from(prevHiddenSeries) as number[];
-      const currentlyHiddenCount = hiddenIndices.filter((index: number) => {
-        return (
-          typeof index === 'number' &&
-          index >= 0 &&
-          index < legendNames.length &&
-          legendNames[index] &&
-          legendNames[index].datapoints.length > 0
-        );
-      }).length;
+      // Count how many series with data are currently visible
+      const currentlyVisibleSeriesWithData = seriesWithData.filter(({ index }) => !prevHiddenSeries.has(index));
 
       const isCurrentlyHidden = newHiddenSeries.has(props.index);
+      const clickedSeriesHasData = legendNames[props.index]?.datapoints.length > 0;
 
-      // If we're trying to hide the last visible series, don't allow it
-      if (!isCurrentlyHidden && currentlyHiddenCount >= totalVisibleSeries - 1) {
-        // Optionally show a message or just ignore the click
-        console.log('Cannot hide all series - at least one must remain visible');
-        return prevHiddenSeries; // Return unchanged state
+      // Only prevent hiding if:
+      // 1. The clicked series has data
+      // 2. It would be the last visible series with data
+      if (!isCurrentlyHidden && clickedSeriesHasData && currentlyVisibleSeriesWithData.length <= 1) {
+        console.log('Cannot hide all series - at least one with data must remain visible');
+        return prevHiddenSeries;
       }
 
-      // If we're trying to show a series when all are hidden, show this one and clear others
-      if (isCurrentlyHidden && currentlyHiddenCount === totalVisibleSeries) {
-        // Clear all hidden series to show everything
+      // If we're trying to show a series when all series with data are hidden,
+      // show this one and clear others
+      if (isCurrentlyHidden && currentlyVisibleSeriesWithData.length === 0) {
         return new Set<number>();
       }
 
