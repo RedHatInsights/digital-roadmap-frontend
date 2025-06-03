@@ -104,3 +104,16 @@ export const getNewChartName = (name: string, major: number, minor: number, life
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${lifecycleText}`;
 };
+
+export const mapSupportTypeToDisplayName = (supportType: string, dataType: string): string => {
+    if (supportType === 'Near retirement') {
+      // Map to the appropriate display name based on data type
+      if (dataType === 'appLifecycle') {
+        return 'Support ends within 6 months';
+      } else {
+        return 'Support ends within 3 months';
+      }
+    }
+    // Return the original support type for all other cases
+    return supportType;
+  };
