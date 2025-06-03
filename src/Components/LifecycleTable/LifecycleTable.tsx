@@ -166,7 +166,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   }, [chartSortByValue]);
 
   React.useEffect(() => {
-    // Set the table sort to be able to synchronize chart sorting with table
+    // Set the table sort to be able to synchronize table sort with chart
     // Mapping index into name of the selected key for sorting
     const tableIndexToChartMappingStreams = [
       'Name',
