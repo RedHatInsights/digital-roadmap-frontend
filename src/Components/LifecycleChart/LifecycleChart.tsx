@@ -65,6 +65,20 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
 
+  // Helper function to map backend support type to display name
+  const mapSupportTypeToDisplayName = (supportType: string, dataType: string): string => {
+    if (supportType === 'Near retirement') {
+      // Map to the appropriate display name based on data type
+      if (dataType === 'appLifecycle') {
+        return 'Support ends within 6 months';
+      } else {
+        return 'Support ends within 3 months';
+      }
+    }
+    // Return the original support type for all other cases
+    return supportType;
+  };
+
   const formatChartData = (
     name: string,
     startDate: string,
@@ -73,12 +87,15 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
     version: string,
     numSystems: string
   ) => {
+    // Map the support type to display name based on data type
+    const displayPackageType = mapSupportTypeToDisplayName(packageType, dataType);
+
     return updatedLifecycleData.push([
       {
         x: name,
         y0: new Date(startDate),
         y: new Date(endDate),
-        packageType,
+        packageType: displayPackageType,
         version,
         numSystems,
         name: name,
