@@ -269,12 +269,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
         return prevHiddenSeries;
       }
 
-      // If we're trying to show a series when all series with data are hidden,
-      // show this one and clear others
-      if (isCurrentlyHidden && currentlyVisibleSeriesWithData.length === 0) {
-        return new Set<number>();
-      }
-
       // Normal toggle behavior
       if (isCurrentlyHidden) {
         newHiddenSeries.delete(props.index);
