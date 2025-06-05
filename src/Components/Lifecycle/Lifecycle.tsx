@@ -750,6 +750,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           viewFilter={selectedViewFilter}
           chartSortByValue={chartSortByValue}
           updateChartSortValue={updateChartSortValue}
+          lifecycleDropdownValue={lifecycleDropdownValue}
         />
       </>
     );
