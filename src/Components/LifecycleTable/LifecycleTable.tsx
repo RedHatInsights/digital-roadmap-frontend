@@ -24,6 +24,7 @@ interface LifecycleTableProps {
   viewFilter?: string;
   chartSortByValue?: string;
   updateChartSortValue: (tableSortByValue: string) => void; // used for synchronize sorting between chart and table
+  lifecycleDropdownValue: string;
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -64,6 +65,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   viewFilter,
   chartSortByValue,
   updateChartSortValue,
+  lifecycleDropdownValue,
 }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -163,7 +165,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         );
       }
     }
-  }, [chartSortByValue]);
+  }, [chartSortByValue, lifecycleDropdownValue]);
 
   React.useEffect(() => {
     // Set the table sort to be able to synchronize table sort with chart
