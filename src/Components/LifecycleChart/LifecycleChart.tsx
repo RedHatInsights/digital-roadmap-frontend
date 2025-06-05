@@ -261,8 +261,9 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
       const clickedSeriesHasData = legendNames[props.index]?.datapoints.length > 0;
 
       // Only prevent hiding if:
-      // 1. The clicked series has data
-      // 2. It would be the last visible series with data
+      // - the series is not currently hidden (without this it wouldn't be possible unhide series in case the last one is showing) and
+      // - the clicked series has data (if it doesn't, it can be hidden anyway) and
+      // - it would be the last visible series with data (hiding last visible series results in empty chart)
       if (!isCurrentlyHidden && clickedSeriesHasData && currentlyVisibleSeriesWithData.length <= 1) {
         console.log('Cannot hide all series - at least one with data must remain visible');
         return prevHiddenSeries;
