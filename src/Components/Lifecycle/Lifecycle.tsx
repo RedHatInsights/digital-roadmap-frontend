@@ -221,181 +221,140 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   // First data fetch - called only once
-// First data fetch - called only once
-const initializeData = async (viewFilter: string) => {
-  setIsLoading(true);
-  setNoDataAvailable(false);
+  const initializeData = async (viewFilter: string) => {
+    setIsLoading(true);
+    setNoDataAvailable(false);
 
-  try {
-    // Fetch all data sets once
-    const relevantSystemResponse = await getRelevantLifecycleSystems();
-    const relevantAppResponse = {
-      data: [
-        {
-          name: 'Ansible Core',
-          application_stream_name: 'Ansible Core',
-          display_name: 'Ansible Core 2.12',
-          os_major: 8,
-          os_minor: 0,
-          start_date: '2022-05-18',
-          end_date: '2023-11-10',
-          count: 30,
-          rolling: false,
-          support_status: 'Retired',
-          impl: 'package',
-          systems: [
-            '17aca508-930f-419d-aa0a-784b5d894c4d',
-            '8d10179a-f07a-413d-be08-559d94ba5706',
-            // ... rest of the systems array
-          ],
-          related: false,
-        },
-        {
-          name: 'Apache httpd 2.4',
-          application_stream_name: 'Apache httpd 2.4',
-          display_name: 'Apache HTTPD 2.4',
-          os_major: 8,
-          os_minor: 0,
-          start_date: '2022-05-18',
-          end_date: '2032-05-31',
-          count: 4,
-          rolling: false,
-          support_status: 'Supported',
-          impl: 'package',
-          systems: [
-            'e47f464d-d7f1-4c56-8829-05d5af3fe72b',
-            'ba7e0422-6950-460e-8308-c1d9a8db1f70',
-            '2d1e8106-648d-4a96-8d3e-a214706c2163',
-            '69b52879-44df-4306-81ce-e8b823ca22b3',
-          ],
-          related: false,
-        },
-        // ... add all other entries from your mock data
-      ],
-    };
-    const allSystemResponse = await getAllLifecycleSystems();
-    const allAppResponse = await getAllLifecycleAppstreams();
+    try {
+      // Fetch all data sets once
+      const relevantSystemResponse = await getRelevantLifecycleSystems();
+      const relevantAppResponse = await getRelevantLifecycleAppstreams();
+      const allSystemResponse = await getAllLifecycleSystems();
+      const allAppResponse = await getAllLifecycleAppstreams();
 
-    // Store all fetched data in state
-    const relatedInstalledSystems = relevantSystemResponse.data || [];
-    const relatedInstalledApps = relevantAppResponse.data || [];
-    // filter out system data with null minor field
-    const allSystems = (allSystemResponse.data || []).filter(
-      (datum: SystemLifecycleChanges) => datum.minor !== null
-    );
-    const allApps = allAppResponse.data || [];
+      // Store all fetched data in state
+      const relatedInstalledSystems = relevantSystemResponse.data || [];
+      const relatedInstalledApps = relevantAppResponse.data || [];
+      // filter out system data with null minor field
+      const allSystems = (allSystemResponse.data || []).filter(
+        (datum: SystemLifecycleChanges) => datum.minor !== null
+      );
+      const allApps = allAppResponse.data || [];
 
-    // Filter out from the instlled & related list of Stream and SystemLifecycleChanges only the installed ones
-    // API is set to provide instlled & related and by this filter we can lower the number of API requests
-    const installedSystems = [
-      ...relatedInstalledSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
-    ];
-    const installedApps = [...relatedInstalledApps.filter((datum: Stream) => datum.related === false)];
+      // Filter out from the instlled & related list of Stream and SystemLifecycleChanges only the installed ones
+      // API is set to provide instlled & related and by this filter we can lower the number of API requests
+      const installedSystems = [
+        ...relatedInstalledSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
+      ];
+      const installedApps = [...relatedInstalledApps.filter((datum: Stream) => datum.related === false)];
 
-    // Store the data in state
-    setRelatedSystemData(relatedInstalledSystems);
-    setRelatedAppData(relatedInstalledApps);
-    setAllSystemData(allSystems);
-    setAllAppData(allApps);
-    setInstalledAppData(installedApps);
-    setInstalledSystemData(installedSystems);
+      // Store the data in state
+      setRelatedSystemData(relatedInstalledSystems);
+      setRelatedAppData(relatedInstalledApps);
+      setAllSystemData(allSystems);
+      setAllAppData(allApps);
+      setInstalledAppData(installedApps);
+      setInstalledSystemData(installedSystems);
 
-    // Mark data as initialized
-    setDataInitialized(true);
+      // Mark data as initialized
+      setDataInitialized(true);
 
-    // Use the explicitly passed viewFilter or default to selectedViewFilter
-    let currentViewFilter = viewFilter || selectedViewFilter;
-    const currentDropdown = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
+      // Use the explicitly passed viewFilter or default to selectedViewFilter
+      let currentViewFilter = viewFilter || selectedViewFilter;
+      const currentDropdown = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
 
-    // Check if there's installed data for the current dropdown selection
-    let hasInstalledDataForDropdown = false;
-    if (currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      hasInstalledDataForDropdown = installedSystems.length > 0;
-    } else {
-      // For app streams (DEFAULT_DROPDOWN_VALUE or RHEL_8_STREAMS_DROPDOWN_VALUE)
-      const installedAppStreams = filterAppDataByDropdown(installedApps, currentDropdown);
-      hasInstalledDataForDropdown = installedAppStreams.length > 0;
-    }
-
-    // Set noDataAvailable based on installed data for current dropdown
-    setNoDataAvailable(!hasInstalledDataForDropdown);
-
-    // If no installed data for current dropdown and we're in installed-only or installed-and-related view,
-    // automatically switch to "all" view
-    if (!hasInstalledDataForDropdown && (currentViewFilter === 'installed-only' || currentViewFilter === 'installed-and-related')) {
-      // Check if "all" view has data for current dropdown
-      let hasAllDataForDropdown = false;
+      // Check if there's installed data for the current dropdown selection
+      let hasInstalledDataForDropdown = false;
       if (currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-        hasAllDataForDropdown = allSystems.length > 0;
+        hasInstalledDataForDropdown = installedSystems.length > 0;
       } else {
-        const allAppStreams = filterAppDataByDropdown(allApps, currentDropdown);
-        hasAllDataForDropdown = allAppStreams.length > 0;
+        // For app streams (DEFAULT_DROPDOWN_VALUE or RHEL_8_STREAMS_DROPDOWN_VALUE)
+        const installedAppStreams = filterAppDataByDropdown(installedApps, currentDropdown);
+        hasInstalledDataForDropdown = installedAppStreams.length > 0;
       }
 
-      if (hasAllDataForDropdown) {
-        currentViewFilter = 'all';
-        setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
+      // Set noDataAvailable based on installed data for current dropdown
+      setNoDataAvailable(!hasInstalledDataForDropdown);
+
+      // If no installed data for current dropdown and we're in installed-only or installed-and-related view,
+      // automatically switch to "all" view
+      if (
+        !hasInstalledDataForDropdown &&
+        (currentViewFilter === 'installed-only' || currentViewFilter === 'installed-and-related')
+      ) {
+        // Check if "all" view has data for current dropdown
+        let hasAllDataForDropdown = false;
+        if (currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          hasAllDataForDropdown = allSystems.length > 0;
+        } else {
+          const allAppStreams = filterAppDataByDropdown(allApps, currentDropdown);
+          hasAllDataForDropdown = allAppStreams.length > 0;
+        }
+
+        if (hasAllDataForDropdown) {
+          currentViewFilter = 'all';
+          setSelectedViewFilter('all');
+          const newFilters = structuredClone(filters) as ExtendedFilter;
+          newFilters.viewFilter = 'all';
+          setFilters(newFilters);
+          setSearchParams(buildURL(newFilters));
+        }
       }
+
+      // Directly use the fetched data to process without relying on state updates
+      const systemData = (() => {
+        switch (currentViewFilter) {
+          case 'all':
+            return allSystems;
+          case 'installed-only':
+            return installedSystems;
+          case 'installed-and-related':
+            return relatedInstalledSystems;
+          default:
+            return installedSystems;
+        }
+      })();
+      const appData = (() => {
+        switch (currentViewFilter) {
+          case 'all':
+            return allApps;
+          case 'installed-only':
+            return installedApps;
+          case 'installed-and-related':
+            return relatedInstalledApps;
+          default:
+            return installedApps;
+        }
+      })();
+
+      // Store the full app data set
+      setFullAppLifecycleChanges([...appData]);
+
+      // Filter based on current dropdown value
+      const appStreams = filterAppDataByDropdown([...appData], currentDropdown);
+      setAppLifecycleChanges(appStreams);
+
+      // Process the data without waiting for state updates
+      if (systemData.length > 0 || appStreams.length > 0) {
+        // Update and set the system lifecycle data
+        const updatedSystems = updateLifecycleData(systemData);
+        setSystemLifecycleChanges(updatedSystems);
+
+        // Apply filters based on URL parameters
+        // Directly using the data we already have instead of relying on state variables
+        filterInitialData(appStreams, updatedSystems);
+      } else {
+        // If no data, at least initialize empty arrays
+        setFilteredTableData([]);
+        setFilteredChartData([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching lifecycle changes:', error);
+      setError({ message: error });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Directly use the fetched data to process without relying on state updates
-    const systemData = (() => {
-      switch (currentViewFilter) {
-        case 'all':
-          return allSystems;
-        case 'installed-only':
-          return installedSystems;
-        case 'installed-and-related':
-          return relatedInstalledSystems;
-        default:
-          return installedSystems;
-      }
-    })();
-    const appData = (() => {
-      switch (currentViewFilter) {
-        case 'all':
-          return allApps;
-        case 'installed-only':
-          return installedApps;
-        case 'installed-and-related':
-          return relatedInstalledApps;
-        default:
-          return installedApps;
-      }
-    })();
-
-    // Store the full app data set
-    setFullAppLifecycleChanges([...appData]);
-
-    // Filter based on current dropdown value
-    const appStreams = filterAppDataByDropdown([...appData], currentDropdown);
-    setAppLifecycleChanges(appStreams);
-
-    // Process the data without waiting for state updates
-    if (systemData.length > 0 || appStreams.length > 0) {
-      // Update and set the system lifecycle data
-      const updatedSystems = updateLifecycleData(systemData);
-      setSystemLifecycleChanges(updatedSystems);
-
-      // Apply filters based on URL parameters
-      // Directly using the data we already have instead of relying on state variables
-      filterInitialData(appStreams, updatedSystems);
-    } else {
-      // If no data, at least initialize empty arrays
-      setFilteredTableData([]);
-      setFilteredChartData([]);
-    }
-  } catch (error: any) {
-    console.error('Error fetching lifecycle changes:', error);
-    setError({ message: error });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // Updated processData function with dropdown-specific no data handling
   const processData = (viewFilter: string) => {
