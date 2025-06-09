@@ -22,7 +22,7 @@ interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   viewFilter?: string;
   chartSortByValue?: string;
-  updateChartSortValue: (tableSortByValue: string) => void; // used for synchronize sorting between chart and table
+  updateChartSortValue: (tableSortByValue: string, order?: string) => void; // used for synchronize sorting between chart and table
   lifecycleDropdownValue: string;
 }
 
@@ -136,8 +136,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         Systems: SortByDirection.desc,
       };
 
-      debugger;
-
       if (type === 'streams') {
         // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
         const indexChartSortBy = Object.keys(chartSortByDefaultValuesStreams).indexOf(chartSortByValue);
@@ -181,11 +179,11 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     const tableIndexToChartMappingSystems = ['Name', 'Release date', 'Retirement date', 'Systems'];
 
     if (type === 'streams' && activeAppSortIndex !== undefined) {
-      updateChartSortValue(tableIndexToChartMappingStreams[activeAppSortIndex]);
+      updateChartSortValue(tableIndexToChartMappingStreams[activeAppSortIndex], activeAppSortDirection);
     } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
-      updateChartSortValue(tableIndexToChartMappingSystems[activeSystemSortIndex]);
+      updateChartSortValue(tableIndexToChartMappingSystems[activeSystemSortIndex], activeSystemSortDirection);
     }
-  }, [activeAppSortIndex, activeSystemSortIndex]);
+  }, [activeAppSortIndex, activeSystemSortIndex, activeAppSortDirection, activeSystemSortDirection]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
