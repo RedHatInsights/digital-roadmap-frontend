@@ -97,17 +97,17 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       if (isRHEL) {
         return 'Add systems to Inventory to view only RHEL releases installed on or related to those systems.';
       } else if (isRHEL9AppStream) {
-        return 'Add systems to Inventory to view only RHEL 9 application streams installed on or related to those systems.';
+        return 'Add systems to Inventory to view only RHEL\u00A09 application streams installed on or related to those systems.';
       } else if (isRHEL8AppStream) {
-        return 'Add systems to Inventory to view only RHEL 8 application streams installed on or related to those systems.';
+        return 'Add systems to Inventory to view only RHEL\u00A08 application streams installed on or related to those systems.';
       }
     } else if (buttonId === 'installed-only') {
       if (isRHEL) {
         return 'Add systems to Inventory to view only RHEL releases installed on those systems.';
       } else if (isRHEL9AppStream) {
-        return 'Add systems to Inventory to view only RHEL 9 application streams installed on those systems.';
+        return 'Add systems to Inventory to view only RHEL\u00A09 application streams installed on those systems.';
       } else if (isRHEL8AppStream) {
-        return 'Add systems to Inventory to view only RHEL 8 application streams installed on those systems.';
+        return 'Add systems to Inventory to view only RHEL\u00A08 application streams installed on those systems.';
       }
     }
   };
