@@ -217,9 +217,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     try {
       // Fetch all data sets once
       const relevantSystemResponse = await getRelevantLifecycleSystems();
-      const relevantAppResponse = {
-        data: [],
-      };
+      const relevantAppResponse = await getRelevantLifecycleAppstreams();
       const allSystemResponse = await getAllLifecycleSystems();
       const allAppResponse = await getAllLifecycleAppstreams();
 
