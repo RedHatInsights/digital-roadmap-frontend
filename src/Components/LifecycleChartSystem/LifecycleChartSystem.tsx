@@ -30,10 +30,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -264,17 +261,13 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
       const clickedSeriesHasData = legendNames[props.index]?.datapoints.length > 0;
 
       // Only prevent hiding if:
-      // 1. The clicked series has data
-      // 2. It would be the last visible series with data
+      // - the series is not currently hidden (without this it wouldn't be possible to unhide series
+      //   in case the last one is showing) and
+      // - the clicked series has data (if it doesn't, it can be hidden anyway) and
+      // - it would be the last visible series with data (hiding last visible series results in empty chart)
       if (!isCurrentlyHidden && clickedSeriesHasData && currentlyVisibleSeriesWithData.length <= 1) {
         console.log('Cannot hide all series - at least one with data must remain visible');
         return prevHiddenSeries;
-      }
-
-      // If we're trying to show a series when all series with data are hidden,
-      // show this one and clear others
-      if (isCurrentlyHidden && currentlyVisibleSeriesWithData.length === 0) {
-        return new Set<number>();
       }
 
       // Normal toggle behavior
