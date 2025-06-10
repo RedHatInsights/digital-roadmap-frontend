@@ -166,35 +166,24 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       !hasInstalledData &&
       (selectedViewFilter === 'installed-only' || selectedViewFilter === 'installed-and-related')
     ) {
-      // Check if "all" view has data for this dropdown
-      let hasAllData = false;
+      // Switch to "all" view
+      setSelectedViewFilter('all');
+      const updatedFilters = structuredClone(newFilters);
+      updatedFilters.viewFilter = 'all';
+      setFilters(updatedFilters);
+      setSearchParams(buildURL(updatedFilters));
+
+      // Update dataToProcess to use "all" data
       if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-        hasAllData = allSystemData.length > 0;
+        dataToProcess = allSystemData;
+        // Update systemLifecycleChanges to use all data
+        const updatedSystems = updateLifecycleData(allSystemData);
+        setSystemLifecycleChanges(updatedSystems);
+        dataToProcess = updatedSystems;
       } else {
-        const allAppFiltered = filterAppDataByDropdown(allAppData, value);
-        hasAllData = allAppFiltered.length > 0;
-      }
-
-      if (hasAllData) {
-        // Switch to "all" view
-        setSelectedViewFilter('all');
-        const updatedFilters = structuredClone(newFilters);
-        updatedFilters.viewFilter = 'all';
-        setFilters(updatedFilters);
-        setSearchParams(buildURL(updatedFilters));
-
-        // Update dataToProcess to use "all" data
-        if (value === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-          dataToProcess = allSystemData;
-          // Update systemLifecycleChanges to use all data
-          const updatedSystems = updateLifecycleData(allSystemData);
-          setSystemLifecycleChanges(updatedSystems);
-          dataToProcess = updatedSystems;
-        } else {
-          dataToProcess = filterAppDataByDropdown(allAppData, value);
-          setFullAppLifecycleChanges(allAppData);
-          setAppLifecycleChanges(dataToProcess);
-        }
+        dataToProcess = filterAppDataByDropdown(allAppData, value);
+        setFullAppLifecycleChanges(allAppData);
+        setAppLifecycleChanges(dataToProcess);
       }
       // Note: noDataAvailable remains true (set above) to keep other views disabled
     }
@@ -228,7 +217,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     try {
       // Fetch all data sets once
       const relevantSystemResponse = await getRelevantLifecycleSystems();
-      const relevantAppResponse = await getRelevantLifecycleAppstreams();
+      const relevantAppResponse = {
+        data: [],
+      };
       const allSystemResponse = await getAllLifecycleSystems();
       const allAppResponse = await getAllLifecycleAppstreams();
 
@@ -282,23 +273,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         !hasInstalledDataForDropdown &&
         (currentViewFilter === 'installed-only' || currentViewFilter === 'installed-and-related')
       ) {
-        // Check if "all" view has data for current dropdown
-        let hasAllDataForDropdown = false;
-        if (currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-          hasAllDataForDropdown = allSystems.length > 0;
-        } else {
-          const allAppStreams = filterAppDataByDropdown(allApps, currentDropdown);
-          hasAllDataForDropdown = allAppStreams.length > 0;
-        }
-
-        if (hasAllDataForDropdown) {
-          currentViewFilter = 'all';
-          setSelectedViewFilter('all');
-          const newFilters = structuredClone(filters) as ExtendedFilter;
-          newFilters.viewFilter = 'all';
-          setFilters(newFilters);
-          setSearchParams(buildURL(newFilters));
-        }
+        currentViewFilter = 'all';
+        setSelectedViewFilter('all');
+        const newFilters = structuredClone(filters) as ExtendedFilter;
+        newFilters.viewFilter = 'all';
+        setFilters(newFilters);
+        setSearchParams(buildURL(newFilters));
       }
 
       // Directly use the fetched data to process without relying on state updates
@@ -453,23 +433,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       // Auto-switch to "all" view if needed
       let effectiveViewFilter = viewFilter;
       if (!hasRelevantData && viewFilter !== 'all') {
-        // Check if "all" view has data for current dropdown
-        let allViewHasData = false;
-        if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-          allViewHasData = allSystemData.length > 0;
-        } else {
-          const allAppFiltered = filterAppDataByDropdown(allAppData, lifecycleDropdownValue);
-          allViewHasData = allAppFiltered.length > 0;
-        }
-
-        if (allViewHasData) {
-          effectiveViewFilter = 'all';
-          setSelectedViewFilter('all');
-          const newFilters = structuredClone(filters) as ExtendedFilter;
-          newFilters.viewFilter = 'all';
-          setFilters(newFilters);
-          setSearchParams(buildURL(newFilters));
-        }
+        effectiveViewFilter = 'all';
+        setSelectedViewFilter('all');
+        const newFilters = structuredClone(filters) as ExtendedFilter;
+        newFilters.viewFilter = 'all';
+        setFilters(newFilters);
+        setSearchParams(buildURL(newFilters));
       }
 
       // Process cached data with the explicit viewFilter

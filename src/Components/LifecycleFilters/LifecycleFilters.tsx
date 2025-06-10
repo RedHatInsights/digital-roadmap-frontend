@@ -64,6 +64,12 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
+
+    // Prevent mouse clicks to "All" view filter when no data is available
+    // Without this when clicking "All" the previously disabled views are no longer grayed out
+    if (noDataAvailable && id === 'all') {
+      return;
+    }
     handleViewFilterChange(id);
   };
 
