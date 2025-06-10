@@ -64,6 +64,12 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
+
+    // Prevent mouse clicks to "All" view filter when no data is available
+    // Without this when clicking "All" the previously disabled views are no longer grayed out
+    if (noDataAvailable && id === 'all') {
+      return;
+    }
     handleViewFilterChange(id);
   };
 
@@ -84,21 +90,30 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   // Helper function to determine tooltip content based on lifecycleDropdownValue
   const getTooltipContent = (buttonId: string) => {
     const isRHEL = lifecycleDropdownValue === 'Red Hat Enterprise Linux';
-    const isAppStream =
-      lifecycleDropdownValue === 'RHEL 8 Application Streams' ||
-      lifecycleDropdownValue === 'RHEL 9 Application Streams';
+    const isRHEL9AppStream = lifecycleDropdownValue === 'RHEL 9 Application Streams';
+    const isRHEL8AppStream = lifecycleDropdownValue === 'RHEL 8 Application Streams';
 
     if (buttonId === 'installed-and-related') {
       if (isRHEL) {
         return 'Add systems to Inventory to view only RHEL releases installed on or related to those systems.';
-      } else if (isAppStream) {
-        return 'Add systems to Inventory to view only application streams installed on or related to those systems.';
+      } else if (isRHEL9AppStream) {
+        return (
+          'Add systems to Inventory to view only RHEL\u00A09 application streams ' +
+          'installed on or related to those systems.'
+        );
+      } else if (isRHEL8AppStream) {
+        return (
+          'Add systems to Inventory to view only RHEL\u00A08 application streams ' +
+          'installed on or related to those systems.'
+        );
       }
     } else if (buttonId === 'installed-only') {
       if (isRHEL) {
         return 'Add systems to Inventory to view only RHEL releases installed on those systems.';
-      } else if (isAppStream) {
-        return 'Add systems to Inventory to view only application streams installed on those systems.';
+      } else if (isRHEL9AppStream) {
+        return 'Add systems to Inventory to view only RHEL\u00A09 application streams installed on those systems.';
+      } else if (isRHEL8AppStream) {
+        return 'Add systems to Inventory to view only RHEL\u00A08 application streams installed on those systems.';
       }
     }
   };
