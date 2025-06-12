@@ -21,6 +21,9 @@ const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalW
 interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   viewFilter?: string;
+  chartSortByValue?: string;
+  updateChartSortValue: (tableSortByValue: string, order?: string) => void; // used for synchronize sorting between chart and table
+  lifecycleDropdownValue: string;
 }
 
 const SYSTEM_LIFECYCLE_COLUMN_NAMES = {
@@ -61,6 +64,9 @@ const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ suppor
 export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   data,
   viewFilter,
+  chartSortByValue,
+  updateChartSortValue,
+  lifecycleDropdownValue,
 }: LifecycleTableProps) => {
   // Index of the currently sorted column
   // Note: if you intend to make columns reorderable, you may instead want to use a non-numeric key
@@ -110,6 +116,74 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     setSortedRows(sortedData);
     setPaginatedRows(sortedData.slice(0, 10));
   }, [data]);
+
+  React.useEffect(() => {
+    // Synchronize sorting from chart dropdown to table
+    if (chartSortByValue) {
+      // Order match with headers in Lifecycle table, names match with sorting dropdown which is above chart.
+      // This contains also specification for sorting - if the SortBy is sorted in ascending or descending way.
+      const chartSortByDefaultValuesStreams = {
+        Name: SortByDirection.asc,
+        'Release version': SortByDirection.asc,
+        'Release date': SortByDirection.asc,
+        'Retirement date': SortByDirection.asc,
+        Systems: SortByDirection.desc,
+      };
+      const chartSortByDefaultValuesSystems = {
+        Name: SortByDirection.asc,
+        'Release date': SortByDirection.asc,
+        'Retirement date': SortByDirection.asc,
+        Systems: SortByDirection.desc,
+      };
+
+      if (type === 'streams') {
+        // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
+        const indexChartSortBy = Object.keys(chartSortByDefaultValuesStreams).indexOf(chartSortByValue);
+
+        if (indexChartSortBy === -1) {
+          // Not found
+          console.debug('Cannot find matching name. Failed to synchronize sorting between chart and table.');
+          return;
+        }
+        sortAppStreamsWithPagination(
+          indexChartSortBy,
+          Object.values(chartSortByDefaultValuesStreams)[indexChartSortBy]
+        );
+      } else {
+        // Get the index of item in chartSortByMapArray - the index is the same one as the index used for sorting in table
+        const indexChartSortBy = Object.keys(chartSortByDefaultValuesSystems).indexOf(chartSortByValue);
+
+        if (indexChartSortBy === -1) {
+          // Not found
+          console.debug('Cannot find matching name. Failed to synchronize sorting between chart and table.');
+          return;
+        }
+        sortSystemsWithPagination(
+          indexChartSortBy,
+          Object.values(chartSortByDefaultValuesSystems)[indexChartSortBy]
+        );
+      }
+    }
+  }, [chartSortByValue, lifecycleDropdownValue]);
+
+  React.useEffect(() => {
+    // Set the table sort to be able to synchronize table sort with chart
+    // Mapping index into name of the selected key for sorting
+    const tableIndexToChartMappingStreams = [
+      'Name',
+      'Release version',
+      'Release date',
+      'Retirement date',
+      'Systems',
+    ];
+    const tableIndexToChartMappingSystems = ['Name', 'Release date', 'Retirement date', 'Systems'];
+
+    if (type === 'streams' && activeAppSortIndex !== undefined) {
+      updateChartSortValue(tableIndexToChartMappingStreams[activeAppSortIndex], activeAppSortDirection);
+    } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
+      updateChartSortValue(tableIndexToChartMappingSystems[activeSystemSortIndex], activeSystemSortDirection);
+    }
+  }, [activeAppSortIndex, activeSystemSortIndex, activeAppSortDirection, activeSystemSortDirection]);
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -194,16 +268,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
-      const sortedData = sortSystemLifecycleData(index, direction);
-      setSortedRows(sortedData);
-      const startIndex = (page - 1) * perPage;
-      const endIndex = (page - 1) * perPage + perPage;
-      setPaginatedRows(sortedData.slice(startIndex, endIndex));
-      setActiveSystemSortIndex(index);
-      setActiveSystemSortDirection(direction);
+      sortSystemsWithPagination(index, direction);
     },
     columnIndex,
   });
+
+  const sortSystemsWithPagination = (index: number, direction: SortByDirection) => {
+    const sortedData = sortSystemLifecycleData(index, direction);
+    setSortedRows(sortedData);
+    const startIndex = (page - 1) * perPage;
+    const endIndex = (page - 1) * perPage + perPage;
+    setPaginatedRows(sortedData.slice(startIndex, endIndex));
+    setActiveSystemSortIndex(index);
+    setActiveSystemSortDirection(direction);
+  };
 
   const getAppSortParams = (columnIndex: number): ThProps['sort'] => ({
     sortBy: {
@@ -212,16 +290,20 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
-      const sortedData = sortAppLifecycleData(index, direction);
-      setSortedRows(sortedData);
-      const startIndex = (page - 1) * perPage;
-      const endIndex = (page - 1) * perPage + perPage;
-      setPaginatedRows(sortedData.slice(startIndex, endIndex));
-      setActiveAppSortIndex(index);
-      setActiveAppSortDirection(direction);
+      sortAppStreamsWithPagination(index, direction);
     },
     columnIndex,
   });
+
+  const sortAppStreamsWithPagination = (index: number, direction: SortByDirection) => {
+    const sortedData = sortAppLifecycleData(index, direction);
+    setSortedRows(sortedData);
+    const startIndex = (page - 1) * perPage;
+    const endIndex = (page - 1) * perPage + perPage;
+    setPaginatedRows(sortedData.slice(startIndex, endIndex));
+    setActiveAppSortIndex(index);
+    setActiveAppSortDirection(direction);
+  };
 
   const sort = (aValue: number | string, bValue: number | string, direction?: string) => {
     if (typeof aValue === 'number') {
