@@ -18,6 +18,7 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+import ClockIcon from '@patternfly/react-icons/dist/esm/icons/outlined-clock-icon';
 import {
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
@@ -715,10 +716,35 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
+  const timeoutState = (
+    <Bullseye>
+      <EmptyState variant={EmptyStateVariant.sm}>
+        <EmptyStateHeader
+          icon={<EmptyStateIcon icon={ClockIcon} />}
+          titleText="Timeout reached when calculating the response."
+          headingLevel="h2"
+        />
+        <EmptyStateBody>We are working to fix this issue soon.</EmptyStateBody>
+        <EmptyStateFooter>
+          <EmptyStateActions>
+            <Button variant="primary" onClick={redirectToDashboard}>
+              Return to home page
+            </Button>
+          </EmptyStateActions>
+        </EmptyStateFooter>
+      </EmptyState>
+    </Bullseye>
+  );
+
   if (error) {
+    debugger;
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
+    } else if (String(error.message) === 'Error: 504 Gateway Time-out') {
+      // Corner case, making user experience a little bit better.
+      // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
+      return timeoutState;
     } else {
       return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
     }
