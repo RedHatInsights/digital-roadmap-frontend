@@ -18,7 +18,6 @@ import {
 import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
-import ClockIcon from '@patternfly/react-icons/dist/esm/icons/outlined-clock-icon';
 import {
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
@@ -717,11 +716,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
+  // Cannot use the ErrorState with customFooter since there are errors with it.
+  // This is basically the same as ErrorState only with custom action at the bottom.
   const timeoutState = (
     <Bullseye>
       <EmptyState variant={EmptyStateVariant.sm}>
         <EmptyStateHeader
-          icon={<EmptyStateIcon icon={ExclamationCircleIcon} />}
+          // the color could be imported from @patternfly/react-tokens/dist/esm/global_danger_color_100,
+          // but the import doesn't work
+          icon={<EmptyStateIcon icon={ExclamationCircleIcon} color="var(--pf-v5-global--danger-color--100)" />}
           titleText="Timeout reached when calculating response"
           headingLevel="h2"
         />
@@ -738,7 +741,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   );
 
   if (error) {
-    debugger;
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
