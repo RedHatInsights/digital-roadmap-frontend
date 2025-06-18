@@ -29,7 +29,6 @@ import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclam
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
-import ClockIcon from '@patternfly/react-icons/dist/esm/icons/outlined-clock-icon';
 import { DEFAULT_FILTERS, buildURL, pluralize } from '../../utils/utils';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
@@ -484,7 +483,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (String(error.message) === 'Error: 504 Gateway Time-out') {
+    } else if (String(error.message).includes('504 Gateway Time-out')) {
       // Corner case, making user experience a little bit better.
       // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
       return timeoutState;

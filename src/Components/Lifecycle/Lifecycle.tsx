@@ -744,7 +744,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (String(error.message) === 'Error: 504 Gateway Time-out') {
+    } else if (String(error.message).includes('504 Gateway Time-out')) {
       // Corner case, making user experience a little bit better.
       // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
       return timeoutState;
