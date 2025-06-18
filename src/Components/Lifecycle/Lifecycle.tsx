@@ -48,6 +48,7 @@ import { download, generateCsv, mkConfig } from 'export-to-csv';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { formatDate, getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
+import { ExclamationCircleIcon } from '@patternfly/react-icons';
 
 // Define DEFAULT_FILTERS with the ExtendedFilter type
 const DEFAULT_FILTERS: ExtendedFilter = {
@@ -720,11 +721,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     <Bullseye>
       <EmptyState variant={EmptyStateVariant.sm}>
         <EmptyStateHeader
-          icon={<EmptyStateIcon icon={ClockIcon} />}
-          titleText="Timeout reached when calculating the response."
+          icon={<EmptyStateIcon icon={ExclamationCircleIcon} />}
+          titleText="Timeout reached when calculating response"
           headingLevel="h2"
         />
-        <EmptyStateBody>We are working to fix this issue soon.</EmptyStateBody>
+        <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
             <Button variant="primary" onClick={redirectToDashboard}>

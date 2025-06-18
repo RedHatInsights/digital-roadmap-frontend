@@ -460,11 +460,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     <Bullseye>
       <EmptyState variant={EmptyStateVariant.sm}>
         <EmptyStateHeader
-          icon={<EmptyStateIcon icon={ClockIcon} />}
-          titleText="Timeout reached when building the response."
+          icon={<EmptyStateIcon icon={ExclamationCircleIcon} />}
+          titleText="Timeout reached when calculating response"
           headingLevel="h2"
         />
-        <EmptyStateBody>We are working to fix this issue soon.</EmptyStateBody>
+        <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
             <Button variant="primary" onClick={redirectToDashboard}>
