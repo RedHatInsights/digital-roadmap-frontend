@@ -343,7 +343,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
     } catch (error: any) {
       console.error('Error fetching lifecycle changes:', error);
-      setError({ message: error });
+      setError({ message: error.message, status_code: error.status_code });
     } finally {
       setIsLoading(false);
     }
@@ -744,10 +744,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (String(error.message).includes('504 Gateway Time-out')) {
-      // Corner case, making user experience a little bit better.
-      // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
-      return timeoutState;
+    } else if (error.status_code) {
+      if (error.status_code === 504) {
+        // Corner case, making user experience a little bit better.
+        // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
+        return timeoutState;
+      }
     } else {
       return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
     }
