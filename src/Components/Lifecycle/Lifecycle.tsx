@@ -117,6 +117,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const updateChartSortValue = (value: string, order?: string) => {
+    debugger;
     setChartSortByValue(value);
     const newFilters = structuredClone(filters);
     newFilters['chartSortBy'] = value;
