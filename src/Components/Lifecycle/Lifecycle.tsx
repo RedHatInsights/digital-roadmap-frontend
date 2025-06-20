@@ -750,9 +750,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
         return timeoutState;
       }
-    } else {
-      return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
-    }
+    } 
+    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
   }
 
   const emptyState = (
