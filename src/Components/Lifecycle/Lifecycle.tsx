@@ -215,11 +215,25 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(false);
 
     try {
-      // Fetch all data sets once
-      const relevantSystemResponse = await getRelevantLifecycleSystems();
-      const relevantAppResponse = await getRelevantLifecycleAppstreams();
-      const allSystemResponse = await getAllLifecycleSystems();
-      const allAppResponse = await getAllLifecycleAppstreams();
+      // Fetch data in parallel
+      const results = await Promise.allSettled([
+        getRelevantLifecycleSystems(),
+        getRelevantLifecycleAppstreams(),
+        getAllLifecycleSystems(),
+        getAllLifecycleAppstreams(),
+      ]);
+
+      // If any of them has an error, propagate the exception to be handled and error is displayed
+      // The order of items in array needs to match with order in the Promise.allSettled()
+      const [relevantSystemResponse, relevantAppResponse, allSystemResponse, allAppResponse] = results.map(
+        (result) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          }
+          // if not fullfiled, there is a exception
+          throw result.reason;
+        }
+      );
 
       // Store all fetched data in state
       const relatedInstalledSystems = relevantSystemResponse.data || [];
