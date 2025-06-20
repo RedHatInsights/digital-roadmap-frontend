@@ -15,6 +15,17 @@ import {
 
 /* Digital Roadmap */
 
+export class ApiError extends Error {
+  name: string;
+  status_code?: number;
+
+  constructor(message: string, status_code?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status_code = status_code;
+  }
+}
+
 export const getRelevantReleaseNotes = async (major: number, minor: number, keyword: string) => {
   const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
@@ -26,13 +37,19 @@ export const getRelevantReleaseNotes = async (major: number, minor: number, keyw
     })
     .catch(function (error) {
       if (error.response.data.detail) {
-        throw new Error(error.response.data.detail);
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
       } else if (error.request.response) {
-        throw new Error(error.request.response);
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
       } else if (error.detail) {
-        throw new Error(error.detail);
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
 
@@ -49,13 +66,19 @@ export const getAllUpcomingChanges = async () => {
     })
     .catch(function (error) {
       if (error.response.data.detail) {
-        throw new Error(error.response.data.detail);
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
       } else if (error.request.response) {
-        throw new Error(error.request.response);
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
       } else if (error.detail) {
-        throw new Error(error.detail);
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
 
@@ -72,13 +95,19 @@ export const getRelevantUpcomingChanges = async () => {
     })
     .catch(function (error) {
       if (error.response.data.detail) {
-        throw new Error(error.response.data.detail);
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
       } else if (error.request.response) {
-        throw new Error(error.request.response);
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
       } else if (error.detail) {
-        throw new Error(error.detail);
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
 
@@ -95,13 +124,19 @@ export const getRelevantLifecycleSystems = async () => {
     })
     .catch(function (error) {
       if (error.response.data.detail) {
-        throw new Error(error.response.data.detail);
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
       } else if (error.request.response) {
-        throw new Error(error.request.response);
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
       } else if (error.detail) {
-        throw new Error(error.detail);
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
   return getResponseOrError(response);
@@ -116,12 +151,20 @@ export const getAllLifecycleSystems = async () => {
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
+      } else if (error.request.response) {
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
+      } else if (error.detail) {
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
   return getResponseOrError(response);
@@ -136,12 +179,20 @@ export const getRelevantLifecycleAppstreams = async () => {
       },
     })
     .catch(function (error) {
-      if (error.response) {
-        throw new Error(error.response.data);
-      } else if (error.request) {
-        throw new Error(error.response.data);
+      if (error.response.data.detail) {
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
+      } else if (error.request.response) {
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
+      } else if (error.detail) {
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
   return getResponseOrError(response);
@@ -157,13 +208,19 @@ export const getAllLifecycleAppstreams = async () => {
     })
     .catch(function (error) {
       if (error.response.data.detail) {
-        throw new Error(error.response.data.detail);
+        if (error.response.status) {
+          throw new ApiError(error.response.data.detail, error.response.status);
+        }
+        throw new ApiError(error.response.data.detail);
       } else if (error.request.response) {
-        throw new Error(error.request.response);
+        if (error.request.status) {
+          throw new ApiError(error.request.response, error.request.status);
+        }
+        throw new ApiError(error.request.response);
       } else if (error.detail) {
-        throw new Error(error.detail);
+        throw new ApiError(error.detail);
       } else {
-        throw new Error(error.message);
+        throw new ApiError(error.message);
       }
     });
   return getResponseOrError(response);
