@@ -332,7 +332,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     } catch (error: any) {
       // Dispatch notif here
       console.error('Error fetching changes:', error);
-      setError({ message: error });
+      setError({ message: error.message, status_code: error.status_code });
     } finally {
       setIsLoading(false);
     }
@@ -455,10 +455,40 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
+  // Cannot use the ErrorState with customFooter since there are errors with it.
+  // This is basically the same as ErrorState only with custom action at the bottom.
+  const timeoutState = (
+    <Bullseye>
+      <EmptyState variant={EmptyStateVariant.sm}>
+        <EmptyStateHeader
+          // the color could be imported from @patternfly/react-tokens/dist/esm/global_danger_color_100,
+          // but the import doesn't work
+          icon={<EmptyStateIcon icon={ExclamationCircleIcon} color="var(--pf-v5-global--danger-color--100)" />}
+          titleText="Timeout reached when calculating response"
+          headingLevel="h2"
+        />
+        <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
+        <EmptyStateFooter>
+          <EmptyStateActions>
+            <Button variant="primary" onClick={redirectToDashboard}>
+              Return to home page
+            </Button>
+          </EmptyStateActions>
+        </EmptyStateFooter>
+      </EmptyState>
+    </Bullseye>
+  );
+
   if (error) {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
+    } else if (error.status_code) {
+      if (error.status_code === 504) {
+        // Corner case, making user experience a little bit better.
+        // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
+        return timeoutState;
+      }
     } else {
       return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
     }
