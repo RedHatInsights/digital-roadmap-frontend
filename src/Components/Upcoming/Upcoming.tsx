@@ -125,7 +125,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       // Fetch both APIs in parallel
       const [allResponse, relevantResponse] = await Promise.allSettled([
         getAllUpcomingChanges(),
-        getRelevantUpcomingChanges()
+        getRelevantUpcomingChanges(),
       ]);
 
       // Process "all" data
@@ -137,7 +137,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           type: capitalizeFirstLetter(item.type),
         }));
         setAllUpcomingChangesData(allData);
-        setDataFetchStatus(prev => ({ ...prev, all: true }));
+        setDataFetchStatus((prev) => ({ ...prev, all: true }));
       } else {
         console.error('Error fetching all changes:', allResponse.reason);
       }
@@ -151,12 +151,16 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           type: capitalizeFirstLetter(item.type),
         }));
         setRelevantUpcomingChangesData(relevantData);
-        setDataFetchStatus(prev => ({ ...prev, relevant: true }));
+        setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
       } else {
         console.error('Error fetching relevant changes:', relevantResponse.reason);
       }
 
-      return { allData, relevantData, hasErrors: allResponse.status === 'rejected' && relevantResponse.status === 'rejected' };
+      return {
+        allData,
+        relevantData,
+        hasErrors: allResponse.status === 'rejected' && relevantResponse.status === 'rejected',
+      };
     } catch (error) {
       console.error('Unexpected error in fetchBothDataSources:', error);
       throw error;
@@ -248,8 +252,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       // If we need to fetch data, use parallel fetching
       if (needsAllData || needsRelevantData) {
-        const { allData: fetchedAllData, relevantData: fetchedRelevantData, hasErrors } = await fetchBothDataSources();
-        
+        const {
+          allData: fetchedAllData,
+          relevantData: fetchedRelevantData,
+          hasErrors,
+        } = await fetchBothDataSources();
+
         if (hasErrors) {
           throw new Error('Failed to fetch data from both endpoints');
         }
@@ -278,7 +286,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         } else {
           setNoDataAvailable(false);
         }
-        
+
         setUpcomingChanges(relevantData);
         processData(relevantData);
       }
