@@ -119,6 +119,54 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setVisibleData(data);
   };
 
+  // Optimized function to fetch both API endpoints in parallel
+  const fetchBothDataSources = async () => {
+    try {
+      // Fetch both APIs in parallel
+      const [allResponse, relevantResponse] = await Promise.allSettled([
+        getAllUpcomingChanges(),
+        getRelevantUpcomingChanges(),
+      ]);
+
+      // Process "all" data
+      let allData: UpcomingChanges[] = [];
+      if (allResponse.status === 'fulfilled') {
+        allData = allResponse.value && allResponse.value.data ? allResponse.value.data : [];
+        allData = allData.map((item) => ({
+          ...item,
+          type: capitalizeFirstLetter(item.type),
+        }));
+        setAllUpcomingChangesData(allData);
+        setDataFetchStatus((prev) => ({ ...prev, all: true }));
+      } else {
+        console.error('Error fetching all changes:', allResponse.reason);
+      }
+
+      // Process "relevant" data
+      let relevantData: UpcomingChanges[] = [];
+      if (relevantResponse.status === 'fulfilled') {
+        relevantData = relevantResponse.value && relevantResponse.value.data ? relevantResponse.value.data : [];
+        relevantData = relevantData.map((item) => ({
+          ...item,
+          type: capitalizeFirstLetter(item.type),
+        }));
+        setRelevantUpcomingChangesData(relevantData);
+        setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
+      } else {
+        console.error('Error fetching relevant changes:', relevantResponse.reason);
+      }
+
+      return {
+        allData,
+        relevantData,
+        hasErrors: allResponse.status === 'rejected' && relevantResponse.status === 'rejected',
+      };
+    } catch (error) {
+      console.error('Unexpected error in fetchBothDataSources:', error);
+      throw error;
+    }
+  };
+
   // Handle view filter changes
   const handleViewFilterChange = (filter: string) => {
     // Don't allow switching to relevant if no relevant data available
@@ -191,113 +239,56 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
     setNoAllDataAvailable(false);
-    setNoDataAvailable(false); // Reset noDataAvailable when starting to fetch
+    setNoDataAvailable(false);
     const currentViewFilter = viewFilter || selectedViewFilter;
 
     try {
-      // Choose API based on view filter
+      // Check if we need to fetch any data
+      const needsAllData = !dataFetchStatus.all;
+      const needsRelevantData = !dataFetchStatus.relevant;
+
+      let allData = allUpcomingChangesData;
+      let relevantData = relevantUpcomingChangesData;
+
+      // If we need to fetch data, use parallel fetching
+      if (needsAllData || needsRelevantData) {
+        const {
+          allData: fetchedAllData,
+          relevantData: fetchedRelevantData,
+          hasErrors,
+        } = await fetchBothDataSources();
+
+        if (hasErrors) {
+          throw new Error('Failed to fetch data from both endpoints');
+        }
+
+        // Update local variables with fetched data
+        if (needsAllData) allData = fetchedAllData;
+        if (needsRelevantData) relevantData = fetchedRelevantData;
+      }
+
+      // Check if ALL data source is empty
+      if (allData.length === 0) {
+        setNoAllDataAvailable(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Determine which data to display based on current view filter
       if (currentViewFilter === 'all') {
-        const response = await getAllUpcomingChanges();
-        let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
-
-        // Check if ALL data source is empty - only then show no data state
-        if (upcomingChangesParagraphs.length === 0) {
-          setNoAllDataAvailable(true);
-          setIsLoading(false);
-          return;
-        }
-
-        // Process the data to capitalize type values
-        upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
-          ...item,
-          type: capitalizeFirstLetter(item.type),
-        }));
-
-        // Store the all data in state
-        setAllUpcomingChangesData(upcomingChangesParagraphs);
-        setDataFetchStatus((prev) => ({ ...prev, all: true }));
-        setUpcomingChanges(upcomingChangesParagraphs);
-        processData(upcomingChangesParagraphs);
-
-        // Check if relevant data is already fetched
-        if (dataFetchStatus.relevant) {
-          // Use cached data to determine if relevant data is empty
-          setNoDataAvailable(relevantUpcomingChangesData.length === 0);
-        } else {
-          // Fetch relevant data to check if it's empty
-          try {
-            const relevantResponse = await getRelevantUpcomingChanges();
-            let relevantData: UpcomingChanges[] =
-              relevantResponse && relevantResponse.data ? relevantResponse.data : [];
-
-            // Process the relevant data
-            relevantData = relevantData.map((item) => ({
-              ...item,
-              type: capitalizeFirstLetter(item.type),
-            }));
-
-            // Store the relevant data
-            setRelevantUpcomingChangesData(relevantData);
-            setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
-
-            // Set noDataAvailable based on whether relevant data exists
-            setNoDataAvailable(relevantData.length === 0);
-          } catch (error) {
-            console.error('Error fetching relevant changes:', error);
-            // Don't set error state here as we already have all data
-          }
-        }
+        setUpcomingChanges(allData);
+        processData(allData);
+        setNoDataAvailable(relevantData.length === 0);
       } else {
-        // For relevant view, first check if we need to fetch "all" data to verify emptiness
-        if (!dataFetchStatus.all) {
-          // We need to check if "all" data is empty
-          const allResponse = await getAllUpcomingChanges();
-          const allData: UpcomingChanges[] = allResponse && allResponse.data ? allResponse.data : [];
-
-          // Store the all data in state
-          const processedAllData = allData.map((item) => ({
-            ...item,
-            type: capitalizeFirstLetter(item.type),
-          }));
-
-          setAllUpcomingChangesData(processedAllData);
-          setDataFetchStatus((prev) => ({ ...prev, all: true }));
-
-          // If all data is empty, show no data state regardless of current view
-          if (allData.length === 0) {
-            setNoAllDataAvailable(true);
-            setIsLoading(false);
-            return;
-          }
-        } else if (allUpcomingChangesData.length === 0) {
-          // We already know "all" data is empty
-          setNoAllDataAvailable(true);
-          setIsLoading(false);
-          return;
-        }
-
-        // Now fetch relevant data
-        const response = await getRelevantUpcomingChanges();
-        let upcomingChangesParagraphs: UpcomingChanges[] = response && response.data ? response.data : [];
-
-        // Check if relevant data is empty
-        if (upcomingChangesParagraphs.length === 0) {
+        // For relevant view
+        if (relevantData.length === 0) {
           setNoDataAvailable(true);
         } else {
           setNoDataAvailable(false);
         }
 
-        // Process the data to capitalize type values
-        upcomingChangesParagraphs = upcomingChangesParagraphs.map((item) => ({
-          ...item,
-          type: capitalizeFirstLetter(item.type),
-        }));
-
-        // Store the relevant data in state
-        setRelevantUpcomingChangesData(upcomingChangesParagraphs);
-        setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
-        setUpcomingChanges(upcomingChangesParagraphs);
-        processData(upcomingChangesParagraphs);
+        setUpcomingChanges(relevantData);
+        processData(relevantData);
       }
 
       // Apply URL parameters
@@ -326,11 +317,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Include view filter in URL
-      newFilters['viewFilter'] = selectedViewFilter; // Use the potentially updated view filter
+      newFilters['viewFilter'] = selectedViewFilter;
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {
-      // Dispatch notif here
       console.error('Error fetching changes:', error);
       setError({ message: error.message, status_code: error.status_code });
     } finally {
