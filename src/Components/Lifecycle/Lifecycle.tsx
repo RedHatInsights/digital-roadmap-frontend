@@ -1,5 +1,5 @@
 import './Lifecycle.scss';
-import React, { lazy, useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
   Bullseye,
