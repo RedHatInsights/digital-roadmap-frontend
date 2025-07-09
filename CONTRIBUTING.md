@@ -4,6 +4,10 @@ First off, thanks for taking the time to contribute!
 
 ## Getting started
 
+### Prerequisites
+
+[Go]
+
 ### Add entries to /etc/hosts
 
 In order to access the` https://[env].foo.redhat.com` in your browser, you have to add entries to your `/etc/hosts` file. This is a **one time** setup that has to be done on each development machine.
@@ -11,7 +15,7 @@ In order to access the` https://[env].foo.redhat.com` in your browser, you have 
 Add the following to `/etc/hosts`:
 
 ```
-127.0.0.1 <your-fqdn> localhost prod.foo.redhat.com stage.foo.redhat.com
+127.0.0.1 prod.foo.redhat.com stage.foo.redhat.com qa.foo.redhat.com ci.foo.redhat.com
 ```
 
 Alternatively you can do this by running following command:
@@ -63,3 +67,6 @@ In the checkout of this repository, do the following:
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
+
+
+[Go]: https://go.dev/doc/install
