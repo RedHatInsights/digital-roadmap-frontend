@@ -824,9 +824,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     return (
       <>
-        <ChartComponent lifecycleData={filteredChartData} viewFilter={selectedViewFilter} />
+        <ChartComponent lifecycleData={filteredChartData.reverse()} viewFilter={selectedViewFilter} />
         <LifecycleTable
-          data={filteredTableData}
+          data={filteredChartData}
           viewFilter={selectedViewFilter}
           chartSortByValue={chartSortByValue}
           updateChartSortValue={updateChartSortValue}
