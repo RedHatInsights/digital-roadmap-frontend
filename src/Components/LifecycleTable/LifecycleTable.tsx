@@ -85,7 +85,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     if (!lifecycleData || lifecycleData.length === 0) {
       return '';
     }
-    if ('application_stream_name' in lifecycleData[0]) {
+    if ('display_name' in lifecycleData[0] && 'os_major' in lifecycleData[0]) {
       return 'streams';
     }
     return 'rhel';
@@ -255,7 +255,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
 
   const renderAppLifecycleData = () => {
     return (paginatedRows as Stream[]).map((repo: Stream, index: number) => {
-      if (!repo.name || !repo.application_stream_name || !repo.os_major) {
+      if (!repo.display_name || !repo.os_major) {
         return;
       }
 
