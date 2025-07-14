@@ -73,6 +73,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+  const [chartDirection, setChartDirection] = React.useState<string>('');
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
   // Add state for view filter (all, installed-only, installed-and-related)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
@@ -174,14 +175,32 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return filteredData;
   };
 
-  const updateChartSortValue = (value: string, order?: string) => {
+  // todo
+  // use one sort by value with asc/desc. Asc/desc is set in the handler of the sort.
+  // useefect depending on the asc/desc change which will change the data
+
+  const setOrderingStates = (value: string, order?: string) => {
     debugger;
     setChartSortByValue(value);
+    if (order) {
+      setChartDirection(order);
+    } else {
+      setChartDirection('asc');
+    }
+  };
+
+  React.useEffect(() => {
+    updateSortedData(chartSortByValue, chartDirection);
+  }, [chartSortByValue, chartDirection]);
+
+  const updateSortedData = (value: string, order?: string) => {
+    //setChartSortByValue(value);
     const newFilters = structuredClone(filters);
     newFilters['chartSortBy'] = value;
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
     setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue, order));
+    debugger;
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -822,14 +841,18 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const ChartComponent =
       lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
 
+    // Create a copy of filteredChartData and reverse it
+    const reversedChartData = [...filteredChartData].reverse() as typeof filteredChartData;
+
     return (
       <>
-        <ChartComponent lifecycleData={filteredChartData.reverse()} viewFilter={selectedViewFilter} />
+        <ChartComponent lifecycleData={filteredChartData} viewFilter={selectedViewFilter} />
         <LifecycleTable
           data={filteredChartData}
           viewFilter={selectedViewFilter}
           chartSortByValue={chartSortByValue}
-          updateChartSortValue={updateChartSortValue}
+          orderingValue={chartDirection}
+          updateChartSortValue={setOrderingStates}
           lifecycleDropdownValue={lifecycleDropdownValue}
         />
       </>
@@ -849,7 +872,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             setLifecycleDropdownValue={setLifecycleDropdownValue}
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
-            updateChartSortValue={updateChartSortValue}
+            updateChartSortValue={setOrderingStates}
             downloadCSV={downloadCSV}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}

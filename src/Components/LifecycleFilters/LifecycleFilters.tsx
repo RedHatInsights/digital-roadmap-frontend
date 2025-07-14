@@ -34,7 +34,7 @@ interface LifecycleFiltersProps {
   setLifecycleDropdownValue: (value: string) => void;
   onLifecycleDropdownSelect: (value: string) => void;
   selectedChartSortBy: string;
-  updateChartSortValue: (name: string) => void;
+  updateChartSortValue: (name: string, order: string) => void;
   downloadCSV: () => void;
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
@@ -62,7 +62,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   React.useEffect(() => {
     if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
       // Default to the first available option when "Systems" becomes disabled
-      updateChartSortValue('Retirement date');
+      updateChartSortValue('Retirement date', 'asc');
     }
   }, [selectedViewFilter, selectedChartSortBy, updateChartSortValue]);
 
@@ -87,7 +87,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   ) => {
     setIsOpen(false);
     if (value && typeof value == 'string') {
-      updateChartSortValue(value);
+      updateChartSortValue(value, 'asc');
     }
   };
 
