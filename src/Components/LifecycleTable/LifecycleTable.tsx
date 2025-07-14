@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React, { lazy, useEffect } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -30,6 +30,7 @@ interface LifecycleTableProps {
   data: Stream[] | SystemLifecycleChanges[];
   viewFilter?: string;
   chartSortByValue?: string;
+  orderingValue?: string;
   updateChartSortValue: (tableSortByValue: string, order?: string) => void; // used for synchronize sorting between chart and table
   lifecycleDropdownValue: string;
 }
@@ -71,6 +72,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   data,
   viewFilter,
   chartSortByValue,
+  orderingValue,
   updateChartSortValue,
   lifecycleDropdownValue,
 }: LifecycleTableProps) => {
@@ -106,6 +108,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   const type = checkDataType(data);
 
   React.useEffect(() => {
+    debugger;
     setActiveAppSortDirection(undefined);
     setActiveSystemSortDirection(undefined);
     setActiveAppSortIndex(undefined);
@@ -124,6 +127,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   }, [data]);
 
   React.useEffect(() => {
+    debugger;
+    console.log(data);
+    console.log(chartSortByValue);
+  }, [chartSortByValue, orderingValue]);
+
+  React.useEffect(() => {
+    debugger;
+    console.log(data);
+    console.log(chartSortByValue);
+  }, [data]);
+
+  /* React.useEffect(() => {
     // Synchronize sorting from chart dropdown to table
     debugger;
     if (chartSortByValue) {
@@ -171,9 +186,9 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         );
       }
     }
-  }, [chartSortByValue, lifecycleDropdownValue]);
+  }, [chartSortByValue, lifecycleDropdownValue]); */
 
-  React.useEffect(() => {
+  /*React.useEffect(() => {
     // Set the table sort to be able to synchronize table sort with chart
     // Mapping index into name of the selected key for sorting
     const tableIndexToChartMappingStreams = [
@@ -192,7 +207,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
       updateChartSortValue(tableIndexToChartMappingSystems[activeSystemSortIndex], activeSystemSortDirection);
     }
-  }, [activeAppSortIndex, activeSystemSortIndex, activeAppSortDirection, activeSystemSortDirection]);
+  }, [activeAppSortIndex, activeSystemSortIndex, activeAppSortDirection, activeSystemSortDirection]);*/
 
   const handleSetPage = (
     _evt: React.MouseEvent | React.KeyboardEvent | MouseEvent,
@@ -277,10 +292,29 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       defaultDirection: 'asc', // starting sort direction when first sorting a column. Defaults to 'asc'
     },
     onSort: (_event, index, direction) => {
-      sortSystemsWithPagination(index, direction);
+      handleSystemSortUpdate(index, direction);
     },
     columnIndex,
   });
+
+  const handleSystemSortUpdate = (index: number, direction: string) => {
+    const tableIndexToChartMappingStreams = [
+      'Name',
+      'Release version',
+      'Release date',
+      'Retirement date',
+      'Systems',
+    ];
+    const tableIndexToChartMappingSystems = ['Name', 'Release date', 'Retirement date', 'Systems'];
+
+    debugger;
+
+    if (type === 'streams') {
+      updateChartSortValue(tableIndexToChartMappingStreams[index], direction);
+    } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
+      updateChartSortValue(tableIndexToChartMappingSystems[index], direction);
+    }
+  };
 
   const sortLifecycleData = (index?: number, direction?: string) => {
     if (typeof index === 'undefined') {
@@ -337,12 +371,39 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     },
     onSort: (_event, index, direction) => {
       debugger;
-      sortAppStreamsWithPagination(index, direction);
+      handleAppSortUpdate(index, direction);
     },
     columnIndex,
   });
 
+  const handleAppSortUpdate = (index: number, direction: string) => {
+    const tableIndexToChartMappingStreams = [
+      'Name',
+      'Release version',
+      'Release date',
+      'Retirement date',
+      'Systems',
+    ];
+    const tableIndexToChartMappingSystems = ['Name', 'Release date', 'Retirement date', 'Systems'];
+
+    debugger;
+
+    if (type === 'streams') {
+      updateChartSortValue(tableIndexToChartMappingStreams[index], direction);
+    } else if (type === 'rhel' && activeSystemSortIndex !== undefined) {
+      updateChartSortValue(tableIndexToChartMappingSystems[index], direction);
+    }
+
+    setSortedRows(data);
+    const startIndex = (page - 1) * perPage;
+    const endIndex = (page - 1) * perPage + perPage;
+    setPaginatedRows(data.slice(startIndex, endIndex));
+    setActiveAppSortIndex(index);
+    setActiveAppSortDirection(direction as SortByDirection);
+  };
+
   const sortAppStreamsWithPagination = (index: number, direction: SortByDirection) => {
+    debugger;
     const sortedData = sortAppLifecycleData(index, direction);
     setSortedRows(sortedData);
     const startIndex = (page - 1) * perPage;
