@@ -14,6 +14,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { mapSupportTypeToDisplayName } from '../../utils/utils';
+import { useChartDataAttributes } from '../../utils/utils';
 
 interface LifecycleChartProps {
   lifecycleData: Stream[] | SystemLifecycleChanges[];
@@ -518,6 +519,9 @@ End: ${formatDate(new Date(tooltipData.y))}`;
       window.removeEventListener('zoom', handleZoom);
     };
   }, [updatedLifecycleData.length, hiddenSeries, renderKey]);
+
+  // QE: Add data attributes to rendered bar elements
+  useChartDataAttributes(chartContainerRef, legendNames, hiddenSeries, renderKey);
 
   // Clear tooltips when mouse leaves the chart
   React.useEffect(() => {

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { To } from 'react-router-dom';
 import { Filter } from '../types/Filter';
 
@@ -116,4 +117,87 @@ export const mapSupportTypeToDisplayName = (supportType: string, dataType: strin
   }
   // Return the original support type for all other cases
   return supportType;
+};
+
+// QE: Custom hook to add data attributes to rendered bar elements
+export const useChartDataAttributes = (
+  chartContainerRef: React.RefObject<HTMLDivElement>,
+  legendNames: Array<{ packageType: string; datapoints: Array<{ name: string }> }>,
+  hiddenSeries: Set<any>,
+  renderKey: number
+) => {
+  React.useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const addDataAttributes = () => {
+      const chartContainer = chartContainerRef.current;
+      if (!chartContainer) return;
+
+      // Find all path elements that represent bars
+      const allPathElements = chartContainer.querySelectorAll('path[role="presentation"]');
+      
+      if (allPathElements.length === 0) {
+        return false; // Indicates we need to try again
+      }
+      
+      let pathIndex = 0;
+      
+      // Iterate through series to map data attributes
+      legendNames.forEach((series, seriesIndex) => {
+        if (hiddenSeries.has(seriesIndex) || series.datapoints.length === 0) {
+          return;
+        }
+
+        // Get unique stream names for this series
+        const streamNames = Array.from(new Set(series.datapoints.map(d => d.name))).join(', ');
+
+        // Add data attributes to each path element in this series
+        series.datapoints.forEach((datapoint, datapointIndex) => {
+          if (pathIndex < allPathElements.length) {
+            const pathElement = allPathElements[pathIndex];
+            pathElement.setAttribute('data-stream-names', streamNames);
+            pathElement.setAttribute('data-package-type', series.packageType);
+            pathElement.setAttribute('data-stream-name', datapoint.name);
+            pathIndex++;
+          }
+        });
+      });
+      
+      return true; // Indicates success
+    };
+
+    // Try immediately
+    if (addDataAttributes()) {
+      return;
+    }
+
+    // If immediate attempt failed, use MutationObserver
+    const observer = new MutationObserver((mutations) => {
+      let shouldTryAgain = false;
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          shouldTryAgain = true;
+        }
+      });
+      
+      if (shouldTryAgain && addDataAttributes()) {
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(chartContainerRef.current, {
+      childList: true,
+      subtree: true
+    });
+
+    // Cleanup observer after 5 seconds
+    const timeoutId = setTimeout(() => {
+      observer.disconnect();
+    }, 5000);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, [chartContainerRef, legendNames, hiddenSeries, renderKey]);
 };
