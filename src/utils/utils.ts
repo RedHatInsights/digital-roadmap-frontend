@@ -135,13 +135,13 @@ export const useChartDataAttributes = (
 
       // Find all path elements that represent bars
       const allPathElements = chartContainer.querySelectorAll('path[role="presentation"]');
-      
+
       if (allPathElements.length === 0) {
         return false; // Indicates we need to try again
       }
-      
+
       let pathIndex = 0;
-      
+
       // Iterate through series to map data attributes
       legendNames.forEach((series, seriesIndex) => {
         if (hiddenSeries.has(seriesIndex) || series.datapoints.length === 0) {
@@ -149,7 +149,7 @@ export const useChartDataAttributes = (
         }
 
         // Get unique stream names for this series
-        const streamNames = Array.from(new Set(series.datapoints.map(d => d.name))).join(', ');
+        const streamNames = Array.from(new Set(series.datapoints.map((d) => d.name))).join(', ');
 
         // Add data attributes to each path element in this series
         series.datapoints.forEach((datapoint, datapointIndex) => {
@@ -162,7 +162,7 @@ export const useChartDataAttributes = (
           }
         });
       });
-      
+
       return true; // Indicates success
     };
 
@@ -179,7 +179,7 @@ export const useChartDataAttributes = (
           shouldTryAgain = true;
         }
       });
-      
+
       if (shouldTryAgain && addDataAttributes()) {
         observer.disconnect();
       }
@@ -187,14 +187,14 @@ export const useChartDataAttributes = (
 
     observer.observe(chartContainerRef.current, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
 
     // Cleanup observer after 5 seconds
     const timeoutId = setTimeout(() => {
       observer.disconnect();
     }, 5000);
-    
+
     return () => {
       clearTimeout(timeoutId);
       observer.disconnect();
