@@ -131,7 +131,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
               className="drf-lifecycle__upcoming-row"
               dataLabel="Summary"
               noPadding={childHasNoPadding}
-              colSpan={3}
+              colSpan={4}
             >
               <div className="drf-lifecycle__upcoming-row-text-container">
                 <TextContent className="drf-lifecycle__upcoming-row-text">
