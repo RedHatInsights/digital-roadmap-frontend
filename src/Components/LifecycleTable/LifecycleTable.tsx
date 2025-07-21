@@ -1,7 +1,8 @@
 import React, { lazy } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
-import { Stream, SystemNames } from '../../types/Stream';
+import { Stream } from '../../types/Stream';
+import { SystemNames } from '../../types/SystemNames';
 import {
   Button,
   Pagination,
