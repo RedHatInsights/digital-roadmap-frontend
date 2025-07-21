@@ -6,17 +6,12 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Mock the lazy-loaded LifecycleModalWindow component
 jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
-  return function MockLifecycleModalWindow({ 
-    name, 
-    modalData, 
-    isModalOpen, 
-    handleModalToggle 
-  }: any) {
+  return function MockLifecycleModalWindow({ name, modalData, isModalOpen, handleModalToggle }: any) {
     if (!isModalOpen) return null;
-    
+
     // Handle undefined explicitly to avoid rendering "undefined" as text
     const displayName = name === undefined || name === null ? '' : String(name);
-    
+
     return (
       <div data-testid="lifecycle-modal">
         <div data-testid="modal-name">{displayName}</div>
@@ -38,7 +33,7 @@ const baseRepo: UpcomingChanges = {
   type: 'Deprecation',
   release: '9.0',
   date: '2024-12-01',
-  package: 'ruby'
+  package: 'ruby',
 };
 
 const repoWithDetails: UpcomingChanges = {
@@ -51,8 +46,8 @@ const repoWithDetails: UpcomingChanges = {
     dateAdded: '2024-01-15',
     lastModified: '2024-02-01',
     detailFormat: 0,
-    architecture: 'x86_64'
-  }
+    architecture: 'x86_64',
+  },
 };
 
 const defaultProps = {
@@ -61,14 +56,20 @@ const defaultProps = {
   rowIndex: 0,
   isExpanded: false,
   hideRepo: jest.fn(),
-  showRepo: jest.fn()
+  showRepo: jest.fn(),
 };
 
 // Helper to render component within a proper table structure
 const renderTableRow = (props = defaultProps) => {
   return render(
     <table>
-      <Suspense fallback={<tr><td>Loading...</td></tr>}>
+      <Suspense
+        fallback={
+          <tr>
+            <td>Loading...</td>
+          </tr>
+        }
+      >
         <TableRow {...props} />
       </Suspense>
     </table>
@@ -102,12 +103,12 @@ describe('TableRow', () => {
         type: 'Addition',
         release: '10.2',
         date: '2024-12-15',
-        package: 'postgresql'
+        package: 'postgresql',
       };
 
       renderTableRow({
         ...defaultProps,
-        repo: differentRepo
+        repo: differentRepo,
       });
 
       expect(screen.getByText('PostgreSQL 15 Feature')).toBeInTheDocument();
@@ -121,7 +122,7 @@ describe('TableRow', () => {
     test('renders danger icon for Deprecation type', () => {
       renderTableRow({
         ...defaultProps,
-        repo: { ...baseRepo, type: 'Deprecation' }
+        repo: { ...baseRepo, type: 'Deprecation' },
       });
 
       const iconContainer = screen.getByText('Deprecation').closest('.drf-lifecycle__upcoming-row-type');
@@ -133,7 +134,7 @@ describe('TableRow', () => {
     test('renders warning icon for Change type', () => {
       renderTableRow({
         ...defaultProps,
-        repo: { ...baseRepo, type: 'Change' }
+        repo: { ...baseRepo, type: 'Change' },
       });
 
       const iconContainer = screen.getByText('Change').closest('.drf-lifecycle__upcoming-row-type');
@@ -144,7 +145,7 @@ describe('TableRow', () => {
     test('renders info icon for Addition type', () => {
       renderTableRow({
         ...defaultProps,
-        repo: { ...baseRepo, type: 'Addition' }
+        repo: { ...baseRepo, type: 'Addition' },
       });
 
       const iconContainer = screen.getByText('Addition').closest('.drf-lifecycle__upcoming-row-type');
@@ -155,7 +156,7 @@ describe('TableRow', () => {
     test('renders info icon for Enhancement type', () => {
       renderTableRow({
         ...defaultProps,
-        repo: { ...baseRepo, type: 'Enhancement' }
+        repo: { ...baseRepo, type: 'Enhancement' },
       });
 
       const iconContainer = screen.getByText('Enhancement').closest('.drf-lifecycle__upcoming-row-type');
@@ -168,7 +169,7 @@ describe('TableRow', () => {
     test('calls showRepo when collapsed row is clicked', () => {
       renderTableRow({
         ...defaultProps,
-        isExpanded: false
+        isExpanded: false,
       });
 
       const expandButton = screen.getByRole('button');
@@ -181,7 +182,7 @@ describe('TableRow', () => {
     test('calls hideRepo when expanded row is clicked', () => {
       renderTableRow({
         ...defaultProps,
-        isExpanded: true
+        isExpanded: true,
       });
 
       const expandButton = screen.getByRole('button');
@@ -196,7 +197,7 @@ describe('TableRow', () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithDetails,
-          isExpanded: false
+          isExpanded: false,
         });
       });
 
@@ -212,7 +213,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.getByText(repoWithDetails.details!.summary)).toBeInTheDocument();
@@ -228,10 +229,12 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
-      expect(screen.getByText('Ruby 2.7 has reached end of life and will no longer receive security updates.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Ruby 2.7 has reached end of life and will no longer receive security updates.')
+      ).toBeInTheDocument();
       expect(screen.getByText('RUBY-123')).toBeInTheDocument();
       expect(screen.getByText('2024-01-15')).toBeInTheDocument();
       expect(screen.getByText('2024-02-01')).toBeInTheDocument();
@@ -241,7 +244,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
       const ticketLink = screen.getByRole('link', { name: 'RUBY-123' });
@@ -253,7 +256,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
       const systemsButton = screen.getByRole('button', { name: '5' });
@@ -265,14 +268,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystemsCount: 0
-        }
+          potentiallyAffectedSystemsCount: 0,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithZeroSystems,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.getByText('0')).toBeInTheDocument();
@@ -284,14 +287,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystemsCount: undefined as any
-        }
+          potentiallyAffectedSystemsCount: undefined as any,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithoutSystemsCount,
-        isExpanded: true
+        isExpanded: true,
       });
 
       // Should not crash and should render the section
@@ -305,7 +308,7 @@ describe('TableRow', () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithDetails,
-          isExpanded: true
+          isExpanded: true,
         });
       });
 
@@ -314,7 +317,7 @@ describe('TableRow', () => {
       });
 
       const systemsButton = screen.getByRole('button', { name: '5' });
-      
+
       await act(async () => {
         fireEvent.click(systemsButton);
       });
@@ -324,7 +327,9 @@ describe('TableRow', () => {
       });
 
       expect(screen.getByTestId('modal-name')).toHaveTextContent('ruby');
-      expect(screen.getByTestId('modal-data')).toHaveTextContent('system1.example.com, system2.example.com, system3.example.com');
+      expect(screen.getByTestId('modal-data')).toHaveTextContent(
+        'system1.example.com, system2.example.com, system3.example.com'
+      );
     });
 
     test('closes modal when close button is clicked', async () => {
@@ -332,7 +337,7 @@ describe('TableRow', () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithDetails,
-          isExpanded: true
+          isExpanded: true,
         });
       });
 
@@ -342,7 +347,7 @@ describe('TableRow', () => {
 
       // Open modal
       const systemsButton = screen.getByRole('button', { name: '5' });
-      
+
       await act(async () => {
         fireEvent.click(systemsButton);
       });
@@ -353,7 +358,7 @@ describe('TableRow', () => {
 
       // Close modal
       const closeButton = screen.getByTestId('modal-close');
-      
+
       await act(async () => {
         fireEvent.click(closeButton);
       });
@@ -367,7 +372,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.queryByTestId('lifecycle-modal')).not.toBeInTheDocument();
@@ -380,14 +385,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          detailFormat: 1 as 0 | 1 | 2 | 3
-        }
+          detailFormat: 1 as 0 | 1 | 2 | 3,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithFormat1,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.getByText(repoWithFormat1.details!.summary)).toBeInTheDocument();
@@ -398,14 +403,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          detailFormat: 2 as 0 | 1 | 2 | 3
-        }
+          detailFormat: 2 as 0 | 1 | 2 | 3,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithFormat2,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.getByText(repoWithFormat2.details!.summary)).toBeInTheDocument();
@@ -416,14 +421,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          detailFormat: 3 as 0 | 1 | 2 | 3
-        }
+          detailFormat: 3 as 0 | 1 | 2 | 3,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithFormat3,
-        isExpanded: true
+        isExpanded: true,
       });
 
       expect(screen.getByText(repoWithFormat3.details!.summary)).toBeInTheDocument();
@@ -435,7 +440,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: baseRepo,
-        isExpanded: true
+        isExpanded: true,
       });
 
       // Should not render expanded details section
@@ -448,15 +453,15 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystems: []
-        }
+          potentiallyAffectedSystems: [],
+        },
       };
 
       await act(async () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithEmptySystems,
-          isExpanded: true
+          isExpanded: true,
         });
       });
 
@@ -465,7 +470,7 @@ describe('TableRow', () => {
       });
 
       const systemsButton = screen.getByRole('button', { name: '5' });
-      
+
       await act(async () => {
         fireEvent.click(systemsButton);
       });
@@ -483,14 +488,14 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystems: undefined as any
-        }
+          potentiallyAffectedSystems: undefined as any,
+        },
       };
 
       renderTableRow({
         ...defaultProps,
         repo: repoWithUndefinedSystems,
-        isExpanded: true
+        isExpanded: true,
       });
 
       // Should not crash
@@ -502,7 +507,7 @@ describe('TableRow', () => {
     test('has proper ARIA attributes for expand button', () => {
       renderTableRow({
         ...defaultProps,
-        isExpanded: false
+        isExpanded: false,
       });
 
       const expandButton = screen.getByRole('button');
@@ -512,7 +517,7 @@ describe('TableRow', () => {
     test('updates ARIA attributes when expanded', () => {
       renderTableRow({
         ...defaultProps,
-        isExpanded: true
+        isExpanded: true,
       });
 
       const expandButton = screen.getByRole('button');
@@ -523,7 +528,7 @@ describe('TableRow', () => {
       renderTableRow({
         ...defaultProps,
         repo: repoWithDetails,
-        isExpanded: true
+        isExpanded: true,
       });
 
       const ticketLink = screen.getByRole('link', { name: 'RUBY-123' });
@@ -537,7 +542,7 @@ describe('TableRow', () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithDetails,
-          isExpanded: true
+          isExpanded: true,
         });
       });
 
@@ -546,7 +551,7 @@ describe('TableRow', () => {
       });
 
       const systemsButton = screen.getByRole('button', { name: '5' });
-      
+
       await act(async () => {
         fireEvent.click(systemsButton);
       });
@@ -554,7 +559,9 @@ describe('TableRow', () => {
       await waitFor(() => {
         expect(screen.getByTestId('lifecycle-modal')).toBeInTheDocument();
         expect(screen.getByTestId('modal-name')).toHaveTextContent('ruby');
-        expect(screen.getByTestId('modal-data')).toHaveTextContent('system1.example.com, system2.example.com, system3.example.com');
+        expect(screen.getByTestId('modal-data')).toHaveTextContent(
+          'system1.example.com, system2.example.com, system3.example.com'
+        );
       });
     });
 
@@ -563,7 +570,7 @@ describe('TableRow', () => {
         renderTableRow({
           ...defaultProps,
           repo: repoWithDetails,
-          isExpanded: true
+          isExpanded: true,
         });
       });
 
@@ -572,7 +579,7 @@ describe('TableRow', () => {
       });
 
       const systemsButton = screen.getByRole('button', { name: '5' });
-      
+
       // Simulate keyboard event
       await act(async () => {
         fireEvent.keyDown(systemsButton, { key: 'Enter' });

@@ -7,9 +7,9 @@ import { DEFAULT_FILTERS } from '../../utils/utils';
 
 // Mock the UpcomingTableFilters component
 jest.mock('./UpcomingTableFilters', () => {
-  return function MockUpcomingTableFilters({ 
-    resetFilters, 
-    searchValue, 
+  return function MockUpcomingTableFilters({
+    resetFilters,
+    searchValue,
     setSearchValue,
     typeSelections,
     setTypeSelections,
@@ -19,13 +19,13 @@ jest.mock('./UpcomingTableFilters', () => {
     setReleaseSelections,
     selectedViewFilter,
     handleViewFilterChange,
-    noDataAvailable
+    noDataAvailable,
   }: any) {
     return (
       <div data-testid="upcoming-table-filters">
-        <input 
-          data-testid="search-input" 
-          value={searchValue} 
+        <input
+          data-testid="search-input"
+          value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by name"
         />
@@ -37,28 +37,16 @@ jest.mock('./UpcomingTableFilters', () => {
         <div data-testid="release-selections">{releaseSelections.join(',')}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
-        <button 
-          data-testid="set-type-filter" 
-          onClick={() => setTypeSelections(new Set(['Deprecation']))}
-        >
+        <button data-testid="set-type-filter" onClick={() => setTypeSelections(new Set(['Deprecation']))}>
           Set Type Filter
         </button>
-        <button 
-          data-testid="set-date-filter" 
-          onClick={() => setDateSelection('2024-12-01')}
-        >
+        <button data-testid="set-date-filter" onClick={() => setDateSelection('2024-12-01')}>
           Set Date Filter
         </button>
-        <button 
-          data-testid="set-release-filter" 
-          onClick={() => setReleaseSelections(['9.0'])}
-        >
+        <button data-testid="set-release-filter" onClick={() => setReleaseSelections(['9.0'])}>
           Set Release Filter
         </button>
-        <button 
-          data-testid="change-view-filter" 
-          onClick={() => handleViewFilterChange('all')}
-        >
+        <button data-testid="change-view-filter" onClick={() => handleViewFilterChange('all')}>
           Change View Filter
         </button>
       </div>
@@ -74,10 +62,7 @@ jest.mock('../../Components/UpcomingRow/UpcomingRow', () => {
         <tbody data-testid={`table-row-${repo.name}`}>
           <tr>
             <td>
-              <button 
-                data-testid={`expand-button-${repo.name}`}
-                onClick={isExpanded ? hideRepo : showRepo}
-              >
+              <button data-testid={`expand-button-${repo.name}`} onClick={isExpanded ? hideRepo : showRepo}>
                 {isExpanded ? 'Collapse' : 'Expand'}
               </button>
             </td>
@@ -93,7 +78,7 @@ jest.mock('../../Components/UpcomingRow/UpcomingRow', () => {
           )}
         </tbody>
       );
-    }
+    },
   };
 });
 
@@ -107,43 +92,43 @@ const mockData: UpcomingChanges[] = [
     type: 'Deprecation',
     release: '9.0',
     date: '2024-12-01',
-    package: 'ruby'
+    package: 'ruby',
   },
   {
     name: 'PostgreSQL 15 Feature',
     type: 'Addition',
     release: '10.2',
     date: '2024-12-15',
-    package: 'postgresql'
+    package: 'postgresql',
   },
   {
     name: 'Rust Update',
     type: 'Change',
     release: '9.0',
     date: '2024-12-01',
-    package: 'rust'
+    package: 'rust',
   },
   {
     name: 'Python Enhancement',
     type: 'Enhancement',
     release: '10.4',
     date: '2025-01-01',
-    package: 'python'
+    package: 'python',
   },
   {
     name: 'Node.js Security Fix',
     type: 'Addition',
     release: '10.2',
     date: '2024-12-15',
-    package: 'nodejs'
-  }
+    package: 'nodejs',
+  },
 ];
 
 const mockColumnNames = {
   name: 'Name',
   type: 'Type',
   release: 'Release',
-  date: 'Release date'
+  date: 'Release date',
 };
 
 const defaultProps = {
@@ -158,7 +143,7 @@ const defaultProps = {
   setFiltersForURL: jest.fn(),
   selectedViewFilter: 'relevant',
   handleViewFilterChange: jest.fn(),
-  noDataAvailable: false
+  noDataAvailable: false,
 };
 
 describe('UpcomingTable', () => {
@@ -188,7 +173,9 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} data={[]} />);
 
       expect(screen.getByText('No results found')).toBeInTheDocument();
-      expect(screen.getByText('No results match the filter criteria. Clear all filters and try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No results match the filter criteria. Clear all filters and try again.')
+      ).toBeInTheDocument();
       expect(screen.getByText('Clear all filters')).toBeInTheDocument();
     });
 
@@ -198,7 +185,7 @@ describe('UpcomingTable', () => {
         initialTypeFilters: new Set(['Deprecation']),
         initialNameFilter: 'Ruby',
         initialDateFilter: '2024-12-01',
-        initialReleaseFilters: ['9.0']
+        initialReleaseFilters: ['9.0'],
       };
 
       render(<UpcomingTable {...props} />);
@@ -317,10 +304,10 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} />);
 
       const nameHeader = screen.getByText('Name');
-      
+
       // First click - ascending
       fireEvent.click(nameHeader);
-      
+
       // Second click - descending
       fireEvent.click(nameHeader);
 
@@ -340,16 +327,16 @@ describe('UpcomingTable', () => {
       const largeDataSet = Array.from({ length: 25 }, (_, i) => ({
         name: `Item ${i + 1}`,
         type: 'Addition',
-        release: `${9 + (i % 3)}.${(i % 5)}`,
+        release: `${9 + (i % 3)}.${i % 5}`,
         date: '2024-12-01',
-        package: 'test'
+        package: 'test',
       }));
 
       render(<UpcomingTable {...defaultProps} data={largeDataSet} />);
 
       // Should show pagination controls
       expect(screen.getByLabelText(/bottom pagination/i)).toBeInTheDocument();
-      
+
       // Should only show first 10 items initially
       expect(screen.getByTestId('table-row-Item 1')).toBeInTheDocument();
       expect(screen.queryByTestId('table-row-Item 15')).not.toBeInTheDocument();
@@ -361,7 +348,7 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} />);
 
       const expandButton = screen.getByTestId('expand-button-Ruby 2.7 EOL');
-      
+
       // Initially collapsed
       expect(screen.queryByTestId('expanded-row-Ruby 2.7 EOL')).not.toBeInTheDocument();
 
@@ -399,7 +386,7 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} />);
 
       const expandAllButton = screen.getByLabelText('Expand all rows');
-      
+
       // First expand all
       fireEvent.click(expandAllButton);
 
@@ -445,8 +432,8 @@ describe('UpcomingTable', () => {
           type: 'Addition',
           release: '9.1',
           date: '2024-12-01',
-          package: 'new'
-        }
+          package: 'new',
+        },
       ];
 
       rerender(<UpcomingTable {...defaultProps} data={newData} />);
@@ -470,7 +457,7 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} />);
 
       const searchInput = screen.getByTestId('search-input');
-      
+
       // Input invalid regex characters
       fireEvent.change(searchInput, { target: { value: '[invalid' } });
 
@@ -487,8 +474,8 @@ describe('UpcomingTable', () => {
           type: 'Addition',
           release: '',
           date: '2024-12-01',
-          package: 'test'
-        }
+          package: 'test',
+        },
       ];
 
       render(<UpcomingTable {...defaultProps} data={dataWithMissingValues} />);
@@ -511,8 +498,8 @@ describe('UpcomingTable', () => {
           type: 'Addition',
           release: '11.0',
           date: '2025-01-15',
-          package: 'ruby'
-        }
+          package: 'ruby',
+        },
       ];
 
       rerender(<UpcomingTable {...defaultProps} data={newData} />);
@@ -531,7 +518,9 @@ describe('UpcomingTable', () => {
     test('has proper ARIA labels', () => {
       render(<UpcomingTable {...defaultProps} />);
 
-      expect(screen.getByLabelText('Upcoming changes, deprecations, and additions to your system')).toBeInTheDocument();
+      expect(
+        screen.getByLabelText('Upcoming changes, deprecations, and additions to your system')
+      ).toBeInTheDocument();
       expect(screen.getByLabelText('Expand all rows')).toBeInTheDocument();
     });
 
@@ -539,7 +528,7 @@ describe('UpcomingTable', () => {
       render(<UpcomingTable {...defaultProps} />);
 
       const expandButton = screen.getByTestId('expand-button-Ruby 2.7 EOL');
-      
+
       // Should be focusable
       expandButton.focus();
       expect(expandButton).toHaveFocus();
