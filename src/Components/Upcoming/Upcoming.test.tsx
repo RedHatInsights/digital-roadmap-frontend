@@ -19,12 +19,12 @@ jest.mock('../../api', () => ({
 
 // Mock the lazy-loaded UpcomingTable component
 jest.mock('../UpcomingTable/UpcomingTable', () => {
-  return function MockUpcomingTable({ 
-    data, 
-    resetInitialFilters, 
-    selectedViewFilter, 
+  return function MockUpcomingTable({
+    data,
+    resetInitialFilters,
+    selectedViewFilter,
     handleViewFilterChange,
-    noDataAvailable 
+    noDataAvailable,
   }: any) {
     return (
       <div data-testid="upcoming-table">
@@ -70,7 +70,9 @@ jest.mock('@patternfly/react-component-groups/dist/dynamic/ErrorState', () => {
 });
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
-const mockGetRelevantUpcomingChanges = getRelevantUpcomingChanges as jest.MockedFunction<typeof getRelevantUpcomingChanges>;
+const mockGetRelevantUpcomingChanges = getRelevantUpcomingChanges as jest.MockedFunction<
+  typeof getRelevantUpcomingChanges
+>;
 
 // Test data
 const mockAllData: UpcomingChanges[] = [
@@ -79,21 +81,21 @@ const mockAllData: UpcomingChanges[] = [
     type: 'deprecation',
     release: 'Release 1.0',
     date: '2024-12-01',
-    package: "ruby",
+    package: 'ruby',
   },
   {
     name: 'Test Change 2',
     type: 'addition',
     release: 'Release 2.0',
     date: '2024-12-15',
-    package: "postgresql",
+    package: 'postgresql',
   },
   {
     name: 'Test Change 3',
     type: 'change',
     release: 'Release 1.0',
     date: '2024-12-01',
-    package: "rust",
+    package: 'rust',
   },
 ];
 
@@ -103,7 +105,7 @@ const mockRelevantData: UpcomingChanges[] = [
     type: 'deprecation',
     release: 'Release 1.0',
     date: '2024-12-01',
-    package: "ruby",
+    package: 'ruby',
   },
 ];
 
@@ -121,7 +123,7 @@ const setupSearchParamsMock = (params: Record<string, string> = {}) => {
   Object.entries(params).forEach(([key, value]) => {
     searchParams.set(key, value);
   });
-  
+
   const useSearchParams = require('react-router-dom').useSearchParams as jest.MockedFunction<any>;
   useSearchParams.mockReturnValue([searchParams, mockSetSearchParams]);
 };
@@ -142,7 +144,7 @@ describe('UpcomingTab', () => {
     jest.clearAllMocks();
     mockSetSearchParams.mockClear();
     setupSearchParamsMock(); // Reset to empty params
-    
+
     // Reset mocks to default successful state
     mockGetAllUpcomingChanges.mockResolvedValue({ data: mockAllData });
     mockGetRelevantUpcomingChanges.mockResolvedValue({ data: mockRelevantData });
@@ -151,9 +153,11 @@ describe('UpcomingTab', () => {
   describe('Initial Loading', () => {
     test('displays loading spinner initially', async () => {
       // Make the API calls take a long time to resolve
-      const delayedPromise = new Promise(resolve => setTimeout(resolve, 100));
+      const delayedPromise = new Promise((resolve) => setTimeout(resolve, 100));
       mockGetAllUpcomingChanges.mockReturnValue(delayedPromise.then(() => ({ data: mockAllData })) as any);
-      mockGetRelevantUpcomingChanges.mockReturnValue(delayedPromise.then(() => ({ data: mockRelevantData })) as any);
+      mockGetRelevantUpcomingChanges.mockReturnValue(
+        delayedPromise.then(() => ({ data: mockRelevantData })) as any
+      );
 
       await act(async () => {
         renderComponent();
@@ -161,11 +165,14 @@ describe('UpcomingTab', () => {
 
       // Check loading spinner is present immediately
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
-      
+
       // Wait for loading to complete
-      await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     test('fetches data on mount and displays summary cards', async () => {
@@ -218,15 +225,17 @@ describe('UpcomingTab', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent('Failed to fetch data from both endpoints');
+        expect(screen.getByTestId('error-description')).toHaveTextContent(
+          'Failed to fetch data from both endpoints'
+        );
       });
     });
 
     test('handles workspace filtering error', async () => {
-      // The component shows the "no roadmap data available" state when one API succeeds 
+      // The component shows the "no roadmap data available" state when one API succeeds
       // with empty data and one fails - this is the actual behavior
       const errorMessage = 'Error: Workspace filtering is not yet implemented';
-      
+
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
       mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
@@ -242,7 +251,7 @@ describe('UpcomingTab', () => {
 
     test('handles timeout error (504)', async () => {
       const timeoutError = { message: 'Timeout', status_code: 504 };
-      
+
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
       mockGetRelevantUpcomingChanges.mockRejectedValue(timeoutError);
 
@@ -325,7 +334,7 @@ describe('UpcomingTab', () => {
       // Find the radio input directly by ID
       const deprecationRadio = document.getElementById('filter-by-type-deprecation');
       expect(deprecationRadio).toBeInTheDocument();
-      
+
       await act(async () => {
         fireEvent.click(deprecationRadio!);
       });
@@ -347,7 +356,7 @@ describe('UpcomingTab', () => {
 
       // Find the radio input for changes and trigger it
       const changeRadio = document.getElementById('filter-by-type-change');
-      
+
       await act(async () => {
         fireEvent.click(changeRadio!);
       });
@@ -368,7 +377,7 @@ describe('UpcomingTab', () => {
 
       // Find the radio input for additions and trigger it
       const additionRadio = document.getElementById('filter-by-type-addition');
-      
+
       await act(async () => {
         fireEvent.click(additionRadio!);
       });
@@ -444,7 +453,11 @@ describe('UpcomingTab', () => {
 
       await waitFor(() => {
         expect(screen.getByText('No roadmap data available')).toBeInTheDocument();
-        expect(screen.getByText('We could not find any Roadmap data. Please add systems to inventory to view Roadmap information.')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'We could not find any Roadmap data. Please add systems to inventory to view Roadmap information.'
+          )
+        ).toBeInTheDocument();
       });
     });
   });
@@ -454,7 +467,7 @@ describe('UpcomingTab', () => {
       const dataWithLowerCaseTypes = [
         { ...mockAllData[0], type: 'deprecation' },
         { ...mockAllData[1], type: 'addition' },
-        { ...mockAllData[2], type: 'change' }
+        { ...mockAllData[2], type: 'change' },
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithLowerCaseTypes });
@@ -479,7 +492,7 @@ describe('UpcomingTab', () => {
         { name: 'Test 2', type: 'Addition', release: 'R1', date: '2024-01-01', package: 'postgresql' },
         { name: 'Test 3', type: 'Enhancement', release: 'R1', date: '2024-01-01', package: 'rust' },
         { name: 'Test 4', type: 'Change', release: 'R1', date: '2024-01-01', package: 'python' },
-        { name: 'Test 5', type: 'Change', release: 'R1', date: '2024-01-01', package: 'nodejs' }
+        { name: 'Test 5', type: 'Change', release: 'R1', date: '2024-01-01', package: 'nodejs' },
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: mixedData });
@@ -495,7 +508,7 @@ describe('UpcomingTab', () => {
 
       // Check that data is rendered
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('5');
-      
+
       // Check cards are present
       expect(screen.getByText('Deprecations')).toBeInTheDocument();
       expect(screen.getByText('Changes')).toBeInTheDocument();
@@ -513,7 +526,7 @@ describe('UpcomingTab', () => {
       });
 
       const workspaceError = new Error('Error: Workspace filtering is not yet implemented');
-      
+
       mockGetAllUpcomingChanges.mockImplementation(() => {
         throw workspaceError;
       });
@@ -537,7 +550,7 @@ describe('UpcomingTab', () => {
 
       expect(mockLocation.href).toBe('http://localhost:3000/insights/dashboard');
     });
-    
+
     test('handles general API errors', async () => {
       mockGetAllUpcomingChanges.mockRejectedValue(new Error('General API Error'));
       mockGetRelevantUpcomingChanges.mockRejectedValue(new Error('General API Error'));
@@ -548,7 +561,9 @@ describe('UpcomingTab', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent('Failed to fetch data from both endpoints');
+        expect(screen.getByTestId('error-description')).toHaveTextContent(
+          'Failed to fetch data from both endpoints'
+        );
       });
     });
   });
@@ -580,7 +595,7 @@ describe('UpcomingTab', () => {
       await act(async () => {
         fireEvent.click(screen.getByTestId('reset-filters'));
       });
-      
+
       await waitFor(() => {
         expect(mockSetSearchParams).toHaveBeenCalled();
       });
@@ -589,7 +604,7 @@ describe('UpcomingTab', () => {
       await act(async () => {
         fireEvent.click(screen.getByTestId('switch-to-all'));
       });
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
       });
