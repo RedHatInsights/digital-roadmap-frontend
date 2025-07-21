@@ -4,7 +4,7 @@ import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/excl
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import React, { lazy } from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
-import { UpcomingChanges } from '../../types/UpcomingChanges';
+import { UpcomingChanges, SystemNames } from '../../types/UpcomingChanges';
 import {
   Button,
   Icon,
@@ -45,7 +45,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
-  const [modalData, setModalData] = React.useState<string[]>();
+  const [modalData, setModalData] = React.useState<SystemNames[]>();
 
   let childIsFullWidth = false;
   let childHasNoPadding = false;
@@ -151,7 +151,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                           onClick={(event) => {
                             handleModalToggle(event);
                             setModalDataName(String(repo.package));
-                            setModalData(repo.details?.potentiallyAffectedSystems);
+                            setModalData(repo.details?.potentiallyAffectedSystemNames);
                           }}
                           style={{
                             marginTop: '-4px',

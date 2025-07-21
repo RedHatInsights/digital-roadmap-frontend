@@ -162,6 +162,7 @@ const mockSystemData: SystemLifecycleChanges[] = [
     display_name: 'RHEL 9.3',
     support_status: 'Supported',
     systems: ['23fr2f23rf42f0'],
+    system_names: [{ id: '23fr2f23rf42f0', display_name: 'Test System 1' }],
   },
   {
     name: 'RHEL',
@@ -175,6 +176,7 @@ const mockSystemData: SystemLifecycleChanges[] = [
     display_name: 'RHEL 8.9',
     support_status: 'Supported',
     systems: ['23fr2f23rf42f0'],
+    system_names: [{ id: '23fr2f23rf42f0', display_name: 'Test System 1' }],
   },
 ];
 
@@ -193,6 +195,7 @@ const mockAppData: Stream[] = [
     support_status: 'Supported',
     systems: ['343252f2f23f44g'],
     os_lifecycle: 'Supported',
+    system_names: [{ id: '343252f2f23f44g', display_name: 'Test App System 1' }],
   },
   {
     name: 'python',
@@ -208,6 +211,7 @@ const mockAppData: Stream[] = [
     support_status: 'Supported',
     systems: ['343252f2f23f44g'],
     os_lifecycle: 'Supported',
+    system_names: [{ id: '343252f2f23f44g', display_name: 'Test App System 1' }],
   },
   {
     name: 'httpd',
@@ -223,6 +227,7 @@ const mockAppData: Stream[] = [
     support_status: 'Supported',
     systems: ['10'],
     os_lifecycle: 'Supported',
+    system_names: [{ id: '10', display_name: 'Test App System 2' }],
   },
 ];
 

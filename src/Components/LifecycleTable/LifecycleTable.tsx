@@ -1,7 +1,7 @@
 import React, { lazy } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
-import { Stream } from '../../types/Stream';
+import { Stream, SystemNames } from '../../types/Stream';
 import {
   Button,
   Pagination,
@@ -78,7 +78,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
-  const [modalData, setModalData] = React.useState<string[]>();
+  const [modalData, setModalData] = React.useState<SystemNames[]>();
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -294,7 +294,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                     onClick={(event) => {
                       handleModalToggle(event);
                       setModalDataName(String(repo.display_name));
-                      setModalData(repo.systems);
+                      setModalData(repo.system_names);
                     }}
                   >
                     {repo.count}
@@ -361,7 +361,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                     onClick={(event) => {
                       handleModalToggle(event);
                       setModalDataName(String(repo.display_name));
-                      setModalData(repo.systems);
+                      setModalData(repo.system_names);
                     }}
                   >
                     {repo.count}
