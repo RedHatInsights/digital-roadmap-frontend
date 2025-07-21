@@ -40,6 +40,10 @@ describe('LifecycleChartSystem', () => {
       lifecycle_type: 'standard',
       systems: ['system1', 'system2'],
       related: false,
+      system_names: [
+        { id: 'system1', display_name: 'System 1' },
+        { id: 'system2', display_name: 'System 2' },
+      ],
     },
     {
       name: 'RHEL 8.0',
@@ -53,6 +57,7 @@ describe('LifecycleChartSystem', () => {
       lifecycle_type: 'standard',
       systems: ['system3'],
       related: false,
+      system_names: [{ id: 'system3', display_name: 'System 3' }],
     },
   ];
 
@@ -115,6 +120,10 @@ describe('LifecycleChartSystem', () => {
         lifecycle_type: 'standard',
         systems: ['system4', 'system5'],
         related: false,
+        system_names: [
+          { id: 'system4', display_name: 'System 4' },
+          { id: 'system5', display_name: 'System 5' },
+        ],
       },
     ];
 

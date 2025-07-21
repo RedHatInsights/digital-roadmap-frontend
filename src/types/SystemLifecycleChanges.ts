@@ -10,4 +10,10 @@ export type SystemLifecycleChanges = {
   support_status: string;
   related: boolean;
   systems: string[];
+  system_names: SystemNames[];
 };
+
+export interface SystemNames {
+  id: string;
+  display_name: string;
+}

@@ -9,9 +9,15 @@ export type UpcomingChanges = {
     architecture: string;
     potentiallyAffectedSystemsCount: number;
     potentiallyAffectedSystems: string[];
+    potentiallyAffectedSystemNames: SystemNames[];
     trainingTicket: string;
     dateAdded: string;
     lastModified: string;
     detailFormat: 0 | 1 | 2 | 3;
   };
 };
+
+export interface SystemNames {
+  id: string;
+  display_name: string;
+}

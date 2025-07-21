@@ -14,6 +14,10 @@ const VIRT = {
   rolling: false,
   systems: ['system1', 'system2'],
   related: false,
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const VARNISH = {
@@ -33,6 +37,10 @@ const VARNISH = {
   rolling: false,
   systems: ['system1', 'system2'],
   related: false,
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const IDM = {
@@ -51,6 +59,10 @@ const IDM = {
   rolling: false,
   systems: ['system1', 'system2'],
   related: false,
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const RHEL_NINE_TWO = {
@@ -66,6 +78,10 @@ const RHEL_NINE_TWO = {
   support_status: 'Retired',
   related: false,
   systems: ['system1', 'system2'],
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const RHEL_EIGHT_THREE = {
@@ -81,6 +97,10 @@ const RHEL_EIGHT_THREE = {
   support_status: 'Retired',
   related: false,
   systems: ['system1', 'system2'],
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const RHEL_EIGHT_SEVEN = {
@@ -96,6 +116,10 @@ const RHEL_EIGHT_SEVEN = {
   support_status: 'Retired',
   related: false,
   systems: ['system1', 'system2'],
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 const RHEL_NINE = {
@@ -111,6 +135,10 @@ const RHEL_NINE = {
   support_status: 'Supported',
   related: false,
   systems: ['system1', 'system2'],
+  system_names: [
+    { id: 'system1', display_name: 'System 1' },
+    { id: 'system2', display_name: 'System 2' },
+  ],
 };
 
 export const ONE_MOCK_RHEL_DATA = [RHEL_NINE_TWO];

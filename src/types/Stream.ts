@@ -12,4 +12,10 @@ export interface Stream {
   rolling: boolean;
   systems: string[];
   related: boolean;
+  system_names: SystemNames[];
+}
+
+export interface SystemNames {
+  id: string;
+  display_name: string;
 }
