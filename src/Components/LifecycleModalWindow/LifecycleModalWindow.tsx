@@ -1,6 +1,6 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
-import { SystemNames } from '../../types/Stream';
+import { SystemNames } from '../../types/SystemNames';
 import {
   Button,
   Pagination,

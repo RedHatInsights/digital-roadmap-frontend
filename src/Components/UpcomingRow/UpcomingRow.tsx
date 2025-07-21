@@ -4,7 +4,8 @@ import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/excl
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import React, { lazy } from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
-import { UpcomingChanges, SystemNames } from '../../types/UpcomingChanges';
+import { UpcomingChanges } from '../../types/UpcomingChanges';
+import { SystemNames } from '../../types/SystemNames';
 import {
   Button,
   Icon,

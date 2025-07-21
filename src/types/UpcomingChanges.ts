@@ -1,3 +1,5 @@
+import { SystemNames } from './SystemNames';
+
 export type UpcomingChanges = {
   name: string;
   type: string;
@@ -15,8 +17,3 @@ export type UpcomingChanges = {
     detailFormat: 0 | 1 | 2 | 3;
   };
 };
-
-export interface SystemNames {
-  id: string;
-  display_name: string;
-}

@@ -1,3 +1,5 @@
+import { SystemNames } from './SystemNames';
+
 export interface Stream {
   name: string;
   display_name: string;
@@ -12,9 +14,4 @@ export interface Stream {
   rolling: boolean;
   related: boolean;
   system_names: SystemNames[];
-}
-
-export interface SystemNames {
-  id: string;
-  display_name: string;
 }

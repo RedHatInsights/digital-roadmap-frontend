@@ -1,3 +1,5 @@
+import { SystemNames } from './SystemNames';
+
 export type SystemLifecycleChanges = {
   name: string;
   display_name: string;
@@ -11,8 +13,3 @@ export type SystemLifecycleChanges = {
   related: boolean;
   system_names: SystemNames[];
 };
-
-export interface SystemNames {
-  id: string;
-  display_name: string;
-}
