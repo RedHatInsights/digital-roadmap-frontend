@@ -40,7 +40,6 @@ describe('LifecycleChart', () => {
       os_lifecycle: 'active',
       application_stream_name: 'stream1',
       rolling: false,
-      systems: ['system1', 'system2'],
       related: false,
       system_names: [
         { id: 'system1', display_name: 'System 1' },
@@ -59,7 +58,6 @@ describe('LifecycleChart', () => {
       os_lifecycle: 'retired',
       application_stream_name: 'stream2',
       rolling: false,
-      systems: ['system3'],
       related: false,
       system_names: [{ id: 'system3', display_name: 'System 3' }],
     },
@@ -124,7 +122,6 @@ describe('LifecycleChart', () => {
         os_lifecycle: 'active',
         application_stream_name: 'stream3',
         rolling: false,
-        systems: ['system4', 'system5'],
         related: false,
         system_names: [
           { id: 'system4', display_name: 'System 4' },

@@ -9,7 +9,6 @@ export type SystemLifecycleChanges = {
   lifecycle_type: string;
   support_status: string;
   related: boolean;
-  systems: string[];
   system_names: SystemNames[];
 };
 

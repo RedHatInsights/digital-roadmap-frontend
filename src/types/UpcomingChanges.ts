@@ -8,7 +8,6 @@ export type UpcomingChanges = {
     summary: string;
     architecture: string;
     potentiallyAffectedSystemsCount: number;
-    potentiallyAffectedSystems: string[];
     potentiallyAffectedSystemNames: SystemNames[];
     trainingTicket: string;
     dateAdded: string;

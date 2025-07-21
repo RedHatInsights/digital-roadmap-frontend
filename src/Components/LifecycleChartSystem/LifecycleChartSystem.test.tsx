@@ -38,7 +38,6 @@ describe('LifecycleChartSystem', () => {
       minor: 0,
       count: 5,
       lifecycle_type: 'standard',
-      systems: ['system1', 'system2'],
       related: false,
       system_names: [
         { id: 'system1', display_name: 'System 1' },
@@ -55,7 +54,6 @@ describe('LifecycleChartSystem', () => {
       minor: 0,
       count: 3,
       lifecycle_type: 'standard',
-      systems: ['system3'],
       related: false,
       system_names: [{ id: 'system3', display_name: 'System 3' }],
     },
@@ -118,7 +116,6 @@ describe('LifecycleChartSystem', () => {
         minor: 1,
         count: 7,
         lifecycle_type: 'standard',
-        systems: ['system4', 'system5'],
         related: false,
         system_names: [
           { id: 'system4', display_name: 'System 4' },
