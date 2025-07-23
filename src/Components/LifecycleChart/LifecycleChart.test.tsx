@@ -41,7 +41,7 @@ describe('LifecycleChart', () => {
       application_stream_name: 'stream1',
       rolling: false,
       related: false,
-      system_names: [
+      systems_detail: [
         { id: 'system1', display_name: 'System 1' },
         { id: 'system2', display_name: 'System 2' },
       ],
@@ -59,7 +59,7 @@ describe('LifecycleChart', () => {
       application_stream_name: 'stream2',
       rolling: false,
       related: false,
-      system_names: [{ id: 'system3', display_name: 'System 3' }],
+      systems_detail: [{ id: 'system3', display_name: 'System 3' }],
     },
   ];
 
@@ -123,7 +123,7 @@ describe('LifecycleChart', () => {
         application_stream_name: 'stream3',
         rolling: false,
         related: false,
-        system_names: [
+        systems_detail: [
           { id: 'system4', display_name: 'System 4' },
           { id: 'system5', display_name: 'System 5' },
         ],

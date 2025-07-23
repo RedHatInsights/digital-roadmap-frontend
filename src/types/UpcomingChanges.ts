@@ -1,4 +1,4 @@
-import { SystemNames } from './SystemNames';
+import { SystemsDetail } from './SystemsDetail';
 
 export type UpcomingChanges = {
   name: string;
@@ -10,7 +10,7 @@ export type UpcomingChanges = {
     summary: string;
     architecture: string;
     potentiallyAffectedSystemsCount: number;
-    potentiallyAffectedSystemNames: SystemNames[];
+    potentiallyAffectedSystemsDetail: SystemsDetail[];
     trainingTicket: string;
     dateAdded: string;
     lastModified: string;
