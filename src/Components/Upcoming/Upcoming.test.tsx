@@ -50,12 +50,9 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
 jest.mock('./upcoming.scss', () => ({}));
 
 // Mock react-router-dom hook
-const mockSetSearchParams = jest.fn();
-const mockSearchParams = new URLSearchParams();
-
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useSearchParams: jest.fn(() => [mockSearchParams, mockSetSearchParams]),
+  useSearchParams: jest.fn(),
 }));
 
 // Mock PatternFly components that might cause issues
@@ -69,6 +66,10 @@ jest.mock('@patternfly/react-component-groups/dist/dynamic/ErrorState', () => {
     );
   };
 });
+
+// Create typed mocks
+const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
+const mockSetSearchParams = jest.fn();
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
 const mockGetRelevantUpcomingChanges = getRelevantUpcomingChanges as jest.MockedFunction<
@@ -125,8 +126,8 @@ const setupSearchParamsMock = (params: Record<string, string> = {}) => {
     searchParams.set(key, value);
   });
 
-  const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
-  useSearchParams.mockReturnValue([searchParams, mockSetSearchParams]);
+  // Use the mocked function, not the original
+  mockedUseSearchParams.mockReturnValue([searchParams, mockSetSearchParams]);
 };
 
 // Suppress console.error for expected error scenarios
