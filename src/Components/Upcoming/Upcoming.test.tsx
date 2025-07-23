@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { useSearchParams } from 'react-router-dom';
+import { act, fireEvent ,render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import UpcomingTab from './Upcoming';
@@ -124,7 +125,7 @@ const setupSearchParamsMock = (params: Record<string, string> = {}) => {
     searchParams.set(key, value);
   });
 
-  const useSearchParams = require('react-router-dom').useSearchParams as jest.MockedFunction<any>;
+  const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
   useSearchParams.mockReturnValue([searchParams, mockSetSearchParams]);
 };
 
