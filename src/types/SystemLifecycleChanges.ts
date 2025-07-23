@@ -1,4 +1,4 @@
-import { SystemNames } from './SystemNames';
+import { SystemsDetail } from './SystemsDetail';
 
 export type SystemLifecycleChanges = {
   name: string;
@@ -11,5 +11,5 @@ export type SystemLifecycleChanges = {
   lifecycle_type: string;
   support_status: string;
   related: boolean;
-  system_names: SystemNames[];
+  systems_detail: SystemsDetail[];
 };
