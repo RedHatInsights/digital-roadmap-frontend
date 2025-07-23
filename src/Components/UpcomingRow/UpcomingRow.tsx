@@ -5,6 +5,7 @@ import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-i
 import React, { lazy } from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
+import { SystemsDetail } from '../../types/SystemsDetail';
 import {
   Button,
   Icon,
@@ -45,7 +46,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
-  const [modalData, setModalData] = React.useState<string[]>();
+  const [modalData, setModalData] = React.useState<SystemsDetail[]>();
 
   let childIsFullWidth = false;
   let childHasNoPadding = false;
@@ -151,7 +152,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                           onClick={(event) => {
                             handleModalToggle(event);
                             setModalDataName(String(repo.package));
-                            setModalData(repo.details?.potentiallyAffectedSystems);
+                            setModalData(repo.details?.potentiallyAffectedSystemsDetail);
                           }}
                           style={{
                             marginTop: '-4px',

@@ -1,3 +1,5 @@
+import { SystemsDetail } from './SystemsDetail';
+
 export type UpcomingChanges = {
   name: string;
   type: string;
@@ -8,7 +10,7 @@ export type UpcomingChanges = {
     summary: string;
     architecture: string;
     potentiallyAffectedSystemsCount: number;
-    potentiallyAffectedSystems: string[];
+    potentiallyAffectedSystemsDetail: SystemsDetail[];
     trainingTicket: string;
     dateAdded: string;
     lastModified: string;

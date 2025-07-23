@@ -1,3 +1,5 @@
+import { SystemsDetail } from './SystemsDetail';
+
 export interface Stream {
   name: string;
   display_name: string;
@@ -10,6 +12,6 @@ export interface Stream {
   count: number;
   application_stream_name: string;
   rolling: boolean;
-  systems: string[];
   related: boolean;
+  systems_detail: SystemsDetail[];
 }
