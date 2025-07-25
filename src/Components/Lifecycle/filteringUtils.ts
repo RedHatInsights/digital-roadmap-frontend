@@ -10,10 +10,10 @@ export const RHEL_SYSTEMS_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 export const filterChartDataByName = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (
     [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)
@@ -30,10 +30,10 @@ export const filterChartDataByName = (
 export const filterChartDataByReleaseDate = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (
     [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)
@@ -60,10 +60,10 @@ export const filterChartDataByReleaseDate = (
 export const filterChartDataByRetirementDate = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (
     [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)
@@ -84,10 +84,10 @@ export const filterChartDataByRetirementDate = (
 export const filterChartDataByRelease = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (
     [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)
@@ -111,7 +111,7 @@ export const filterChartDataByRelease = (
 export const filterChartDataBySystems = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'desc'
+  order: string = 'asc'
 ) => {
   // Needed to be able to switch order from ascending to descending
   const order_control = order === 'asc' ? 1 : -1;
