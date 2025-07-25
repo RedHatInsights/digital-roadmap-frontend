@@ -10,10 +10,10 @@ export const RHEL_SYSTEMS_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 export const filterChartDataByName = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
@@ -33,10 +33,10 @@ export const filterChartDataByName = (
 export const filterChartDataByReleaseDate = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
@@ -71,10 +71,10 @@ export const filterChartDataByReleaseDate = (
 export const filterChartDataByRetirementDate = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
@@ -106,10 +106,10 @@ export const filterChartDataByRetirementDate = (
 export const filterChartDataByRelease = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'asc'
+  order: string = 'desc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'asc' ? 1 : -1;
+  const order_control = order === 'desc' ? 1 : -1;
 
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
@@ -142,10 +142,10 @@ export const filterChartDataByRelease = (
 export const filterChartDataBySystems = (
   data: Stream[] | SystemLifecycleChanges[],
   dropdownValue: string,
-  order: string = 'desc'
+  order: string = 'asc'
 ) => {
   // Needed to be able to switch order from ascending to descending
-  const order_control = order === 'desc' ? 1 : -1;
+  const order_control = order === 'asc' ? 1 : -1;
 
   if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
