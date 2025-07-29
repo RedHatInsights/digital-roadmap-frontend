@@ -31,8 +31,8 @@ import { buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
-  RHEL_8_STREAMS_DROPDOWN_VALUE,
   RHEL_10_STREAMS_DROPDOWN_VALUE,
+  RHEL_8_STREAMS_DROPDOWN_VALUE,
   RHEL_SYSTEMS_DROPDOWN_VALUE,
   filterChartDataByName,
   filterChartDataByRelease,
