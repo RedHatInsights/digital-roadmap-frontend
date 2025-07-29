@@ -19,7 +19,11 @@ import React from 'react';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
 import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
-import { DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE } from '../Lifecycle/filteringUtils';
+import {
+  DEFAULT_DROPDOWN_VALUE,
+  RHEL_8_STREAMS_DROPDOWN_VALUE,
+  RHEL_10_STREAMS_DROPDOWN_VALUE,
+} from '../Lifecycle/filteringUtils';
 
 interface LifecycleFiltersProps {
   nameFilter: string;

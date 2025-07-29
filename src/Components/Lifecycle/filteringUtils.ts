@@ -8,7 +8,9 @@ export const RHEL_10_STREAMS_DROPDOWN_VALUE = 'RHEL 10 Application Streams';
 export const RHEL_SYSTEMS_DROPDOWN_VALUE = 'Red Hat Enterprise Linux';
 
 export const filterChartDataByName = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
-if ([DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)) {    
+  if (
+    [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(dropdownValue)
+  ) {
     return (data as Stream[]).sort((a: Stream, b: Stream) => {
       return b.display_name.localeCompare(a.display_name, undefined, { numeric: true });
     });
