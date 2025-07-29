@@ -65,9 +65,11 @@ const renderTableRow = (props = defaultProps) => {
     <table>
       <Suspense
         fallback={
-          <tr>
-            <td>Loading...</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td>Loading...</td>
+            </tr>
+          </tbody>
         }
       >
         <TableRow {...props} />

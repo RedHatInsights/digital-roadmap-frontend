@@ -412,7 +412,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <div>
         <Bullseye>
-          <Spinner />
+          <Spinner role="progressbar" aria-label="Loading upcoming changes" />
         </Bullseye>
       </div>
     );

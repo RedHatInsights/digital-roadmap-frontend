@@ -154,19 +154,35 @@ describe('UpcomingTab', () => {
 
   describe('Initial Loading', () => {
     test('displays loading spinner initially', async () => {
-      // Make the API calls take a long time to resolve
-      const delayedPromise = new Promise((resolve) => setTimeout(resolve, 100));
-      mockGetAllUpcomingChanges.mockReturnValue(delayedPromise.then(() => ({ data: mockAllData })) as any);
-      mockGetRelevantUpcomingChanges.mockReturnValue(
-        delayedPromise.then(() => ({ data: mockRelevantData })) as any
-      );
+      let resolveAll: (value: any) => void;
+      let resolveRelevant: (value: any) => void;
 
-      await act(async () => {
-        renderComponent();
+      // Create promises that we can control
+      const allPromise = new Promise((resolve) => {
+        resolveAll = resolve;
+      });
+      const relevantPromise = new Promise((resolve) => {
+        resolveRelevant = resolve;
       });
 
-      // Check loading spinner is present immediately
+      mockGetAllUpcomingChanges.mockReturnValue(allPromise as any);
+      mockGetRelevantUpcomingChanges.mockReturnValue(relevantPromise as any);
+
+      // Render the component and wait for the loading state to be set
+      await act(async () => {
+        renderComponent();
+        // Wait for the next tick to allow useEffect to run
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      // Check loading spinner is present
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
+
+      // Resolve the promises
+      await act(async () => {
+        resolveAll!({ data: mockAllData });
+        resolveRelevant!({ data: mockRelevantData });
+      });
 
       // Wait for loading to complete
       await waitFor(
