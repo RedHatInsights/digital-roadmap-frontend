@@ -19,7 +19,7 @@ import React from 'react';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
 import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
-import { DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE } from '../Lifecycle/filteringUtils';
+import { DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE } from '../Lifecycle/filteringUtils';
 
 interface LifecycleFiltersProps {
   nameFilter: string;
@@ -92,6 +92,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     const isRHEL = lifecycleDropdownValue === 'Red Hat Enterprise Linux';
     const isRHEL9AppStream = lifecycleDropdownValue === 'RHEL 9 Application Streams';
     const isRHEL8AppStream = lifecycleDropdownValue === 'RHEL 8 Application Streams';
+    const isRHEL10AppStream = lifecycleDropdownValue === 'RHEL 10 Application Streams';
 
     if (buttonId === 'installed-and-related') {
       if (isRHEL) {
@@ -106,6 +107,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
           'Add systems to Inventory to view only RHEL\u00A08 application streams ' +
           'installed on or related to those systems.'
         );
+      } else if (isRHEL10AppStream) {
+        return (
+          'Add systems to Inventory to view only RHEL\u00A010 application streams ' +
+          'installed on or related to those systems.'
+        );
       }
     } else if (buttonId === 'installed-only') {
       if (isRHEL) {
@@ -114,6 +120,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         return 'Add systems to Inventory to view only RHEL\u00A09 application streams installed on those systems.';
       } else if (isRHEL8AppStream) {
         return 'Add systems to Inventory to view only RHEL\u00A08 application streams installed on those systems.';
+      } else if (isRHEL10AppStream) {
+        return 'Add systems to Inventory to view only RHEL\u00A010 application streams installed on those systems.';
       }
     }
   };
@@ -136,7 +144,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         </ToolbarGroup>
 
         {(lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-          lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) && (
+          lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE ||
+          lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE) && (
           <Alert
             variant="info"
             isInline
