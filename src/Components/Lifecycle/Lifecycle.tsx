@@ -166,10 +166,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setNoDataAvailable(relatedAppData.length === 0);
 
     // Only auto-switch if there's no related data at all for the data type
-    const shouldAutoSwitch = value === RHEL_SYSTEMS_DROPDOWN_VALUE 
-      ? relatedSystemData.length === 0 
-      : relatedAppData.length === 0;
-      
+    const shouldAutoSwitch =
+      value === RHEL_SYSTEMS_DROPDOWN_VALUE ? relatedSystemData.length === 0 : relatedAppData.length === 0;
+
     if (
       shouldAutoSwitch &&
       (selectedViewFilter === 'installed-only' || selectedViewFilter === 'installed-and-related')
@@ -287,10 +286,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setNoDataAvailable(relatedInstalledApps.length === 0);
 
       // Only auto-switch if there's no related data at all for the data type
-      const shouldAutoSwitch = currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE 
-        ? relatedInstalledSystems.length === 0 
-        : relatedInstalledApps.length === 0;
-        
+      const shouldAutoSwitch =
+        currentDropdown === RHEL_SYSTEMS_DROPDOWN_VALUE
+          ? relatedInstalledSystems.length === 0
+          : relatedInstalledApps.length === 0;
+
       if (
         shouldAutoSwitch &&
         (currentViewFilter === 'installed-only' || currentViewFilter === 'installed-and-related')
@@ -454,10 +454,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setNoDataAvailable(relatedAppData.length === 0);
 
       // Only auto-switch if there's no related data at all for the data type
-      const shouldAutoSwitch = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE 
-        ? relatedSystemData.length === 0 
-        : relatedAppData.length === 0;
-        
+      const shouldAutoSwitch =
+        lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE
+          ? relatedSystemData.length === 0
+          : relatedAppData.length === 0;
+
       let effectiveViewFilter = viewFilter;
       if (shouldAutoSwitch && viewFilter !== 'all') {
         effectiveViewFilter = 'all';
@@ -577,7 +578,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE 
+      lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE
     ) {
       currentData = appLifecycleChanges;
     } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
@@ -666,7 +667,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       return data.filter((stream) => stream?.rolling === false && stream.os_major === 9);
     } else if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
       return data.filter((stream) => stream?.rolling === false && stream.os_major === 8);
-    } 
+    }
     return data;
   };
 
