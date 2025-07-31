@@ -169,7 +169,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     setFilteredTableData(filteredData);
 
-    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue);
+    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue, chartDirection);
     setFilteredChartData(chartData);
 
     return filteredData;
@@ -180,7 +180,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // useefect depending on the asc/desc change which will change the data
 
   const setOrderingStates = (value: string, order?: string) => {
-    debugger;
     setChartSortByValue(value);
     if (order) {
       setChartDirection(order);
@@ -200,7 +199,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
     setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue, order));
-    debugger;
   };
 
   const onLifecycleDropdownSelect = (value: string) => {

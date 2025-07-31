@@ -20,10 +20,10 @@ import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 import {
   filterChartDataByName,
+  filterChartDataByRelease,
   filterChartDataByReleaseDate,
   filterChartDataByRetirementDate,
   filterChartDataBySystems,
-  filterChartDataByRelease,
 } from '../Lifecycle/filteringUtils';
 
 interface LifecycleTableProps {
