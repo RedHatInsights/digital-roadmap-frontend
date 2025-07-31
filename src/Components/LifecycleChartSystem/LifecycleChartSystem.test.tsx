@@ -38,8 +38,11 @@ describe('LifecycleChartSystem', () => {
       minor: 0,
       count: 5,
       lifecycle_type: 'standard',
-      systems: ['system1', 'system2'],
       related: false,
+      systems_detail: [
+        { id: 'system1', display_name: 'System 1' },
+        { id: 'system2', display_name: 'System 2' },
+      ],
     },
     {
       name: 'RHEL 8.0',
@@ -51,8 +54,8 @@ describe('LifecycleChartSystem', () => {
       minor: 0,
       count: 3,
       lifecycle_type: 'standard',
-      systems: ['system3'],
       related: false,
+      systems_detail: [{ id: 'system3', display_name: 'System 3' }],
     },
   ];
 
@@ -113,8 +116,11 @@ describe('LifecycleChartSystem', () => {
         minor: 1,
         count: 7,
         lifecycle_type: 'standard',
-        systems: ['system4', 'system5'],
         related: false,
+        systems_detail: [
+          { id: 'system4', display_name: 'System 4' },
+          { id: 'system5', display_name: 'System 5' },
+        ],
       },
     ];
 
