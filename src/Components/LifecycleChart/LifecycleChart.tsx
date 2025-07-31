@@ -68,7 +68,6 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   const years: { [key: string]: Date } = {};
 
   React.useEffect(() => {
-    debugger;
     console.log(lifecycleData);
   }, [lifecycleData]);
 
