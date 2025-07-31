@@ -662,11 +662,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // Helper function to filter app data based on dropdown value
   const filterAppDataByDropdown = (data: Stream[], dropdownValue: string): Stream[] => {
     if (dropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE) {
-      return data.filter((stream) => stream?.rolling === false && stream.os_major === 10);
+      return data.filter((stream) => stream.os_major === 10);
     } else if (dropdownValue === DEFAULT_DROPDOWN_VALUE) {
-      return data.filter((stream) => stream?.rolling === false && stream.os_major === 9);
+      return data.filter((stream) => stream.os_major === 9);
     } else if (dropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      return data.filter((stream) => stream?.rolling === false && stream.os_major === 8);
+      return data.filter((stream) => stream.os_major === 8);
     }
     return data;
   };
