@@ -1,3 +1,5 @@
+import { SystemsDetail } from './SystemsDetail';
+
 export type SystemLifecycleChanges = {
   name: string;
   display_name: string;
@@ -9,5 +11,5 @@ export type SystemLifecycleChanges = {
   lifecycle_type: string;
   support_status: string;
   related: boolean;
-  systems: string[];
+  systems_detail: SystemsDetail[];
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
+import { SystemsDetail } from '../../types/SystemsDetail';
 import {
   Button,
   Pagination,
@@ -24,8 +25,8 @@ The modal window requires following parameters to be set in the parent component
 */
 interface ModalWindowProps {
   name: string | undefined;
-  modalData: string[] | undefined;
-  setModalData: React.Dispatch<React.SetStateAction<string[] | undefined>>;
+  modalData: SystemsDetail[] | undefined;
+  setModalData: React.Dispatch<React.SetStateAction<SystemsDetail[] | undefined>>;
   isModalOpen: boolean;
   // any because <Modal onClose> stops working with anything else (including unknown)
   handleModalToggle: (_event: any) => void;
@@ -38,7 +39,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   isModalOpen,
   handleModalToggle,
 }) => {
-  const [modalDataFiltered, setModalDataFiltered] = React.useState<string[] | undefined>();
+  const [modalDataFiltered, setModalDataFiltered] = React.useState<SystemsDetail[] | undefined>();
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | undefined>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [inputValue, setInputValue] = React.useState('');
@@ -46,7 +47,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
   // Pagination state
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
-  const [paginatedData, setPaginatedData] = React.useState<string[] | undefined>();
+  const [paginatedData, setPaginatedData] = React.useState<SystemsDetail[] | undefined>();
 
   // When the modal window is opened, update it with new data/default values
   React.useEffect(() => {
@@ -117,7 +118,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     );
   };
 
-  const renderModalWindowTable = (data: string[] | undefined) => {
+  const renderModalWindowTable = (data: SystemsDetail[] | undefined) => {
     if (data === undefined) {
       return '';
     }
@@ -148,10 +149,10 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
                 <Td dataLabel="Name">
                   <Button
                     variant="link"
-                    onClick={() => window.open(`${baseUrl}/insights/inventory/${item}`)}
+                    onClick={() => window.open(`${baseUrl}/insights/inventory/${item.id}`)}
                     style={buttonStyles}
                   >
-                    {item}
+                    {item.display_name}
                   </Button>
                 </Td>
               </Tr>
@@ -209,7 +210,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     );
   };
 
-  const getSortParamsModalWindow = (columnIndex: number, data: string[]): ThProps['sort'] => ({
+  const getSortParamsModalWindow = (columnIndex: number, data: SystemsDetail[]): ThProps['sort'] => ({
     sortBy: {
       index: activeSortIndex,
       direction: activeSortDirection,
@@ -223,7 +224,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     columnIndex,
   });
 
-  const sortModalWindowData = (data: string[] | undefined, direction: string, index: number) => {
+  const sortModalWindowData = (data: SystemsDetail[] | undefined, direction: string, index: number) => {
     if (data === undefined) {
       return undefined;
     }
@@ -231,13 +232,13 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
     let sortedSystemsModalWindow = data;
     if (index !== undefined) {
       sortedSystemsModalWindow = data.sort((a, b) => {
-        const aValue = a;
-        const bValue = b;
+        const aValue = a.display_name;
+        const bValue = b.display_name;
         // string sort
         if (direction === 'asc') {
-          return (aValue as string).localeCompare(bValue as string);
+          return aValue.localeCompare(bValue);
         }
-        return (bValue as string).localeCompare(aValue as string);
+        return bValue.localeCompare(aValue);
       });
     }
     return sortedSystemsModalWindow;
@@ -270,7 +271,9 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
     if (value) {
       // For filtering using the original list!
-      setModalDataFiltered(modalData.filter((item) => item.toLowerCase().includes(value.toLowerCase())));
+      setModalDataFiltered(
+        modalData.filter((item) => item.display_name.toLowerCase().includes(value.toLowerCase()))
+      );
     } else {
       setModalDataFiltered(modalData);
     }
