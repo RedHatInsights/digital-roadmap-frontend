@@ -89,18 +89,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   // Helper function to determine if data is available for current dropdown and view
-  const checkDataAvailability = (dropdownValue: string, viewFilter: string, allSystems?: SystemLifecycleChanges[], relatedSystems?: SystemLifecycleChanges[], allApps?: Stream[], relatedApps?: Stream[]) => {
+  const checkDataAvailability = (
+    dropdownValue: string,
+    viewFilter: string,
+    allSystems?: SystemLifecycleChanges[],
+    relatedSystems?: SystemLifecycleChanges[],
+    allApps?: Stream[],
+    relatedApps?: Stream[]
+  ) => {
     // Use passed data if available, otherwise fall back to state
     const systemDataAll = allSystems || allSystemData;
     const systemDataRelated = relatedSystems || relatedSystemData;
     const appDataAll = allApps || allAppData;
     const appDataRelated = relatedApps || relatedAppData;
-    
+
     if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       // For systems dropdown, only check system data
-      return viewFilter === 'all' ? 
-        systemDataAll.length > 0 : 
-        systemDataRelated.length > 0;
+      return viewFilter === 'all' ? systemDataAll.length > 0 : systemDataRelated.length > 0;
     } else {
       // For app stream dropdowns (DEFAULT, RHEL_8, RHEL_10), only check app data
       const relevantAppData = viewFilter === 'all' ? appDataAll : appDataRelated;
@@ -110,11 +115,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   // Helper function to determine if we should show noDataAvailable for current dropdown
-  const shouldShowNoDataAvailable = (dropdownValue: string, relatedSystems?: SystemLifecycleChanges[], relatedApps?: Stream[]) => {
+  const shouldShowNoDataAvailable = (
+    dropdownValue: string,
+    relatedSystems?: SystemLifecycleChanges[],
+    relatedApps?: Stream[]
+  ) => {
     // Use passed data if available, otherwise fall back to state
     const systemData = relatedSystems || relatedSystemData;
     const appData = relatedApps || relatedAppData;
-    
+
     if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       // For systems dropdown, check if we have any installed/related systems
       return systemData.length === 0;
@@ -176,7 +185,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     // Check if current view has data for the new dropdown
     const hasDataForCurrentView = checkDataAvailability(value, selectedViewFilter);
-    
+
     // Set noDataAvailable based on the specific dropdown type
     setNoDataAvailable(shouldShowNoDataAvailable(value));
 
@@ -280,7 +289,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const currentDropdown = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
 
       // Check if there's data available for the current dropdown and view filter
-      const hasDataForCurrentView = checkDataAvailability(currentDropdown, currentViewFilter, allSystems, relatedInstalledSystems, allApps, relatedInstalledApps);
+      const hasDataForCurrentView = checkDataAvailability(
+        currentDropdown,
+        currentViewFilter,
+        allSystems,
+        relatedInstalledSystems,
+        allApps,
+        relatedInstalledApps
+      );
 
       // Auto-switch to 'all' view if no data in current view
       if (!hasDataForCurrentView && currentViewFilter !== 'all') {
@@ -339,19 +355,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         setFilteredTableData([]);
         setFilteredChartData([]);
       }
-      
+
       // Set noDataAvailable based on the actual dropdown that will be used
       // Pass the actual fetched data instead of relying on state
       const finalDropdownValue = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
-      const noDataValue = shouldShowNoDataAvailable(finalDropdownValue, relatedInstalledSystems, relatedInstalledApps);
-      
+      const noDataValue = shouldShowNoDataAvailable(
+        finalDropdownValue,
+        relatedInstalledSystems,
+        relatedInstalledApps
+      );
+
       console.log('Initial load noDataAvailable check:', {
         finalDropdownValue,
         relatedSystemsCount: relatedInstalledSystems.length,
         relatedAppsCount: relatedInstalledApps.length,
-        noDataValue
+        noDataValue,
       });
-      
+
       setNoDataAvailable(noDataValue);
     } catch (error: any) {
       console.error('Error fetching lifecycle changes:', error);
@@ -376,7 +396,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     // Check data availability for current dropdown and view
     const hasDataForCurrentView = checkDataAvailability(lifecycleDropdownValue, viewFilter);
-    
+
     // Set noDataAvailable based on the specific dropdown type
     setNoDataAvailable(shouldShowNoDataAvailable(lifecycleDropdownValue));
 
@@ -439,7 +459,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
       // Check if relevant data is available for current dropdown
       const hasRelevantData = checkDataAvailability(lifecycleDropdownValue, viewFilter);
-      
+
       // Set noDataAvailable based on the specific dropdown type
       setNoDataAvailable(shouldShowNoDataAvailable(lifecycleDropdownValue));
 
