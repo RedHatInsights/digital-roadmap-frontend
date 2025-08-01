@@ -54,6 +54,7 @@ export const LifecycleDropdown: React.FunctionComponent<LifecycleDropdownProps> 
       shouldFocusToggleOnSelect
     >
       <SelectList>
+        <SelectOption value="RHEL 10 Application Streams">RHEL 10 Application Streams</SelectOption>
         <SelectOption value="RHEL 9 Application Streams">RHEL 9 Application Streams</SelectOption>
         <SelectOption value="RHEL 8 Application Streams">RHEL 8 Application Streams</SelectOption>
         <SelectOption value="Red Hat Enterprise Linux">Red Hat Enterprise Linux</SelectOption>
