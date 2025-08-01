@@ -3,7 +3,6 @@ module.exports = {
   debug: true,
   useProxy: true,
   proxyVerbose: true,
-  localChrome: process.env.INSIGHTS_CHROME,
   /**
    * Change accordingly to your appname in package.json.
    * The `sassPrefix` attribute is only required if your `appname` includes the dash `-` characters.
@@ -19,14 +18,6 @@ module.exports = {
    // NOTE: This is here for local testing purposes
   // remove it when you want to use deployed chrome-service,
   // meaning fed-modules and navigation is updated in chrome-service-backend
-  routes: {
-    '/api/chrome-service/v1/static': {
-      host: 'http://localhost:8090',
-    },
-    '/api/roadmap/v1': {
-      host: 'http://localhost:8000/',
-    },
-  },
 
   /**
    * Add additional webpack plugins
