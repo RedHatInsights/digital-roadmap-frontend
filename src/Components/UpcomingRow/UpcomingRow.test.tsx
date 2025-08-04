@@ -7,8 +7,14 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 // Mock the lazy-loaded LifecycleModalWindow component
 jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
   return function MockLifecycleModalWindow({ name, modalData, isModalOpen, handleModalToggle }: any) {
-    console.log('🔍 Mock Modal Props:', { name, modalData, isModalOpen, modalDataType: typeof modalData, modalDataLength: modalData?.length });
-    
+    console.log('🔍 Mock Modal Props:', {
+      name,
+      modalData,
+      isModalOpen,
+      modalDataType: typeof modalData,
+      modalDataLength: modalData?.length,
+    });
+
     if (!isModalOpen) return null;
 
     // Handle undefined explicitly to avoid rendering "undefined" as text
@@ -22,9 +28,9 @@ jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
         joinedData = modalData.join(', ');
       } else if (modalData[0] && typeof modalData[0] === 'object') {
         // Handle SystemsDetail objects - try common property names
-        joinedData = modalData.map(item => 
-          item.name || item.hostname || item.systemName || item.system || Object.values(item)[0]
-        ).join(', ');
+        joinedData = modalData
+          .map((item) => item.name || item.hostname || item.systemName || item.system || Object.values(item)[0])
+          .join(', ');
       }
     }
 
