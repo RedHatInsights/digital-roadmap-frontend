@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { LifecycleTable } from './LifecycleTable';
@@ -21,7 +21,7 @@ jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
 
 // Mock the utils
 jest.mock('../../utils/utils', () => ({
-  formatDate: jest.fn((date) => date ? `Formatted: ${date}` : 'Not available'),
+  formatDate: jest.fn((date) => (date ? `Formatted: ${date}` : 'Not available')),
 }));
 
 describe('LifecycleTable', () => {
@@ -109,34 +109,34 @@ describe('LifecycleTable', () => {
   describe('Component Rendering', () => {
     it('renders stream data table correctly', async () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       // Wait for the component to fully render
       await waitFor(() => {
         expect(screen.getByRole('grid')).toBeInTheDocument();
       });
-            
+
       // Check that the "3" appears multiple times in pagination (should be 3 occurrences: "1 - 3", "of 3", and in dropdown)
       const threeElements = screen.getAllByText('3');
       expect(threeElements.length).toBeGreaterThanOrEqual(2);
-      
+
       // Check that we have the expected number of rows (header + 3 data rows)
       const rows = screen.getAllByRole('row');
       expect(rows).toHaveLength(4);
-      
+
       // Check for our specific data - try both approaches
       expect(screen.getByText(/Node\.js 18/)).toBeInTheDocument();
       expect(screen.getByText(/Python 3\.11/)).toBeInTheDocument();
       expect(screen.getByText(/Apache HTTP Server/)).toBeInTheDocument();
-      
+
       // Verify it's detected as stream data by checking the aria label
       expect(screen.getByLabelText(/RHEL 9 Application Streams/)).toBeInTheDocument();
     });
 
     it('renders system data table correctly', () => {
       render(<LifecycleTable data={mockSystemData} />);
-      
+
       expect(screen.getByLabelText('Red Hat Enterprise Linux Lifecycle information')).toBeInTheDocument();
-      
+
       // Look for the data in table cells specifically
       expect(screen.getByRole('cell', { name: /RHEL 9\.3/ })).toBeInTheDocument();
       expect(screen.getByRole('cell', { name: /RHEL 8\.9/ })).toBeInTheDocument();
@@ -144,7 +144,7 @@ describe('LifecycleTable', () => {
 
     it('renders empty table when no data provided', () => {
       render(<LifecycleTable data={[]} />);
-      
+
       expect(screen.getByLabelText('Lifecycle information')).toBeInTheDocument();
     });
   });
@@ -152,7 +152,7 @@ describe('LifecycleTable', () => {
   describe('Column Headers', () => {
     it('renders correct headers for stream data without viewFilter', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByText('Name')).toBeInTheDocument();
       expect(screen.getByText('Initial release')).toBeInTheDocument();
       expect(screen.getByText('Release date')).toBeInTheDocument();
@@ -162,7 +162,7 @@ describe('LifecycleTable', () => {
 
     it('renders correct headers for stream data with viewFilter="all"', () => {
       render(<LifecycleTable data={mockStreamData} viewFilter="all" />);
-      
+
       expect(screen.getByText('Name')).toBeInTheDocument();
       expect(screen.getByText('Initial release')).toBeInTheDocument();
       expect(screen.getByText('Release date')).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('LifecycleTable', () => {
 
     it('renders correct headers for system data', () => {
       render(<LifecycleTable data={mockSystemData} />);
-      
+
       expect(screen.getByText('Name')).toBeInTheDocument();
       expect(screen.getByText('Release date')).toBeInTheDocument();
       expect(screen.getByText('Retirement date')).toBeInTheDocument();
@@ -183,20 +183,20 @@ describe('LifecycleTable', () => {
   describe('Data Rendering', () => {
     it('renders stream data with correct version format', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByText('8.0')).toBeInTheDocument();
     });
 
     it('renders formatted dates', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByText('Formatted: 2023-01-01')).toBeInTheDocument();
       expect(screen.getByText('Formatted: 2025-01-01')).toBeInTheDocument();
     });
 
     it('renders status icons correctly', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       // Check for count buttons that indicate status icons are rendered
       expect(screen.getByRole('button', { name: '25' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '30' })).toBeInTheDocument();
@@ -205,7 +205,7 @@ describe('LifecycleTable', () => {
 
     it('renders system data status icons correctly', () => {
       render(<LifecycleTable data={mockSystemData} />);
-      
+
       // Check for system data count buttons
       expect(screen.getByRole('button', { name: '100' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '50' })).toBeInTheDocument();
@@ -216,11 +216,11 @@ describe('LifecycleTable', () => {
         {
           ...mockStreamData[0],
           count: 0,
-        }
+        },
       ];
-      
+
       render(<LifecycleTable data={dataWithZeroCount} />);
-      
+
       expect(screen.getByText('0')).toBeInTheDocument();
     });
   });
@@ -228,7 +228,7 @@ describe('LifecycleTable', () => {
   describe('Pagination', () => {
     it('renders pagination controls', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByLabelText('top pagination')).toBeInTheDocument();
       expect(screen.getByLabelText('bottom pagination')).toBeInTheDocument();
     });
@@ -243,7 +243,7 @@ describe('LifecycleTable', () => {
       }));
 
       render(<LifecycleTable data={largeDataSet} />);
-      
+
       // Should show first 10 items initially
       expect(screen.getByRole('cell', { name: 'App 0' })).toBeInTheDocument();
       expect(screen.getByRole('cell', { name: 'App 9' })).toBeInTheDocument();
@@ -260,17 +260,17 @@ describe('LifecycleTable', () => {
       }));
 
       render(<LifecycleTable data={largeDataSet} />);
-      
+
       // Find and click the per page dropdown (look for the toggle button)
       const perPageButtons = screen.getAllByRole('button', { name: /1 - 10 of 25/i });
       await user.click(perPageButtons[0]); // Click the first one (top pagination)
-      
+
       // Wait for the dropdown to appear and select 20 per page
       await waitFor(() => {
         const twentyOption = screen.getByText('20 per page');
         return user.click(twentyOption);
       });
-      
+
       // Should now show more items
       expect(screen.getByRole('cell', { name: 'App 0' })).toBeInTheDocument();
       expect(screen.getByRole('cell', { name: 'App 19' })).toBeInTheDocument();
@@ -281,10 +281,10 @@ describe('LifecycleTable', () => {
     it('sorts stream data by name', async () => {
       const user = userEvent.setup();
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       const nameHeader = screen.getByText('Name');
       await user.click(nameHeader);
-      
+
       // After sorting, check that Apache HTTP Server appears first (alphabetically)
       const rows = screen.getAllByRole('row');
       expect(rows[1]).toHaveTextContent('Apache HTTP Server'); // First data row after header
@@ -293,10 +293,10 @@ describe('LifecycleTable', () => {
     it('sorts stream data by version', async () => {
       const user = userEvent.setup();
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       const versionHeader = screen.getByText('Initial release');
       await user.click(versionHeader);
-      
+
       // Should sort by numeric version (8.0 should come first)
       const rows = screen.getAllByRole('row');
       expect(rows[1]).toHaveTextContent('8.0'); // Apache HTTP Server with 8.0 should be first
@@ -305,14 +305,14 @@ describe('LifecycleTable', () => {
     it('toggles sort direction', async () => {
       const user = userEvent.setup();
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       const nameHeader = screen.getByText('Name');
-      
+
       // First click - ascending (default is already ascending, so this should remain)
       await user.click(nameHeader);
       let rows = screen.getAllByRole('row');
       expect(rows[1]).toHaveTextContent('Apache HTTP Server');
-      
+
       // Second click - descending
       await user.click(nameHeader);
       rows = screen.getAllByRole('row');
@@ -324,10 +324,10 @@ describe('LifecycleTable', () => {
     it('opens modal when count button is clicked', async () => {
       const user = userEvent.setup();
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       const countButton = screen.getByRole('button', { name: '25' });
       await user.click(countButton);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('lifecycle-modal')).toBeInTheDocument();
         expect(screen.getByText('Modal Name: Node.js 18')).toBeInTheDocument();
@@ -339,11 +339,11 @@ describe('LifecycleTable', () => {
         {
           ...mockStreamData[0],
           count: 0,
-        }
+        },
       ];
-      
+
       render(<LifecycleTable data={dataWithZeroCount} />);
-      
+
       // The zero count should be plain text, not a button
       const zeroElement = screen.getByText('0');
       expect(zeroElement).not.toHaveAttribute('role', 'button');
@@ -352,10 +352,10 @@ describe('LifecycleTable', () => {
     it('passes correct modal data', async () => {
       const user = userEvent.setup();
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       const countButton = screen.getByRole('button', { name: '25' });
       await user.click(countButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText(/Modal Data:/)).toBeInTheDocument();
       });
@@ -365,19 +365,19 @@ describe('LifecycleTable', () => {
   describe('Data Type Detection', () => {
     it('detects stream data type correctly', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByLabelText('RHEL 9 Application Streams Lifecycle information')).toBeInTheDocument();
     });
 
     it('detects system data type correctly', () => {
       render(<LifecycleTable data={mockSystemData} />);
-      
+
       expect(screen.getByLabelText('Red Hat Enterprise Linux Lifecycle information')).toBeInTheDocument();
     });
 
     it('handles empty data gracefully', () => {
       render(<LifecycleTable data={[]} />);
-      
+
       expect(screen.getByLabelText('Lifecycle information')).toBeInTheDocument();
     });
   });
@@ -385,14 +385,14 @@ describe('LifecycleTable', () => {
   describe('Filter Handling', () => {
     it('hides count column when viewFilter is "all"', () => {
       render(<LifecycleTable data={mockStreamData} viewFilter="all" />);
-      
+
       expect(screen.queryByText('Systems')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: '25' })).not.toBeInTheDocument();
     });
 
     it('shows count column when viewFilter is not "all"', () => {
       render(<LifecycleTable data={mockStreamData} viewFilter="filtered" />);
-      
+
       expect(screen.getByText('Systems')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '25' })).toBeInTheDocument();
     });
@@ -404,11 +404,11 @@ describe('LifecycleTable', () => {
         {
           ...mockStreamData[0],
           display_name: undefined as any, // Cast to any to test edge case
-        }
+        },
       ];
-      
+
       render(<LifecycleTable data={dataWithMissingName} />);
-      
+
       // Should not render the row with missing display_name
       expect(screen.queryByText('9.0')).not.toBeInTheDocument();
     });
@@ -419,11 +419,11 @@ describe('LifecycleTable', () => {
           ...mockStreamData[0],
           start_date: null as any, // Cast to any to test edge case
           end_date: null as any, // Cast to any to test edge case
-        }
+        },
       ];
-      
+
       render(<LifecycleTable data={dataWithMissingDates} />);
-      
+
       // Should find multiple "Not available" texts (for start_date and end_date)
       const notAvailableElements = screen.getAllByText('Not available');
       expect(notAvailableElements).toHaveLength(2);
@@ -434,11 +434,11 @@ describe('LifecycleTable', () => {
         {
           ...mockStreamData[0],
           support_status: undefined as any, // Cast to any to test edge case
-        }
+        },
       ];
-      
+
       render(<LifecycleTable data={dataWithMissingStatus} />);
-      
+
       // Should render without crashing - check for the display name in a cell
       expect(screen.getByRole('cell', { name: 'Node.js 18' })).toBeInTheDocument();
     });
@@ -447,7 +447,7 @@ describe('LifecycleTable', () => {
   describe('Accessibility', () => {
     it('has proper ARIA labels', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByLabelText('RHEL 9 Application Streams Lifecycle information')).toBeInTheDocument();
       expect(screen.getByLabelText('top pagination')).toBeInTheDocument();
       expect(screen.getByLabelText('bottom pagination')).toBeInTheDocument();
@@ -455,7 +455,7 @@ describe('LifecycleTable', () => {
 
     it('has proper table structure', () => {
       render(<LifecycleTable data={mockStreamData} />);
-      
+
       // PatternFly tables use role="grid" instead of role="table"
       expect(screen.getByRole('grid')).toBeInTheDocument();
       expect(screen.getAllByRole('columnheader')).toHaveLength(5); // Name, Release, Start, End, Systems
@@ -466,33 +466,33 @@ describe('LifecycleTable', () => {
   describe('Component Updates', () => {
     it('updates when data changes', () => {
       const { rerender } = render(<LifecycleTable data={mockStreamData} />);
-      
+
       expect(screen.getByRole('cell', { name: 'Node.js 18' })).toBeInTheDocument();
-      
+
       const newData = [
         {
           ...mockStreamData[0],
           display_name: 'Updated App',
-        }
+        },
       ];
-      
+
       rerender(<LifecycleTable data={newData} />);
-      
+
       expect(screen.getByRole('cell', { name: 'Updated App' })).toBeInTheDocument();
       expect(screen.queryByRole('cell', { name: 'Node.js 18' })).not.toBeInTheDocument();
     });
 
     it('resets pagination when data changes', () => {
       const { rerender } = render(<LifecycleTable data={mockStreamData} />);
-      
+
       // Change to new data
       const newData = Array.from({ length: 25 }, (_, i) => ({
         ...mockStreamData[0],
         display_name: `New App ${i}`,
       }));
-      
+
       rerender(<LifecycleTable data={newData} />);
-      
+
       // Should be back on page 1
       expect(screen.getByRole('cell', { name: 'New App 0' })).toBeInTheDocument();
     });
