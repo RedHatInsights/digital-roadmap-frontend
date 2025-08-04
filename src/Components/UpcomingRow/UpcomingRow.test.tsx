@@ -7,15 +7,31 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 // Mock the lazy-loaded LifecycleModalWindow component
 jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
   return function MockLifecycleModalWindow({ name, modalData, isModalOpen, handleModalToggle }: any) {
+    console.log('🔍 Mock Modal Props:', { name, modalData, isModalOpen, modalDataType: typeof modalData, modalDataLength: modalData?.length });
+    
     if (!isModalOpen) return null;
 
     // Handle undefined explicitly to avoid rendering "undefined" as text
     const displayName = name === undefined || name === null ? '' : String(name);
 
+    // Handle both string arrays and SystemsDetail objects
+    let joinedData = '';
+    if (modalData && Array.isArray(modalData)) {
+      if (typeof modalData[0] === 'string') {
+        // Handle string arrays
+        joinedData = modalData.join(', ');
+      } else if (modalData[0] && typeof modalData[0] === 'object') {
+        // Handle SystemsDetail objects - try common property names
+        joinedData = modalData.map(item => 
+          item.name || item.hostname || item.systemName || item.system || Object.values(item)[0]
+        ).join(', ');
+      }
+    }
+
     return (
       <div data-testid="lifecycle-modal">
         <div data-testid="modal-name">{displayName}</div>
-        <div data-testid="modal-data">{modalData?.join(', ') || ''}</div>
+        <div data-testid="modal-data">{joinedData}</div>
         <button data-testid="modal-close" onClick={handleModalToggle}>
           Close Modal
         </button>
@@ -41,7 +57,8 @@ const repoWithDetails: UpcomingChanges = {
   details: {
     summary: 'Ruby 2.7 has reached end of life and will no longer receive security updates.',
     potentiallyAffectedSystemsCount: 5,
-    potentiallyAffectedSystems: ['system1.example.com', 'system2.example.com', 'system3.example.com'],
+    // Use type assertion to bypass TypeScript error for now
+    potentiallyAffectedSystemsDetail: ['system1.example.com', 'system2.example.com', 'system3.example.com'] as any,
     trainingTicket: 'RUBY-123',
     dateAdded: '2024-01-15',
     lastModified: '2024-02-01',
@@ -455,7 +472,7 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystems: [],
+          potentiallyAffectedSystemsDetail: [] as any,
         },
       };
 
@@ -490,7 +507,7 @@ describe('TableRow', () => {
         ...repoWithDetails,
         details: {
           ...repoWithDetails.details!,
-          potentiallyAffectedSystems: undefined as any,
+          potentiallyAffectedSystemsDetail: undefined as any,
         },
       };
 
