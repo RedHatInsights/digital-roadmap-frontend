@@ -221,6 +221,9 @@ spec:
         - name: COMMIT_SHA
           value: $(tasks.clone-repository.results.commit)
 
+        - name: SOURCE_DATE_EPOCH
+          value: $(tasks.clone-repository.results.commit-timestamp)
+
         - name: BUILD_ARGS
           value:
             - $(params.build-args[*])
@@ -496,6 +499,9 @@ spec:
 
         - name: COMMIT_SHA
           value: $(tasks.clone-repository.results.commit)
+
+        - name: SOURCE_DATE_EPOCH
+          value: $(tasks.clone-repository.results.commit-timestamp)
 
         - name: BUILD_ARGS
           value:
