@@ -22,3 +22,7 @@ ENV CADDY_TLS_MODE http_port 8000
 COPY --from=builder /opt/app-root/src/Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /opt/app-root/src/dist dist
 COPY package.json .
+
+RUN useradd --key HOME_MODE=0775 --system --gid 0 caddy
+
+USER caddy
