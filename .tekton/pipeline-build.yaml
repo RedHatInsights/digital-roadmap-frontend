@@ -221,12 +221,11 @@ spec:
         - name: COMMIT_SHA
           value: $(tasks.clone-repository.results.commit)
 
-        - name: SOURCE_DATE_EPOCH
-          value: $(tasks.clone-repository.results.commit-timestamp)
-
         - name: BUILD_ARGS
           value:
             - $(params.build-args[*])
+            - SOURCE_DATE_EPOCH=$(tasks.clone-repository.results.commit-timestamp)
+
 
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
@@ -500,12 +499,10 @@ spec:
         - name: COMMIT_SHA
           value: $(tasks.clone-repository.results.commit)
 
-        - name: SOURCE_DATE_EPOCH
-          value: $(tasks.clone-repository.results.commit-timestamp)
-
         - name: BUILD_ARGS
           value:
             - $(params.build-args[*])
+            - SOURCE_DATE_EPOCH=$(tasks.clone-repository.results.commit-timestamp)
 
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
