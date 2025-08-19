@@ -226,7 +226,6 @@ spec:
             - $(params.build-args[*])
             - SOURCE_DATE_EPOCH=$(tasks.clone-repository.results.commit-timestamp)
 
-
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
 
