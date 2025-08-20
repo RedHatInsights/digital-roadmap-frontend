@@ -7,6 +7,7 @@ import {
   ChartGroup,
   ChartLegend,
   ChartLine,
+  ChartPoint,
   ChartTooltip,
   getInteractiveLegendEvents,
   getInteractiveLegendItemStyles,
@@ -566,6 +567,27 @@ End: ${formatDate(new Date(tooltipData.y))}`;
 
   const leftPadding = calculateLeftPadding();
 
+  // Inline dataComponent that enlarges the hit area to the right of the legend symbol
+  const LegendDataHit: React.FC<any> = (rawProps) => {
+    const { x = 0, y = 0, size = 5, style, events, hitExtend = 12, ...rest } = rawProps as any;
+    const s = typeof size === 'number' ? size : 5; // effective half-size
+
+    return (
+      <g {...rest} {...(events || {})}>
+        {/* transparent hitbox covering symbol + gap to the right */}
+        <rect
+          x={x - s}
+          y={y - s}
+          width={s * 2 + hitExtend}
+          height={s * 2}
+          fill="transparent"
+          pointerEvents="all"
+        />
+        <ChartPoint x={x} y={y} size={size} style={style} />
+      </g>
+    );
+  };
+
   // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
@@ -585,7 +607,16 @@ End: ${formatDate(new Date(tooltipData.y))}`;
           legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
-        legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} height={50} gutter={20} />}
+        legendComponent={
+          <ChartLegend
+            name="chart5-ChartLegend"
+            data={getLegendData()}
+            height={50}
+            gutter={20}
+            style={{ labels: { padding: 0 } }}
+            dataComponent={<LegendDataHit />}
+          />
+        }
         legendPosition="bottom-left"
         name="chart5"
         padding={{
