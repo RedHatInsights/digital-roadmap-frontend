@@ -658,7 +658,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     ) {
       (filteredTableData as Stream[]).forEach((item: Stream) =>
         data.push({
-          Name: item.name,
+          Name: item.display_name,
           Release: item.os_major,
           'Release date': formatDate(item.start_date),
           'Retirement date': formatDate(item.end_date),
