@@ -109,7 +109,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     } else {
       // For app stream dropdowns (DEFAULT, RHEL_8, RHEL_10), only check app data
       const relevantAppData = viewFilter === 'all' ? appDataAll : appDataRelated;
-      const filteredAppData = filterAppDataByDropdown(relevantAppData, dropdownValue);
+      const filteredAppData = filterAppDataByDropdown(
+        relevantAppData.filter((s) => !s.related),
+        dropdownValue
+      );
       return filteredAppData.length > 0;
     }
   };
