@@ -121,8 +121,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     relatedApps?: Stream[]
   ) => {
     // Use passed data if available, otherwise fall back to state
-    const systemData = relatedSystems || relatedSystemData;
-    const appData = relatedApps || relatedAppData;
+    const systemData = relatedSystems
+      ? relatedSystems.filter((s) => !s.related)
+      : installedSystemData.filter((s) => !s.related);
+    const appData = relatedApps
+      ? relatedApps.filter((s) => !s.related)
+      : installedAppData.filter((s) => !s.related);
 
     if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       // For systems dropdown, check if we have any installed/related systems
