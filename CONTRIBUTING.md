@@ -1,14 +1,13 @@
-# Digital Roadmap
+# Contributing
 
 First off, thanks for taking the time to contribute!
 
-## Getting started
+### Prerequisites ###
 
-### Prerequisites
+- [npm]
+- [podman] or [docker] to run `chrome-service-backend` in a container
 
-[Go]
-
-### Add entries to /etc/hosts
+### Add entries to /etc/hosts ###
 
 In order to access the` https://[env].foo.redhat.com` in your browser, you have to add entries to your `/etc/hosts` file. This is a **one time** setup that has to be done on each development machine.
 
@@ -30,9 +29,23 @@ If this command throws an error run it as a `sudo`:
 sudo npm run patch:hosts
 ```
 
-###
+### Start chrome-service-backend (Optional) ###
 
-In the checkout of this repository, do the following:
+By default, `chrome-service-backend` is run in a local container. If you want to run it natively, follow these instructions.
+
+```
+git clone git@github.com:RedHatInsights/chrome-service-backend
+cd chrome-service-backend
+port=9998 make dev-static
+```
+
+### Run the application ###
+
+If running the `chrome-service-backend` set the following variables:
+
+```
+export INSIGHTS_CHROME=[path to chrome-service-backend]
+```
 
 1. Install dependencies.
 
@@ -49,8 +62,12 @@ In the checkout of this repository, do the following:
    - If you see a certificate error, ignore the error and continue.
    - For the credentials you can check our shared password manager if you don't have required rights at your own account.
 
-### Testing
+
+
+### Testing ###
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
 
-[go]: https://go.dev/doc/install
+[npm]: https://www.npmjs.com
+[podman]: https://podman.io
+[docker]: https://www.docker.com
