@@ -1,8 +1,10 @@
 module.exports = {
-  appUrl: '/insights/roadmap',
+  appUrl: '/insights/planning/',
   debug: true,
   useProxy: true,
   proxyVerbose: true,
+  localChrome: process.env.INSIGHTS_CHROME,
+  chromePort: process.env.CHROME_PORT,
   /**
    * Change accordingly to your appname in package.json.
    * The `sassPrefix` attribute is only required if your `appname` includes the dash `-` characters.
