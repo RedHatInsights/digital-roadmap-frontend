@@ -49,7 +49,7 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
     lifecycleDropdownValue = 'rhel-9-appstreams', // Default value
     onLifecycleDropdownSelect,
     selectedChartSortBy = 'Retirement date', // Default value
-    setSelectedChartSortBy,
+    updateChartSortValue,
     downloadCSV,
     selectedViewFilter = 'installed-only', // Default value
     handleViewFilterChange,
@@ -74,7 +74,7 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
       <select
         data-testid="sort-select"
         value={selectedChartSortBy}
-        onChange={(e) => setSelectedChartSortBy?.(e.target.value)}
+        onChange={(e) => updateChartSortValue?.(e.target.value)}
       >
         <option value="Retirement date">Retirement date</option>
         <option value="Name">Name</option>
