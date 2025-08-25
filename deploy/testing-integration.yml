@@ -17,7 +17,7 @@ objects:
       iqe-env: ${ENV_FOR_DYNACONF}
       iqe-plugin: ${IQE_PLUGINS}
   spec:
-    backoffLimit: 0
+    backoffLimit: 2
     template:
       spec:
         imagePullSecrets:
@@ -27,6 +27,7 @@ objects:
         - name: sel-shm
           emptyDir:
             medium: Memory
+            sizeLimit: 2Gi
         - name: insights-qa-private-key
           secret:
             secretName: insights-qa-private-key
@@ -165,13 +166,13 @@ parameters:
 - name: IQE_MEMORY_REQUEST
   value: 1Gi
 - name: SELENIUM_CPU_LIMIT
-  value: 500m
+  value: "2"
 - name: SELENIUM_MEMORY_LIMIT
-  value: 2Gi
+  value: 4Gi
 - name: SELENIUM_CPU_REQUEST
-  value: 100m
+  value: 500m
 - name: SELENIUM_MEMORY_REQUEST
-  value: 1Gi
+  value: 2Gi
 - name: VNC_GEOMETRY
   value: '1920x1080'
 - name: IQE_PARALLEL_ENABLED
