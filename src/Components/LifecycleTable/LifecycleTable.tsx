@@ -359,7 +359,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                     }}
                     onClick={(event) => {
                       handleModalToggle(event);
-                      setModalDataName(String(repo.display_name));
+                      setModalDataName(String(repo.name));
                       setModalData(repo.systems_detail);
                     }}
                   >
