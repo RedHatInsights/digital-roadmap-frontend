@@ -3,7 +3,7 @@ export const DR_RELEASE_NOTES = '/release-notes';
 export const DR_RELEVANT_LIFECYCLE_SYSTEMS = '/relevant/lifecycle/rhel';
 export const DR_ALL_LIFECYCLE_SYSTEMS = '/lifecycle/rhel';
 export const DR_RELEVANT_LIFECYCLE_APPSTREAMS = '/relevant/lifecycle/app-streams?related=true';
-export const DR_ALL_LIFECYCLE_APPSTREAMS = '/lifecycle/app-streams?kind=dnf_module';
+export const DR_ALL_LIFECYCLE_APPSTREAMS = '/lifecycle/app-streams/streams';
 
 export const DR_ALL_UPCOMING = '/relevant/upcoming-changes?all=true';
 export const DR_RELEVANT_UPCOMING = '/relevant/upcoming-changes';
