@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-charts';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
-import { mapSupportTypeToDisplayName } from '../../utils/utils';
+import { formatDate, mapSupportTypeToDisplayName } from '../../utils/utils';
 import { useChartDataAttributes } from '../../utils/utils';
 
 interface LifecycleChartProps {
@@ -297,11 +297,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
     setTooltipData(null);
   };
 
-  const formatDate = (date: Date) => {
-    const dateString = date?.toLocaleDateString('en-US', { timeZone: 'UTC' });
-    return dateString;
-  };
-
   const getPackageColor = (datum: string) => {
     switch (datum) {
       case 'Retired':
@@ -371,8 +366,8 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
 Release: ${tooltipData.version}
 Support Type: ${tooltipData.packageType}
 Systems: ${tooltipData.numSystems}
-Start: ${formatDate(new Date(tooltipData.y0))}
-End: ${formatDate(new Date(tooltipData.y))}`;
+Start: ${formatDate(tooltipData.y0)}
+End: ${formatDate(tooltipData.y)}`;
 
     return (
       <div
@@ -452,7 +447,7 @@ End: ${formatDate(new Date(tooltipData.y))}`;
             borderRight: '10px solid black',
           }}
         />
-        Current Date: {formatDate(new Date())}
+        Current Date: {formatDate(new Date().toISOString())}
       </div>
     );
   };
