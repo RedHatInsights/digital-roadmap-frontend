@@ -444,7 +444,7 @@ End: ${formatDate(tooltipData.y)}`;
             borderRight: '10px solid black',
           }}
         />
-        Current Date: {formatDate(new Date().toISOString())}
+        Current Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
       </div>
     );
   };
