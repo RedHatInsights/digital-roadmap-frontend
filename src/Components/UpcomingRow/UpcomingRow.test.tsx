@@ -119,7 +119,7 @@ describe('TableRow', () => {
 
       expect(screen.getByText('Deprecation')).toBeInTheDocument();
       expect(screen.getByText('9.0')).toBeInTheDocument();
-      expect(screen.getByText('2024-12-01')).toBeInTheDocument();
+      expect(screen.getByText('Dec 2024')).toBeInTheDocument();
     });
 
     test('renders different repo data correctly', () => {
@@ -139,7 +139,7 @@ describe('TableRow', () => {
       expect(screen.getByText('PostgreSQL 15 Feature')).toBeInTheDocument();
       expect(screen.getByText('Addition')).toBeInTheDocument();
       expect(screen.getByText('10.2')).toBeInTheDocument();
-      expect(screen.getByText('2024-12-15')).toBeInTheDocument();
+      expect(screen.getByText('Dec 2024')).toBeInTheDocument();
     });
   });
 
