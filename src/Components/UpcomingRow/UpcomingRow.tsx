@@ -17,6 +17,7 @@ import {
   TextListVariants,
   TextVariants,
 } from '@patternfly/react-core';
+import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
 export const columnNames = {
@@ -122,7 +123,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
             {repo.release}
           </Td>
           <Td dataLabel={columnNames.date} modifier="truncate">
-            {repo.date}
+            {formatDate(repo.date)}
           </Td>
         </Tr>
         {repo.details ? (
