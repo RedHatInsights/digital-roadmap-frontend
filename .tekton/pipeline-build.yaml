@@ -186,7 +186,7 @@ spec:
             value: prefetch-dependencies-oci-ta
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.2@sha256:05551e144d090844903d61893a383fa4dc69ab563797f03ffaab0f8624bf530d
+            value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.2@sha256:0b58e5132333dd3b710ef9c18ecebe0d5e5b22066ba56481d34431c989cb21dd
 
           - name: kind
             value: task
@@ -313,7 +313,7 @@ spec:
             value: deprecated-image-check
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:c49732039f105de809840be396f83ead8c46f6a6948e1335b76d37e9eb469574
+            value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:1f57224c21021b2d497bac73312386d7421ec949241280a20102192acf1d01d3
 
           - name: kind
             value: task
@@ -342,7 +342,7 @@ spec:
             value: clair-scan
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.2@sha256:076d5cde62b55bbfcdda2b4782392256bbda5ad38f839013b4330b3aba70a973
+            value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.2@sha256:c5cb2e44d2b98eeb8f3a8edb39f3684e6d2342e8f080a7e1d9b0d6ecfb071d94
 
           - name: kind
             value: task
@@ -368,7 +368,7 @@ spec:
             value: ecosystem-cert-preflight-checks
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.2@sha256:51ee3ca7b8142f39a2861ed0f94f67e02c538e3b7e57de56ed301fbb9774aa12
+            value: quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.2@sha256:365c65ed8dfbd83c4a49300dcb9c74c5c3f027efec0be1a1f0baa9633c29b249
 
           - name: kind
             value: task
