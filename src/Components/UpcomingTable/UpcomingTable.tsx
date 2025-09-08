@@ -107,11 +107,32 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     }
     return dataToSort;
   };
-
+  
   const sortData = (index: number, direction: SortByDirection, currentData: UpcomingChanges[]) => {
     return currentData.sort((a, b) => {
       const aValue = getSortableRowValues(a)[index];
       const bValue = getSortableRowValues(b)[index];
+      
+      // Special handling for release column (index 2) - semantic version sorting
+      if (index === 2 && typeof aValue === 'string' && typeof bValue === 'string') {
+        const parseVersion = (version: string) => {
+          const parts = version.split('.').map(part => parseInt(part, 10) || 0);
+          return { major: parts[0] || 0, minor: parts[1] || 0 };
+        };
+        
+        const versionA = parseVersion(aValue);
+        const versionB = parseVersion(bValue);
+        
+        // Compare major versions first
+        if (versionA.major > versionB.major) return direction === 'asc' ? 1 : -1;
+        if (versionA.major < versionB.major) return direction === 'asc' ? -1 : 1;
+        // If major versions are equal, compare minor versions
+        if (versionA.minor > versionB.minor) return direction === 'asc' ? 1 : -1;
+        if (versionA.minor < versionB.minor) return direction === 'asc' ? -1 : 1;
+        return 0;
+      }
+      
+      // Default sorting for other columns
       if (typeof aValue === 'number') {
         // Numeric sort
         if (direction === 'asc') {
@@ -127,7 +148,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
       }
     });
   };
-
+  
   const getSortParams = (columnIndex: number): ThProps['sort'] => ({
     sortBy: {
       index: activeSortIndex,
