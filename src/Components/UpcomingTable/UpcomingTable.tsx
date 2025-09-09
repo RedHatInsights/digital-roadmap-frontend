@@ -112,6 +112,16 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     return currentData.sort((a, b) => {
       const aValue = getSortableRowValues(a)[index];
       const bValue = getSortableRowValues(b)[index];
+
+      // Special handling for release column (index 2) - semantic version sorting
+      if (index === 2 && typeof aValue === 'string' && typeof bValue === 'string') {
+        const aNum = parseFloat(aValue);
+        const bNum = parseFloat(bValue);
+        const comparison = aNum - bNum;
+        return direction === 'asc' ? comparison : -comparison;
+      }
+
+      // Default sorting for other columns
       if (typeof aValue === 'number') {
         // Numeric sort
         if (direction === 'asc') {
