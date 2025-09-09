@@ -115,21 +115,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
 
       // Special handling for release column (index 2) - semantic version sorting
       if (index === 2 && typeof aValue === 'string' && typeof bValue === 'string') {
-        const parseVersion = (version: string) => {
-          const parts = version.split('.').map((part) => parseInt(part, 10) || 0);
-          return { major: parts[0] || 0, minor: parts[1] || 0 };
-        };
-
-        const versionA = parseVersion(aValue);
-        const versionB = parseVersion(bValue);
-
-        // Compare major versions first
-        if (versionA.major > versionB.major) return direction === 'asc' ? 1 : -1;
-        if (versionA.major < versionB.major) return direction === 'asc' ? -1 : 1;
-        // If major versions are equal, compare minor versions
-        if (versionA.minor > versionB.minor) return direction === 'asc' ? 1 : -1;
-        if (versionA.minor < versionB.minor) return direction === 'asc' ? -1 : 1;
-        return 0;
+        const aNum = parseFloat(aValue);
+        const bNum = parseFloat(bValue);
+        const comparison = aNum - bNum;
+        return direction === 'asc' ? comparison : -comparison;
       }
 
       // Default sorting for other columns
