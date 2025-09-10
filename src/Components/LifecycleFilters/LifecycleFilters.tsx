@@ -1,5 +1,7 @@
+import * as React from 'react';
 import {
   Alert,
+  Badge,
   Button,
   Dropdown,
   DropdownItem,
@@ -8,14 +10,20 @@ import {
   FormGroup,
   MenuToggle,
   SearchInput,
+  Select,
+  SelectList,
+  SelectOption,
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
+  ToolbarChip,
+  ToolbarChipGroup,
+  ToolbarContent,
+  ToolbarFilter,
   ToolbarGroup,
   ToolbarItem,
   Tooltip,
 } from '@patternfly/react-core';
-import React from 'react';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
 import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
@@ -23,7 +31,9 @@ import {
   DEFAULT_DROPDOWN_VALUE,
   RHEL_10_STREAMS_DROPDOWN_VALUE,
   RHEL_8_STREAMS_DROPDOWN_VALUE,
+  RHEL_SYSTEMS_DROPDOWN_VALUE,
 } from '../Lifecycle/filteringUtils';
+import { FilterIcon } from '@patternfly/react-icons';
 
 interface LifecycleFiltersProps {
   nameFilter: string;
@@ -39,9 +49,14 @@ interface LifecycleFiltersProps {
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable: boolean;
+  onFilterFieldChange?: (field: 'Name' | 'Version') => void;
+  onRhelVersionsChange?: (versions: string[]) => void;
+  rhelVersionOptions: string[];
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
+
+const FIELD_OPTIONS = ['Name', 'Version'] as const;
 
 export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = ({
   nameFilter,
@@ -55,9 +70,18 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedViewFilter,
   handleViewFilterChange,
   noDataAvailable,
+  onFilterFieldChange,
+  onRhelVersionsChange,
+  rhelVersionOptions,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const [selectedField, setSelectedField] = React.useState<(typeof FIELD_OPTIONS)[number]>('Name');
+  const [isFieldOpen, setIsFieldOpen] = React.useState(false);
+
+  const [isRhelSelectOpen, setIsRhelSelectOpen] = React.useState(false);
+
+  const [selectedRhelVersions, setSelectedRhelVersions] = React.useState<string[]>([]);
   // Handle switching to "all" view when sort is set to "Systems"
   React.useEffect(() => {
     if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
@@ -65,6 +89,16 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       updateChartSortValue('Retirement date', 'asc');
     }
   }, [selectedViewFilter, selectedChartSortBy, updateChartSortValue]);
+
+  // When filter select options changes
+  React.useEffect(() => {
+    setSelectedRhelVersions((prev) => {
+      const intersection = prev.filter((v) => rhelVersionOptions.includes(v));
+      const next = intersection.length > 0 ? intersection : [];
+      onRhelVersionsChange?.(next);
+      return next;
+    });
+  }, [rhelVersionOptions]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
@@ -140,9 +174,50 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     }
   };
 
+  const onFieldToggle = () => setIsFieldOpen((prev) => !prev);
+  const onFieldSelect = (_event?: React.MouseEvent, value?: string | number) => {
+    if (typeof value === 'string') {
+      setSelectedField(value as (typeof FIELD_OPTIONS)[number]);
+      onFilterFieldChange?.(value === 'Name' ? 'Name' : 'Version');
+    }
+    setIsFieldOpen(false);
+  };
+
+  // RHEL versions multi-select handlers (checkbox select)
+  const onRhelSelect = (event?: React.MouseEvent, value?: string | number) => {
+    if (value == null) return;
+    const v = String(value);
+    const checked = (event?.target as HTMLInputElement | undefined)?.checked ?? false;
+
+    setSelectedRhelVersions((prev) => {
+      const next = checked ? (prev.includes(v) ? prev : [...prev, v]) : prev.filter((x) => x !== v);
+      onRhelVersionsChange?.(next);
+      return next;
+    });
+  };
+
+  const handleDeleteRhelChip = (_category: string | ToolbarChipGroup, chip: ToolbarChip | string) => {
+    const label = typeof chip === 'string' ? chip : String((chip as any)?.key ?? '');
+    setSelectedRhelVersions((prev) => {
+      const next = prev.filter((v) => v !== label);
+      onRhelVersionsChange?.(next);
+      return next;
+    });
+  };
+
+  const handleClearAllFilters = () => {
+    const none: string[] = [];
+    setSelectedRhelVersions(none);
+    onRhelVersionsChange?.(none);
+    setNameFilter('');
+    onFilterFieldChange?.('Name');
+  };
+
+  const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+
   return (
     <div className="drf-lifecycle__filters">
-      <Toolbar className="drf-lifecycle__filters-toolbar">
+      <Toolbar className="drf-lifecycle__filters-toolbar" clearAllFilters={handleClearAllFilters}>
         <ToolbarGroup>
           <ToolbarItem variant="bulk-select">
             <Form>
@@ -179,17 +254,108 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
           </Alert>
         )}
 
-        <div className="drf-lifecycle__filters-toolbar-group">
+        <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
+          <ToolbarGroup variant="filter-group">
+            {isSystemsView && (
+              <ToolbarFilter
+                categoryName="Field"
+                deleteChipGroup={(_category: string | ToolbarChipGroup) => {
+                  setSelectedField('Name');
+                }}
+              >
+                <Select
+                  aria-label="Select filter field"
+                  isOpen={isFieldOpen}
+                  onOpenChange={(open) => setIsFieldOpen(open)}
+                  onSelect={onFieldSelect}
+                  selected={selectedField}
+                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={onFieldToggle}
+                      isExpanded={isFieldOpen}
+                      icon={<FilterIcon />}
+                    >
+                      {selectedField}
+                    </MenuToggle>
+                  )}
+                >
+                  <SelectList>
+                    {FIELD_OPTIONS.map((opt) => (
+                      <SelectOption key={opt} value={opt} isSelected={selectedField === opt}>
+                        {opt}
+                      </SelectOption>
+                    ))}
+                  </SelectList>
+                </Select>
+              </ToolbarFilter>
+            )}
+
+            {/* Name input chips & control */}
+            <ToolbarFilter
+              categoryName="Name"
+              chips={isSystemsView && nameFilter ? [nameFilter] : undefined}
+              deleteChip={(_category: string | ToolbarChipGroup, _chip: string | ToolbarChip) => {
+                setNameFilter('');
+              }}
+            >
+              {selectedField === 'Name' && (
+                <SearchInput
+                  placeholder="Filter by name"
+                  value={nameFilter}
+                  onChange={(_event, value) => setNameFilter(value)}
+                  onClear={() => setNameFilter('')}
+                  aria-label="Filter by name"
+                />
+              )}
+            </ToolbarFilter>
+
+            <ToolbarFilter
+              categoryName="RHEL versions"
+              chips={isSystemsView ? selectedRhelVersions : undefined}
+              deleteChip={handleDeleteRhelChip}
+              deleteChipGroup={(_category: string | ToolbarChipGroup) => {
+                setSelectedRhelVersions([]);
+                onRhelVersionsChange?.([]);
+              }}
+            >
+              {selectedField === 'Version' && (
+                <Select
+                  aria-label="RHEL version"
+                  isOpen={isRhelSelectOpen}
+                  onOpenChange={(open) => setIsRhelSelectOpen(open)}
+                  onSelect={onRhelSelect}
+                  selected={selectedRhelVersions}
+                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => setIsRhelSelectOpen((p) => !p)}
+                      isExpanded={isRhelSelectOpen}
+                    >
+                      RHEL versions
+                      {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
+                    </MenuToggle>
+                  )}
+                  role="menu"
+                >
+                  <SelectList>
+                    {rhelVersionOptions.map((opt) => (
+                      <SelectOption
+                        key={opt}
+                        value={opt}
+                        hasCheckbox
+                        isSelected={selectedRhelVersions.includes(opt)}
+                      >
+                        {opt}
+                      </SelectOption>
+                    ))}
+                  </SelectList>
+                </Select>
+              )}
+            </ToolbarFilter>
+          </ToolbarGroup>
+
           <ToolbarGroup>
-            <ToolbarItem>
-              <SearchInput
-                placeholder="Filter by name"
-                value={nameFilter}
-                onChange={(_event, value) => setNameFilter(value)}
-                onClear={() => setNameFilter('')}
-                aria-label="Filter by name"
-              />
-            </ToolbarItem>
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
@@ -243,7 +409,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               </Tooltip>
             </ToolbarItem>
           </ToolbarGroup>
-          <ToolbarGroup>
+          <ToolbarGroup className="pf-v5-u-ml-auto-on-lg pf-v5-u-ml-0">
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
@@ -277,21 +443,21 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               </Form>
             </ToolbarItem>
           </ToolbarGroup>
-        </div>
-        {selectedViewFilter === 'all' && !noDataAvailable && (
-          <Alert
-            variant="info"
-            isInline
-            title="Connected systems are not considered in this view"
-            style={{ marginBottom: '32px' }}
-          >
-            <p>
-              This chart differs from the other views, as the color-coding below applies to all releases and not
-              just those installed on the systems in your inventory.
-            </p>
-          </Alert>
-        )}
+        </ToolbarContent>
       </Toolbar>
+      {selectedViewFilter === 'all' && !noDataAvailable && (
+        <Alert
+          variant="info"
+          isInline
+          title="Connected systems are not considered in this view"
+          style={{ marginBottom: '32px' }}
+        >
+          <p>
+            This chart differs from the other views, as the color-coding below applies to all releases and not just
+            those installed on the systems in your inventory.
+          </p>
+        </Alert>
+      )}
     </div>
   );
 };

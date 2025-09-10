@@ -87,6 +87,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
+  const [filterField, setFilterField] = useState<'Name' | 'Version'>('Name');
+  const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
+  const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
+
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const getDefaultOrder = (sortBy: string): 'asc' | 'desc' => {
@@ -104,6 +108,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       default:
         return 'asc';
     }
+  };
+
+  // Helper function to generate the RHEL version filter array
+  const computeRhelVersionOptions = (systems: SystemLifecycleChanges[]): string[] => {
+    const majors = new Set<number>();
+    systems.forEach((s) => {
+      if (typeof s.major === 'number') majors.add(s.major);
+    });
+    return Array.from(majors)
+      .sort((a, b) => a - b)
+      .map((m) => `RHEL ${m}`);
   };
 
   // Helper function to determine if data is available for current dropdown and view
@@ -163,25 +178,38 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const applyAllActiveFilters = (
     data: Stream[] | SystemLifecycleChanges[],
     dropdownValue: string,
-    nameFilterValue: string
+    nameFilterValue: string,
+    field: 'Name' | 'Version' = filterField,
+    versions: string[] = rhelVersionFilter
   ) => {
     let filteredData = data;
 
-    if (nameFilterValue) {
-      if (
-        [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(
-          dropdownValue
-        )
-      ) {
-        filteredData = (data as Stream[]).filter((datum) => {
-          return `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase());
-        });
-      } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-        filteredData = (data as SystemLifecycleChanges[]).filter((datum) => {
+    if (
+      [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(
+        dropdownValue
+      )
+    ) {
+      if (nameFilterValue) {
+        filteredData = (data as Stream[]).filter((datum) =>
+          `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase())
+        );
+      }
+    } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      let result = data as SystemLifecycleChanges[];
+
+      if (Array.isArray(versions) && versions.length > 0) {
+        result = result.filter((datum) => versions.includes(`RHEL ${datum.major}`));
+      }
+
+      if (nameFilterValue) {
+        const keyword = nameFilterValue.toLowerCase();
+        result = result.filter((datum) => {
           const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
           return product.includes(nameFilterValue.toLowerCase());
         });
       }
+
+      filteredData = result;
     }
 
     setFilteredTableData(filteredData);
@@ -398,6 +426,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         setFilteredTableData([]);
         setFilteredChartData([]);
       }
+
+      // calculate RHEL version options
+      const dynOptions = computeRhelVersionOptions(allSystems);
+      setRhelVersionOptions(dynOptions);
+      setRhelVersionFilter([]);
 
       // Set noDataAvailable based on the actual dropdown that will be used
       // Pass the actual fetched data instead of relying on state
@@ -714,6 +747,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
     setFilters(DEFAULT_FILTERS);
     setSelectedViewFilter('installed-only');
+    setFilterField('Name');
+    setRhelVersionFilter([]);
 
     // Use the cached data
     fetchData('installed-only');
@@ -904,6 +939,22 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}
+            onFilterFieldChange={(field) => {
+              setFilterField(field);
+            }}
+            onRhelVersionsChange={(versions) => {
+              setRhelVersionFilter(versions);
+              if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+                applyAllActiveFilters(
+                  systemLifecycleChanges,
+                  lifecycleDropdownValue,
+                  nameFilter,
+                  filterField,
+                  versions
+                );
+              }
+            }}
+            rhelVersionOptions={rhelVersionOptions}
           />
           {renderContent()}
         </Card>
