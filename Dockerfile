@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20:9.5 as builder
+FROM registry.access.redhat.com/ubi9/nodejs-20:9.6-1756959855 as builder
 
 USER root
 
