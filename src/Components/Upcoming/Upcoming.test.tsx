@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import UpcomingTab from './Upcoming';
-import { getAllUpcomingChanges, getRelevantUpcomingChanges } from '../../api';
+import { getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Polyfill for structuredClone in test environment
@@ -15,7 +15,6 @@ if (!global.structuredClone) {
 // Mock the API functions
 jest.mock('../../api', () => ({
   getAllUpcomingChanges: jest.fn(),
-  getRelevantUpcomingChanges: jest.fn(),
 }));
 
 // Mock the lazy-loaded UpcomingTable component
@@ -72,11 +71,8 @@ const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useS
 const mockSetSearchParams = jest.fn();
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
-const mockGetRelevantUpcomingChanges = getRelevantUpcomingChanges as jest.MockedFunction<
-  typeof getRelevantUpcomingChanges
->;
 
-// Test data
+// Test data - includes details field for relevant filtering
 const mockAllData: UpcomingChanges[] = [
   {
     name: 'Test Change 1',
@@ -84,6 +80,16 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 1.0',
     date: '2024-12-01',
     package: 'ruby',
+    details: {
+      summary: 'Test summary 1',
+      architecture: 'x86_64',
+      potentiallyAffectedSystemsCount: 5,
+      potentiallyAffectedSystemsDetail: [],
+      trainingTicket: 'TICKET-1',
+      dateAdded: '2024-01-01',
+      lastModified: '2024-01-01',
+      detailFormat: 1,
+    },
   },
   {
     name: 'Test Change 2',
@@ -91,6 +97,16 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 2.0',
     date: '2024-12-15',
     package: 'postgresql',
+    details: {
+      summary: 'Test summary 2',
+      architecture: 'x86_64',
+      potentiallyAffectedSystemsCount: 0,
+      potentiallyAffectedSystemsDetail: [],
+      trainingTicket: 'TICKET-2',
+      dateAdded: '2024-01-01',
+      lastModified: '2024-01-01',
+      detailFormat: 1,
+    },
   },
   {
     name: 'Test Change 3',
@@ -98,16 +114,16 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 1.0',
     date: '2024-12-01',
     package: 'rust',
-  },
-];
-
-const mockRelevantData: UpcomingChanges[] = [
-  {
-    name: 'Test Change 1',
-    type: 'deprecation',
-    release: 'Release 1.0',
-    date: '2024-12-01',
-    package: 'ruby',
+    details: {
+      summary: 'Test summary 3',
+      architecture: 'x86_64',
+      potentiallyAffectedSystemsCount: 0,
+      potentiallyAffectedSystemsDetail: [],
+      trainingTicket: 'TICKET-3',
+      dateAdded: '2024-01-01',
+      lastModified: '2024-01-01',
+      detailFormat: 1,
+    },
   },
 ];
 
@@ -149,24 +165,18 @@ describe('UpcomingTab', () => {
 
     // Reset mocks to default successful state
     mockGetAllUpcomingChanges.mockResolvedValue({ data: mockAllData });
-    mockGetRelevantUpcomingChanges.mockResolvedValue({ data: mockRelevantData });
   });
 
   describe('Initial Loading', () => {
     test('displays loading spinner initially', async () => {
       let resolveAll: (value: any) => void;
-      let resolveRelevant: (value: any) => void;
 
       // Create promises that we can control
       const allPromise = new Promise((resolve) => {
         resolveAll = resolve;
       });
-      const relevantPromise = new Promise((resolve) => {
-        resolveRelevant = resolve;
-      });
 
       mockGetAllUpcomingChanges.mockReturnValue(allPromise as any);
-      mockGetRelevantUpcomingChanges.mockReturnValue(relevantPromise as any);
 
       // Render the component and wait for the loading state to be set
       await act(async () => {
@@ -181,7 +191,6 @@ describe('UpcomingTab', () => {
       // Resolve the promises
       await act(async () => {
         resolveAll!({ data: mockAllData });
-        resolveRelevant!({ data: mockRelevantData });
       });
 
       // Wait for loading to complete
@@ -207,27 +216,26 @@ describe('UpcomingTab', () => {
       expect(screen.getByText('Changes')).toBeInTheDocument();
       expect(screen.getByText('Additions and enhancements')).toBeInTheDocument();
 
-      // Should show relevant data initially (1 item)
+      // Should show relevant data initially (1 item with potentiallyAffectedSystemsCount > 0)
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
     });
   });
 
   describe('Data Fetching', () => {
-    test('handles successful data fetching from both APIs', async () => {
+    test('handles successful data fetching and filters relevant data', async () => {
       await act(async () => {
         renderComponent();
       });
 
       await waitFor(() => {
         expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
-        expect(mockGetRelevantUpcomingChanges).toHaveBeenCalledTimes(1);
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('table-data-count')).toBeInTheDocument();
       });
 
-      // Should display relevant data initially
+      // Should display relevant data initially (only items with potentiallyAffectedSystemsCount > 0)
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
       expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
     });
@@ -235,7 +243,6 @@ describe('UpcomingTab', () => {
     test('handles API failure gracefully', async () => {
       const errorMessage = 'API Error';
       mockGetAllUpcomingChanges.mockRejectedValue(new Error(errorMessage));
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
       await act(async () => {
         renderComponent();
@@ -249,13 +256,8 @@ describe('UpcomingTab', () => {
       });
     });
 
-    test('handles workspace filtering error', async () => {
-      // The component shows the "no roadmap data available" state when one API succeeds
-      // with empty data and one fails - this is the actual behavior
-      const errorMessage = 'Error: Workspace filtering is not yet implemented';
-
+    test('handles empty data response', async () => {
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
       await act(async () => {
         renderComponent();
@@ -268,18 +270,22 @@ describe('UpcomingTab', () => {
     });
 
     test('handles timeout error (504)', async () => {
-      const timeoutError = { message: 'Timeout', status_code: 504 };
+      // For timeout error to show the special timeout state, it needs to be thrown directly
+      // not through Promise.allSettled, and needs to have status_code property
+      const timeoutError = new Error('Timeout');
+      (timeoutError as any).status_code = 504;
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockRejectedValue(timeoutError);
+      mockGetAllUpcomingChanges.mockImplementation(() => {
+        throw timeoutError;
+      });
 
       await act(async () => {
         renderComponent();
       });
 
-      // Should show "no roadmap data available" since all data is empty
+      // Should show timeout error state
       await waitFor(() => {
-        expect(screen.getByText('No roadmap data available')).toBeInTheDocument();
+        expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
       });
     });
   });
@@ -306,7 +312,15 @@ describe('UpcomingTab', () => {
     });
 
     test('auto-switches to all view when relevant data is empty', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+      // Mock data where no items have potentiallyAffectedSystemsCount > 0
+      const dataWithNoRelevant = mockAllData.map((item) => ({
+        ...item,
+        details: {
+          ...item.details!,
+          potentiallyAffectedSystemsCount: 0,
+        },
+      }));
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNoRelevant });
 
       await act(async () => {
         renderComponent();
@@ -320,7 +334,15 @@ describe('UpcomingTab', () => {
     });
 
     test('prevents switching to relevant when no relevant data available', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+      // Mock data where no items have potentiallyAffectedSystemsCount > 0
+      const dataWithNoRelevant = mockAllData.map((item) => ({
+        ...item,
+        details: {
+          ...item.details!,
+          potentiallyAffectedSystemsCount: 0,
+        },
+      }));
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNoRelevant });
 
       await act(async () => {
         renderComponent();
@@ -427,7 +449,15 @@ describe('UpcomingTab', () => {
     });
 
     test('resets to all view when no relevant data available', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+      // Mock data where no items have potentiallyAffectedSystemsCount > 0
+      const dataWithNoRelevant = mockAllData.map((item) => ({
+        ...item,
+        details: {
+          ...item.details!,
+          potentiallyAffectedSystemsCount: 0,
+        },
+      }));
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNoRelevant });
 
       await act(async () => {
         renderComponent();
@@ -463,7 +493,6 @@ describe('UpcomingTab', () => {
   describe('Empty States', () => {
     test('displays no data available state when all data sources are empty', async () => {
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
 
       await act(async () => {
         renderComponent();
@@ -489,7 +518,6 @@ describe('UpcomingTab', () => {
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithLowerCaseTypes });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
 
       await act(async () => {
         renderComponent();
@@ -499,22 +527,101 @@ describe('UpcomingTab', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // Should auto-switch to all view and show the count
-      expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
-      expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      // Should show relevant data initially (1 item with potentiallyAffectedSystemsCount > 0)
+      expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
     });
 
     test('correctly calculates counts for different types', async () => {
       const mixedData = [
-        { name: 'Test 1', type: 'Deprecation', release: 'R1', date: '2024-01-01', package: 'ruby' },
-        { name: 'Test 2', type: 'Addition', release: 'R1', date: '2024-01-01', package: 'postgresql' },
-        { name: 'Test 3', type: 'Enhancement', release: 'R1', date: '2024-01-01', package: 'rust' },
-        { name: 'Test 4', type: 'Change', release: 'R1', date: '2024-01-01', package: 'python' },
-        { name: 'Test 5', type: 'Change', release: 'R1', date: '2024-01-01', package: 'nodejs' },
+        {
+          name: 'Test 1',
+          type: 'Deprecation',
+          release: 'R1',
+          date: '2024-01-01',
+          package: 'ruby',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 1,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TICKET-1',
+            dateAdded: '2024-01-01',
+            lastModified: '2024-01-01',
+            detailFormat: 1,
+          },
+        },
+        {
+          name: 'Test 2',
+          type: 'Addition',
+          release: 'R1',
+          date: '2024-01-01',
+          package: 'postgresql',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 1,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TICKET-2',
+            dateAdded: '2024-01-01',
+            lastModified: '2024-01-01',
+            detailFormat: 1,
+          },
+        },
+        {
+          name: 'Test 3',
+          type: 'Enhancement',
+          release: 'R1',
+          date: '2024-01-01',
+          package: 'rust',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 1,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TICKET-3',
+            dateAdded: '2024-01-01',
+            lastModified: '2024-01-01',
+            detailFormat: 1,
+          },
+        },
+        {
+          name: 'Test 4',
+          type: 'Change',
+          release: 'R1',
+          date: '2024-01-01',
+          package: 'python',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 1,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TICKET-4',
+            dateAdded: '2024-01-01',
+            lastModified: '2024-01-01',
+            detailFormat: 1,
+          },
+        },
+        {
+          name: 'Test 5',
+          type: 'Change',
+          release: 'R1',
+          date: '2024-01-01',
+          package: 'nodejs',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 1,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TICKET-5',
+            dateAdded: '2024-01-01',
+            lastModified: '2024-01-01',
+            detailFormat: 1,
+          },
+        },
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: mixedData });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: mixedData });
 
       await act(async () => {
         renderComponent();
@@ -524,7 +631,7 @@ describe('UpcomingTab', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // Check that data is rendered
+      // Check that data is rendered (all items have potentiallyAffectedSystemsCount > 0)
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('5');
 
       // Check cards are present
@@ -548,9 +655,6 @@ describe('UpcomingTab', () => {
       mockGetAllUpcomingChanges.mockImplementation(() => {
         throw workspaceError;
       });
-      mockGetRelevantUpcomingChanges.mockImplementation(() => {
-        throw workspaceError;
-      });
 
       await act(async () => {
         renderComponent();
@@ -571,7 +675,6 @@ describe('UpcomingTab', () => {
 
     test('handles general API errors', async () => {
       mockGetAllUpcomingChanges.mockRejectedValue(new Error('General API Error'));
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error('General API Error'));
 
       await act(async () => {
         renderComponent();

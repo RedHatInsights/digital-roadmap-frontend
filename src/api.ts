@@ -8,7 +8,6 @@ import {
   DR_RELEASE_NOTES,
   DR_RELEVANT_LIFECYCLE_APPSTREAMS,
   DR_RELEVANT_LIFECYCLE_SYSTEMS,
-  DR_RELEVANT_UPCOMING,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
 } from './constants';
@@ -58,35 +57,6 @@ export const getRelevantReleaseNotes = async (major: number, minor: number, keyw
 
 export const getAllUpcomingChanges = async () => {
   const path = DR_API.concat(DR_ALL_UPCOMING);
-  const response = await axios
-    .get(path, {
-      validateStatus: function (status) {
-        return status === 200;
-      },
-    })
-    .catch(function (error) {
-      if (error.response.data.detail) {
-        if (error.response.status) {
-          throw new ApiError(error.response.data.detail, error.response.status);
-        }
-        throw new ApiError(error.response.data.detail);
-      } else if (error.request.response) {
-        if (error.request.status) {
-          throw new ApiError(error.request.response, error.request.status);
-        }
-        throw new ApiError(error.request.response);
-      } else if (error.detail) {
-        throw new ApiError(error.detail);
-      } else {
-        throw new ApiError(error.message);
-      }
-    });
-
-  return getResponseOrError(response);
-};
-
-export const getRelevantUpcomingChanges = async () => {
-  const path = DR_API.concat(DR_RELEVANT_UPCOMING);
   const response = await axios
     .get(path, {
       validateStatus: function (status) {
