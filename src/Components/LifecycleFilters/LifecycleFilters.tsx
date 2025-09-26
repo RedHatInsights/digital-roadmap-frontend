@@ -87,7 +87,17 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   ) => {
     setIsOpen(false);
     if (value && typeof value == 'string') {
-      updateChartSortValue(value, 'asc');
+      const defaultOrder =
+        value === 'Retirement date'
+          ? 'asc'
+          : value === 'Systems'
+          ? 'desc'
+          : value === 'Name'
+          ? 'asc'
+          : value === 'Release version'
+          ? 'desc'
+          : 'desc';
+      updateChartSortValue(value, defaultOrder);
     }
   };
 

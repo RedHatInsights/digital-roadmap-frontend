@@ -272,7 +272,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     sortBy: {
       index: activeSystemSortIndex,
       direction: activeSystemSortDirection,
-      defaultDirection: 'desc',
+      defaultDirection:
+        columnIndex === 0
+          ? 'asc' // Name
+          : columnIndex === 1
+          ? 'desc' // Release date
+          : columnIndex === 2
+          ? 'asc' // Retirement date
+          : 'desc', // Systems
     },
     onSort: (_event, index, direction) => {
       handleSortUpdate(index, direction as SortByDirection);
@@ -284,7 +291,16 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     sortBy: {
       index: activeAppSortIndex,
       direction: activeAppSortDirection,
-      defaultDirection: 'desc',
+      defaultDirection:
+        columnIndex === 0
+          ? 'asc' // Name
+          : columnIndex === 1
+          ? 'desc' // Release version
+          : columnIndex === 2
+          ? 'desc' // Release date
+          : columnIndex === 3
+          ? 'asc' // Retirement date
+          : 'desc', // Systems
     },
     onSort: (_event, index, direction) => {
       handleSortUpdate(index, direction as SortByDirection);
