@@ -73,6 +73,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
   const [chartSortByValue, setChartSortByValue] = React.useState<string>(DEFAULT_CHART_SORTBY_VALUE);
+  const [chartDirection, setChartDirection] = React.useState<string>('asc');
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
   // Add state for view filter (all, installed-only, installed-and-related)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
@@ -87,6 +88,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
+
+  const getDefaultOrder = (sortBy: string): 'asc' | 'desc' => {
+    switch (sortBy) {
+      case 'Retirement date':
+        return 'asc';
+      case 'Systems':
+        return 'desc';
+      case 'Name':
+        return 'asc';
+      case 'Release version':
+        return 'desc';
+      case 'Release date':
+        return 'desc';
+      default:
+        return 'asc';
+    }
+  };
 
   // Helper function to determine if data is available for current dropdown and view
   const checkDataAvailability = (
@@ -168,19 +186,37 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     setFilteredTableData(filteredData);
 
-    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue);
+    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue, chartDirection);
     setFilteredChartData(chartData);
 
     return filteredData;
   };
 
-  const updateChartSortValue = (value: string) => {
+  // todo
+  // use one sort by value with asc/desc. Asc/desc is set in the handler of the sort.
+  // useefect depending on the asc/desc change which will change the data
+
+  const setOrderingStates = (value: string, order?: string) => {
     setChartSortByValue(value);
+    if (order) {
+      setChartDirection(order);
+    } else {
+      setChartDirection(getDefaultOrder(value));
+    }
+  };
+
+  React.useEffect(() => {
+    updateSortedData(chartSortByValue, chartDirection);
+  }, [chartSortByValue, chartDirection]);
+
+  const updateSortedData = (value: string, order?: string) => {
+    const effectiveOrder = order ?? chartDirection ?? getDefaultOrder(value);
     const newFilters = structuredClone(filters);
     newFilters['chartSortBy'] = value;
+    newFilters['chartOrder'] = effectiveOrder;
     setFilters(newFilters);
     setSearchParams(buildURL(newFilters));
-    setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue));
+    setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue, effectiveOrder));
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
@@ -520,11 +556,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     } else {
       let chartData;
       if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
-        chartData = filterChartData(data, sortByParam, dropdownValue);
+        const effectiveOrder = orderParam ?? getDefaultOrder(sortByParam);
         setChartSortByValue(sortByParam);
+        setChartDirection(effectiveOrder);
+        chartData = filterChartData(data, sortByParam, dropdownValue, effectiveOrder);
         setFilteredChartData(chartData);
       } else {
-        chartData = filterChartDataByRetirementDate(data, dropdownValue);
+        const defaultSort = DEFAULT_CHART_SORTBY_VALUE;
+        const effectiveOrder = getDefaultOrder(defaultSort);
+        setChartSortByValue(defaultSort);
+        setChartDirection(effectiveOrder);
+        chartData = filterChartData(data, defaultSort, dropdownValue, effectiveOrder);
         setFilteredChartData(chartData);
       }
 
@@ -556,6 +598,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const nameQueryParam = searchParams.get('name');
   const dropdownQueryParam = searchParams.get('lifecycleDropdown');
   const sortByParam = searchParams.get('chartSortBy');
+  const orderParam = searchParams.get('chartOrder');
   const viewFilterParam = searchParams.get('viewFilter');
 
   useEffect(() => {
@@ -577,6 +620,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (nameQueryParam) initialFilters.name = nameQueryParam;
     if (dropdownQueryParam) initialFilters.lifecycleDropdown = dropdownQueryParam;
     if (sortByParam) initialFilters.chartSortBy = sortByParam;
+    if (orderParam) initialFilters.chartOrder = orderParam;
+    else if (sortByParam) initialFilters.chartOrder = getDefaultOrder(sortByParam);
+    else initialFilters.chartOrder = getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE);
+
     initialFilters.viewFilter = initialViewFilter;
     setFilters(initialFilters);
 
@@ -601,14 +648,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     setFilteredTableData(currentData);
-    const chartData = filterChartData(currentData, chartSortByValue, lifecycleDropdownValue);
+    const chartData = filterChartData(currentData, chartSortByValue, lifecycleDropdownValue, chartDirection);
     setFilteredChartData(chartData);
   };
 
   const filterChartData = (
     data: Stream[] | SystemLifecycleChanges[],
     sortBy: string,
-    dropdownValue: string
+    dropdownValue: string,
+    order?: string
   ): Stream[] | SystemLifecycleChanges[] => {
     if (!data || data.length === 0) {
       return [];
@@ -616,17 +664,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     switch (sortBy) {
       case 'Name':
-        return filterChartDataByName(data, dropdownValue);
+        return filterChartDataByName(data, dropdownValue, order);
       case 'Release version':
-        return filterChartDataByRelease(data, dropdownValue);
+        return filterChartDataByRelease(data, dropdownValue, order);
       case 'Release date':
-        return filterChartDataByReleaseDate(data, dropdownValue);
+        return filterChartDataByReleaseDate(data, dropdownValue, order);
       case 'Retirement date':
-        return filterChartDataByRetirementDate(data, dropdownValue);
+        return filterChartDataByRetirementDate(data, dropdownValue, order);
       case 'Systems':
-        return filterChartDataBySystems(data, dropdownValue);
+        return filterChartDataBySystems(data, dropdownValue, order);
       default:
-        return filterChartDataByRetirementDate(data, dropdownValue);
+        return filterChartDataByRetirementDate(data, dropdownValue, order);
     }
   };
 
@@ -820,10 +868,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const ChartComponent =
       lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
 
+    // Create a copy of filteredChartData and reverse it
+    const reversedChartData = [...filteredChartData].reverse() as typeof filteredChartData;
+
     return (
       <>
-        <ChartComponent lifecycleData={filteredChartData} viewFilter={selectedViewFilter} />
-        <LifecycleTable data={filteredTableData} viewFilter={selectedViewFilter} />
+        <ChartComponent lifecycleData={reversedChartData} viewFilter={selectedViewFilter} />
+        <LifecycleTable
+          data={filteredChartData}
+          viewFilter={selectedViewFilter}
+          chartSortByValue={chartSortByValue}
+          orderingValue={chartDirection}
+          updateChartSortValue={setOrderingStates}
+          lifecycleDropdownValue={lifecycleDropdownValue}
+        />
       </>
     );
   };
@@ -841,7 +899,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             setLifecycleDropdownValue={setLifecycleDropdownValue}
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
-            setSelectedChartSortBy={updateChartSortValue}
+            updateChartSortValue={setOrderingStates}
             downloadCSV={downloadCSV}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}

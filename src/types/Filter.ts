@@ -6,6 +6,7 @@ export interface Filter {
   type?: Set<string>;
   release?: string[];
   date?: string;
+  chartOrder?: string;
 }
 
 export interface ExtendedFilter extends Filter {
