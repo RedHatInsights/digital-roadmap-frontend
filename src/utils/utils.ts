@@ -42,6 +42,7 @@ export const formatDate = (date: string | null) => {
   return dateAsDate?.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
+    timeZone: 'UTC',
   });
 };
 
