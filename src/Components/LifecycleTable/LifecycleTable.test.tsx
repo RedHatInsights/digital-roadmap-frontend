@@ -388,9 +388,9 @@ describe('LifecycleTable', () => {
       await act(async () => {
         await user.click(nameHeader);
       });
-      
+
       expect(mockUpdateChartSortValue).toHaveBeenCalledWith('Name', 'desc');
-      
+
       rows = screen.getAllByRole('row');
       expect(rows[1]).toHaveTextContent('Python 3.11'); // Should be last alphabetically when descending
     });
@@ -601,12 +601,7 @@ describe('LifecycleTable', () => {
   describe('Chart Sorting Integration', () => {
     it('applies sorting when chartSortByValue prop changes', async () => {
       const { rerender } = await renderWithAct(
-        <LifecycleTable 
-          data={mockStreamData} 
-          chartSortByValue="Name"
-          orderingValue="asc"
-          {...defaultProps} 
-        />
+        <LifecycleTable data={mockStreamData} chartSortByValue="Name" orderingValue="asc" {...defaultProps} />
       );
 
       // Should be sorted by name in ascending order
@@ -616,11 +611,11 @@ describe('LifecycleTable', () => {
       // Change to sort by systems descending
       await act(async () => {
         rerender(
-          <LifecycleTable 
-            data={mockStreamData} 
+          <LifecycleTable
+            data={mockStreamData}
             chartSortByValue="Systems"
             orderingValue="desc"
-            {...defaultProps} 
+            {...defaultProps}
           />
         );
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -633,7 +628,7 @@ describe('LifecycleTable', () => {
 
     it('handles lifecycleDropdownValue changes', async () => {
       const { rerender } = await renderWithAct(
-        <LifecycleTable 
+        <LifecycleTable
           data={mockStreamData}
           updateChartSortValue={mockUpdateChartSortValue}
           lifecycleDropdownValue="supported"
@@ -644,7 +639,7 @@ describe('LifecycleTable', () => {
 
       await act(async () => {
         rerender(
-          <LifecycleTable 
+          <LifecycleTable
             data={mockStreamData}
             updateChartSortValue={mockUpdateChartSortValue}
             lifecycleDropdownValue="all"
