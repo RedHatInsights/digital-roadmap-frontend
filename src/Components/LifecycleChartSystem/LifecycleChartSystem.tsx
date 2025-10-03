@@ -564,6 +564,40 @@ End: ${formatDate(tooltipData.y)}`;
 
   const leftPadding = calculateLeftPadding();
 
+  // Nice step for year axis (positive integers only)
+  const niceStep = (minStep: number): number => {
+    const candidates = [1, 2, 5, 10];
+    return candidates.find((step) => minStep <= step) ?? Math.ceil(minStep / 10) * 10;
+  };
+
+  const allYearDates = React.useMemo(
+    () => Object.values(years).sort((dateA, dateB) => dateA.getTime() - dateB.getTime()),
+    [years]
+  );
+
+  const yearTickValues = React.useMemo(() => {
+    if (allYearDates.length === 0) return [];
+
+    const paddingLeft = leftPadding;
+    const paddingRight = 75;
+    const plotWidth = Math.max(chartDimensions.width - paddingLeft - paddingRight, 100);
+
+    const minPixelsPerTick = 50;
+
+    const firstYear = allYearDates[0].getUTCFullYear();
+    const lastYear = allYearDates[allYearDates.length - 1].getUTCFullYear();
+    const totalYears = lastYear - firstYear + 1;
+
+    const rawStep = Math.ceil((totalYears * minPixelsPerTick) / plotWidth);
+    const step = niceStep(rawStep);
+
+    const includedYears = new Set<number>();
+    for (let year = firstYear; year <= lastYear; year += step) {
+      includedYears.add(year);
+    }
+
+    return allYearDates.filter((date) => includedYears.has(date.getUTCFullYear()));
+  }, [allYearDates, chartDimensions.width, leftPadding]);
   // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
@@ -597,21 +631,21 @@ End: ${formatDate(tooltipData.y)}`;
         width={chartDimensions.width}
       >
         {/*X axis with date timeline for the bottom of the chart */}
-        {Object.values(years).length > 0 && (
+        {yearTickValues.length > 0 && (
           <ChartAxis
             dependentAxis
             showGrid
-            tickValues={Object.values(years)}
+            tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}
         {/*X axis with date timeline for the top of the chart */}
-        {Object.values(years).length > 0 && (
+        {yearTickValues.length > 0 && (
           <ChartAxis
             dependentAxis
             showGrid={false}
             orientation="top"
-            tickValues={Object.values(years)}
+            tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}
