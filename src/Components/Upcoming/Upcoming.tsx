@@ -21,7 +21,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
-import { getAllUpcomingChanges, getRelevantUpcomingChanges } from '../../api';
+import { getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
@@ -123,10 +123,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const fetchBothDataSources = async () => {
     try {
       // Fetch both APIs in parallel
-      const [allResponse, relevantResponse] = await Promise.allSettled([
-        getAllUpcomingChanges(),
-        getRelevantUpcomingChanges(),
-      ]);
+      const [allResponse] = await Promise.allSettled([getAllUpcomingChanges()]);
 
       // Process "all" data
       let allData: UpcomingChanges[] = [];
@@ -144,22 +141,16 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       // Process "relevant" data
       let relevantData: UpcomingChanges[] = [];
-      if (relevantResponse.status === 'fulfilled') {
-        relevantData = relevantResponse.value && relevantResponse.value.data ? relevantResponse.value.data : [];
-        relevantData = relevantData.map((item) => ({
-          ...item,
-          type: capitalizeFirstLetter(item.type),
-        }));
+      if (allData.length > 0) {
+        relevantData = allData.filter((item) => item.details && item.details.potentiallyAffectedSystemsCount > 0);
         setRelevantUpcomingChangesData(relevantData);
         setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
-      } else {
-        console.error('Error fetching relevant changes:', relevantResponse.reason);
       }
 
       return {
         allData,
         relevantData,
-        hasErrors: allResponse.status === 'rejected' && relevantResponse.status === 'rejected',
+        hasErrors: allResponse.status === 'rejected',
       };
     } catch (error) {
       console.error('Unexpected error in fetchBothDataSources:', error);
