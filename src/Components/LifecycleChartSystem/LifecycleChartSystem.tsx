@@ -244,11 +244,12 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const legendNames = React.useMemo(calculateLegendNames, [updatedLifecycleData]);
+  const LEGEND_NAME_PREFIX = '\u00A0\u00A0\u00A0'; // Nonbreakable space - fix issue with legend hover spacing bug
 
   const getLegendData = () =>
     legendNames.map((s, index) => ({
       childName: `series-${index}`,
-      name: s.packageType,
+      name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
       symbol: { fill: `${getPackageColor(s.packageType)}` },
       ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
     }));
@@ -583,7 +584,16 @@ End: ${formatDate(tooltipData.y)}`;
           legendName: 'chart5-ChartLegend',
           onLegendClick: handleLegendClick,
         })}
-        legendComponent={<ChartLegend name="chart5-ChartLegend" data={getLegendData()} height={50} gutter={20} />}
+        legendComponent={
+          <ChartLegend
+            name="chart5-ChartLegend"
+            symbolSpacer={1}
+            borderPadding={{ top: 12, bottom: 0, left: 0, right: 0 }}
+            data={getLegendData()}
+            height={50}
+            gutter={20}
+          />
+        }
         legendPosition="bottom-left"
         name="chart5"
         padding={{
