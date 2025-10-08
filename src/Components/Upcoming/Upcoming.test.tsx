@@ -233,7 +233,7 @@ describe('UpcomingTab', () => {
     });
 
     test('handles API failure gracefully', async () => {
-      const errorMessage = 'API Error';
+      const errorMessage = 'Not authorized to access host inventory';
       mockGetAllUpcomingChanges.mockRejectedValue(new Error(errorMessage));
       mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
@@ -244,7 +244,7 @@ describe('UpcomingTab', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error-state')).toBeInTheDocument();
         expect(screen.getByTestId('error-description')).toHaveTextContent(
-          'Failed to fetch data from both endpoints'
+          'Not authorized to access host inventory'
         );
       });
     });
@@ -261,14 +261,17 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      // The component shows "no roadmap data available" when all data is empty
+      // The component shows planning not enabled message
       await waitFor(() => {
-        expect(screen.getByText('No roadmap data available')).toBeInTheDocument();
+        expect(screen.getByText('Planning is not yet enabled for your organization')).toBeInTheDocument();
       });
     });
 
     test('handles timeout error (504)', async () => {
-      const timeoutError = { message: 'Timeout', status_code: 504 };
+      //const timeoutError = new Error(messag'Timeout reached when calculating response');
+      //(timeoutError as any).status_code = 504;
+
+      const timeoutError = { message: 'Timeout reached when calculating response', status_code: 504 };
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
       mockGetRelevantUpcomingChanges.mockRejectedValue(timeoutError);
@@ -277,9 +280,9 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      // Should show "no roadmap data available" since all data is empty
+      // Should show timeout message
       await waitFor(() => {
-        expect(screen.getByText('No roadmap data available')).toBeInTheDocument();
+        expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
       });
     });
   });
@@ -579,9 +582,7 @@ describe('UpcomingTab', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent(
-          'Failed to fetch data from both endpoints'
-        );
+        expect(screen.getByTestId('error-description')).toHaveTextContent('General API Error');
       });
     });
   });

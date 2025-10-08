@@ -140,6 +140,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setDataFetchStatus((prev) => ({ ...prev, all: true }));
       } else {
         console.error('Error fetching all changes:', allResponse.reason);
+        throw new Error(allResponse.reason.message);
       }
 
       // Process "relevant" data
@@ -154,12 +155,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
       } else {
         console.error('Error fetching relevant changes:', relevantResponse.reason);
+        throw new Error(relevantResponse.reason.message);
       }
 
       return {
         allData,
         relevantData,
-        hasErrors: allResponse.status === 'rejected' && relevantResponse.status === 'rejected',
       };
     } catch (error) {
       console.error('Unexpected error in fetchBothDataSources:', error);
@@ -252,15 +253,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       // If we need to fetch data, use parallel fetching
       if (needsAllData || needsRelevantData) {
-        const {
-          allData: fetchedAllData,
-          relevantData: fetchedRelevantData,
-          hasErrors,
-        } = await fetchBothDataSources();
-
-        if (hasErrors) {
-          throw new Error('Failed to fetch data from both endpoints');
-        }
+        const { allData: fetchedAllData, relevantData: fetchedRelevantData } = await fetchBothDataSources();
 
         // Update local variables with fetched data
         if (needsAllData) allData = fetchedAllData;
@@ -321,7 +314,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {
-      console.error('Error fetching changes:', error);
+      console.error('Error fetching changes:', error.message);
       setError({ message: error.message, status_code: error.status_code });
     } finally {
       setIsLoading(false);
