@@ -2,17 +2,21 @@ import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemsDetail } from '../../types/SystemsDetail';
 import {
-  Button,
-  Pagination,
-  PaginationVariant,
-  TextInputGroup,
-  TextInputGroupMain,
-  TextInputGroupUtilities,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
+	Button,
+	Pagination,
+	PaginationVariant,
+	TextInputGroup,
+	TextInputGroupMain,
+	TextInputGroupUtilities,
+	Toolbar,
+	ToolbarContent,
+	ToolbarItem,
+	Modal /* data-codemods */,
+	ModalBody /* data-codemods */,
+	ModalFooter /* data-codemods */,
+	ModalHeader /* data-codemods */,
+	ModalVariant
 } from '@patternfly/react-core';
-import { Modal, ModalBody, ModalFooter, ModalHeader, ModalVariant } from '@patternfly/react-core/next';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 
@@ -101,7 +105,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           <Toolbar>
             <ToolbarContent>
               <ToolbarItem>{renderFilterBoxModalWindow()}</ToolbarItem>
-              <ToolbarItem align={{ default: 'alignRight' }}>{renderPagination('top', true)}</ToolbarItem>
+              <ToolbarItem align={{ default: "alignEnd" }}>{renderPagination('top', true)}</ToolbarItem>
             </ToolbarContent>
           </Toolbar>
         </div>
@@ -199,9 +203,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           {showUtilities && (
             <TextInputGroupUtilities>
               {showClearButton && (
-                <Button variant="plain" onClick={clearInput} aria-label="Clear button and input">
-                  <TimesIcon />
-                </Button>
+                <Button icon={<TimesIcon />} variant="plain" onClick={clearInput} aria-label="Clear button and input" />
               )}
             </TextInputGroupUtilities>
           )}
