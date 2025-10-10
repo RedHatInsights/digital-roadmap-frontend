@@ -5,7 +5,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarPanel,
-  TextContent,
+  Content,
 } from '@patternfly/react-core';
 
 import './release-view.scss';
@@ -39,6 +39,7 @@ export const Scrollspy: React.FC<DataProps> = ({ data }) => {
               {data.map((v, i) => (
                 <JumpLinksItem
                   key={i}
+                  href={`#${v.title}-${i}`}
                   isActive={activeLinkIndex === i}
                   onClick={() => {
                     document.getElementById(`${v.title}-${i}`)?.focus();
@@ -53,7 +54,7 @@ export const Scrollspy: React.FC<DataProps> = ({ data }) => {
           ) : null}
         </SidebarPanel>
         <SidebarContent hasNoBackground>
-          <TextContent>
+          <Content>
             {data.length > 0 ? (
               data.map((v, i) => (
                 <div key={i} style={{ maxWidth: '800px', marginBottom: '32px' }}>
@@ -75,7 +76,7 @@ export const Scrollspy: React.FC<DataProps> = ({ data }) => {
             ) : (
               <p>No data</p>
             )}
-          </TextContent>
+          </Content>
         </SidebarContent>
       </Sidebar>
     </>

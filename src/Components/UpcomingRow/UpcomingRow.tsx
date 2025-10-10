@@ -9,14 +9,9 @@ import { SystemsDetail } from '../../types/SystemsDetail';
 import {
   Button,
   Icon,
-  Text,
-  TextContent,
-  TextList,
-  TextListItem,
-  TextListItemVariants,
-  TextListVariants,
-  TextVariants,
-} from '@patternfly/react-core';
+  Content,
+  ContentVariants,
+  } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
@@ -136,16 +131,16 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
               colSpan={4}
             >
               <div className="drf-lifecycle__upcoming-row-text-container">
-                <TextContent className="drf-lifecycle__upcoming-row-text">
-                  <Text component={TextVariants.p}>{repo.details.summary}</Text>
-                </TextContent>
+                <Content className="drf-lifecycle__upcoming-row-text">
+                  <Content component={ContentVariants.p}>{repo.details.summary}</Content>
+                </Content>
 
-                <TextContent className="drf-lifecycle__upcoming-row-text">
-                  <TextList component={TextListVariants.dl} style={{ gridRowGap: '0px' }}>
-                    <TextListItem component={TextListItemVariants.dt} style={{ paddingBottom: '16px' }}>
+                <Content className="drf-lifecycle__upcoming-row-text">
+                  <Content component={ContentVariants.dl} style={{ gridRowGap: '0px' }}>
+                    <Content component={ContentVariants.dt} style={{ paddingBottom: '16px' }}>
                       Potentially affected systems
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
+                    </Content>
+                    <Content component={ContentVariants.dd}>
                       {repo.details.potentiallyAffectedSystemsCount &&
                       repo.details.potentiallyAffectedSystemsCount > 0 ? (
                         <Button
@@ -173,19 +168,19 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                           {repo.details.potentiallyAffectedSystemsCount}
                         </span>
                       )}
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Tracking ticket</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>
+                    </Content>
+                    <Content component={ContentVariants.dt}>Tracking ticket</Content>
+                    <Content component={ContentVariants.dd}>
                       <a href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`} rel="noreferrer">
                         {repo.details.trainingTicket}
                       </a>
-                    </TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Date added</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>{repo.details.dateAdded}</TextListItem>
-                    <TextListItem component={TextListItemVariants.dt}>Last modified</TextListItem>
-                    <TextListItem component={TextListItemVariants.dd}>{repo.details.lastModified}</TextListItem>
-                  </TextList>
-                </TextContent>
+                    </Content>
+                    <Content component={ContentVariants.dt}>Date added</Content>
+                    <Content component={ContentVariants.dd}>{repo.details.dateAdded}</Content>
+                    <Content component={ContentVariants.dt}>Last modified</Content>
+                    <Content component={ContentVariants.dd}>{repo.details.lastModified}</Content>
+                  </Content>
+                </Content>
               </div>
             </Td>
           </Tr>

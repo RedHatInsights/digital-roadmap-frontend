@@ -6,8 +6,6 @@ import {
   EmptyStateActions,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   Pagination,
   PaginationVariant,
 } from '@patternfly/react-core';
@@ -235,12 +233,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   };
 
   const emptyState = (
-    <EmptyState>
-      <EmptyStateHeader
-        headingLevel="h4"
-        titleText="No results found"
-        icon={<EmptyStateIcon icon={SearchIcon} />}
-      />
+    <EmptyState  headingLevel="h4" icon={SearchIcon}  titleText="No results found">
       <EmptyStateBody>No results match the filter criteria. Clear all filters and try again.</EmptyStateBody>
       <EmptyStateFooter>
         <EmptyStateActions>
@@ -335,7 +328,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
             {filteredData.length > 0 && (
               <Th>
                 <span className="pf-v5-c-table__td pf-v5-c-table__toggle">
-                  <Button
+                  <Button icon={<div className="pf-v5-c-table__toggle-icon">
+                      <AngleDownIcon />
+                    </div>}
                     aria-expanded={expandedRows.size === paginatedRows.length}
                     aria-label={
                       expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'
@@ -343,11 +338,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                     variant="plain"
                     onClick={onClickArrow}
                     className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
-                  >
-                    <div className="pf-v5-c-table__toggle-icon">
-                      <AngleDownIcon />
-                    </div>
-                  </Button>
+                   />
                 </span>
               </Th>
             )}

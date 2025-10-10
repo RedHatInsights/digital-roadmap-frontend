@@ -144,7 +144,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     <div className="drf-lifecycle__filters">
       <Toolbar className="drf-lifecycle__filters-toolbar">
         <ToolbarGroup>
-          <ToolbarItem variant="bulk-select">
+          <ToolbarItem >
             <Form>
               <FormGroup className="drf-lifecycle__filter-formgroup" label="Life Cycle" fieldId="data-switcher">
                 <LifecycleDropdown
