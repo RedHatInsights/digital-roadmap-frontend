@@ -1,7 +1,6 @@
 import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
 import { LifecycleTable } from './LifecycleTable';
 import { Stream } from '../../types/Stream';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
