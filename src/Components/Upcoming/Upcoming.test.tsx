@@ -268,9 +268,6 @@ describe('UpcomingTab', () => {
     });
 
     test('handles timeout error (504)', async () => {
-      //const timeoutError = new Error(messag'Timeout reached when calculating response');
-      //(timeoutError as any).status_code = 504;
-
       const timeoutError = { message: 'Timeout reached when calculating response', status_code: 504 };
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
