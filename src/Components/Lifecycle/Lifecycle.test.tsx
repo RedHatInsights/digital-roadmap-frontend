@@ -54,6 +54,7 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
     selectedViewFilter = 'installed-only', // Default value
     handleViewFilterChange,
     noDataAvailable,
+    rhelVersionOptions = [],
   }: any) => (
     <div data-testid="lifecycle-filters">
       <input
@@ -93,6 +94,12 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
       <button data-testid="download-csv" onClick={downloadCSV}>
         Download CSV
       </button>
+
+      <ul data-testid="rhel-version-options">
+        {rhelVersionOptions.map((opt: string) => (
+          <li key={opt}>{opt}</li>
+        ))}
+      </ul>
     </div>
   );
   MockComponent.displayName = 'MockLifecycleFilters';
@@ -638,5 +645,20 @@ describe('LifecycleTab Component', () => {
         expect(dropdown).toHaveValue('rhel-systems');
       });
     });
+  });
+});
+
+describe('Dynamic RHEL version options', () => {
+  test('computes and passes dynamic RHEL version options from system data', async () => {
+    renderWithRouter(<LifecycleTab />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('lifecycle-filters')).toBeInTheDocument();
+    });
+
+    const list = screen.getByTestId('rhel-version-options');
+    expect(list).toBeInTheDocument();
+    expect(list).toHaveTextContent('RHEL 8');
+    expect(list).toHaveTextContent('RHEL 9');
   });
 });
