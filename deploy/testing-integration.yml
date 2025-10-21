@@ -40,10 +40,8 @@ objects:
           args:
           - run
           envFrom:
-            - configMapRef:
-              name: /insights-common/ibutsu.configmap.yaml
-            - configMapRef:
-              name: /insights-common/iqe-ibutsu-vault.secret.yaml
+            - secretRef:
+              name: iqe-ibutsu-token
           env:
           - name: ENV_FOR_DYNACONF
             value: ${ENV_FOR_DYNACONF}
@@ -94,6 +92,24 @@ objects:
               secretKeyRef:
                 key: secretId
                 name: iqe-vault
+                optional: true
+          - name: IBUTSU_MODE
+            valueFrom:
+              secretKeyRef:
+                key: IBUTSU_MODE
+                name: ibutsu-config
+                optional: true
+          - name: IBUTSU_PROJECT
+            valueFrom:
+              secretKeyRef:
+                key: IBUTSU_PROJECT
+                name: ibutsu-config
+                optional: true
+          - name: IBUTSU_SOURCE
+            valueFrom:
+              secretKeyRef:
+                key: IBUTSU_SOURCE
+                name: ibutsu-config
                 optional: true
           resources:
             limits:
