@@ -39,6 +39,11 @@ objects:
           imagePullPolicy: Always
           args:
           - run
+          envFrom:
+            - configMapRef:
+              name: /insights-common/ibutsu.configmap.yaml
+            - configMapRef:
+              name: /insights-common/iqe-ibutsu-vault.secret.yaml
           env:
           - name: ENV_FOR_DYNACONF
             value: ${ENV_FOR_DYNACONF}
@@ -156,7 +161,7 @@ parameters:
 - name: IQE_TEST_IMPORTANCE
   value: 'critical'
 - name: IQE_SEL_IMAGE
-  value: 'quay.io/redhatqe/selenium-standalone:latest'
+  value: 'selenium/standalone-chrome:latest'
 - name: IQE_CPU_LIMIT
   value: "1"
 - name: IQE_MEMORY_LIMIT
