@@ -95,13 +95,13 @@ objects:
                 optional: true
           - name: IBUTSU_MODE
             valueFrom:
-              secretKeyRef:
+              configMapRef:
                 key: IBUTSU_MODE
                 name: ibutsu-config
                 optional: true
           - name: IBUTSU_PROJECT
             valueFrom:
-              secretKeyRef:
+              configMapRef:
                 key: IBUTSU_PROJECT
                 name: ibutsu-config
                 optional: true
