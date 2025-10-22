@@ -47,7 +47,7 @@ objects:
             value: ${ENV_FOR_DYNACONF}
           - name: DYNACONF_MAIN__use_beta
             value: ${USE_BETA}
-          - name: IQE_IBUTSU_SOURCE
+          - name: IBUTSU_SOURCE
             value: digital-roadmap-e2e-${IMAGE_TAG}-${UID}
           - name: IQE_PLUGINS
             value: ${IQE_PLUGINS}
@@ -105,11 +105,11 @@ objects:
                 key: IBUTSU_PROJECT
                 name: ibutsu-config
                 optional: true
-          - name: IBUTSU_SOURCE
+          - name: IBUTSU_TOKEN
             valueFrom:
               secretKeyRef:
-                key: IBUTSU_SOURCE
-                name: ibutsu-config
+                key: IBUTSU_TOKEN
+                name: iqe-ibutsu-token
                 optional: true
           resources:
             limits:
