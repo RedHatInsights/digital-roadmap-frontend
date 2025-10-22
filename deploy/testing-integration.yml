@@ -105,12 +105,6 @@ objects:
                 key: IBUTSU_PROJECT
                 name: ibutsu-config
                 optional: true
-          - name: IBUTSU_TOKEN
-            valueFrom:
-              secretKeyRef:
-                key: IBUTSU_TOKEN
-                name: iqe-ibutsu-token
-                optional: true
           resources:
             limits:
               cpu: ${IQE_CPU_LIMIT}
