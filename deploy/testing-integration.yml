@@ -42,6 +42,10 @@ objects:
           envFrom:
             - secretRef:
               name: iqe-ibutsu-token
+              optional: true
+            - configMapRef:
+              name: ibutsu-config
+              optional: true
           env:
           - name: ENV_FOR_DYNACONF
             value: ${ENV_FOR_DYNACONF}
@@ -92,18 +96,6 @@ objects:
               secretKeyRef:
                 key: secretId
                 name: iqe-vault
-                optional: true
-          - name: IBUTSU_MODE
-            valueFrom:
-              secretKeyRef:
-                key: IBUTSU_MODE
-                name: ibutsu-config
-                optional: true
-          - name: IBUTSU_PROJECT
-            valueFrom:
-              secretKeyRef:
-                key: IBUTSU_PROJECT
-                name: ibutsu-config
                 optional: true
           resources:
             limits:
