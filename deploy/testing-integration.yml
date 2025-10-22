@@ -44,8 +44,8 @@ objects:
               name: iqe-ibutsu-token
               optional: true
             - configMapRef:
-                name: ibutsu-config
-                optional: true
+              name: ibutsu-config
+              optional: true
           env:
           - name: ENV_FOR_DYNACONF
             value: ${ENV_FOR_DYNACONF}
