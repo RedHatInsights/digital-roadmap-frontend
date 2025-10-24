@@ -17,7 +17,7 @@ objects:
         iqe-env: ${ENV_FOR_DYNACONF}
         iqe-plugin: ${IQE_PLUGINS}
     spec:
-      backoffLimit: 2
+      backoffLimit: 2 # We can make it 0 as well...just saying..
       template:
         spec:
           imagePullSecrets:
@@ -41,11 +41,11 @@ objects:
                 - run
               envFrom:
                 - secretRef:
-                  name: iqe-ibutsu-token
-                  optional: true
+                    name: iqe-ibutsu-token
+                    optional: true
                 - configMapRef:
-                  name: ibutsu-config
-                  optional: true
+                    name: ibutsu-config
+                    optional: true
               env:
                 - name: ENV_FOR_DYNACONF
                   value: ${ENV_FOR_DYNACONF}
@@ -186,3 +186,4 @@ parameters:
     value: 'false'
   - name: SE_NODE_MAX_SESSIONS
     value: '2'
+
