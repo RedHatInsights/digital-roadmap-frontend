@@ -302,17 +302,17 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   const getPackageColor = (datum: string) => {
     switch (datum) {
       case 'Retired':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--danger-color--100 */;
+        return 'var(--pf-t--global--color--status--danger--default)';
       case 'Support ends within 3 months':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */;
+        return 'var(--pf-t--global--color--status--warning--default)';
       case 'Support ends within 6 months':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */;
+        return 'var(--pf-t--global--color--status--warning--default)';
       case 'Not installed':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--palette--blue-200 */;
+        return 'var(--pf-t--global--icon--color--severity--none--default)';
       case 'Supported':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */;
+        return 'var(--pf-t--global--color--status--success--default)';
       case 'Upcoming release':
-        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--palette--blue-100 */;
+        return 'var(--pf-t--global--color--nonstatus--blue--default)';
       default:
         return 'var(--pf-v5-global--default-color--300)';
     }

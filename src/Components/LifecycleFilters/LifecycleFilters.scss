@@ -12,24 +12,101 @@
 .drf-lifecycle__filters-toolbar-group {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+
+  > .pf-v6-c-toolbar__group {
+    &:first-child {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    &:last-child {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+    }
+  }
 }
 
 .drf-lifecycle__filter-formgroup {
   display: flex;
-  gap: 16px;
-  align-items: baseline;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 0;
+  flex-direction: row;
 
   label {
     color: #000;
     font-size: 16px;
     font-weight: 500;
     line-height: 24px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    margin-right: 4px;
   }
+
+  // Ensure form controls are inline with label
+  > *:not(label) {
+    margin-bottom: 0;
+  }
+}
+
+// Ensure toolbar items are properly aligned
+.drf-lifecycle__filters-toolbar-group .pf-v6-c-toolbar__item {
+  align-items: center;
+  display: flex;
+}
+
+// Override PatternFly's default FormGroup block layout
+.drf-lifecycle__filter-formgroup.pf-v6-c-form__group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+
+  .pf-v6-c-form__group-label {
+    margin-bottom: 0;
+    margin-right: 4px;
+  }
+
+  .pf-v6-c-form__group-control {
+    margin-bottom: 0;
+  }
+}
+
+// Reduce spacing between search input and View section
+.drf-lifecycle__filters-toolbar-group .pf-v6-c-toolbar__item:first-child {
+  margin-right: 8px;
 }
 
 .drf-lifecycle__filter-download {
   padding-left: 8px;
   padding-right: 8px;
+}
+
+// Style the rolling application streams alert
+.drf-lifecycle__filters-toolbar .pf-v6-c-alert.pf-m-info.pf-m-inline {
+  background-color: #E7F1FA;
+  border: 1px solid #2B9AF3;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 16px 0;
+
+  .pf-v6-c-alert__title {
+    font-size: 14px;
+    font-weight: 400;
+    color: #151515;
+  }
+
+  .pf-v6-c-alert__icon {
+    color: #2B9AF3;
+  }
 }
 
 /* Fix toggle group height consistency */
@@ -38,12 +115,12 @@
   align-items: stretch; /* This ensures all children have the same height */
 }
 
-.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__item {
+.drf-lifecycle__toggle-group-fixed-height .pf-v6-c-toggle-group__item {
   flex: 1; /* makes all items equally wide */
   display: flex;
 }
 
-.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__button {
+.drf-lifecycle__toggle-group-fixed-height .pf-v6-c-toggle-group__button {
   min-height: 40px; /* Set a minimum height for consistency */
   height: 100%;
   display: flex;
