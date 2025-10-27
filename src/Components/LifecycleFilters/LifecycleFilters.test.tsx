@@ -182,6 +182,7 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
       rhelVersionOptions={['RHEL 8', 'RHEL 9']}
+      initialRhelVersions={['RHEL 8']}
       onRhelVersionsChange={onRhelVersionsChange}
       onFilterFieldChange={jest.fn()}
     />
@@ -193,7 +194,6 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
     await userEvent.click(await within(fieldMenu).findByText(/^Version$/i));
   });
 
-  // Rerender with new dynamic option "RHEL 11"
   rerender(
     <LifecycleFilters
       nameFilter=""
@@ -209,7 +209,8 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
       selectedViewFilter="installed-only"
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
-      rhelVersionOptions={['RHEL 8', 'RHEL 9', 'RHEL 11']}
+      rhelVersionOptions={['RHEL 9', 'RHEL 11']}
+      initialRhelVersions={['RHEL 8']}
       onRhelVersionsChange={onRhelVersionsChange}
       onFilterFieldChange={jest.fn()}
     />
@@ -218,7 +219,8 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
   // Open versions menu and verify the new option appears
   const versionsMenu = await openMenuByButton(/RHEL versions/i);
   expect(await within(versionsMenu).findByText('RHEL 11')).toBeInTheDocument();
-  expect(onRhelVersionsChange).toHaveBeenCalled();
+
+  await waitFor(() => expect(onRhelVersionsChange).toHaveBeenCalled());
 });
 
 it('keeps both Name keyword and Version selection effective when switching Field', async () => {

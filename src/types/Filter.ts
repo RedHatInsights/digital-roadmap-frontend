@@ -7,6 +7,7 @@ export interface Filter {
   release?: string[];
   date?: string;
   chartOrder?: string;
+  versions?: string[];
 }
 
 export interface ExtendedFilter extends Filter {

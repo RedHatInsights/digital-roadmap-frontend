@@ -52,6 +52,7 @@ interface LifecycleFiltersProps {
   onFilterFieldChange?: (field: 'Name' | 'Version') => void;
   onRhelVersionsChange?: (versions: string[]) => void;
   rhelVersionOptions: string[];
+  initialRhelVersions?: string[];
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -73,6 +74,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   onFilterFieldChange,
   onRhelVersionsChange,
   rhelVersionOptions,
+  initialRhelVersions,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -82,6 +84,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const [isRhelSelectOpen, setIsRhelSelectOpen] = React.useState(false);
 
   const [selectedRhelVersions, setSelectedRhelVersions] = React.useState<string[]>([]);
+  const hasInitializedFromParent = React.useRef(false);
   // Handle switching to "all" view when sort is set to "Systems"
   React.useEffect(() => {
     if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
@@ -95,10 +98,19 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     setSelectedRhelVersions((prev) => {
       const intersection = prev.filter((v) => rhelVersionOptions.includes(v));
       const next = intersection.length > 0 ? intersection : [];
-      onRhelVersionsChange?.(next);
+      if (hasInitializedFromParent.current && JSON.stringify(prev) !== JSON.stringify(next)) {
+        onRhelVersionsChange?.(next);
+      }
       return next;
     });
   }, [rhelVersionOptions]);
+
+  React.useEffect(() => {
+    if (!initialRhelVersions) return;
+    const valid = initialRhelVersions.filter((v) => rhelVersionOptions.includes(v));
+    setSelectedRhelVersions(valid);
+    hasInitializedFromParent.current = true;
+  }, [initialRhelVersions, rhelVersionOptions]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
@@ -206,10 +218,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   };
 
   const handleClearAllFilters = () => {
+    setNameFilter('');
     const none: string[] = [];
     setSelectedRhelVersions(none);
     onRhelVersionsChange?.(none);
-    setNameFilter('');
     onFilterFieldChange?.('Name');
   };
 

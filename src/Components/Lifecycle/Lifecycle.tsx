@@ -91,7 +91,21 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
 
+  const [isSwitchingView, setIsSwitchingView] = useState(false);
+
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
+
+  const updateFilters = React.useCallback(
+    (patch: Partial<ExtendedFilter> | ((prev: ExtendedFilter) => Partial<ExtendedFilter>)) => {
+      setFilters((prev) => {
+        const partial = typeof patch === 'function' ? patch(prev) : patch;
+        const next = { ...prev, ...partial };
+        setSearchParams(buildURL(next));
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
 
   const getDefaultOrder = (sortBy: string): 'asc' | 'desc' => {
     switch (sortBy) {
@@ -239,20 +253,18 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const updateSortedData = (value: string, order?: string) => {
     const effectiveOrder = order ?? chartDirection ?? getDefaultOrder(value);
-    const newFilters = structuredClone(filters);
-    newFilters['chartSortBy'] = value;
-    newFilters['chartOrder'] = effectiveOrder;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
-    setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue, effectiveOrder));
+    updateFilters({ chartSortBy: value, chartOrder: effectiveOrder });
+    const baseData =
+      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+
+    setFilteredChartData(filterChartData(baseData, value, lifecycleDropdownValue, effectiveOrder));
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
+    setIsSwitchingView(true);
+
     setLifecycleDropdownValue(value);
-    const newFilters = structuredClone(filters);
-    newFilters['lifecycleDropdown'] = value;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ lifecycleDropdown: value });
 
     // Check if current view has data for the new dropdown
     const hasDataForCurrentView = checkDataAvailability(value, selectedViewFilter);
@@ -265,10 +277,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (!hasDataForCurrentView && selectedViewFilter !== 'all') {
       effectiveViewFilter = 'all';
       setSelectedViewFilter('all');
-      const updatedFilters = structuredClone(newFilters);
-      updatedFilters.viewFilter = 'all';
-      setFilters(updatedFilters);
-      setSearchParams(buildURL(updatedFilters));
+      updateFilters({ viewFilter: 'all' });
     }
 
     // Filter from the full dataset each time
@@ -300,6 +309,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     // Apply all current filters to the new data, including name filter
     applyAllActiveFilters(dataToProcess, value, nameFilter);
+    // Schedule resetting the "isSwitchingView" flag after the current microtask to avoid rendering conflicts.
+    queueMicrotask?.(() => setIsSwitchingView(false));
   };
 
   // First data fetch - called only once
@@ -373,10 +384,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       if (!hasDataForCurrentView && currentViewFilter !== 'all') {
         currentViewFilter = 'all';
         setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
+        updateFilters({ viewFilter: 'all' });
       }
 
       // Directly use the fetched data to process without relying on state updates
@@ -430,7 +438,31 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       // calculate RHEL version options
       const dynOptions = computeRhelVersionOptions(allSystems);
       setRhelVersionOptions(dynOptions);
-      setRhelVersionFilter([]);
+      if (versionsParam) {
+        const wanted = decodeURIComponent(versionsParam)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const valid = wanted.filter((v) => dynOptions.includes(v));
+        setRhelVersionFilter(valid);
+
+        updateFilters({ versions: valid });
+
+        const finalDropdownValue = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
+        if (finalDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          const dataForSystems = updateLifecycleData(systemData);
+          setSystemLifecycleChanges(dataForSystems);
+          applyAllActiveFilters(
+            dataForSystems,
+            RHEL_SYSTEMS_DROPDOWN_VALUE,
+            nameQueryParam ?? '',
+            'Version',
+            valid
+          );
+        }
+      } else {
+        setRhelVersionFilter([]);
+      }
 
       // Set noDataAvailable based on the actual dropdown that will be used
       // Pass the actual fetched data instead of relying on state
@@ -544,10 +576,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       if (!hasRelevantData && viewFilter !== 'all') {
         effectiveViewFilter = 'all';
         setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
+        updateFilters({ viewFilter: 'all' });
       }
 
       // Process cached data with the explicit viewFilter
@@ -560,10 +589,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const handleViewFilterChange = (filter: string) => {
     console.log('View filter changed to:', filter);
     setSelectedViewFilter(filter);
-    const newFilters = structuredClone(filters) as ExtendedFilter;
-    newFilters.viewFilter = filter;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ viewFilter: filter });
 
     // Process data with the new filter - no API call
     fetchData(filter);
@@ -633,6 +659,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const sortByParam = searchParams.get('chartSortBy');
   const orderParam = searchParams.get('chartOrder');
   const viewFilterParam = searchParams.get('viewFilter');
+  const versionsParam = searchParams.get('versions');
 
   useEffect(() => {
     // Get view filter from URL params
@@ -657,12 +684,42 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     else if (sortByParam) initialFilters.chartOrder = getDefaultOrder(sortByParam);
     else initialFilters.chartOrder = getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE);
 
+    if (versionsParam) {
+      const raw = decodeURIComponent(versionsParam)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      initialFilters.versions = raw;
+      setRhelVersionFilter(raw);
+    }
+
     initialFilters.viewFilter = initialViewFilter;
-    setFilters(initialFilters);
+
+    setLifecycleDropdownValue(initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE);
+    setChartSortByValue(initialFilters.chartSortBy ?? DEFAULT_CHART_SORTBY_VALUE);
+    setChartDirection(initialFilters.chartOrder as 'asc' | 'desc');
+
+    updateFilters(() => initialFilters);
 
     // Initialize data with the correct view filter
     fetchData(initialViewFilter);
   }, []);
+
+  useEffect(() => {
+    const dataSource =
+      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+
+    applyAllActiveFilters(dataSource, lifecycleDropdownValue, nameFilter, filterField, rhelVersionFilter);
+  }, [
+    nameFilter,
+    rhelVersionFilter,
+    filterField,
+    lifecycleDropdownValue,
+    systemLifecycleChanges,
+    appLifecycleChanges,
+    chartSortByValue,
+    chartDirection,
+  ]);
 
   // Update resetDataFiltering to use the properly filtered app data
   const resetDataFiltering = () => {
@@ -727,17 +784,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (name !== '') {
       doFilter(name);
     } else {
-      resetDataFiltering();
+      const dataSource =
+        lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+      applyAllActiveFilters(dataSource, lifecycleDropdownValue, '', filterField, rhelVersionFilter);
     }
   };
 
   const onNameFilterChange = (name: string) => {
     setNameFilter(name);
     filterData(name);
-    const newFilters = structuredClone(filters);
-    newFilters['name'] = name;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ name });
   };
 
   // Update resetFilters to use cached data
@@ -749,6 +805,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setSelectedViewFilter('installed-only');
     setFilterField('Name');
     setRhelVersionFilter([]);
+    setSearchParams(buildURL(DEFAULT_FILTERS));
 
     // Use the cached data
     fetchData('installed-only');
@@ -892,23 +949,61 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   );
 
   const renderContent = () => {
+    const LoadingComponent = (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+
     if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;
+    }
+
+    // Resolve the runtime crash issue caused by React temporarily rendering mismatched data types
+    // during view switching between AppStreams and RHEL Systems.
+    const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+
+    const dataReadyForView =
+      filteredChartData.length > 0 &&
+      (isSystemsView
+        ? (filteredChartData as SystemLifecycleChanges[]).some((d) => typeof d.major === 'number')
+        : (filteredChartData as Stream[]).some((d) => typeof d.os_major === 'number'));
+
+    if (isSwitchingView) {
+      return LoadingComponent;
+    }
+
+    if (!dataReadyForView) {
+      return isLoading ? (
+        LoadingComponent
+      ) : (
+        <LifecycleTable
+          data={filteredTableData}
+          viewFilter={selectedViewFilter}
+          chartSortByValue={chartSortByValue}
+          orderingValue={chartDirection}
+          updateChartSortValue={setOrderingStates}
+          lifecycleDropdownValue={lifecycleDropdownValue}
+        />
+      );
     }
 
     // TEMPORARY BUG FIX for https://github.com/patternfly/patternfly-react/issues/11724
     // RSPEED-908
     // When the bug is resolved, this can be removed and just the LifecycleChart component can be used.
     // NOTE: The LifecycleChartSystem is 1:1 copy of LifecycleChart, just needs to be separated.
-    const ChartComponent =
-      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
+    const ChartComponent = isSystemsView ? LifecycleChartSystem : LifecycleChart;
 
     // Create a copy of filteredChartData and reverse it
     const reversedChartData = [...filteredChartData].reverse() as typeof filteredChartData;
 
     return (
       <>
-        <ChartComponent lifecycleData={reversedChartData} viewFilter={selectedViewFilter} />
+        <ChartComponent
+          key={`${isSystemsView ? 'systems' : 'apps'}:${selectedViewFilter}:${chartSortByValue}`}
+          lifecycleData={reversedChartData}
+          viewFilter={selectedViewFilter}
+        />
         <LifecycleTable
           data={filteredChartData}
           viewFilter={selectedViewFilter}
@@ -944,17 +1039,10 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             }}
             onRhelVersionsChange={(versions) => {
               setRhelVersionFilter(versions);
-              if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-                applyAllActiveFilters(
-                  systemLifecycleChanges,
-                  lifecycleDropdownValue,
-                  nameFilter,
-                  filterField,
-                  versions
-                );
-              }
+              updateFilters({ versions });
             }}
             rhelVersionOptions={rhelVersionOptions}
+            initialRhelVersions={rhelVersionFilter}
           />
           {renderContent()}
         </Card>
