@@ -163,7 +163,7 @@ parameters:
   - name: IQE_TEST_IMPORTANCE
     value: 'critical'
   - name: IQE_SEL_IMAGE
-    value: 'quay.io/cloudservices/selenium-standalone-chrome:136.0-20250828'
+    value: 'quay.io/cloudservices/selenium-standalone-chrome:latest'
   - name: IQE_CPU_LIMIT
     value: '1'
   - name: IQE_MEMORY_LIMIT
