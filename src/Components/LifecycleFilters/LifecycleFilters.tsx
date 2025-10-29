@@ -53,6 +53,7 @@ interface LifecycleFiltersProps {
   onRhelVersionsChange?: (versions: string[]) => void;
   rhelVersionOptions: string[];
   initialRhelVersions?: string[];
+  resetOnAppsSwitchKey?: number;
 }
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -75,6 +76,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   onRhelVersionsChange,
   rhelVersionOptions,
   initialRhelVersions,
+  resetOnAppsSwitchKey,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -111,6 +113,15 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     setSelectedRhelVersions(valid);
     hasInitializedFromParent.current = true;
   }, [initialRhelVersions, rhelVersionOptions]);
+
+  React.useEffect(() => {
+    if (resetOnAppsSwitchKey === undefined) return;
+    setNameFilter('');
+    setSelectedRhelVersions([]);
+    onRhelVersionsChange?.([]);
+    setSelectedField('Name');
+    onFilterFieldChange?.('Name');
+  }, [resetOnAppsSwitchKey]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;

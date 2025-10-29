@@ -92,8 +92,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
 
   const [isSwitchingView, setIsSwitchingView] = useState(false);
+  const [appsSwitchKey, setAppsSwitchKey] = useState(0);
 
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
+
+  const isAppStream = (v: string) =>
+    v === DEFAULT_DROPDOWN_VALUE || v === RHEL_8_STREAMS_DROPDOWN_VALUE || v === RHEL_10_STREAMS_DROPDOWN_VALUE;
 
   const updateFilters = React.useCallback(
     (patch: Partial<ExtendedFilter> | ((prev: ExtendedFilter) => Partial<ExtendedFilter>)) => {
@@ -263,6 +267,19 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const onLifecycleDropdownSelect = (value: string) => {
     setIsSwitchingView(true);
 
+    const wasAppStream = isAppStream(lifecycleDropdownValue);
+    const willBeAppStream = isAppStream(value);
+    const isCrossDomainSwitch = wasAppStream !== willBeAppStream;
+
+    if (isCrossDomainSwitch) {
+      setNameFilter('');
+      setRhelVersionFilter([]);
+      setFilterField('Name');
+      updateFilters({ name: '', versions: [] });
+
+      setAppsSwitchKey((k) => k + 1);
+    }
+
     setLifecycleDropdownValue(value);
     updateFilters({ lifecycleDropdown: value });
 
@@ -307,8 +324,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
     }
 
-    // Apply all current filters to the new data, including name filter
-    applyAllActiveFilters(dataToProcess, value, nameFilter);
+    // Apply all current filters to the new data
+    applyAllActiveFilters(dataToProcess, value, isCrossDomainSwitch ? '' : nameFilter);
+
     // Schedule resetting the "isSwitchingView" flag after the current microtask to avoid rendering conflicts.
     queueMicrotask?.(() => setIsSwitchingView(false));
   };
@@ -1043,6 +1061,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             }}
             rhelVersionOptions={rhelVersionOptions}
             initialRhelVersions={rhelVersionFilter}
+            resetOnAppsSwitchKey={appsSwitchKey}
           />
           {renderContent()}
         </Card>
