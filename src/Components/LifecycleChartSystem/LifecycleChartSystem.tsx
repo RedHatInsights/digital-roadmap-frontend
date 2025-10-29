@@ -565,6 +565,30 @@ End: ${formatDate(tooltipData.y)}`;
 
   const leftPadding = calculateLeftPadding();
 
+  // constants
+  const YEAR_TICK_MIN_PX = 50;
+  const RIGHT_PADDING_PX = 75;
+
+  // Nice step for positive integer years
+  const niceStep = (min: number) => [1, 2, 5, 10].find((s) => min <= s) ?? Math.ceil(min / 10) * 10;
+
+  const allYearDates = React.useMemo(() => Object.values(years).sort((a, b) => +a - +b), [years]);
+
+  const yearTickValues = React.useMemo(() => {
+    if (!allYearDates.length) return [];
+
+    const plotWidth = Math.max(chartDimensions.width - leftPadding - RIGHT_PADDING_PX, 100);
+
+    const firstYear = allYearDates[0].getUTCFullYear();
+    const lastYear = allYearDates[allYearDates.length - 1].getUTCFullYear();
+    const totalYears = lastYear - firstYear + 1;
+
+    const rawStep = Math.ceil((totalYears * YEAR_TICK_MIN_PX) / plotWidth);
+    const step = niceStep(rawStep);
+
+    return allYearDates.filter((d) => (d.getUTCFullYear() - firstYear) % step === 0);
+  }, [allYearDates, chartDimensions.width, leftPadding]);
+
   // Explicitly return the entire div structure
   return (
     <div className="drf-lifecycle__chart" tabIndex={0} ref={chartContainerRef} style={{ position: 'relative' }}>
@@ -607,21 +631,21 @@ End: ${formatDate(tooltipData.y)}`;
         width={chartDimensions.width}
       >
         {/*X axis with date timeline for the bottom of the chart */}
-        {Object.values(years).length > 0 && (
+        {yearTickValues.length > 0 && (
           <ChartAxis
             dependentAxis
             showGrid
-            tickValues={Object.values(years)}
+            tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}
         {/*X axis with date timeline for the top of the chart */}
-        {Object.values(years).length > 0 && (
+        {yearTickValues.length > 0 && (
           <ChartAxis
             dependentAxis
             showGrid={false}
             orientation="top"
-            tickValues={Object.values(years)}
+            tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
           />
         )}

@@ -87,7 +87,29 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
+  const [filterField, setFilterField] = useState<'Name' | 'Version'>('Name');
+  const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
+  const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
+
+  const [isSwitchingView, setIsSwitchingView] = useState(false);
+  const [appsSwitchKey, setAppsSwitchKey] = useState(0);
+
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
+
+  const isAppStream = (v: string) =>
+    v === DEFAULT_DROPDOWN_VALUE || v === RHEL_8_STREAMS_DROPDOWN_VALUE || v === RHEL_10_STREAMS_DROPDOWN_VALUE;
+
+  const updateFilters = React.useCallback(
+    (patch: Partial<ExtendedFilter> | ((prev: ExtendedFilter) => Partial<ExtendedFilter>)) => {
+      setFilters((prev) => {
+        const partial = typeof patch === 'function' ? patch(prev) : patch;
+        const next = { ...prev, ...partial };
+        setSearchParams(buildURL(next));
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
 
   const getDefaultOrder = (sortBy: string): 'asc' | 'desc' => {
     switch (sortBy) {
@@ -104,6 +126,17 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       default:
         return 'asc';
     }
+  };
+
+  // Helper function to generate the RHEL version filter array
+  const computeRhelVersionOptions = (systems: SystemLifecycleChanges[]): string[] => {
+    const majors = new Set<number>();
+    systems.forEach((s) => {
+      if (typeof s.major === 'number') majors.add(s.major);
+    });
+    return Array.from(majors)
+      .sort((a, b) => a - b)
+      .map((m) => `RHEL ${m}`);
   };
 
   // Helper function to determine if data is available for current dropdown and view
@@ -163,25 +196,38 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const applyAllActiveFilters = (
     data: Stream[] | SystemLifecycleChanges[],
     dropdownValue: string,
-    nameFilterValue: string
+    nameFilterValue: string,
+    field: 'Name' | 'Version' = filterField,
+    versions: string[] = rhelVersionFilter
   ) => {
     let filteredData = data;
 
-    if (nameFilterValue) {
-      if (
-        [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(
-          dropdownValue
-        )
-      ) {
-        filteredData = (data as Stream[]).filter((datum) => {
-          return `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase());
-        });
-      } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-        filteredData = (data as SystemLifecycleChanges[]).filter((datum) => {
+    if (
+      [DEFAULT_DROPDOWN_VALUE, RHEL_8_STREAMS_DROPDOWN_VALUE, RHEL_10_STREAMS_DROPDOWN_VALUE].includes(
+        dropdownValue
+      )
+    ) {
+      if (nameFilterValue) {
+        filteredData = (data as Stream[]).filter((datum) =>
+          `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase())
+        );
+      }
+    } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      let result = data as SystemLifecycleChanges[];
+
+      if (Array.isArray(versions) && versions.length > 0) {
+        result = result.filter((datum) => versions.includes(`RHEL ${datum.major}`));
+      }
+
+      if (nameFilterValue) {
+        const keyword = nameFilterValue.toLowerCase();
+        result = result.filter((datum) => {
           const product = `${datum.name.toLowerCase()} ${datum.major}.${datum.minor}`;
           return product.includes(nameFilterValue.toLowerCase());
         });
       }
+
+      filteredData = result;
     }
 
     setFilteredTableData(filteredData);
@@ -211,20 +257,31 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const updateSortedData = (value: string, order?: string) => {
     const effectiveOrder = order ?? chartDirection ?? getDefaultOrder(value);
-    const newFilters = structuredClone(filters);
-    newFilters['chartSortBy'] = value;
-    newFilters['chartOrder'] = effectiveOrder;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
-    setFilteredChartData(filterChartData(filteredChartData, value, lifecycleDropdownValue, effectiveOrder));
+    updateFilters({ chartSortBy: value, chartOrder: effectiveOrder });
+    const baseData =
+      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+
+    setFilteredChartData(filterChartData(baseData, value, lifecycleDropdownValue, effectiveOrder));
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
+    setIsSwitchingView(true);
+
+    const wasAppStream = isAppStream(lifecycleDropdownValue);
+    const willBeAppStream = isAppStream(value);
+    const isCrossDomainSwitch = wasAppStream !== willBeAppStream;
+
+    if (isCrossDomainSwitch) {
+      setNameFilter('');
+      setRhelVersionFilter([]);
+      setFilterField('Name');
+      updateFilters({ name: '', versions: [] });
+
+      setAppsSwitchKey((k) => k + 1);
+    }
+
     setLifecycleDropdownValue(value);
-    const newFilters = structuredClone(filters);
-    newFilters['lifecycleDropdown'] = value;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ lifecycleDropdown: value });
 
     // Check if current view has data for the new dropdown
     const hasDataForCurrentView = checkDataAvailability(value, selectedViewFilter);
@@ -237,10 +294,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (!hasDataForCurrentView && selectedViewFilter !== 'all') {
       effectiveViewFilter = 'all';
       setSelectedViewFilter('all');
-      const updatedFilters = structuredClone(newFilters);
-      updatedFilters.viewFilter = 'all';
-      setFilters(updatedFilters);
-      setSearchParams(buildURL(updatedFilters));
+      updateFilters({ viewFilter: 'all' });
     }
 
     // Filter from the full dataset each time
@@ -270,8 +324,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       }
     }
 
-    // Apply all current filters to the new data, including name filter
-    applyAllActiveFilters(dataToProcess, value, nameFilter);
+    // Apply all current filters to the new data
+    applyAllActiveFilters(dataToProcess, value, isCrossDomainSwitch ? '' : nameFilter);
+
+    // Schedule resetting the "isSwitchingView" flag after the current microtask to avoid rendering conflicts.
+    queueMicrotask?.(() => setIsSwitchingView(false));
   };
 
   // First data fetch - called only once
@@ -345,10 +402,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       if (!hasDataForCurrentView && currentViewFilter !== 'all') {
         currentViewFilter = 'all';
         setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
+        updateFilters({ viewFilter: 'all' });
       }
 
       // Directly use the fetched data to process without relying on state updates
@@ -397,6 +451,35 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         // If no data, at least initialize empty arrays
         setFilteredTableData([]);
         setFilteredChartData([]);
+      }
+
+      // calculate RHEL version options
+      const dynOptions = computeRhelVersionOptions(allSystems);
+      setRhelVersionOptions(dynOptions);
+      if (versionsParam) {
+        const wanted = decodeURIComponent(versionsParam)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const valid = wanted.filter((v) => dynOptions.includes(v));
+        setRhelVersionFilter(valid);
+
+        updateFilters({ versions: valid });
+
+        const finalDropdownValue = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
+        if (finalDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          const dataForSystems = updateLifecycleData(systemData);
+          setSystemLifecycleChanges(dataForSystems);
+          applyAllActiveFilters(
+            dataForSystems,
+            RHEL_SYSTEMS_DROPDOWN_VALUE,
+            nameQueryParam ?? '',
+            'Version',
+            valid
+          );
+        }
+      } else {
+        setRhelVersionFilter([]);
       }
 
       // Set noDataAvailable based on the actual dropdown that will be used
@@ -511,10 +594,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       if (!hasRelevantData && viewFilter !== 'all') {
         effectiveViewFilter = 'all';
         setSelectedViewFilter('all');
-        const newFilters = structuredClone(filters) as ExtendedFilter;
-        newFilters.viewFilter = 'all';
-        setFilters(newFilters);
-        setSearchParams(buildURL(newFilters));
+        updateFilters({ viewFilter: 'all' });
       }
 
       // Process cached data with the explicit viewFilter
@@ -527,10 +607,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const handleViewFilterChange = (filter: string) => {
     console.log('View filter changed to:', filter);
     setSelectedViewFilter(filter);
-    const newFilters = structuredClone(filters) as ExtendedFilter;
-    newFilters.viewFilter = filter;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ viewFilter: filter });
 
     // Process data with the new filter - no API call
     fetchData(filter);
@@ -600,6 +677,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const sortByParam = searchParams.get('chartSortBy');
   const orderParam = searchParams.get('chartOrder');
   const viewFilterParam = searchParams.get('viewFilter');
+  const versionsParam = searchParams.get('versions');
 
   useEffect(() => {
     // Get view filter from URL params
@@ -624,12 +702,42 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     else if (sortByParam) initialFilters.chartOrder = getDefaultOrder(sortByParam);
     else initialFilters.chartOrder = getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE);
 
+    if (versionsParam) {
+      const raw = decodeURIComponent(versionsParam)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      initialFilters.versions = raw;
+      setRhelVersionFilter(raw);
+    }
+
     initialFilters.viewFilter = initialViewFilter;
-    setFilters(initialFilters);
+
+    setLifecycleDropdownValue(initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE);
+    setChartSortByValue(initialFilters.chartSortBy ?? DEFAULT_CHART_SORTBY_VALUE);
+    setChartDirection(initialFilters.chartOrder as 'asc' | 'desc');
+
+    updateFilters(() => initialFilters);
 
     // Initialize data with the correct view filter
     fetchData(initialViewFilter);
   }, []);
+
+  useEffect(() => {
+    const dataSource =
+      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+
+    applyAllActiveFilters(dataSource, lifecycleDropdownValue, nameFilter, filterField, rhelVersionFilter);
+  }, [
+    nameFilter,
+    rhelVersionFilter,
+    filterField,
+    lifecycleDropdownValue,
+    systemLifecycleChanges,
+    appLifecycleChanges,
+    chartSortByValue,
+    chartDirection,
+  ]);
 
   // Update resetDataFiltering to use the properly filtered app data
   const resetDataFiltering = () => {
@@ -694,17 +802,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (name !== '') {
       doFilter(name);
     } else {
-      resetDataFiltering();
+      const dataSource =
+        lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
+      applyAllActiveFilters(dataSource, lifecycleDropdownValue, '', filterField, rhelVersionFilter);
     }
   };
 
   const onNameFilterChange = (name: string) => {
     setNameFilter(name);
     filterData(name);
-    const newFilters = structuredClone(filters);
-    newFilters['name'] = name;
-    setFilters(newFilters);
-    setSearchParams(buildURL(newFilters));
+    updateFilters({ name });
   };
 
   // Update resetFilters to use cached data
@@ -714,6 +821,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setChartSortByValue(DEFAULT_CHART_SORTBY_VALUE);
     setFilters(DEFAULT_FILTERS);
     setSelectedViewFilter('installed-only');
+    setFilterField('Name');
+    setRhelVersionFilter([]);
+    setSearchParams(buildURL(DEFAULT_FILTERS));
 
     // Use the cached data
     fetchData('installed-only');
@@ -857,23 +967,61 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   );
 
   const renderContent = () => {
+    const LoadingComponent = (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+
     if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;
+    }
+
+    // Resolve the runtime crash issue caused by React temporarily rendering mismatched data types
+    // during view switching between AppStreams and RHEL Systems.
+    const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+
+    const dataReadyForView =
+      filteredChartData.length > 0 &&
+      (isSystemsView
+        ? (filteredChartData as SystemLifecycleChanges[]).some((d) => typeof d.major === 'number')
+        : (filteredChartData as Stream[]).some((d) => typeof d.os_major === 'number'));
+
+    if (isSwitchingView) {
+      return LoadingComponent;
+    }
+
+    if (!dataReadyForView) {
+      return isLoading ? (
+        LoadingComponent
+      ) : (
+        <LifecycleTable
+          data={filteredTableData}
+          viewFilter={selectedViewFilter}
+          chartSortByValue={chartSortByValue}
+          orderingValue={chartDirection}
+          updateChartSortValue={setOrderingStates}
+          lifecycleDropdownValue={lifecycleDropdownValue}
+        />
+      );
     }
 
     // TEMPORARY BUG FIX for https://github.com/patternfly/patternfly-react/issues/11724
     // RSPEED-908
     // When the bug is resolved, this can be removed and just the LifecycleChart component can be used.
     // NOTE: The LifecycleChartSystem is 1:1 copy of LifecycleChart, just needs to be separated.
-    const ChartComponent =
-      lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? LifecycleChartSystem : LifecycleChart;
+    const ChartComponent = isSystemsView ? LifecycleChartSystem : LifecycleChart;
 
     // Create a copy of filteredChartData and reverse it
     const reversedChartData = [...filteredChartData].reverse() as typeof filteredChartData;
 
     return (
       <>
-        <ChartComponent lifecycleData={reversedChartData} viewFilter={selectedViewFilter} />
+        <ChartComponent
+          key={`${isSystemsView ? 'systems' : 'apps'}:${selectedViewFilter}:${chartSortByValue}`}
+          lifecycleData={reversedChartData}
+          viewFilter={selectedViewFilter}
+        />
         <LifecycleTable
           data={filteredChartData}
           viewFilter={selectedViewFilter}
@@ -904,6 +1052,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}
+            onFilterFieldChange={(field) => {
+              setFilterField(field);
+            }}
+            onRhelVersionsChange={(versions) => {
+              setRhelVersionFilter(versions);
+              updateFilters({ versions });
+            }}
+            rhelVersionOptions={rhelVersionOptions}
+            initialRhelVersions={rhelVersionFilter}
+            resetOnAppsSwitchKey={appsSwitchKey}
           />
           {renderContent()}
         </Card>
