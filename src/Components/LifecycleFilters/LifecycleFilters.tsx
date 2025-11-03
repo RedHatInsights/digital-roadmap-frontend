@@ -16,8 +16,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
-  ToolbarChip,
-  ToolbarChipGroup,
   ToolbarContent,
   ToolbarFilter,
   ToolbarGroup,
@@ -219,10 +217,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     });
   };
 
-  const handleDeleteRhelChip = (_category: string | ToolbarChipGroup, chip: ToolbarChip | string) => {
-    const label = typeof chip === 'string' ? chip : String((chip as any)?.key ?? '');
+  const handleDeleteRhelChip = (_category: any, label: any) => {
+    const labelStr = typeof label === 'string' ? label : String(label?.key ?? '');
     setSelectedRhelVersions((prev) => {
-      const next = prev.filter((v) => v !== label);
+      const next = prev.filter((v) => v !== labelStr);
       onRhelVersionsChange?.(next);
       return next;
     });
@@ -282,7 +280,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             {isSystemsView && (
               <ToolbarFilter
                 categoryName="Field"
-                deleteChipGroup={(_category: string | ToolbarChipGroup) => {
+                deleteLabelGroup={() => {
                   setSelectedField('Name');
                 }}
               >
@@ -314,11 +312,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               </ToolbarFilter>
             )}
 
-            {/* Name input chips & control */}
+            {/* Name input labels & control */}
             <ToolbarFilter
               categoryName="Name"
-              chips={isSystemsView && nameFilter ? [nameFilter] : undefined}
-              deleteChip={(_category: string | ToolbarChipGroup, _chip: string | ToolbarChip) => {
+              labels={isSystemsView && nameFilter ? [nameFilter] : undefined}
+              deleteLabel={() => {
                 setNameFilter('');
               }}
             >
@@ -335,9 +333,9 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
 
             <ToolbarFilter
               categoryName="RHEL versions"
-              chips={isSystemsView ? selectedRhelVersions : undefined}
-              deleteChip={handleDeleteRhelChip}
-              deleteChipGroup={(_category: string | ToolbarChipGroup) => {
+              labels={isSystemsView ? selectedRhelVersions : undefined}
+              deleteLabel={handleDeleteRhelChip}
+              deleteLabelGroup={() => {
                 setSelectedRhelVersions([]);
                 onRhelVersionsChange?.([]);
               }}
