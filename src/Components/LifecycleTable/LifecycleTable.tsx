@@ -368,7 +368,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                   </Button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '32px' }}>
                   {repo.count}
                 </div>
               )}

@@ -32,10 +32,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -69,6 +66,10 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
+
+  React.useEffect(() => {
+    console.log(lifecycleData);
+  }, [lifecycleData]);
 
   const formatChartData = (
     name: string,
@@ -307,11 +308,11 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
       case 'Support ends within 6 months':
         return 'var(--pf-t--global--color--status--warning--default)';
       case 'Not installed':
-        return 'var(--pf-t--global--color--nonstatus--blue--default)';
+        return 'var(--pf-t--global--icon--color--severity--none--default)';
       case 'Supported':
         return 'var(--pf-t--global--color--status--success--default)';
       case 'Upcoming release':
-        return 'var(--pf-t--global--color--status--info--default)';
+        return 'var(--pf-t--global--color--nonstatus--blue--default)';
       default:
         return 'var(--pf-v5-global--default-color--300)';
     }
