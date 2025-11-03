@@ -58,11 +58,11 @@ const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ supportStatus }) => {
   switch (supportStatus) {
     case 'Supported':
-      return <CheckCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */ />;
+      return <CheckCircleIcon color="var(--pf-t--global--color--status--success--default)" />;
     case 'Near retirement':
-      return <ExclamationTriangleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */ />;
+      return <ExclamationTriangleIcon color="var(--pf-t--global--color--status--warning--default)" />;
     case 'Retired':
-      return <ExclamationCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--danger-color--100 */ />;
+      return <ExclamationCircleIcon color="var(--pf-t--global--color--status--danger--default)" />;
     default:
       return null;
   }
