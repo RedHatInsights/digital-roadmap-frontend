@@ -32,10 +32,7 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
-  lifecycleData,
-  viewFilter,
-}: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,
@@ -69,6 +66,10 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const dataType = checkDataType(lifecycleData);
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
+
+  React.useEffect(() => {
+    console.log(lifecycleData);
+  }, [lifecycleData]);
 
   const formatChartData = (
     name: string,
