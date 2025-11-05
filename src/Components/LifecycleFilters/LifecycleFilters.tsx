@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import {
   Alert,
   Badge,
@@ -17,7 +17,6 @@ import {
   ToggleGroupItem,
   Toolbar,
   ToolbarContent,
-  ToolbarFilter,
   ToolbarGroup,
   ToolbarItem,
   Tooltip,
@@ -217,15 +216,6 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     });
   };
 
-  const handleDeleteRhelChip = (_category: any, label: any) => {
-    const labelStr = typeof label === 'string' ? label : String(label?.key ?? '');
-    setSelectedRhelVersions((prev) => {
-      const next = prev.filter((v) => v !== labelStr);
-      onRhelVersionsChange?.(next);
-      return next;
-    });
-  };
-
   const handleClearAllFilters = () => {
     setNameFilter('');
     const none: string[] = [];
@@ -240,7 +230,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     <div className="drf-lifecycle__filters">
       <Toolbar className="drf-lifecycle__filters-toolbar" clearAllFilters={handleClearAllFilters}>
         <ToolbarGroup>
-          <ToolbarItem >
+          <ToolbarItem>
             <Form>
               <FormGroup className="drf-lifecycle__filter-formgroup" label="Life Cycle" fieldId="data-switcher">
                 <LifecycleDropdown
@@ -275,15 +265,10 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
           </Alert>
         )}
 
-        <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
-          <ToolbarGroup variant="filter-group">
-            {isSystemsView && (
-              <ToolbarFilter
-                categoryName="Field"
-                deleteLabelGroup={() => {
-                  setSelectedField('Name');
-                }}
-              >
+        {isSystemsView ? (
+          <ToolbarContent className="drf-lifecycle__filters-toolbar-group" key="systems-view">
+            <ToolbarGroup variant="filter-group">
+              <ToolbarItem>
                 <Select
                   aria-label="Select filter field"
                   isOpen={isFieldOpen}
@@ -309,72 +294,56 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                     ))}
                   </SelectList>
                 </Select>
-              </ToolbarFilter>
-            )}
+              </ToolbarItem>
 
-            {/* Name input labels & control */}
-            <ToolbarFilter
-              categoryName="Name"
-              labels={isSystemsView && nameFilter ? [nameFilter] : undefined}
-              deleteLabel={() => {
-                setNameFilter('');
-              }}
-            >
               {selectedField === 'Name' && (
-                <SearchInput
-                  placeholder="Filter by name"
-                  value={nameFilter}
-                  onChange={(_event, value) => setNameFilter(value)}
-                  onClear={() => setNameFilter('')}
-                  aria-label="Filter by name"
-                />
+                <ToolbarItem>
+                  <SearchInput
+                    placeholder="Filter by name"
+                    value={nameFilter}
+                    onChange={(_event, value) => setNameFilter(value)}
+                    onClear={() => setNameFilter('')}
+                    aria-label="Filter by name"
+                  />
+                </ToolbarItem>
               )}
-            </ToolbarFilter>
 
-            <ToolbarFilter
-              categoryName="RHEL versions"
-              labels={isSystemsView ? selectedRhelVersions : undefined}
-              deleteLabel={handleDeleteRhelChip}
-              deleteLabelGroup={() => {
-                setSelectedRhelVersions([]);
-                onRhelVersionsChange?.([]);
-              }}
-            >
               {selectedField === 'Version' && (
-                <Select
-                  aria-label="RHEL version"
-                  isOpen={isRhelSelectOpen}
-                  onOpenChange={(open) => setIsRhelSelectOpen(open)}
-                  onSelect={onRhelSelect}
-                  selected={selectedRhelVersions}
-                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      onClick={() => setIsRhelSelectOpen((p) => !p)}
-                      isExpanded={isRhelSelectOpen}
-                    >
-                      RHEL versions
-                      {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
-                    </MenuToggle>
-                  )}
-                  role="menu"
-                >
-                  <SelectList>
-                    {rhelVersionOptions.map((opt) => (
-                      <SelectOption
-                        key={opt}
-                        value={opt}
-                        hasCheckbox
-                        isSelected={selectedRhelVersions.includes(opt)}
+                <ToolbarItem>
+                  <Select
+                    aria-label="RHEL version"
+                    isOpen={isRhelSelectOpen}
+                    onOpenChange={(open) => setIsRhelSelectOpen(open)}
+                    onSelect={onRhelSelect}
+                    selected={selectedRhelVersions}
+                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={() => setIsRhelSelectOpen((p) => !p)}
+                        isExpanded={isRhelSelectOpen}
                       >
-                        {opt}
-                      </SelectOption>
-                    ))}
-                  </SelectList>
-                </Select>
+                        RHEL versions
+                        {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
+                      </MenuToggle>
+                    )}
+                    role="menu"
+                  >
+                    <SelectList>
+                      {rhelVersionOptions.map((opt) => (
+                        <SelectOption
+                          key={opt}
+                          value={opt}
+                          hasCheckbox
+                          isSelected={selectedRhelVersions.includes(opt)}
+                        >
+                          {opt}
+                        </SelectOption>
+                      ))}
+                    </SelectList>
+                  </Select>
+                </ToolbarItem>
               )}
-            </ToolbarFilter>
-          </ToolbarGroup>
+            </ToolbarGroup>
 
           <ToolbarGroup>
             <ToolbarItem>
@@ -430,7 +399,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
               </Tooltip>
             </ToolbarItem>
           </ToolbarGroup>
-          <ToolbarGroup className="pf-v5-u-ml-auto-on-lg pf-v5-u-ml-0">
+          <ToolbarGroup className="drf-lifecycle__sort-group">
             <ToolbarItem>
               <Form>
                 <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
@@ -465,6 +434,111 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarContent>
+        ) : (
+          <ToolbarContent className="drf-lifecycle__filters-toolbar-group" key="appstreams-view">
+            <ToolbarGroup variant="filter-group">
+              {/* Name input for AppStreams view */}
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name"
+                  value={nameFilter}
+                  onChange={(_event, value) => setNameFilter(value)}
+                  onClear={() => setNameFilter('')}
+                  aria-label="Filter by name"
+                />
+              </ToolbarItem>
+            </ToolbarGroup>
+
+            <ToolbarGroup>
+              <ToolbarItem>
+                <Form>
+                  <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
+                    <ToggleGroup
+                      className="drf-lifecycle__toggle-group-fixed-height"
+                      aria-label="Whether installed and related, only installed or all items are displayed"
+                    >
+                      <Tooltip
+                        content={getTooltipContent('installed-and-related')}
+                        trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                      >
+                        <ToggleGroupItem
+                          text="Installed and related"
+                          buttonId="installed-and-related"
+                          isSelected={selectedViewFilter === 'installed-and-related'}
+                          isDisabled={noDataAvailable}
+                          onChange={handleItemClick}
+                        />
+                      </Tooltip>
+                      <Tooltip
+                        content={getTooltipContent('installed-only')}
+                        trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                      >
+                        <ToggleGroupItem
+                          text="Installed only"
+                          buttonId="installed-only"
+                          isSelected={selectedViewFilter === 'installed-only'}
+                          isDisabled={noDataAvailable}
+                          onChange={handleItemClick}
+                        />
+                      </Tooltip>
+                      <ToggleGroupItem
+                        text="All"
+                        buttonId="all"
+                        isSelected={selectedViewFilter === 'all'}
+                        onChange={handleItemClick}
+                      />
+                    </ToggleGroup>
+                  </FormGroup>
+                </Form>
+              </ToolbarItem>
+              <ToolbarItem>
+                <Tooltip content="Export data">
+                  <Button
+                    className="drf-lifecycle__filter-download"
+                    variant="plain"
+                    aria-label="Download visible dataset as CSV"
+                    onClick={downloadCSV}
+                    icon={<ExportIcon />}
+                  ></Button>
+                </Tooltip>
+              </ToolbarItem>
+            </ToolbarGroup>
+            <ToolbarGroup className="drf-lifecycle__sort-group">
+              <ToolbarItem>
+                <Form>
+                  <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                    <Dropdown
+                      isOpen={isOpen}
+                      onSelect={onSelect}
+                      onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+                      toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                        <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                          {selectedChartSortBy}
+                        </MenuToggle>
+                      )}
+                      ouiaId="Value to sort lifecycle chart by"
+                      shouldFocusToggleOnSelect
+                      popperProps={{ enableFlip: true, position: 'end' }}
+                    >
+                      <DropdownList>
+                        {DROPDOWN_ITEMS.map((item) => (
+                          <DropdownItem
+                            value={item}
+                            key={item}
+                            isSelected={item === selectedChartSortBy}
+                            isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
+                          >
+                            {item}
+                          </DropdownItem>
+                        ))}
+                      </DropdownList>
+                    </Dropdown>
+                  </FormGroup>
+                </Form>
+              </ToolbarItem>
+            </ToolbarGroup>
+          </ToolbarContent>
+        )}
       </Toolbar>
       {selectedViewFilter === 'all' && !noDataAvailable && (
         <Alert

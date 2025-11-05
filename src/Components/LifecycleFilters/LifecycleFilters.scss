@@ -12,48 +12,18 @@
 .drf-lifecycle__filters-toolbar-group {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 24px;
-
-  > .pf-v6-c-toolbar__group {
-    &:first-child {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    &:last-child {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-    }
-  }
 }
 
 .drf-lifecycle__filter-formgroup {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 0;
-  flex-direction: row;
+  gap: 16px;
+  align-items: baseline;
 
   label {
     color: #000;
     font-size: 16px;
     font-weight: 500;
     line-height: 24px;
-    margin-bottom: 0;
-    white-space: nowrap;
-    margin-right: 4px;
-  }
-
-  // Ensure form controls are inline with label
-  > *:not(label) {
-    margin-bottom: 0;
   }
 }
 
