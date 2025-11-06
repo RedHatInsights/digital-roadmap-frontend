@@ -57,11 +57,11 @@ jest.mock('react-router-dom', () => ({
 
 // Mock PatternFly components that might cause issues
 jest.mock('@patternfly/react-component-groups/dist/dynamic/ErrorState', () => {
-  return function MockErrorState({ errorTitle, errorDescription }: any) {
+  return function MockErrorState({ titleText, bodyText, errorTitle, errorDescription }: any) {
     return (
       <div data-testid="error-state">
-        <div data-testid="error-title">{errorTitle}</div>
-        <div data-testid="error-description">{errorDescription}</div>
+        <div data-testid="error-title">{titleText || errorTitle}</div>
+        <div data-testid="error-description">{bodyText || errorDescription}</div>
       </div>
     );
   };
@@ -349,12 +349,13 @@ describe('UpcomingTab', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // Find the radio input directly by ID
-      const deprecationRadio = document.getElementById('filter-by-type-deprecation');
-      expect(deprecationRadio).toBeInTheDocument();
+      // Find the clickable button in the deprecations card by its aria-labelledby
+      const deprecationsButtons = screen.getAllByRole('button');
+      const deprecationsButton = deprecationsButtons.find(btn => btn.getAttribute('aria-labelledby') === 'Deprecations');
+      expect(deprecationsButton).toBeInTheDocument();
 
       await act(async () => {
-        fireEvent.click(deprecationRadio!);
+        fireEvent.click(deprecationsButton!);
       });
 
       // URL should be updated with type filter
@@ -372,11 +373,13 @@ describe('UpcomingTab', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // Find the radio input for changes and trigger it
-      const changeRadio = document.getElementById('filter-by-type-change');
+      // Find the clickable button in the changes card by its aria-labelledby
+      const changesButtons = screen.getAllByRole('button');
+      const changesButton = changesButtons.find(btn => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
 
       await act(async () => {
-        fireEvent.click(changeRadio!);
+        fireEvent.click(changesButton!);
       });
 
       await waitFor(() => {
@@ -393,11 +396,13 @@ describe('UpcomingTab', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // Find the radio input for additions and trigger it
-      const additionRadio = document.getElementById('filter-by-type-addition');
+      // Find the clickable button in the additions card by its aria-labelledby
+      const additionsButtons = screen.getAllByRole('button');
+      const additionsButton = additionsButtons.find(btn => btn.getAttribute('aria-labelledby') === 'filter-by-type-3');
+      expect(additionsButton).toBeInTheDocument();
 
       await act(async () => {
-        fireEvent.click(additionRadio!);
+        fireEvent.click(additionsButton!);
       });
 
       await waitFor(() => {

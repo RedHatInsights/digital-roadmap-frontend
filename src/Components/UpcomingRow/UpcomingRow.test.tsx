@@ -152,8 +152,8 @@ describe('TableRow', () => {
 
       const iconContainer = screen.getByText('Deprecation').closest('.drf-lifecycle__upcoming-row-type');
       expect(iconContainer).toBeInTheDocument();
-      // PatternFly Icon component should be rendered
-      expect(iconContainer?.querySelector('.pf-v5-c-icon')).toBeInTheDocument();
+      // PatternFly Icon component should be rendered (check for SVG)
+      expect(iconContainer?.querySelector('svg')).toBeInTheDocument();
     });
 
     test('renders warning icon for Change type', () => {
@@ -164,7 +164,7 @@ describe('TableRow', () => {
 
       const iconContainer = screen.getByText('Change').closest('.drf-lifecycle__upcoming-row-type');
       expect(iconContainer).toBeInTheDocument();
-      expect(iconContainer?.querySelector('.pf-v5-c-icon')).toBeInTheDocument();
+      expect(iconContainer?.querySelector('svg')).toBeInTheDocument();
     });
 
     test('renders info icon for Addition type', () => {
@@ -175,7 +175,7 @@ describe('TableRow', () => {
 
       const iconContainer = screen.getByText('Addition').closest('.drf-lifecycle__upcoming-row-type');
       expect(iconContainer).toBeInTheDocument();
-      expect(iconContainer?.querySelector('.pf-v5-c-icon')).toBeInTheDocument();
+      expect(iconContainer?.querySelector('svg')).toBeInTheDocument();
     });
 
     test('renders info icon for Enhancement type', () => {
@@ -186,7 +186,7 @@ describe('TableRow', () => {
 
       const iconContainer = screen.getByText('Enhancement').closest('.drf-lifecycle__upcoming-row-type');
       expect(iconContainer).toBeInTheDocument();
-      expect(iconContainer?.querySelector('.pf-v5-c-icon')).toBeInTheDocument();
+      expect(iconContainer?.querySelector('svg')).toBeInTheDocument();
     });
   });
 
