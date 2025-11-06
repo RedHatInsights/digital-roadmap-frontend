@@ -191,7 +191,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <div style={{ width: '210px', marginLeft: '5px' }}>
+      <div style={{ width: '210px', marginLeft: '22px' }}>
         <TextInputGroup>
           <TextInputGroupMain
             icon={<SearchIcon />}

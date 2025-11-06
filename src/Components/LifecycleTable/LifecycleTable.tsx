@@ -257,16 +257,26 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       titles={{
         paginationAriaLabel: `${variant} pagination`,
       }}
+      style={variant === 'bottom' ? {
+        marginLeft: 'auto',
+        marginRight: '58px',
+        marginTop: '16px',
+        marginBottom: '16px',
+        border: 'none',
+        background: 'transparent'
+      } : undefined}
     />
   );
 
-  const toolbar = (
+  const topPagination = (
     <Toolbar>
-      <ToolbarContent>
+      <ToolbarContent style={{ justifyContent: 'flex-end', marginRight: '58px' }}>
         <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );
+
+  const bottomPagination = buildPagination('bottom', false);
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
     sortBy: {
@@ -555,7 +565,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
 
   return (
     <>
-      {toolbar}
+      {topPagination}
       <Table aria-label={getAriaLabel()} variant="compact">
         <Thead>{renderHeaders(viewFilter)}</Thead>
         <Tbody>{renderData()}</Tbody>
@@ -567,7 +577,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
       />
-      {buildPagination('bottom', false)}
+      {bottomPagination}
     </>
   );
 };
