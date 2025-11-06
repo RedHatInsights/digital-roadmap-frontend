@@ -2,20 +2,20 @@ import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemsDetail } from '../../types/SystemsDetail';
 import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  ModalVariant,
-  Pagination,
-  PaginationVariant,
-  TextInputGroup,
-  TextInputGroupMain,
-  TextInputGroupUtilities,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
+	Button,
+	Pagination,
+	PaginationVariant,
+	TextInputGroup,
+	TextInputGroupMain,
+	TextInputGroupUtilities,
+	Toolbar,
+	ToolbarContent,
+	ToolbarItem,
+	Modal,
+	ModalBody,
+	ModalFooter,
+	ModalHeader,
+	ModalVariant
 } from '@patternfly/react-core';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
