@@ -1,15 +1,15 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
-	Chart,
-	ChartAxis,
-	ChartBar,
-	ChartGroup,
-	ChartLegend,
-	ChartLine,
-	ChartTooltip,
-	getInteractiveLegendEvents,
-	getInteractiveLegendItemStyles
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartGroup,
+  ChartLegend,
+  ChartLine,
+  ChartTooltip,
+  getInteractiveLegendEvents,
+  getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts/victory';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -32,7 +32,10 @@ interface ChartDataObject {
   name: string;
 }
 
-const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilter }: LifecycleChartProps) => {
+const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
+  lifecycleData,
+  viewFilter,
+}: LifecycleChartProps) => {
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = React.useState({
     width: 900,

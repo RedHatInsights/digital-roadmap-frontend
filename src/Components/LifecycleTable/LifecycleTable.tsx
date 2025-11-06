@@ -257,14 +257,18 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       titles={{
         paginationAriaLabel: `${variant} pagination`,
       }}
-      style={variant === 'bottom' ? {
-        marginLeft: 'auto',
-        marginRight: '58px',
-        marginTop: '16px',
-        marginBottom: '16px',
-        border: 'none',
-        background: 'transparent'
-      } : undefined}
+      style={
+        variant === 'bottom'
+          ? {
+              marginLeft: 'auto',
+              marginRight: '58px',
+              marginTop: '16px',
+              marginBottom: '16px',
+              border: 'none',
+              background: 'transparent',
+            }
+          : undefined
+      }
     />
   );
 
@@ -456,7 +460,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span>{APP_LIFECYCLE_COLUMN_NAMES.release}</span>
         <Popover headerContent="Initial release" bodyContent={popoverContent} position="right">
-          <Button icon={<OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />}
+          <Button
+            icon={<OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />}
             variant="plain"
             aria-label="More info for initial release"
             style={{
@@ -468,7 +473,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}
-           />
+          />
         </Popover>
       </div>
     );

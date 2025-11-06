@@ -351,7 +351,9 @@ describe('UpcomingTab', () => {
 
       // Find the clickable button in the deprecations card by its aria-labelledby
       const deprecationsButtons = screen.getAllByRole('button');
-      const deprecationsButton = deprecationsButtons.find(btn => btn.getAttribute('aria-labelledby') === 'Deprecations');
+      const deprecationsButton = deprecationsButtons.find(
+        (btn) => btn.getAttribute('aria-labelledby') === 'Deprecations'
+      );
       expect(deprecationsButton).toBeInTheDocument();
 
       await act(async () => {
@@ -375,7 +377,9 @@ describe('UpcomingTab', () => {
 
       // Find the clickable button in the changes card by its aria-labelledby
       const changesButtons = screen.getAllByRole('button');
-      const changesButton = changesButtons.find(btn => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      const changesButton = changesButtons.find(
+        (btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2'
+      );
       expect(changesButton).toBeInTheDocument();
 
       await act(async () => {
@@ -398,7 +402,9 @@ describe('UpcomingTab', () => {
 
       // Find the clickable button in the additions card by its aria-labelledby
       const additionsButtons = screen.getAllByRole('button');
-      const additionsButton = additionsButtons.find(btn => btn.getAttribute('aria-labelledby') === 'filter-by-type-3');
+      const additionsButton = additionsButtons.find(
+        (btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-3'
+      );
       expect(additionsButton).toBeInTheDocument();
 
       await act(async () => {
