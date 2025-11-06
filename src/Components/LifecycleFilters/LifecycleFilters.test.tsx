@@ -268,9 +268,7 @@ it('keeps both Name keyword and Version selection effective when switching Field
   // Switch back to Name (disambiguate multiple "Version" buttons)
   const versionButtons = screen.getAllByRole('button', { name: /^Version$/i });
   const fieldVersionToggle = versionButtons.find(
-    (el) =>
-      (el.classList.contains('pf-v6-c-menu-toggle') || el.classList.contains('pf-v5-c-menu-toggle')) &&
-      el.textContent?.trim() === 'Version'
+    (el) => (el.classList.contains('pf-v6-c-menu-toggle') || el.classList.contains('pf-v5-c-menu-toggle')) && el.textContent?.trim() === 'Version'
   );
   if (!fieldVersionToggle) throw new Error('Field toggle button (Version) not found');
   await userEvent.click(fieldVersionToggle);
