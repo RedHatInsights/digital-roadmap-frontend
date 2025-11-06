@@ -11,10 +11,10 @@ import {
 	Toolbar,
 	ToolbarContent,
 	ToolbarItem,
-	Modal /* data-codemods */,
-	ModalBody /* data-codemods */,
-	ModalFooter /* data-codemods */,
-	ModalHeader /* data-codemods */,
+	Modal,
+	ModalBody,
+	ModalFooter,
+	ModalHeader,
 	ModalVariant
 } from '@patternfly/react-core';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
