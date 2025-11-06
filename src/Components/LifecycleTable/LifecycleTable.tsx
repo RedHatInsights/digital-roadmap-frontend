@@ -257,18 +257,14 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       titles={{
         paginationAriaLabel: `${variant} pagination`,
       }}
-      style={
-        variant === 'bottom'
-          ? {
-              marginLeft: 'auto',
-              marginRight: '58px',
-              marginTop: '16px',
-              marginBottom: '16px',
-              border: 'none',
-              background: 'transparent',
-            }
-          : undefined
-      }
+      style={variant === 'bottom' ? {
+        marginLeft: 'auto',
+        marginRight: '58px',
+        marginTop: '16px',
+        marginBottom: '16px',
+        border: 'none',
+        background: 'transparent'
+      } : undefined}
     />
   );
 
