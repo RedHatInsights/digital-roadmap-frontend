@@ -70,10 +70,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const updatedLifecycleData: ChartDataObject[][] = [];
   const years: { [key: string]: Date } = {};
 
-  React.useEffect(() => {
-    console.log(lifecycleData);
-  }, [lifecycleData]);
-
   const formatChartData = (
     name: string,
     startDate: string,
