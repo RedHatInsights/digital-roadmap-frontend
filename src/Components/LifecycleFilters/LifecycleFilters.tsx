@@ -11,8 +11,11 @@ import {
   SelectOption,
   Toolbar,
   ToolbarContent,
+  ToolbarFilter,
   ToolbarGroup,
   ToolbarItem,
+  ToolbarToggleGroup,
+  Tooltip,
 } from '@patternfly/react-core';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
@@ -207,6 +210,19 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     });
   };
 
+  const deleteRhelVersion = (_category: string | unknown, chip: string | unknown) => {
+    setSelectedRhelVersions((prev) => {
+      const next = prev.filter((v) => v !== String(chip));
+      onRhelVersionsChange?.(next);
+      return next;
+    });
+  };
+
+  const deleteAllRhelVersions = () => {
+    setSelectedRhelVersions([]);
+    onRhelVersionsChange?.([]);
+  };
+
   const handleClearAllFilters = () => {
     setNameFilter('');
     const none: string[] = [];
@@ -236,7 +252,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       onSelect={onRhelSelect}
       selected={selectedRhelVersions}
       toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-        <MenuToggle ref={toggleRef} onClick={() => setIsRhelSelectOpen((p) => !p)} isExpanded={isRhelSelectOpen}>
+        <MenuToggle
+          ref={toggleRef}
+          onClick={() => setIsRhelSelectOpen((p) => !p)}
+          isExpanded={isRhelSelectOpen}
+        >
           RHEL versions
           {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
         </MenuToggle>
@@ -295,83 +315,56 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         {isSystemsView ? (
           <div className="drf-lifecycle__toolbar-row">
             <ToolbarContent className="drf-lifecycle__filters-toolbar-group" key="systems-view">
-              <ToolbarGroup>
-                <ToolbarItem>
-                  <Select
-                    aria-label="Select filter field"
-                    isOpen={isFieldOpen}
-                    onOpenChange={(open) => setIsFieldOpen(open)}
-                    onSelect={onFieldSelect}
-                    selected={selectedField}
-                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        onClick={onFieldToggle}
-                        isExpanded={isFieldOpen}
-                        icon={<FilterIcon />}
-                      >
-                        {selectedField}
-                      </MenuToggle>
-                    )}
-                  >
-                    <SelectList>
-                      {FIELD_OPTIONS.map((opt) => (
-                        <SelectOption key={opt} value={opt} isSelected={selectedField === opt}>
-                          {opt}
-                        </SelectOption>
-                      ))}
-                    </SelectList>
-                  </Select>
-                </ToolbarItem>
-
-                {selectedField === 'Name' && (
-                  <ToolbarItem>
-                    <SearchInput
-                      placeholder="Filter by name"
-                      value={nameFilter}
-                      onChange={(_event, value) => setNameFilter(value)}
-                      onClear={() => setNameFilter('')}
-                      aria-label="Filter by name"
-                    />
-                  </ToolbarItem>
-                )}
-
-                {selectedField === 'Version' && (
+              <ToolbarToggleGroup toggleIcon={<FilterIcon />} breakpoint="xl">
+                <ToolbarGroup variant="filter-group">
                   <ToolbarItem>
                     <Select
-                      aria-label="RHEL version"
-                      isOpen={isRhelSelectOpen}
-                      onOpenChange={(open) => setIsRhelSelectOpen(open)}
-                      onSelect={onRhelSelect}
-                      selected={selectedRhelVersions}
+                      aria-label="Select filter field"
+                      isOpen={isFieldOpen}
+                      onOpenChange={(open) => setIsFieldOpen(open)}
+                      onSelect={onFieldSelect}
+                      selected={selectedField}
                       toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
                         <MenuToggle
                           ref={toggleRef}
-                          onClick={() => setIsRhelSelectOpen((p) => !p)}
-                          isExpanded={isRhelSelectOpen}
+                          onClick={onFieldToggle}
+                          isExpanded={isFieldOpen}
+                          icon={<FilterIcon />}
                         >
-                          RHEL versions
-                          {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
+                          {selectedField}
                         </MenuToggle>
                       )}
-                      role="menu"
                     >
                       <SelectList>
-                        {rhelVersionOptions.map((opt) => (
-                          <SelectOption
-                            key={opt}
-                            value={opt}
-                            hasCheckbox
-                            isSelected={selectedRhelVersions.includes(opt)}
-                          >
+                        {FIELD_OPTIONS.map((opt) => (
+                          <SelectOption key={opt} value={opt} isSelected={selectedField === opt}>
                             {opt}
                           </SelectOption>
                         ))}
                       </SelectList>
                     </Select>
                   </ToolbarItem>
-                )}
 
+                  <ToolbarFilter
+                    labels={nameFilter !== '' ? [nameFilter] : ([] as string[])}
+                    deleteLabel={() => setNameFilter('')}
+                    deleteLabelGroup={() => setNameFilter('')}
+                    categoryName="Name"
+                  >
+                    {selectedField === 'Name' ? nameSearchInput : <div style={{ display: 'none' }} />}
+                  </ToolbarFilter>
+
+                  <ToolbarFilter
+                    labels={selectedRhelVersions}
+                    deleteLabel={deleteRhelVersion}
+                    deleteLabelGroup={deleteAllRhelVersions}
+                    categoryName="Version"
+                  >
+                    {selectedField === 'Version' ? rhelVersionSelect : <div style={{ display: 'none' }} />}
+                  </ToolbarFilter>
+                </ToolbarGroup>
+              </ToolbarToggleGroup>
+              <ToolbarGroup>
                 <ToolbarItem>
                   <Form>
                     <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
