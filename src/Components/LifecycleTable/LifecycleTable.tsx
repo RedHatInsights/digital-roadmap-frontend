@@ -62,7 +62,7 @@ const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ suppor
     case 'Near retirement':
       return <ExclamationTriangleIcon color="var(--pf-t--global--color--status--warning--default)" />;
     case 'Retired':
-      return <ExclamationCircleIcon color="var(--pf-t--global--color--status--danger--default)" />;
+      return <ExclamationCircleIcon color="var(--pf-t--global--color--status--danger--100)" />;
     default:
       return null;
   }

@@ -301,7 +301,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const getPackageColor = (datum: string) => {
     switch (datum) {
       case 'Retired':
-        return 'var(--pf-t--global--color--status--danger--default)';
+        return 'var(--pf-t--global--color--status--danger--100)';
       case 'Support ends within 3 months':
         return 'var(--pf-t--global--color--status--warning--default)';
       case 'Support ends within 6 months':
