@@ -89,24 +89,6 @@
   padding-right: 8px;
 }
 
-// Style the rolling application streams alert
-.drf-lifecycle__filters-toolbar .pf-v6-c-alert.pf-m-info.pf-m-inline {
-  background-color: #E7F1FA;
-  border: 1px solid #2B9AF3;
-  border-radius: 4px;
-  padding: 12px 16px;
-  margin: 16px 0;
-
-  .pf-v6-c-alert__title {
-    font-size: 14px;
-    font-weight: 400;
-    color: #151515;
-  }
-
-  .pf-v6-c-alert__icon {
-    color: #2B9AF3;
-  }
-}
 
 /* Fix toggle group height consistency */
 .drf-lifecycle__toggle-group-fixed-height {
