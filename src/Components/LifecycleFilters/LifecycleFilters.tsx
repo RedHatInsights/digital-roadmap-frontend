@@ -351,7 +351,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                     deleteLabelGroup={() => setNameFilter('')}
                     categoryName="Name"
                   >
-                    {selectedField === 'Name' ? nameSearchInput : <div style={{ display: 'none' }} />}
+                    <div style={{ display: selectedField === 'Name' ? 'block' : 'none' }}>{nameSearchInput}</div>
                   </ToolbarFilter>
 
                   <ToolbarFilter
@@ -360,7 +360,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                     deleteLabelGroup={deleteAllRhelVersions}
                     categoryName="Version"
                   >
-                    {selectedField === 'Version' ? rhelVersionSelect : <div style={{ display: 'none' }} />}
+                    <div style={{ display: selectedField === 'Version' ? 'block' : 'none' }}>{rhelVersionSelect}</div>
                   </ToolbarFilter>
                 </ToolbarGroup>
               </ToolbarToggleGroup>
