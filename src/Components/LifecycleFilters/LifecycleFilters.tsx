@@ -378,32 +378,38 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                           content={getTooltipContent('installed-and-related')}
                           trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                         >
-                          <ToggleGroupItem
-                            text="Installed and related"
-                            buttonId="installed-and-related"
-                            isSelected={selectedViewFilter === 'installed-and-related'}
-                            isDisabled={noDataAvailable}
-                            onChange={handleItemClick}
-                          />
+                          <div>
+                            <ToggleGroupItem
+                              text="Installed and related"
+                              buttonId="installed-and-related"
+                              isSelected={selectedViewFilter === 'installed-and-related'}
+                              isDisabled={noDataAvailable}
+                              onChange={handleItemClick}
+                            />
+                          </div>
                         </Tooltip>
                         <Tooltip
                           content={getTooltipContent('installed-only')}
                           trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                         >
+                          <div>
+                            <ToggleGroupItem
+                              text="Installed only"
+                              buttonId="installed-only"
+                              isSelected={selectedViewFilter === 'installed-only'}
+                              isDisabled={noDataAvailable}
+                              onChange={handleItemClick}
+                            />
+                          </div>
+                        </Tooltip>
+                        <div>
                           <ToggleGroupItem
-                            text="Installed only"
-                            buttonId="installed-only"
-                            isSelected={selectedViewFilter === 'installed-only'}
-                            isDisabled={noDataAvailable}
+                            text="All"
+                            buttonId="all"
+                            isSelected={selectedViewFilter === 'all'}
                             onChange={handleItemClick}
                           />
-                        </Tooltip>
-                        <ToggleGroupItem
-                          text="All"
-                          buttonId="all"
-                          isSelected={selectedViewFilter === 'all'}
-                          onChange={handleItemClick}
-                        />
+                        </div>
                       </ToggleGroup>
                     </FormGroup>
                   </Form>
@@ -484,32 +490,38 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
                           content={getTooltipContent('installed-and-related')}
                           trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                         >
-                          <ToggleGroupItem
-                            text="Installed and related"
-                            buttonId="installed-and-related"
-                            isSelected={selectedViewFilter === 'installed-and-related'}
-                            isDisabled={noDataAvailable}
-                            onChange={handleItemClick}
-                          />
+                          <div>
+                            <ToggleGroupItem
+                              text="Installed and related"
+                              buttonId="installed-and-related"
+                              isSelected={selectedViewFilter === 'installed-and-related'}
+                              isDisabled={noDataAvailable}
+                              onChange={handleItemClick}
+                            />
+                          </div>
                         </Tooltip>
                         <Tooltip
                           content={getTooltipContent('installed-only')}
                           trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                         >
+                          <div>
+                            <ToggleGroupItem
+                              text="Installed only"
+                              buttonId="installed-only"
+                              isSelected={selectedViewFilter === 'installed-only'}
+                              isDisabled={noDataAvailable}
+                              onChange={handleItemClick}
+                            />
+                          </div>
+                        </Tooltip>
+                        <div>
                           <ToggleGroupItem
-                            text="Installed only"
-                            buttonId="installed-only"
-                            isSelected={selectedViewFilter === 'installed-only'}
-                            isDisabled={noDataAvailable}
+                            text="All"
+                            buttonId="all"
+                            isSelected={selectedViewFilter === 'all'}
                             onChange={handleItemClick}
                           />
-                        </Tooltip>
-                        <ToggleGroupItem
-                          text="All"
-                          buttonId="all"
-                          isSelected={selectedViewFilter === 'all'}
-                          onChange={handleItemClick}
-                        />
+                        </div>
                       </ToggleGroup>
                     </FormGroup>
                   </Form>
