@@ -382,18 +382,18 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
           <ToolbarGroup variant="filter-group">
             <ToolbarItem>{attributeDropdown}</ToolbarItem>
             <ToolbarFilter
-              chips={searchValue !== '' ? [searchValue] : ([] as string[])}
-              deleteChip={resetName}
-              deleteChipGroup={resetName}
+              labels={searchValue !== '' ? [searchValue] : ([] as string[])}
+              deleteLabel={resetName}
+              deleteLabelGroup={resetName}
               categoryName="Name"
               showToolbarItem={activeAttributeMenu === 'Name'}
             >
               {searchInput}
             </ToolbarFilter>
             <ToolbarFilter
-              chips={[...typeSelections]}
-              deleteChip={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
-              deleteChipGroup={() => {
+              labels={[...typeSelections]}
+              deleteLabel={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
+              deleteLabelGroup={() => {
                 const newFilters = structuredClone(filtersForURL);
                 delete newFilters['type'];
                 setFiltersForURL(newFilters);
@@ -405,18 +405,18 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               {typeMenu}
             </ToolbarFilter>
             <ToolbarFilter
-              chips={releaseSelections}
-              deleteChip={(category, chip) => onReleaseSelect(undefined, chip as string)}
-              deleteChipGroup={resetRelease}
+              labels={releaseSelections}
+              deleteLabel={(category, chip) => onReleaseSelect(undefined, chip as string)}
+              deleteLabelGroup={resetRelease}
               categoryName="Release"
               showToolbarItem={activeAttributeMenu === 'Release'}
             >
               {releaseSelect}
             </ToolbarFilter>
             <ToolbarFilter
-              chips={dateSelection !== '' ? [dateSelection] : ([] as string[])}
-              deleteChip={resetDate}
-              deleteChipGroup={resetDate}
+              labels={dateSelection !== '' ? [dateSelection] : ([] as string[])}
+              deleteLabel={resetDate}
+              deleteLabelGroup={resetDate}
               categoryName="Date"
               showToolbarItem={activeAttributeMenu === 'Date'}
             >

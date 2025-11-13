@@ -3,9 +3,8 @@ import React, { Suspense, lazy } from 'react';
 import {
   Button,
   Spinner,
-  Text,
-  TextContent,
-  TextVariants,
+  Content,
+  ContentVariants,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -46,11 +45,11 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
   const items = (
     <React.Fragment>
       <ToolbarItem style={{ alignSelf: 'center' }}>
-        <TextContent>
-          <Text component={TextVariants.h6}>Release</Text>
-        </TextContent>
+        <Content>
+          <Content component={ContentVariants.h6}>Release</Content>
+        </Content>
       </ToolbarItem>
-      <ToolbarItem variant="bulk-select">
+      <ToolbarItem >
         <Suspense fallback={<Spinner />}>
           <SelectOptionVariations />
         </Suspense>
