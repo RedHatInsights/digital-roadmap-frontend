@@ -29,9 +29,7 @@ const LifecyclePage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
           <PageHeaderTitle title="Life Cycle" />
           <Popover headerContent="About life cycle" bodyContent={popoverContent} position="right">
-            <Button variant="plain" aria-label="Life cycle information">
-              <OutlinedQuestionCircleIcon />
-            </Button>
+            <Button icon={<OutlinedQuestionCircleIcon />} variant="plain" aria-label="Life cycle information" />
           </Popover>
         </div>
       </PageHeader>

@@ -1,16 +1,16 @@
 import * as React from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
-  Chart,
-  ChartAxis,
-  ChartBar,
-  ChartGroup,
-  ChartLegend,
-  ChartLine,
-  ChartTooltip,
-  getInteractiveLegendEvents,
-  getInteractiveLegendItemStyles,
-} from '@patternfly/react-charts';
+	Chart,
+	ChartAxis,
+	ChartBar,
+	ChartGroup,
+	ChartLegend,
+	ChartLine,
+	ChartTooltip,
+	getInteractiveLegendEvents,
+	getInteractiveLegendItemStyles
+} from '@patternfly/react-charts/victory';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { formatDate, mapSupportTypeToDisplayName } from '../../utils/utils';
@@ -301,17 +301,17 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const getPackageColor = (datum: string) => {
     switch (datum) {
       case 'Retired':
-        return 'var(--pf-v5-global--danger-color--100)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--danger-color--100 */;
       case 'Support ends within 3 months':
-        return 'var(--pf-v5-global--warning-color--100)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */;
       case 'Support ends within 6 months':
-        return 'var(--pf-v5-global--warning-color--100)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */;
       case 'Not installed':
-        return 'var(--pf-v5-global--palette--blue-200)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--palette--blue-200 */;
       case 'Supported':
-        return 'var(--pf-v5-global--success-color--100)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */;
       case 'Upcoming release':
-        return 'var(--pf-v5-global--palette--blue-100)';
+        return "var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--palette--blue-100 */;
       default:
         return 'var(--pf-v5-global--default-color--300)';
     }
