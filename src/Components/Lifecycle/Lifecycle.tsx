@@ -9,8 +9,6 @@ import {
   EmptyStateActions,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   EmptyStateVariant,
   Spinner,
   Stack,
@@ -890,12 +888,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const lockedState = (
     <Bullseye>
-      <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader
-          icon={<EmptyStateIcon icon={LockIcon} />}
-          titleText="Planning is not yet enabled for your organization"
-          headingLevel="h2"
-        />
+      <EmptyState  headingLevel="h2" icon={LockIcon}  titleText="Planning is not yet enabled for your organization" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>Workspace filtering has not been implemented.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -912,14 +905,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // This is basically the same as ErrorState only with custom action at the bottom.
   const timeoutState = (
     <Bullseye>
-      <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader
-          // the color could be imported from @patternfly/react-tokens/dist/esm/global_danger_color_100,
-          // but the import doesn't work
-          icon={<EmptyStateIcon icon={ExclamationCircleIcon} color="var(--pf-v5-global--danger-color--100)" />}
-          titleText="Timeout reached when calculating response"
-          headingLevel="h2"
-        />
+      <EmptyState  headingLevel="h2" icon={ExclamationCircleIcon}  titleText="Timeout reached when calculating response" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -943,17 +929,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         return timeoutState;
       }
     }
-    return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
+    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
   const emptyState = (
     <Bullseye>
-      <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader
-          icon={<EmptyStateIcon icon={SearchIcon} />}
-          titleText="No results found"
-          headingLevel="h2"
-        />
+      <EmptyState  headingLevel="h2" icon={SearchIcon}  titleText="No results found" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>Clear all filters and try again.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
