@@ -11,8 +11,6 @@ import {
   EmptyStateActions,
   EmptyStateBody,
   EmptyStateFooter,
-  EmptyStateHeader,
-  EmptyStateIcon,
   EmptyStateVariant,
   Grid,
   GridItem,
@@ -420,12 +418,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const lockedState = (
     <Bullseye>
-      <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader
-          icon={<EmptyStateIcon icon={LockIcon} />}
-          titleText="Planning is not yet enabled for your organization"
-          headingLevel="h2"
-        />
+      <EmptyState  headingLevel="h2" icon={LockIcon}  titleText="Planning is not yet enabled for your organization" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>Workspace filtering has not been implemented.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -442,14 +435,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   // This is basically the same as ErrorState only with custom action at the bottom.
   const timeoutState = (
     <Bullseye>
-      <EmptyState variant={EmptyStateVariant.sm}>
-        <EmptyStateHeader
-          // the color could be imported from @patternfly/react-tokens/dist/esm/global_danger_color_100,
-          // but the import doesn't work
-          icon={<EmptyStateIcon icon={ExclamationCircleIcon} color="var(--pf-v5-global--danger-color--100)" />}
-          titleText="Timeout reached when calculating response"
-          headingLevel="h2"
-        />
+      <EmptyState  headingLevel="h2" icon={ExclamationCircleIcon}  titleText="Timeout reached when calculating response" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -473,7 +459,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         return timeoutState;
       }
     } else {
-      return <ErrorState errorTitle="Failed to load data" errorDescription={String(error.message)} />;
+      return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
     }
   }
 
@@ -481,12 +467,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   if (noAllDataAvailable) {
     return (
       <Bullseye>
-        <EmptyState variant={EmptyStateVariant.lg}>
-          <EmptyStateHeader
-            icon={<EmptyStateIcon icon={CubesIcon} />}
-            titleText="No roadmap data available"
-            headingLevel="h2"
-          />
+        <EmptyState  headingLevel="h2" icon={CubesIcon}  titleText="No roadmap data available" variant={EmptyStateVariant.lg}>
           <EmptyStateBody>
             We could not find any Roadmap data. Please add systems to inventory to view Roadmap information.
           </EmptyStateBody>
@@ -509,12 +490,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           <GridItem span={4}>
             <Card ouiaId="upcoming-deprecations" isClickable style={{ height: '135px' }}>
               <CardHeader
-                selectableActions={{
-                  onClickAction: () => handleCardClick('deprecations'),
-                  selectableActionId: deprecationId,
-                  selectableActionAriaLabelledby: 'Deprecations',
-                  name: 'filter-by-type',
-                }}
+                selectableActions={{onClickAction: () => handleCardClick('deprecations'), selectableActionAriaLabelledby: 'Deprecations'}}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationCircleIcon color={'#C9190B'} />
@@ -530,12 +506,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           <GridItem span={4}>
             <Card ouiaId="upcoming-changes" isClickable style={{ height: '135px' }}>
               <CardHeader
-                selectableActions={{
-                  onClickAction: () => handleCardClick('changes'),
-                  selectableActionId: changeId,
-                  selectableActionAriaLabelledby: 'filter-by-type-2',
-                  name: 'filter-by-type',
-                }}
+                selectableActions={{onClickAction: () => handleCardClick('changes'), selectableActionAriaLabelledby: 'filter-by-type-2'}}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <ExclamationTriangleIcon color={'#FFA500'} />
@@ -551,12 +522,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           <GridItem span={4}>
             <Card ouiaId="upcoming-additions" isClickable style={{ height: '135px' }}>
               <CardHeader
-                selectableActions={{
-                  onClickAction: () => handleCardClick('additions'),
-                  selectableActionId: additionId,
-                  selectableActionAriaLabelledby: 'filter-by-type-3',
-                  name: 'filter-by-type',
-                }}
+                selectableActions={{onClickAction: () => handleCardClick('additions'), selectableActionAriaLabelledby: 'filter-by-type-3'}}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
                   <InfoCircleIcon color={'#2B9AF3'} />

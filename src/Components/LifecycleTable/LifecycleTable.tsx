@@ -58,11 +58,11 @@ const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ supportStatus }) => {
   switch (supportStatus) {
     case 'Supported':
-      return <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />;
+      return <CheckCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */ />;
     case 'Near retirement':
-      return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
+      return <ExclamationTriangleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */ />;
     case 'Retired':
-      return <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />;
+      return <ExclamationCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--danger-color--100 */ />;
     default:
       return null;
   }
@@ -446,7 +446,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span>{APP_LIFECYCLE_COLUMN_NAMES.release}</span>
         <Popover headerContent="Initial release" bodyContent={popoverContent} position="right">
-          <Button
+          <Button icon={<OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />}
             variant="plain"
             aria-label="More info for initial release"
             style={{
@@ -458,9 +458,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}
-          >
-            <OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />
-          </Button>
+           />
         </Popover>
       </div>
     );
