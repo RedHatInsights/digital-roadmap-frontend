@@ -51,10 +51,7 @@ interface SystemsViewToolbarProps {
   selectedChartSortBy: string;
   isOpen: boolean;
   onToggleClick: () => void;
-  onSelect: (
-    _event: React.MouseEvent<Element, MouseEvent> | undefined,
-    value: string | number | undefined
-  ) => void;
+  onSelect: (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => void;
   setIsOpen: (open: boolean) => void;
   downloadCSV: () => void;
 }
@@ -135,146 +132,148 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
               </ToolbarItem>
             )}
 
-            {selectedField === 'Version' && <ToolbarItem key="version-select">{rhelVersionSelect}</ToolbarItem>}
+            {selectedField === 'Version' && (
+              <ToolbarItem key="version-select">{rhelVersionSelect}</ToolbarItem>
+            )}
           </ToolbarGroup>
 
-          <ToolbarGroup>
-            <ToolbarItem>
-              <Form>
-                <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
-                  <ToggleGroup
-                    className="drf-lifecycle__toggle-group-fixed-height"
-                    aria-label="Whether installed and related, only installed or all items are displayed"
+        <ToolbarGroup>
+          <ToolbarItem>
+            <Form>
+              <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
+                <ToggleGroup
+                  className="drf-lifecycle__toggle-group-fixed-height"
+                  aria-label="Whether installed and related, only installed or all items are displayed"
+                >
+                  <Tooltip
+                    content={getTooltipContent('installed-and-related')}
+                    trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                   >
-                    <Tooltip
-                      content={getTooltipContent('installed-and-related')}
-                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
-                    >
-                      <div>
-                        <ToggleGroupItem
-                          text="Installed and related"
-                          buttonId="installed-and-related"
-                          isSelected={selectedViewFilter === 'installed-and-related'}
-                          isDisabled={noDataAvailable}
-                          onChange={handleItemClick}
-                        />
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      content={getTooltipContent('installed-only')}
-                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
-                    >
-                      <div>
-                        <ToggleGroupItem
-                          text="Installed only"
-                          buttonId="installed-only"
-                          isSelected={selectedViewFilter === 'installed-only'}
-                          isDisabled={noDataAvailable}
-                          onChange={handleItemClick}
-                        />
-                      </div>
-                    </Tooltip>
                     <div>
                       <ToggleGroupItem
-                        text="All"
-                        buttonId="all"
-                        isSelected={selectedViewFilter === 'all'}
+                        text="Installed and related"
+                        buttonId="installed-and-related"
+                        isSelected={selectedViewFilter === 'installed-and-related'}
+                        isDisabled={noDataAvailable}
                         onChange={handleItemClick}
                       />
                     </div>
-                  </ToggleGroup>
-                </FormGroup>
-              </Form>
-            </ToolbarItem>
-            <ToolbarItem>
-              <Tooltip content="Export data">
-                <Button
-                  className="drf-lifecycle__filter-download"
-                  variant="plain"
-                  aria-label="Download visible dataset as CSV"
-                  onClick={downloadCSV}
-                  icon={<ExportIcon />}
-                ></Button>
-              </Tooltip>
-            </ToolbarItem>
-          </ToolbarGroup>
-        </ToolbarContent>
-        <ToolbarContent className="drf-lifecycle__sort-toolbar-content">
-          <ToolbarGroup className="drf-lifecycle__sort-group">
-            <ToolbarItem>
-              <Form>
-                <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
-                  <Dropdown
-                    isOpen={isOpen}
-                    onSelect={onSelect}
-                    onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
-                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                      <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
-                        {selectedChartSortBy}
-                      </MenuToggle>
-                    )}
-                    ouiaId="Value to sort lifecycle chart by"
-                    shouldFocusToggleOnSelect
-                    popperProps={{ enableFlip: true, position: 'end' }}
+                  </Tooltip>
+                  <Tooltip
+                    content={getTooltipContent('installed-only')}
+                    trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                   >
-                    <DropdownList>
-                      {DROPDOWN_ITEMS.map((item) => (
-                        <DropdownItem
-                          value={item}
-                          key={item}
-                          isSelected={item === selectedChartSortBy}
-                          isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
-                        >
-                          {item}
-                        </DropdownItem>
-                      ))}
-                    </DropdownList>
-                  </Dropdown>
-                </FormGroup>
-              </Form>
-            </ToolbarItem>
-          </ToolbarGroup>
-        </ToolbarContent>
-      </div>
-
-      {/* Chips row below the toolbar */}
-      {nameFilter !== '' || selectedRhelVersions.length > 0 ? (
-        <div style={{ paddingLeft: '0px', paddingRight: '24px', paddingTop: '8px' }}>
-          {nameFilter !== '' && (
-            <LabelGroup categoryName="Name" numLabels={1}>
-              <Label variant="outline" onClose={() => setNameFilter('')}>
-                {nameFilter}
-              </Label>
-            </LabelGroup>
-          )}
-
-          {selectedRhelVersions.length > 0 && (
-            <LabelGroup
-              categoryName="RHEL versions"
-              numLabels={3}
-              isClosable
-              onClick={() => {
-                setSelectedRhelVersions([]);
-                onRhelVersionsChange?.([]);
-              }}
-            >
-              {selectedRhelVersions.map((version) => (
-                <Label
-                  key={version}
-                  variant="outline"
-                  onClose={() => {
-                    const next = selectedRhelVersions.filter((v) => v !== version);
-                    setSelectedRhelVersions(next);
-                    onRhelVersionsChange?.(next);
-                  }}
+                    <div>
+                      <ToggleGroupItem
+                        text="Installed only"
+                        buttonId="installed-only"
+                        isSelected={selectedViewFilter === 'installed-only'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
+                    </div>
+                  </Tooltip>
+                  <div>
+                    <ToggleGroupItem
+                      text="All"
+                      buttonId="all"
+                      isSelected={selectedViewFilter === 'all'}
+                      onChange={handleItemClick}
+                    />
+                  </div>
+                </ToggleGroup>
+              </FormGroup>
+            </Form>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Tooltip content="Export data">
+              <Button
+                className="drf-lifecycle__filter-download"
+                variant="plain"
+                aria-label="Download visible dataset as CSV"
+                onClick={downloadCSV}
+                icon={<ExportIcon />}
+              ></Button>
+            </Tooltip>
+          </ToolbarItem>
+        </ToolbarGroup>
+      </ToolbarContent>
+      <ToolbarContent className="drf-lifecycle__sort-toolbar-content">
+        <ToolbarGroup className="drf-lifecycle__sort-group">
+          <ToolbarItem>
+            <Form>
+              <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                <Dropdown
+                  isOpen={isOpen}
+                  onSelect={onSelect}
+                  onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                    <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                      {selectedChartSortBy}
+                    </MenuToggle>
+                  )}
+                  ouiaId="Value to sort lifecycle chart by"
+                  shouldFocusToggleOnSelect
+                  popperProps={{ enableFlip: true, position: 'end' }}
                 >
-                  {version}
-                </Label>
-              ))}
-            </LabelGroup>
-          )}
-        </div>
-      ) : null}
+                  <DropdownList>
+                    {DROPDOWN_ITEMS.map((item) => (
+                      <DropdownItem
+                        value={item}
+                        key={item}
+                        isSelected={item === selectedChartSortBy}
+                        isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
+                      >
+                        {item}
+                      </DropdownItem>
+                    ))}
+                  </DropdownList>
+                </Dropdown>
+              </FormGroup>
+            </Form>
+          </ToolbarItem>
+        </ToolbarGroup>
+      </ToolbarContent>
+    </div>
+
+    {/* Chips row below the toolbar */}
+    {(selectedField === 'Name' && nameFilter !== '') || (selectedField === 'Version' && selectedRhelVersions.length > 0) ? (
+      <div style={{ paddingLeft: '0px', paddingRight: '24px', paddingTop: '8px' }}>
+        {selectedField === 'Name' && nameFilter !== '' && (
+          <LabelGroup categoryName="Name" numLabels={1}>
+            <Label variant="outline" onClose={() => setNameFilter('')}>
+              {nameFilter}
+            </Label>
+          </LabelGroup>
+        )}
+
+        {selectedField === 'Version' && selectedRhelVersions.length > 0 && (
+          <LabelGroup
+            categoryName="RHEL versions"
+            numLabels={3}
+            isClosable
+            onClick={() => {
+              setSelectedRhelVersions([]);
+              onRhelVersionsChange?.([]);
+            }}
+          >
+            {selectedRhelVersions.map((version) => (
+              <Label
+                key={version}
+                variant="outline"
+                onClose={() => {
+                  const next = selectedRhelVersions.filter((v) => v !== version);
+                  setSelectedRhelVersions(next);
+                  onRhelVersionsChange?.(next);
+                }}
+              >
+                {version}
+              </Label>
+            ))}
+          </LabelGroup>
+        )}
+      </div>
+    ) : null}
     </>
   );
 };

@@ -29,10 +29,14 @@ interface AppStreamsViewToolbarProps {
   selectedChartSortBy: string;
   isOpen: boolean;
   onToggleClick: () => void;
+<<<<<<< HEAD
   onSelect: (
     _event: React.MouseEvent<Element, MouseEvent> | undefined,
     value: string | number | undefined
   ) => void;
+=======
+  onSelect: (_event: React.MouseEvent<Element, MouseEvent> | undefined, value: string | number | undefined) => void;
+>>>>>>> 164289f (Add seperate components for appstream and system filters)
   setIsOpen: (open: boolean) => void;
   downloadCSV: () => void;
 }
@@ -53,6 +57,7 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
 }) => {
   return (
     <div className="drf-lifecycle__toolbar-row">
+<<<<<<< HEAD
       <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
         <ToolbarGroup>
           <ToolbarItem>
@@ -66,6 +71,21 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
             />
           </ToolbarItem>
         </ToolbarGroup>
+=======
+        <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
+          <ToolbarGroup>
+            <ToolbarItem>
+              {/* Name input for AppStreams view */}
+              <SearchInput
+                placeholder="Filter by name"
+                value={nameFilter}
+                onChange={(_event, value) => setNameFilter(value)}
+                onClear={() => setNameFilter('')}
+                aria-label="Filter by name"
+              />
+            </ToolbarItem>
+          </ToolbarGroup>
+>>>>>>> 164289f (Add seperate components for appstream and system filters)
 
         <ToolbarGroup>
           <ToolbarItem>
