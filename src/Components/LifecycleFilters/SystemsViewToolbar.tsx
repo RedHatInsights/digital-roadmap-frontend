@@ -237,9 +237,9 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
     </div>
 
     {/* Chips row below the toolbar */}
-    {(selectedField === 'Name' && nameFilter !== '') || (selectedField === 'Version' && selectedRhelVersions.length > 0) ? (
+    {(nameFilter !== '' || selectedRhelVersions.length > 0) ? (
       <div style={{ paddingLeft: '0px', paddingRight: '24px', paddingTop: '8px' }}>
-        {selectedField === 'Name' && nameFilter !== '' && (
+        {nameFilter !== '' && (
           <LabelGroup categoryName="Name" numLabels={1}>
             <Label variant="outline" onClose={() => setNameFilter('')}>
               {nameFilter}
@@ -247,7 +247,7 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
           </LabelGroup>
         )}
 
-        {selectedField === 'Version' && selectedRhelVersions.length > 0 && (
+        {selectedRhelVersions.length > 0 && (
           <LabelGroup
             categoryName="RHEL versions"
             numLabels={3}
