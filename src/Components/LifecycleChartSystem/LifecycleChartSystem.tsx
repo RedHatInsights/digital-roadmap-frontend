@@ -303,7 +303,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
       case 'Retired':
         return 'var(--pf-t--global--color--status--danger--100)';
       case 'Support ends within 3 months':
-        return 'var(--pf-t--global--color--status--warning--default)';
+        return 'var(--pf-t--global--color--status--warning--200)';
       case 'Support ends within 6 months':
         return 'var(--pf-t--global--color--status--warning--200)';
       case 'Not installed':
