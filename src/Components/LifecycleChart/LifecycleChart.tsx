@@ -306,7 +306,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
       case 'Support ends within 3 months':
         return 'var(--pf-t--global--color--status--warning--200)';
       case 'Support ends within 6 months':
-        return 'var(--pf-t--global--color--status--warning--default)';
+        return 'var(--pf-t--global--color--status--warning--200)';
       case 'Not installed':
         return 'var(--pf-t--global--icon--color--severity--none--default)';
       case 'Supported':
