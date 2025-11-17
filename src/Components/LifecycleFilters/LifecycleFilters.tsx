@@ -235,11 +235,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       onSelect={onRhelSelect}
       selected={selectedRhelVersions}
       toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-        <MenuToggle
-          ref={toggleRef}
-          onClick={() => setIsRhelSelectOpen((p) => !p)}
-          isExpanded={isRhelSelectOpen}
-        >
+        <MenuToggle ref={toggleRef} onClick={() => setIsRhelSelectOpen((p) => !p)} isExpanded={isRhelSelectOpen}>
           RHEL versions
           {selectedRhelVersions.length > 0 && <Badge isRead>{selectedRhelVersions.length}</Badge>}
         </MenuToggle>
