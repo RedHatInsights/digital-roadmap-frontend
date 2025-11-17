@@ -131,7 +131,7 @@ export const useChartDataAttributes = (
   chartContainerRef: React.RefObject<HTMLDivElement>,
   legendNames: Array<{ packageType: string; datapoints: Array<{ name: string }> }>,
   hiddenSeries: Set<any>,
-  renderKey: number
+  renderKey?: number
 ) => {
   React.useEffect(() => {
     if (!chartContainerRef.current) return;
