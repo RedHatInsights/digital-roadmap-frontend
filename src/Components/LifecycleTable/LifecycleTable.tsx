@@ -58,11 +58,11 @@ const DEFAULT_ARIA_LABEL = 'Lifecycle information';
 const StatusIcon: React.FunctionComponent<{ supportStatus: string }> = ({ supportStatus }) => {
   switch (supportStatus) {
     case 'Supported':
-      return <CheckCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--success-color--100 */ />;
+      return <CheckCircleIcon color="var(--pf-t--global--color--status--success--default)" />;
     case 'Near retirement':
-      return <ExclamationTriangleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--warning-color--100 */ />;
+      return <ExclamationTriangleIcon color="var(--pf-t--global--color--status--warning--200)" />;
     case 'Retired':
-      return <ExclamationCircleIcon color="var(--pf-t--temp--dev--tbd)"/* CODEMODS: original v5 color was --pf-v5-global--danger-color--100 */ />;
+      return <ExclamationCircleIcon color="var(--pf-t--global--color--status--danger--100)" />;
     default:
       return null;
   }
@@ -257,16 +257,30 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       titles={{
         paginationAriaLabel: `${variant} pagination`,
       }}
+      style={
+        variant === 'bottom'
+          ? {
+              marginLeft: 'auto',
+              marginRight: '58px',
+              marginTop: '16px',
+              marginBottom: '16px',
+              border: 'none',
+              background: 'transparent',
+            }
+          : undefined
+      }
     />
   );
 
-  const toolbar = (
+  const topPagination = (
     <Toolbar>
-      <ToolbarContent>
+      <ToolbarContent style={{ justifyContent: 'flex-end', marginRight: '58px' }}>
         <ToolbarItem variant="pagination">{buildPagination('top', true)}</ToolbarItem>
       </ToolbarContent>
     </Toolbar>
   );
+
+  const bottomPagination = buildPagination('bottom', false);
 
   const getSystemSortParams = (columnIndex: number): ThProps['sort'] => ({
     sortBy: {
@@ -368,7 +382,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                   </Button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingLeft: '32px' }}>
                   {repo.count}
                 </div>
               )}
@@ -446,7 +460,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span>{APP_LIFECYCLE_COLUMN_NAMES.release}</span>
         <Popover headerContent="Initial release" bodyContent={popoverContent} position="right">
-          <Button icon={<OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />}
+          <Button
+            icon={<OutlinedQuestionCircleIcon style={{ fontSize: '14px' }} />}
             variant="plain"
             aria-label="More info for initial release"
             style={{
@@ -458,7 +473,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
             }}
-           />
+          />
         </Popover>
       </div>
     );
@@ -555,7 +570,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
 
   return (
     <>
-      {toolbar}
+      {topPagination}
       <Table aria-label={getAriaLabel()} variant="compact">
         <Thead>{renderHeaders(viewFilter)}</Thead>
         <Tbody>{renderData()}</Tbody>
@@ -567,7 +582,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
       />
-      {buildPagination('bottom', false)}
+      {bottomPagination}
     </>
   );
 };

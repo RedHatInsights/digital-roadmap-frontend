@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  JumpLinks,
-  JumpLinksItem,
-  Sidebar,
-  SidebarContent,
-  SidebarPanel,
-  Content,
-} from '@patternfly/react-core';
+import { Content, JumpLinks, JumpLinksItem, Sidebar, SidebarContent, SidebarPanel } from '@patternfly/react-core';
 
 import './release-view.scss';
 

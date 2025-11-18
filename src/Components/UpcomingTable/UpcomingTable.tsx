@@ -233,7 +233,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   };
 
   const emptyState = (
-    <EmptyState  headingLevel="h4" icon={SearchIcon}  titleText="No results found">
+    <EmptyState headingLevel="h4" icon={SearchIcon} titleText="No results found">
       <EmptyStateBody>No results match the filter criteria. Clear all filters and try again.</EmptyStateBody>
       <EmptyStateFooter>
         <EmptyStateActions>
@@ -328,9 +328,12 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
             {filteredData.length > 0 && (
               <Th>
                 <span className="pf-v5-c-table__td pf-v5-c-table__toggle">
-                  <Button icon={<div className="pf-v5-c-table__toggle-icon">
-                      <AngleDownIcon />
-                    </div>}
+                  <Button
+                    icon={
+                      <div className="pf-v5-c-table__toggle-icon">
+                        <AngleDownIcon />
+                      </div>
+                    }
                     aria-expanded={expandedRows.size === paginatedRows.length}
                     aria-label={
                       expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'
@@ -338,7 +341,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                     variant="plain"
                     onClick={onClickArrow}
                     className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
-                   />
+                  />
                 </span>
               </Th>
             )}

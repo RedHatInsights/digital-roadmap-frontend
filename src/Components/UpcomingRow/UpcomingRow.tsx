@@ -6,12 +6,7 @@ import React, { lazy } from 'react';
 import { Tbody, Td, Tr } from '@patternfly/react-table';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { SystemsDetail } from '../../types/SystemsDetail';
-import {
-  Button,
-  Icon,
-  Content,
-  ContentVariants,
-  } from '@patternfly/react-core';
+import { Button, Content, ContentVariants, Icon } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
