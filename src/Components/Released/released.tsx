@@ -2,9 +2,9 @@ import './released.scss';
 import React, { Suspense, lazy } from 'react';
 import {
   Button,
-  Spinner,
   Content,
   ContentVariants,
+  Spinner,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -49,7 +49,7 @@ const ReleasedTab: React.FC<React.PropsWithChildren> = () => {
           <Content component={ContentVariants.h6}>Release</Content>
         </Content>
       </ToolbarItem>
-      <ToolbarItem >
+      <ToolbarItem>
         <Suspense fallback={<Spinner />}>
           <SelectOptionVariations />
         </Suspense>

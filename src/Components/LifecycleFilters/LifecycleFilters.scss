@@ -12,6 +12,7 @@
 .drf-lifecycle__filters-toolbar-group {
   display: flex;
   justify-content: space-between;
+  width: 100%;
 }
 
 .drf-lifecycle__filter-formgroup {
@@ -27,10 +28,39 @@
   }
 }
 
+// Ensure toolbar items are properly aligned
+.drf-lifecycle__filters-toolbar-group .pf-v6-c-toolbar__item {
+  align-items: center;
+  display: flex;
+}
+
+// Override PatternFly's default FormGroup block layout
+.drf-lifecycle__filter-formgroup.pf-v6-c-form__group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+
+  .pf-v6-c-form__group-label {
+    margin-bottom: 0;
+    margin-right: 4px;
+  }
+
+  .pf-v6-c-form__group-control {
+    margin-bottom: 0;
+  }
+}
+
+// Reduce spacing between search input and View section
+.drf-lifecycle__filters-toolbar-group .pf-v6-c-toolbar__item:first-child {
+  margin-right: 8px;
+}
+
 .drf-lifecycle__filter-download {
   padding-left: 8px;
   padding-right: 8px;
 }
+
 
 /* Fix toggle group height consistency */
 .drf-lifecycle__toggle-group-fixed-height {
@@ -38,16 +68,44 @@
   align-items: stretch; /* This ensures all children have the same height */
 }
 
-.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__item {
+.drf-lifecycle__toggle-group-fixed-height .pf-v6-c-toggle-group__item {
   flex: 1; /* makes all items equally wide */
   display: flex;
 }
 
-.drf-lifecycle__toggle-group-fixed-height .pf-v5-c-toggle-group__button {
+.drf-lifecycle__toggle-group-fixed-height .pf-v6-c-toggle-group__button {
   min-height: 40px; /* Set a minimum height for consistency */
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap; /* Prevents text wrapping */
+}
+
+/* Wrapper div for the toolbar row */
+.drf-lifecycle__toolbar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  /* Extend beyond the parent padding to align with chart */
+  margin-left: -24px;
+  margin-right: -24px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Main filters on the left */
+.drf-lifecycle__filters-toolbar-group {
+  flex: 0 1 auto;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+/* Sort filter on the right */
+.drf-lifecycle__sort-toolbar-content {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
 }
