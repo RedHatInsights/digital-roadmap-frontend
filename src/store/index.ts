@@ -6,9 +6,6 @@ import { Middleware, Reducer } from 'redux';
 export let registry: ReducerRegistry<Reducer>;
 
 export function init(...middleware: Middleware[]) {
-  registry = getRegistry({}, [
-    promiseMiddleware,
-    ...middleware,
-  ]);
+  registry = getRegistry({}, [promiseMiddleware, ...middleware]);
   return registry;
 }

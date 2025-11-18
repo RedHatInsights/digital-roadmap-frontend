@@ -30,7 +30,11 @@ const UpcomingPage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
           <PageHeaderTitle title="Roadmap" />
           <Popover headerContent="About roadmap" bodyContent={popoverContent} position="right">
-            <Button icon={<OutlinedQuestionCircleIcon style={{ color: '#6a6e73' }} />} variant="plain" aria-label="Roadmap information" />
+            <Button
+              icon={<OutlinedQuestionCircleIcon style={{ color: '#6a6e73' }} />}
+              variant="plain"
+              aria-label="Roadmap information"
+            />
           </Popover>
         </div>
       </PageHeader>

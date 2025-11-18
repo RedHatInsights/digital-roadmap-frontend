@@ -888,7 +888,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const lockedState = (
     <Bullseye>
-      <EmptyState  headingLevel="h2" icon={LockIcon}  titleText="Planning is not yet enabled for your organization" variant={EmptyStateVariant.sm}>
+      <EmptyState
+        headingLevel="h2"
+        icon={LockIcon}
+        titleText="Planning is not yet enabled for your organization"
+        variant={EmptyStateVariant.sm}
+      >
         <EmptyStateBody>Workspace filtering has not been implemented.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -905,7 +910,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // This is basically the same as ErrorState only with custom action at the bottom.
   const timeoutState = (
     <Bullseye>
-      <EmptyState  headingLevel="h2" icon={ExclamationCircleIcon}  titleText="Timeout reached when calculating response" variant={EmptyStateVariant.sm}>
+      <EmptyState
+        headingLevel="h2"
+        icon={ExclamationCircleIcon}
+        titleText="Timeout reached when calculating response"
+        variant={EmptyStateVariant.sm}
+      >
         <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>
@@ -934,7 +944,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   const emptyState = (
     <Bullseye>
-      <EmptyState  headingLevel="h2" icon={SearchIcon}  titleText="No results found" variant={EmptyStateVariant.sm}>
+      <EmptyState headingLevel="h2" icon={SearchIcon} titleText="No results found" variant={EmptyStateVariant.sm}>
         <EmptyStateBody>Clear all filters and try again.</EmptyStateBody>
         <EmptyStateFooter>
           <EmptyStateActions>

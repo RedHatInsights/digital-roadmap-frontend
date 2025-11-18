@@ -2,20 +2,20 @@ import React from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemsDetail } from '../../types/SystemsDetail';
 import {
-	Button,
-	Pagination,
-	PaginationVariant,
-	TextInputGroup,
-	TextInputGroupMain,
-	TextInputGroupUtilities,
-	Toolbar,
-	ToolbarContent,
-	ToolbarItem,
-	Modal /* data-codemods */,
-	ModalBody /* data-codemods */,
-	ModalFooter /* data-codemods */,
-	ModalHeader /* data-codemods */,
-	ModalVariant
+  Button,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalVariant,
+  Pagination,
+  PaginationVariant,
+  TextInputGroup,
+  TextInputGroupMain,
+  TextInputGroupUtilities,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from '@patternfly/react-core';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
@@ -105,7 +105,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           <Toolbar>
             <ToolbarContent>
               <ToolbarItem>{renderFilterBoxModalWindow()}</ToolbarItem>
-              <ToolbarItem align={{ default: "alignEnd" }}>{renderPagination('top', true)}</ToolbarItem>
+              <ToolbarItem align={{ default: 'alignEnd' }}>{renderPagination('top', true)}</ToolbarItem>
             </ToolbarContent>
           </Toolbar>
         </div>
@@ -191,7 +191,7 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
 
   const renderFilterBoxModalWindow = () => {
     return (
-      <div style={{ width: '210px', marginLeft: '5px' }}>
+      <div style={{ width: '210px', marginLeft: '22px' }}>
         <TextInputGroup>
           <TextInputGroupMain
             icon={<SearchIcon />}
@@ -203,7 +203,12 @@ export const LifecycleModalWindow: React.FunctionComponent<ModalWindowProps> = (
           {showUtilities && (
             <TextInputGroupUtilities>
               {showClearButton && (
-                <Button icon={<TimesIcon />} variant="plain" onClick={clearInput} aria-label="Clear button and input" />
+                <Button
+                  icon={<TimesIcon />}
+                  variant="plain"
+                  onClick={clearInput}
+                  aria-label="Clear button and input"
+                />
               )}
             </TextInputGroupUtilities>
           )}

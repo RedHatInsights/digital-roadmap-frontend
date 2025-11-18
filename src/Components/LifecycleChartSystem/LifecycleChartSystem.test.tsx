@@ -12,7 +12,7 @@ jest.mock('../../utils/utils', () => ({
 }));
 
 // Mock PatternFly components
-jest.mock('@patternfly/react-charts', () => ({
+jest.mock('@patternfly/react-charts/victory', () => ({
   Chart: ({ children }: { children: React.ReactNode }) => <div data-testid="chart">{children}</div>,
   ChartAxis: () => <div data-testid="chart-axis" />,
   ChartBar: () => <div data-testid="chart-bar" />,

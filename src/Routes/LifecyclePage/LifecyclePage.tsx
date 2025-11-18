@@ -26,7 +26,7 @@ const LifecyclePage = () => {
   return (
     <React.Fragment>
       <PageHeader>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0px', paddingLeft: '8px' }}>
           <PageHeaderTitle title="Life Cycle" />
           <Popover headerContent="About life cycle" bodyContent={popoverContent} position="right">
             <Button icon={<OutlinedQuestionCircleIcon />} variant="plain" aria-label="Life cycle information" />

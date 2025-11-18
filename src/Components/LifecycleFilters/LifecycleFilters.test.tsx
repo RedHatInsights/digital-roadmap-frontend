@@ -250,7 +250,9 @@ it('keeps both Name keyword and Version selection effective when switching Field
 
   // Switch to Version field (disambiguate between MenuToggle "Name" and chip-group close button)
   const nameButtons = screen.getAllByRole('button', { name: /^Name$/i });
-  const fieldToggle = nameButtons.find((el) => el.classList.contains('pf-v5-c-menu-toggle'));
+  const fieldToggle = nameButtons.find(
+    (el) => el.classList.contains('pf-v6-c-menu-toggle') || el.classList.contains('pf-v5-c-menu-toggle')
+  );
   if (!fieldToggle) throw new Error('Field toggle button (Name) not found');
   await userEvent.click(fieldToggle);
 
@@ -266,7 +268,9 @@ it('keeps both Name keyword and Version selection effective when switching Field
   // Switch back to Name (disambiguate multiple "Version" buttons)
   const versionButtons = screen.getAllByRole('button', { name: /^Version$/i });
   const fieldVersionToggle = versionButtons.find(
-    (el) => el.classList.contains('pf-v5-c-menu-toggle') && el.textContent?.trim() === 'Version'
+    (el) =>
+      (el.classList.contains('pf-v6-c-menu-toggle') || el.classList.contains('pf-v5-c-menu-toggle')) &&
+      el.textContent?.trim() === 'Version'
   );
   if (!fieldVersionToggle) throw new Error('Field toggle button (Version) not found');
   await userEvent.click(fieldVersionToggle);
