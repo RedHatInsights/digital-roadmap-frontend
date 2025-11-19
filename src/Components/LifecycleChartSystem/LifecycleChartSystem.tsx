@@ -5,11 +5,11 @@ import {
   ChartAxis,
   ChartBar,
   ChartGroup,
+  ChartLegend,
   ChartLine,
+  ChartPoint,
   ChartTooltip,
-  getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts/victory';
-import { VictoryLegend } from 'victory-legend';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { formatDate, mapSupportTypeToDisplayName } from '../../utils/utils';
@@ -242,21 +242,24 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const legendNames = React.useMemo(calculateLegendNames, [updatedLifecycleData]);
-  const LEGEND_NAME_PREFIX = '\u00A0\u00A0\u00A0'; // Nonbreakable space - fix issue with legend hover spacing bug
+  const LEGEND_NAME_PREFIX = '\u00A0\u00A0\u00A0'; // Non-breakable space - creates spacing between icon and label
 
   const getLegendData = () =>
-    legendNames.map((s, index) => ({
-      childName: `series-${index}`,
-      name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
-      symbol: {
-        fill: `${getPackageColor(s.packageType)}`,
-        cursor: 'pointer',
-      },
-      labels: {
-        cursor: 'pointer',
-      },
-      ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
-    }));
+    legendNames.map((s, index) => {
+      const isHidden = hiddenSeries.has(index);
+      return {
+        name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
+        symbol: {
+          fill: isHidden ? '#151515' : getPackageColor(s.packageType),
+          type: isHidden ? 'eyeSlash' : 'square',
+          cursor: 'pointer',
+        },
+        labels: {
+          fill: '#1f1f1f', // Keep label text black for both hidden and visible
+          cursor: 'pointer',
+        },
+      };
+    });
 
   const handleLegendClick = (props: { index: number }) => {
     setHiddenSeries((prevHiddenSeries) => {
@@ -655,13 +658,20 @@ End: ${formatDate(tooltipData.y)}`;
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
         legendComponent={
-          <VictoryLegend
+          <ChartLegend
             name="chart5-ChartLegend"
             data={getLegendData()}
             gutter={20}
+            symbolSpacer={1}
+            borderPadding={{ top: 8 }}
+            x={leftPadding}
+            dataComponent={<ChartPoint />}
             events={legendEventsForLegendComponent}
             style={{
-              labels: { cursor: 'pointer' },
+              labels: {
+                cursor: 'pointer',
+                fontSize: 14,
+              },
             }}
           />
         }
