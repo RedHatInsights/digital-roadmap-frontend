@@ -324,10 +324,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
       />
       <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
         <Thead>
-          <Tr>
-            {filteredData.length > 0 && (
+          {filteredData.length > 0 && (
+            <Tr>
               <Th>
-                <span className="pf-v6-c-table__td pf-v6-c-table__toggle">
+                <span className="pf-v6-c-table__toggle ">
                   <Button
                     icon={
                       <div className="pf-v6-c-table__toggle-icon">
@@ -344,20 +344,21 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                   />
                 </span>
               </Th>
-            )}
-            <Th width={10} sort={getSortParams(0)}>
-              {columnNames.name}
-            </Th>
-            <Th width={10} sort={getSortParams(1)}>
-              {columnNames.type}
-            </Th>
-            <Th width={10} sort={getSortParams(2)}>
-              {columnNames.release}
-            </Th>
-            <Th width={10} sort={getSortParams(3)}>
-              {columnNames.date}
-            </Th>
-          </Tr>
+
+              <Th width={10} sort={getSortParams(0)}>
+                {columnNames.name}
+              </Th>
+              <Th width={10} sort={getSortParams(1)}>
+                {columnNames.type}
+              </Th>
+              <Th width={10} sort={getSortParams(2)}>
+                {columnNames.release}
+              </Th>
+              <Th width={10} sort={getSortParams(3)}>
+                {columnNames.date}
+              </Th>
+            </Tr>
+          )}
         </Thead>
         {filteredData.length === 0 ? (
           <Tbody>

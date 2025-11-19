@@ -6,7 +6,8 @@
 .drf-upcoming__filter-formgroup {
     display: flex;
     gap: 16px;
-    align-items: baseline;
+    flex-direction: row;
+    align-items: center;
     padding-left: 16px;
   
     label {
@@ -14,5 +15,11 @@
       font-size: 16px;
       font-weight: 500;
       line-height: 24px;
+    }
+  }
+  
+  .pf-v6-c-table thead .pf-v6-c-table__toggle {
+    .pf-v6-c-button {
+      margin-left: -4px;
     }
   }
