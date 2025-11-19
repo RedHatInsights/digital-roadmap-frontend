@@ -81,8 +81,7 @@ describe('LifecycleChartSystem', () => {
     expect(mockUseChartDataAttributes).toHaveBeenCalledWith(
       expect.objectContaining({ current: expect.any(Object) }), // chartContainerRef
       expect.any(Array), // legendNames
-      expect.any(Set), // hiddenSeries
-      expect.any(Number) // renderKey
+      expect.any(Set) // hiddenSeries
     );
   });
 
