@@ -549,7 +549,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 }}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
-                  <InfoCircleIcon color={'var(--pf-t--global--icon--color--status--info--default)'} />
+                  <InfoCircleIcon color={'var(--pf-t--global--icon--color--severity--none--default)'} />
                   Additions and enhancements
                 </CardTitle>
               </CardHeader>
