@@ -503,7 +503,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-deprecations" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-deprecations" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('deprecations'),
@@ -522,7 +522,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-changes" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-changes" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('changes'),
@@ -541,7 +541,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-additions" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-additions" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('additions'),

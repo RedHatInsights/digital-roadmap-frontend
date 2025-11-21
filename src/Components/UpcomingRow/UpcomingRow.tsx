@@ -131,8 +131,11 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                 </Content>
 
                 <Content className="drf-lifecycle__upcoming-row-text">
-                  <Content component={ContentVariants.dl} style={{ gridRowGap: '0px' }}>
-                    <Content component={ContentVariants.dt} style={{ paddingBottom: '16px' }}>
+                  <Content component={ContentVariants.dl} style={{ gridRowGap: '0px', gridColumnGap: '120px' }}>
+                    <Content
+                      component={ContentVariants.dt}
+                      style={{ paddingBottom: '16px', whiteSpace: 'nowrap' }}
+                    >
                       Potentially affected systems
                     </Content>
                     <Content component={ContentVariants.dd}>
