@@ -322,7 +322,11 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         handleViewFilterChange={handleViewFilterChange}
         noDataAvailable={noDataAvailable}
       />
-      <Table aria-label="Upcoming changes, deprecations, and additions to your system" variant="compact">
+      <Table
+        aria-label="Upcoming changes, deprecations, and additions to your system"
+        variant="compact"
+        isExpandable
+      >
         <Thead>
           {filteredData.length > 0 && (
             <Tr>
