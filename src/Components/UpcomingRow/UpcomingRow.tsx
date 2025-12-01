@@ -3,7 +3,7 @@ import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclam
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import React, { lazy } from 'react';
-import { Tbody, Td, Tr } from '@patternfly/react-table';
+import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { SystemsDetail } from '../../types/SystemsDetail';
 import { Button, Content, ContentVariants, Icon } from '@patternfly/react-core';
@@ -60,7 +60,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   if (repo.type === 'Addition' || repo.type === 'Enhancement') {
     typeIcon = (
       <Icon status="info">
-        <InfoCircleIcon />
+        <InfoCircleIcon color="var(--pf-t--global--icon--color--severity--none--default)" />
       </Icon>
     );
   }
@@ -88,7 +88,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   return (
     <>
       <Tbody isExpanded={isExpanded}>
-        <Tr>
+        <Tr isContentExpanded={isExpanded}>
           <Td
             expand={{
               rowIndex: rowIndex,
@@ -119,64 +119,67 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
         {repo.details ? (
           <Tr isExpanded={isExpanded}>
             {!childIsFullWidth ? <Td /> : null}
-            <Td
-              className="drf-lifecycle__upcoming-row"
-              dataLabel="Summary"
-              noPadding={childHasNoPadding}
-              colSpan={4}
-            >
-              <div className="drf-lifecycle__upcoming-row-text-container">
-                <Content className="drf-lifecycle__upcoming-row-text">
-                  <Content component={ContentVariants.p}>{repo.details.summary}</Content>
-                </Content>
-
-                <Content className="drf-lifecycle__upcoming-row-text">
-                  <Content component={ContentVariants.dl} style={{ gridRowGap: '0px' }}>
-                    <Content component={ContentVariants.dt} style={{ paddingBottom: '16px' }}>
-                      Potentially affected systems
-                    </Content>
-                    <Content component={ContentVariants.dd}>
-                      {repo.details.potentiallyAffectedSystemsCount &&
-                      repo.details.potentiallyAffectedSystemsCount > 0 ? (
-                        <Button
-                          variant="link"
-                          onClick={(event) => {
-                            handleModalToggle(event);
-                            setModalDataName(String(repo.package));
-                            setModalData(repo.details?.potentiallyAffectedSystemsDetail);
-                          }}
-                          style={{
-                            marginTop: '-4px',
-                            fontSize: '14px',
-                            marginLeft: '-16px',
-                          }}
-                        >
-                          {repo.details.potentiallyAffectedSystemsCount}
-                        </Button>
-                      ) : (
-                        <span
-                          style={{
-                            fontSize: '14px',
-                            marginLeft: '-2px',
-                          }}
-                        >
-                          {repo.details.potentiallyAffectedSystemsCount}
-                        </span>
-                      )}
-                    </Content>
-                    <Content component={ContentVariants.dt}>Tracking ticket</Content>
-                    <Content component={ContentVariants.dd}>
-                      <a href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`} rel="noreferrer">
-                        {repo.details.trainingTicket}
-                      </a>
-                    </Content>
-                    <Content component={ContentVariants.dt}>Date added</Content>
-                    <Content component={ContentVariants.dd}>{repo.details.dateAdded}</Content>
-                    <Content component={ContentVariants.dt}>Last modified</Content>
-                    <Content component={ContentVariants.dd}>{repo.details.lastModified}</Content>
+            <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding colSpan={4}>
+              <ExpandableRowContent>
+                <div className="drf-lifecycle__upcoming-row-text-container">
+                  <Content className="drf-lifecycle__upcoming-row-text">
+                    <Content component={ContentVariants.p}>{repo.details.summary}</Content>
                   </Content>
-                </Content>
-              </div>
+
+                  <Content className="drf-lifecycle__upcoming-row-text">
+                    <Content component={ContentVariants.dl} style={{ gridRowGap: '0px', gridColumnGap: '120px' }}>
+                      <Content
+                        component={ContentVariants.dt}
+                        style={{ paddingBottom: '16px', whiteSpace: 'nowrap' }}
+                      >
+                        Potentially affected systems
+                      </Content>
+                      <Content component={ContentVariants.dd}>
+                        {repo.details.potentiallyAffectedSystemsCount &&
+                        repo.details.potentiallyAffectedSystemsCount > 0 ? (
+                          <Button
+                            variant="link"
+                            onClick={(event) => {
+                              handleModalToggle(event);
+                              setModalDataName(String(repo.package));
+                              setModalData(repo.details?.potentiallyAffectedSystemsDetail);
+                            }}
+                            style={{
+                              marginTop: '-4px',
+                              fontSize: '14px',
+                              marginLeft: '-16px',
+                            }}
+                          >
+                            {repo.details.potentiallyAffectedSystemsCount}
+                          </Button>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              marginLeft: '-2px',
+                            }}
+                          >
+                            {repo.details.potentiallyAffectedSystemsCount}
+                          </span>
+                        )}
+                      </Content>
+                      <Content component={ContentVariants.dt}>Tracking ticket</Content>
+                      <Content component={ContentVariants.dd}>
+                        <a
+                          href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`}
+                          rel="noreferrer"
+                        >
+                          {repo.details.trainingTicket}
+                        </a>
+                      </Content>
+                      <Content component={ContentVariants.dt}>Date added</Content>
+                      <Content component={ContentVariants.dd}>{repo.details.dateAdded}</Content>
+                      <Content component={ContentVariants.dt}>Last modified</Content>
+                      <Content component={ContentVariants.dd}>{repo.details.lastModified}</Content>
+                    </Content>
+                  </Content>
+                </div>
+              </ExpandableRowContent>
             </Td>
           </Tr>
         ) : null}
