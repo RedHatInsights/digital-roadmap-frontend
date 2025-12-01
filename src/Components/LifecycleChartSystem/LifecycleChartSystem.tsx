@@ -7,7 +7,6 @@ import {
   ChartGroup,
   ChartLegend,
   ChartLine,
-  ChartPoint,
   ChartTooltip,
   getInteractiveLegendEvents,
   getInteractiveLegendItemStyles,
