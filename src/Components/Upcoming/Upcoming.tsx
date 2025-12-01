@@ -503,7 +503,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-deprecations" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-deprecations" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('deprecations'),
@@ -511,7 +511,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 }}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
-                  <ExclamationCircleIcon color={'#C9190B'} />
+                  <ExclamationCircleIcon color={'var(--pf-t--global--color--status--danger--100)'} />
                   Deprecations
                 </CardTitle>
               </CardHeader>
@@ -522,7 +522,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-changes" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-changes" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('changes'),
@@ -530,7 +530,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 }}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
-                  <ExclamationTriangleIcon color={'#FFA500'} />
+                  <ExclamationTriangleIcon color={'var(--pf-t--global--color--status--warning--200)'} />
                   Changes
                 </CardTitle>
               </CardHeader>
@@ -541,7 +541,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
             </Card>
           </GridItem>
           <GridItem span={4}>
-            <Card ouiaId="upcoming-additions" isClickable style={{ height: '135px' }}>
+            <Card ouiaId="upcoming-additions" isClickable style={{ height: '110px' }}>
               <CardHeader
                 selectableActions={{
                   onClickAction: () => handleCardClick('additions'),
@@ -549,7 +549,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 }}
               >
                 <CardTitle className="drf-lifecycle__upcoming-card">
-                  <InfoCircleIcon color={'#2B9AF3'} />
+                  <InfoCircleIcon color={'var(--pf-t--global--icon--color--severity--none--default)'} />
                   Additions and enhancements
                 </CardTitle>
               </CardHeader>
