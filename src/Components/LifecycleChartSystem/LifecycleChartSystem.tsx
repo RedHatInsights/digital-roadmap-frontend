@@ -53,7 +53,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
 
   // Hidden series state with forced re-render counter
   const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
-  const [renderKey, setRenderKey] = React.useState(0);
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -244,15 +243,35 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const legendNames = React.useMemo(calculateLegendNames, [updatedLifecycleData]);
+  const rawChartId = React.useId();
+  const chartId = React.useMemo(
+    () => `lifecycle-chart-${rawChartId.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+    [rawChartId]
+  );
+  const legendComponentName = `${chartId}-ChartLegend`;
+  const getSeriesName = (index: number) => `${chartId}-ChartBar-${index}`;
+  const chartNames = legendNames.map((_, index) => [getSeriesName(index)]) as [string[]];
+  const [hoveredLegendIndex, setHoveredLegendIndex] = React.useState<number | null>(null);
   const LEGEND_NAME_PREFIX = '\u00A0\u00A0\u00A0'; // Nonbreakable space - fix issue with legend hover spacing bug
 
   const getLegendData = () =>
-    legendNames.map((s, index) => ({
-      childName: `series-${index}`,
-      name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
-      symbol: { fill: `${getPackageColor(s.packageType)}` },
-      ...getInteractiveLegendItemStyles(hiddenSeries.has(index)),
-    }));
+    legendNames.map((s, index) => {
+      const dimmed = hoveredLegendIndex !== null && hoveredLegendIndex !== index;
+      const interactiveStyles = getInteractiveLegendItemStyles(hiddenSeries.has(index));
+      return {
+        childName: getSeriesName(index),
+        name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
+        symbol: {
+          fill: getPackageColor(s.packageType),
+          ...(dimmed && { opacity: 0.3 }),
+          ...interactiveStyles.symbol,
+        },
+        labels: {
+          ...(dimmed && { opacity: 0.3 }),
+          ...interactiveStyles.labels,
+        },
+      };
+    });
 
   const handleLegendClick = (props: { index: number }) => {
     setHiddenSeries((prevHiddenSeries) => {
@@ -288,9 +307,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
 
       return newHiddenSeries;
     });
-
-    // Force a re-render by updating the render key
-    setRenderKey((prev) => prev + 1);
 
     // Clear any active tooltips when legend is clicked
     setShowTooltip(false);
@@ -334,9 +350,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   };
 
   const isHidden = (index: number) => hiddenSeries.has(index);
-
-  // needs to be a specific tuple format or filter on hover breaks
-  const chartNames = legendNames.map((_, i) => [`series-${i}`]) as [string[]];
 
   // Function to position tooltip - always to the right of the bar
   const calculateTooltipPosition = (x: number): number => {
@@ -453,8 +466,6 @@ End: ${formatDate(tooltipData.y)}`;
     );
   };
 
-  const isHiddenSeries = (index: number) => hiddenSeries.has(index);
-
   // Handle resize observation
   React.useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -517,10 +528,10 @@ End: ${formatDate(tooltipData.y)}`;
       window.removeEventListener('resize', updateDimensions);
       window.removeEventListener('zoom', handleZoom);
     };
-  }, [updatedLifecycleData.length, hiddenSeries, renderKey]);
+  }, [updatedLifecycleData.length, hiddenSeries]);
 
   // QE: Add data attributes to rendered bar elements
-  useChartDataAttributes(chartContainerRef, legendNames, hiddenSeries, renderKey);
+  useChartDataAttributes(chartContainerRef, legendNames, hiddenSeries);
 
   // Clear tooltips when mouse leaves the chart
   React.useEffect(() => {
@@ -599,27 +610,62 @@ End: ${formatDate(tooltipData.y)}`;
       {showDateTooltip && renderDateTooltip()}
 
       <Chart
-        key={renderKey} // Force re-render when renderKey changes
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
         events={getInteractiveLegendEvents({
           chartNames,
-          isHidden: isHiddenSeries,
-          legendName: 'chart5-ChartLegend',
+          isHidden,
+          legendName: legendComponentName,
           onLegendClick: handleLegendClick,
         })}
         legendComponent={
           <ChartLegend
-            name="chart5-ChartLegend"
+            name={legendComponentName}
+            events={[
+              {
+                target: 'data',
+                eventHandlers: {
+                  onClick: (_event, props) => {
+                    handleLegendClick({ index: props.index });
+                    return [];
+                  },
+                  onMouseOver: (_event, props) => {
+                    setHoveredLegendIndex(props.index);
+                    return [];
+                  },
+                  onMouseOut: () => {
+                    setHoveredLegendIndex(null);
+                    return [];
+                  },
+                },
+              },
+              {
+                target: 'labels',
+                eventHandlers: {
+                  onClick: (_event, props) => {
+                    handleLegendClick({ index: props.index });
+                    return [];
+                  },
+                  onMouseOver: (_event, props) => {
+                    setHoveredLegendIndex(props.index);
+                    return [];
+                  },
+                  onMouseOut: () => {
+                    setHoveredLegendIndex(null);
+                    return [];
+                  },
+                },
+              },
+            ]}
             symbolSpacer={1}
-            borderPadding={{ top: 12, bottom: 0, left: 0, right: 0 }}
+            borderPadding={{ top: 12, bottom: 0, left: 10, right: 0 }}
             data={getLegendData()}
             height={50}
             gutter={20}
           />
         }
         legendPosition="bottom-left"
-        name="chart5"
+        name={chartId}
         padding={{
           bottom: 60, // Adjusted to accommodate legend
           left: leftPadding, // Dynamically calculated based on the longest name
@@ -668,17 +714,19 @@ End: ${formatDate(tooltipData.y)}`;
             return (
               <ChartBar
                 data={s.datapoints}
-                key={`bar-${index}-${renderKey}`} // Include renderKey for forced re-render
-                name={`series-${index}`}
+                key={`bar-${index}`}
+                name={getSeriesName(index)}
                 barWidth={10}
                 style={{
                   data: {
                     fill: getPackageColor(s.packageType),
                     stroke: getPackageColor(s.packageType),
-                    fillOpacity: hiddenSeries.has(index) ? 0.3 : 1, // Ensure proper opacity based on hidden state
+                    fillOpacity:
+                      hiddenSeries.has(index) || (hoveredLegendIndex !== null && hoveredLegendIndex !== index)
+                        ? 0.3
+                        : 1,
                   },
                 }}
-                // Add direct event handlers for tooltips
                 events={[
                   {
                     target: 'data',
@@ -735,7 +783,6 @@ End: ${formatDate(tooltipData.y)}`;
                     },
                   },
                 ]}
-                // Empty tooltip component to satisfy PatternFly requirements
                 labelComponent={<ChartTooltip text={() => ''} active={false} />}
               />
             );
@@ -798,8 +845,6 @@ End: ${formatDate(tooltipData.y)}`;
                 },
               },
             ]}
-            // Empty tooltip component to satisfy PatternFly requirements
-            labelComponent={<ChartTooltip text={() => ''} active={false} />}
           />
         )}
       </Chart>
