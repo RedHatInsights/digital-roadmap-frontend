@@ -8,10 +8,28 @@ USER default
 
 RUN npm i -g yarn
 
+ARG APP_BUILD_DIR=dist
+ARG PACKAGE_JSON_PATH=package.json
+ARG ENABLE_SENTRY=false
+ARG SENTRY_AUTH_TOKEN
+ARG SENTRY_RELEASE
+ARG USES_YARN=false
+ARG YARN_BUILD_SCRIPT=""
+ARG NPM_BUILD_SCRIPT=""
+
+ENV ENABLE_SENTRY=${ENABLE_SENTRY}
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV USES_YARN=${USES_YARN}
+ENV YARN_BUILD_SCRIPT=${YARN_BUILD_SCRIPT}
+
 COPY build/*.sh /opt/app-root/bin/
 COPY --chown=default . .
 
-RUN universal_build.sh
+USER root
+RUN --mount=type=secret,id=build-container-additional-secret/secrets,required=false \
+  universal_build.sh
+USER default
 
 FROM quay.io/redhat-services-prod/hcm-eng-prod-tenant/caddy-ubi:latest
 
@@ -30,13 +48,17 @@ LABEL vendor="Red Hat, Inc."
 COPY LICENSE /licenses/
 
 ENV CADDY_TLS_MODE http_port 8000
+ENV ENV_PUBLIC_PATH "/default"
+
+ARG APP_BUILD_DIR=dist
+ARG PACKAGE_JSON_PATH=package.json
 
 # Copy the valpop binary from the valpop image
 COPY --from=quay.io/redhat-services-prod/hcc-platex-services-tenant/valpop:latest /usr/local/bin/valpop /usr/local/bin/valpop
 
 COPY --from=builder /opt/app-root/src/Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /opt/app-root/src/dist dist
-COPY package.json .
+COPY ${PACKAGE_JSON_PATH} .
 
 RUN useradd --key HOME_MODE=0775 --system --gid 0 caddy
 
