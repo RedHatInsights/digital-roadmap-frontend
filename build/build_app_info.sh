@@ -18,10 +18,12 @@
 #               pieces of source information.
 # ----------------------------------------------------------------------------
 
+export PACKAGE_JSON_PATH=${PACKAGE_JSON_PATH:-package.json}
+
 get_package_value() {
   local key="$1"
 
-  jq ".${key} // \"unknown\" " --raw-output < package.json
+  jq ".${key} // \"unknown\" " --raw-output < $PACKAGE_JSON_PATH
 }
 
 # handle_npm_list

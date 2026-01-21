@@ -1,8 +1,33 @@
 #!/bin/bash
+set -euo pipefail
 
 set -exv
 
-export OUTPUT_DIR=${OUTPUT_DIR:-dist}
+# ────────── SENTRY & SECRETS SETUP ──────────
+# Source secrets if the parse-secrets script exists
+if [[ -f ./build/parse-secrets.sh ]]; then
+  source ./build/parse-secrets.sh
+fi
+
+# Get the app name in uppercase format for secret lookup
+# Note: Uses PACKAGE_JSON_PATH env var (defaults to package.json)
+APP_NAME_FOR_SECRET="$(jq -r '.insights.appname' < "${PACKAGE_JSON_PATH:-package.json}" | tr '[:lower:]-' '[:upper:]_')"
+SECRET_VAR_NAME="${APP_NAME_FOR_SECRET}_SECRET"
+
+if [[ -n "${!SECRET_VAR_NAME:-}" ]]; then
+  export ENABLE_SENTRY=true
+  export SENTRY_AUTH_TOKEN="${!SECRET_VAR_NAME}"
+  echo "Sentry: token found for ${APP_NAME_FOR_SECRET} – enabling sourcemap upload."
+else
+  echo "Sentry: no token for ${APP_NAME_FOR_SECRET} – using any pre-set token (if provided) or skipping upload."
+fi
+
+# Configure git to trust this directory
+git config --global --add safe.directory /opt/app-root/src
+
+# ────────── END SENTRY & SECRETS SETUP ──────────
+
+export APP_BUILD_DIR=${APP_BUILD_DIR:-dist}
 
 function install() {
   if [ $USES_NPM == true ]; then
@@ -74,7 +99,7 @@ function setNpmOrYarn() {
 }
 
 get_appname_from_package() {
-  jq --raw-output '.insights.appname' < package.json
+  jq --raw-output '.insights.appname' < $PACKAGE_JSON_PATH
 }
 
 # Work around large package timeout; up default from 30s to 5m
@@ -93,5 +118,5 @@ install
 
 export BETA=false
 build
-build_app_info.sh > "${OUTPUT_DIR}/app.info.json"
+build_app_info.sh > "${APP_BUILD_DIR}/app.info.json"
 server_config_gen.sh

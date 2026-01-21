@@ -41,6 +41,19 @@ generate_caddy_config() {
 		}
 	}
 
+  # Handle env based main route
+  @env_match {
+      path {\$ENV_PUBLIC_PATH}*
+  }
+
+  handle @env_match {
+      uri strip_prefix {\$ENV_PUBLIC_PATH}
+      file_server * {
+          root /srv/${OUTPUT_DIR}
+          browse
+      }
+  }
+
 	handle / {
 		redir /apps/chrome/index.html permanent
 	}
