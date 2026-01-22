@@ -49,7 +49,7 @@ generate_caddy_config() {
   handle @env_match {
       uri strip_prefix {\$ENV_PUBLIC_PATH}
       file_server * {
-          root /srv/dist/${OUTPUT_DIR}
+          root /srv/${OUTPUT_DIR}
           browse
       }
   }

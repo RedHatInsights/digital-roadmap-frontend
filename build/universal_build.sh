@@ -3,6 +3,8 @@ set -euo pipefail
 
 set -exv
 
+export OUTPUT_DIR=${OUTPUT_DIR:-dist}
+
 # ────────── SENTRY & SECRETS SETUP ──────────
 # Source secrets if the parse-secrets script exists
 if [[ -f ./build/parse-secrets.sh ]]; then
