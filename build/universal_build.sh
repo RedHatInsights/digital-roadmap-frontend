@@ -28,6 +28,7 @@ git config --global --add safe.directory /opt/app-root/src
 # ────────── END SENTRY & SECRETS SETUP ──────────
 
 export APP_BUILD_DIR=${APP_BUILD_DIR:-dist}
+export OUTPUT_DIR=${OUTPUT_DIR:-dist}
 
 function install() {
   if [ $USES_NPM == true ]; then
