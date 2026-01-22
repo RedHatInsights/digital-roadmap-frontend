@@ -3,8 +3,6 @@ set -euo pipefail
 
 set -exv
 
-export OUTPUT_DIR=${OUTPUT_DIR:-dist}
-
 # ────────── SENTRY & SECRETS SETUP ──────────
 # Source secrets if the parse-secrets script exists
 if [[ -f ./build/parse-secrets.sh ]]; then
@@ -30,6 +28,8 @@ git config --global --add safe.directory /opt/app-root/src
 # ────────── END SENTRY & SECRETS SETUP ──────────
 
 export APP_BUILD_DIR=${APP_BUILD_DIR:-dist}
+
+export OUTPUT_DIR=${OUTPUT_DIR:-dist}
 
 function install() {
   if [ $USES_NPM == true ]; then
