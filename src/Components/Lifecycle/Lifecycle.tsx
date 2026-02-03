@@ -92,6 +92,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [isSwitchingView, setIsSwitchingView] = useState(false);
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
 
+  const [disableInstalledOnly, setDisableInstalledOnly] = useState<boolean>(false);
+
   const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const isAppStream = (v: string) =>
@@ -144,26 +146,38 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     allSystems?: SystemLifecycleChanges[],
     relatedSystems?: SystemLifecycleChanges[],
     allApps?: Stream[],
-    relatedApps?: Stream[]
+    relatedApps?: Stream[],
+    installedSystems?: SystemLifecycleChanges[],
+    installedApps?: Stream[]
   ) => {
     // Use passed data if available, otherwise fall back to state
-    const systemDataAll = allSystems || allSystemData;
-    const systemDataRelated = relatedSystems || relatedSystemData;
-    const appDataAll = allApps || allAppData;
-    const appDataRelated = relatedApps || relatedAppData;
+    const systemDataAll = allSystems ?? allSystemData;
+    const systemDataRelated = relatedSystems ?? relatedSystemData;
+    const systemDataInstalled = installedSystems ?? installedSystemData;
+
+    const appDataAll = allApps ?? allAppData;
+    const appDataRelated = relatedApps ?? relatedAppData;
+    const appDataInstalled = installedApps ?? installedAppData;
 
     if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       // For systems dropdown, only check system data
-      return viewFilter === 'all' ? systemDataAll.length > 0 : systemDataRelated.length > 0;
-    } else {
-      // For app stream dropdowns (DEFAULT, RHEL_8, RHEL_10), only check app data
-      const relevantAppData = viewFilter === 'all' ? appDataAll : appDataRelated;
-      const filteredAppData = filterAppDataByDropdown(
-        relevantAppData.filter((s) => !s.related),
-        dropdownValue
-      );
-      return filteredAppData.length > 0;
+      const sysData =
+        viewFilter === 'all'
+          ? systemDataAll
+          : viewFilter === 'installed-and-related'
+          ? systemDataRelated
+          : systemDataInstalled;
+      return getSystemsCountForDropdown(sysData) > 0;
     }
+
+    const appData =
+      viewFilter === 'all'
+        ? appDataAll
+        : viewFilter === 'installed-and-related'
+        ? appDataRelated
+        : appDataInstalled;
+
+    return getAppCountForDropdown(appData, dropdownValue) > 0;
   };
 
   // Helper function to determine if we should show noDataAvailable for current dropdown
@@ -172,20 +186,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     relatedSystems?: SystemLifecycleChanges[],
     relatedApps?: Stream[]
   ) => {
-    // Use passed data if available, otherwise fall back to state
-    const systemData = relatedSystems
-      ? relatedSystems.filter((s) => !s.related)
-      : installedSystemData.filter((s) => !s.related);
-    const appData = relatedApps
-      ? relatedApps.filter((s) => !s.related)
-      : installedAppData.filter((s) => !s.related);
+    const sysRelated = relatedSystems ?? relatedSystemData;
+    const appRelated = relatedApps ?? relatedAppData;
 
     if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       // For systems dropdown, check if we have any installed/related systems
-      return systemData.length === 0;
+      return sysRelated.length === 0;
     } else {
       // For app stream dropdowns, check if we have any installed/related apps for this specific dropdown
-      const installedAppStreams = filterAppDataByDropdown(appData, dropdownValue);
+      const installedAppStreams = filterAppDataByDropdown(appRelated, dropdownValue);
       return installedAppStreams.length === 0;
     }
   };
@@ -329,6 +338,28 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     queueMicrotask?.(() => setIsSwitchingView(false));
   };
 
+  const computeDisableInstalledOnly = (
+    dropdownValue: string,
+    installedSystems?: SystemLifecycleChanges[],
+    relatedSystems?: SystemLifecycleChanges[],
+    installedApps?: Stream[],
+    relatedApps?: Stream[]
+  ) => {
+    const sysInstalled = installedSystems ?? installedSystemData;
+    const sysRelated = relatedSystems ?? relatedSystemData;
+    const appInstalled = installedApps ?? installedAppData;
+    const appRelated = relatedApps ?? relatedAppData;
+
+    if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      return sysInstalled.length === 0 && sysRelated.length > 0;
+    }
+
+    const installedCount = filterAppDataByDropdown(appInstalled, dropdownValue).length;
+    const relatedCount = filterAppDataByDropdown(appRelated, dropdownValue).length;
+
+    return installedCount === 0 && relatedCount > 0;
+  };
+
   // First data fetch - called only once
   const initializeData = async (viewFilter: string) => {
     setIsLoading(true);
@@ -393,14 +424,40 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         allSystems,
         relatedInstalledSystems,
         allApps,
-        relatedInstalledApps
+        relatedInstalledApps,
+        installedSystems,
+        installedApps
       );
 
-      // Auto-switch to 'all' view if no data in current view
+      // Auto-switch strategy:
+      // installed-only -> installed-and-related (if available) -> all
       if (!hasDataForCurrentView && currentViewFilter !== 'all') {
-        currentViewFilter = 'all';
-        setSelectedViewFilter('all');
-        updateFilters({ viewFilter: 'all' });
+        if (currentViewFilter === 'installed-only') {
+          const hasDataForInstalledAndRelated = checkDataAvailability(
+            currentDropdown,
+            'installed-and-related',
+            allSystems,
+            relatedInstalledSystems,
+            allApps,
+            relatedInstalledApps,
+            installedSystems,
+            installedApps
+          );
+
+          if (hasDataForInstalledAndRelated) {
+            currentViewFilter = 'installed-and-related';
+            setSelectedViewFilter('installed-and-related');
+            updateFilters({ viewFilter: 'installed-and-related' });
+          } else {
+            currentViewFilter = 'all';
+            setSelectedViewFilter('all');
+            updateFilters({ viewFilter: 'all' });
+          }
+        } else {
+          currentViewFilter = 'all';
+          setSelectedViewFilter('all');
+          updateFilters({ viewFilter: 'all' });
+        }
       }
 
       // Directly use the fetched data to process without relying on state updates
@@ -489,6 +546,23 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         relatedInstalledApps
       );
 
+      const disableInstalledOnlyValue = computeDisableInstalledOnly(
+        finalDropdownValue,
+        installedSystems,
+        relatedInstalledSystems,
+        installedApps,
+        relatedInstalledApps
+      );
+      setDisableInstalledOnly(disableInstalledOnlyValue);
+
+      // If user is on installed-only but it would be empty while installed-and-related has data,
+      // automatically switch to installed-and-related.
+      if (disableInstalledOnlyValue && currentViewFilter === 'installed-only') {
+        currentViewFilter = 'installed-and-related';
+        setSelectedViewFilter('installed-and-related');
+        updateFilters({ viewFilter: 'installed-and-related' });
+      }
+
       console.log('Initial load noDataAvailable check:', {
         finalDropdownValue,
         relatedSystemsCount: relatedInstalledSystems.length,
@@ -546,6 +620,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     applyAllActiveFilters(dataToFilter, lifecycleDropdownValue, nameFilter);
   };
 
+  const getAppCountForDropdown = (data: Stream[], dropdownValue: string): number =>
+    filterAppDataByDropdown(data, dropdownValue).length;
+
+  const getSystemsCountForDropdown = (data: SystemLifecycleChanges[]): number => data.length;
+
   const selectSystemDataSource = (filter: string) => {
     switch (filter) {
       case 'all':
@@ -578,6 +657,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       // First load - initialize all data with the explicit viewFilter
       initializeData(viewFilter);
     } else {
+      let effectiveViewFilter = viewFilter;
       // Already have data - just process with current filter
       setIsLoading(true);
 
@@ -587,12 +667,40 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       // Set noDataAvailable based on the specific dropdown type
       setNoDataAvailable(shouldShowNoDataAvailable(lifecycleDropdownValue));
 
-      // Auto-switch to 'all' view if no data for current view
-      let effectiveViewFilter = viewFilter;
+      const disableInstalledOnlyValue = computeDisableInstalledOnly(lifecycleDropdownValue);
+      setDisableInstalledOnly(disableInstalledOnlyValue);
+
+      if (disableInstalledOnlyValue && viewFilter === 'installed-only') {
+        setSelectedViewFilter('installed-and-related');
+        updateFilters({ viewFilter: 'installed-and-related' });
+        // Re-run with effective view
+        processData('installed-and-related');
+        setIsLoading(false);
+        return;
+      }
+
       if (!hasRelevantData && viewFilter !== 'all') {
-        effectiveViewFilter = 'all';
-        setSelectedViewFilter('all');
-        updateFilters({ viewFilter: 'all' });
+        // Prefer "installed-and-related" over "all" when "installed-only" is empty but related has data.
+        if (viewFilter === 'installed-only') {
+          const hasInstalledAndRelatedData = checkDataAvailability(
+            lifecycleDropdownValue,
+            'installed-and-related'
+          );
+
+          if (hasInstalledAndRelatedData) {
+            effectiveViewFilter = 'installed-and-related';
+            setSelectedViewFilter('installed-and-related');
+            updateFilters({ viewFilter: 'installed-and-related' });
+          } else {
+            effectiveViewFilter = 'all';
+            setSelectedViewFilter('all');
+            updateFilters({ viewFilter: 'all' });
+          }
+        } else {
+          effectiveViewFilter = 'all';
+          setSelectedViewFilter('all');
+          updateFilters({ viewFilter: 'all' });
+        }
       }
 
       // Process cached data with the explicit viewFilter
@@ -603,7 +711,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
   // Update the view filter handler to use cached data
   const handleViewFilterChange = (filter: string) => {
-    console.log('View filter changed to:', filter);
+    // Prevent selecting "installed-only" when it's intentionally disabled
+    if (filter === 'installed-only' && disableInstalledOnly) {
+      setSelectedViewFilter('installed-and-related');
+      updateFilters({ viewFilter: 'installed-and-related' });
+      fetchData('installed-and-related');
+      return;
+    }
+
     setSelectedViewFilter(filter);
     updateFilters({ viewFilter: filter });
 
@@ -1053,6 +1168,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             rhelVersionOptions={rhelVersionOptions}
             initialRhelVersions={rhelVersionFilter}
             resetOnAppsSwitchKey={appsSwitchKey}
+            disableInstalledOnly={disableInstalledOnly}
           />
           {renderContent()}
         </Card>

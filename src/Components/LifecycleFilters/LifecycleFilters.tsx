@@ -43,6 +43,7 @@ interface LifecycleFiltersProps {
   rhelVersionOptions: string[];
   initialRhelVersions?: string[];
   resetOnAppsSwitchKey?: number;
+  disableInstalledOnly?: boolean;
 }
 
 const FIELD_OPTIONS = ['Name', 'Version'] as const;
@@ -64,6 +65,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   rhelVersionOptions,
   initialRhelVersions,
   resetOnAppsSwitchKey,
+  disableInstalledOnly,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -319,6 +321,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onSelect={onSelect}
             setIsOpen={setIsOpen}
             downloadCSV={downloadCSV}
+            disableInstalledOnly={disableInstalledOnly ?? false}
           />
         ) : (
           <AppStreamsViewToolbar
@@ -335,6 +338,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onSelect={onSelect}
             setIsOpen={setIsOpen}
             downloadCSV={downloadCSV}
+            disableInstalledOnly={disableInstalledOnly ?? false}
           />
         )}
       </Toolbar>

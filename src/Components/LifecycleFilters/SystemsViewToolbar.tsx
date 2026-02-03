@@ -57,6 +57,7 @@ interface SystemsViewToolbarProps {
   ) => void;
   setIsOpen: (open: boolean) => void;
   downloadCSV: () => void;
+  disableInstalledOnly: boolean;
 }
 
 export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps> = ({
@@ -85,6 +86,7 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
   onSelect,
   setIsOpen,
   downloadCSV,
+  disableInstalledOnly,
 }) => {
   return (
     <>
@@ -161,15 +163,19 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
                       </div>
                     </Tooltip>
                     <Tooltip
-                      content={getTooltipContent('installed-only')}
-                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                      content={
+                        disableInstalledOnly
+                          ? 'No installed RHEL releases found for this major version. Use "Installed and related" instead.'
+                          : getTooltipContent('installed-only')
+                      }
+                      trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
                     >
                       <div>
                         <ToggleGroupItem
                           text="Installed only"
                           buttonId="installed-only"
                           isSelected={selectedViewFilter === 'installed-only'}
-                          isDisabled={noDataAvailable}
+                          isDisabled={noDataAvailable || disableInstalledOnly}
                           onChange={handleItemClick}
                         />
                       </div>
