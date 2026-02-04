@@ -120,6 +120,14 @@ objects:
                   value: ${VNC_GEOMETRY}
                 - name: SE_NODE_MAX_SESSIONS
                   value: ${SE_NODE_MAX_SESSIONS}
+              readinessProbe:
+                httpGet:
+                  path: /status
+                  port: 4444
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 5
+                failureThreshold: 3
               resources:
                 limits:
                   cpu: ${SELENIUM_CPU_LIMIT}
