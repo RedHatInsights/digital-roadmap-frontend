@@ -95,6 +95,9 @@ objects:
                   href: /insights/planning/roadmap
 
       module:
+        analytics:
+          APIKey: HYwIDCAEy3o3xmI6sPXT8XhEAdkXS46u
+          APIKeyDev: opUqCKxRlCTMP6xgwSuUqSYkAjFyk8AC
         manifestLocation: "/apps/roadmap/fed-mods.json"
         modules:
           - id: "roadmap"
