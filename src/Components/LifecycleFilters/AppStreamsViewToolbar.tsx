@@ -34,6 +34,7 @@ interface AppStreamsViewToolbarProps {
   ) => void;
   setIsOpen: (open: boolean) => void;
   downloadCSV: () => void;
+  disableInstalledOnly: boolean;
 }
 
 export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolbarProps> = ({
@@ -49,6 +50,7 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
   onSelect,
   setIsOpen,
   downloadCSV,
+  disableInstalledOnly,
 }) => {
   return (
     <div className="drf-lifecycle__toolbar-row">
@@ -89,15 +91,22 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
                     </div>
                   </Tooltip>
                   <Tooltip
-                    content={getTooltipContent('installed-only')}
-                    trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    content={
+                      noDataAvailable
+                        ? getTooltipContent('installed-only')
+                        : disableInstalledOnly
+                        ? 'No installed application streams found for this RHEL major version. Use "Installed and related"' +
+                          ' instead.'
+                        : getTooltipContent('installed-only')
+                    }
+                    trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
                   >
                     <div>
                       <ToggleGroupItem
                         text="Installed only"
                         buttonId="installed-only"
                         isSelected={selectedViewFilter === 'installed-only'}
-                        isDisabled={noDataAvailable}
+                        isDisabled={noDataAvailable || disableInstalledOnly}
                         onChange={handleItemClick}
                       />
                     </div>
