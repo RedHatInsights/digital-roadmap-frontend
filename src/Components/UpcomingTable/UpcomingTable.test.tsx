@@ -4,6 +4,13 @@ import '@testing-library/jest-dom';
 import UpcomingTable from './UpcomingTable';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { DEFAULT_FILTERS } from '../../utils/utils';
+import { download, generateCsv } from 'export-to-csv';
+
+jest.mock('export-to-csv', () => ({
+  mkConfig: jest.fn(() => ({})),
+  generateCsv: jest.fn(() => () => 'csv,data'),
+  download: jest.fn(() => () => {}),
+}));
 
 // Mock the UpcomingTableFilters component
 jest.mock('./UpcomingTableFilters', () => {
@@ -20,6 +27,8 @@ jest.mock('./UpcomingTableFilters', () => {
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
+    downloadCSV,
+    canDownloadCSV,
   }: any) {
     return (
       <div data-testid="upcoming-table-filters">
@@ -48,6 +57,9 @@ jest.mock('./UpcomingTableFilters', () => {
         </button>
         <button data-testid="change-view-filter" onClick={() => handleViewFilterChange('all')}>
           Change View Filter
+        </button>
+        <button data-testid="download-csv" onClick={downloadCSV} disabled={!canDownloadCSV}>
+          Download CSV
         </button>
       </div>
     );
@@ -147,6 +159,9 @@ const defaultProps = {
 };
 
 describe('UpcomingTable', () => {
+  const mockedDownload = download as jest.Mock;
+  const mockedGenerateCsv = generateCsv as jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -419,6 +434,27 @@ describe('UpcomingTable', () => {
       fireEvent.click(screen.getByTestId('change-view-filter'));
 
       expect(defaultProps.handleViewFilterChange).toHaveBeenCalledWith('all');
+    });
+
+    test('downloads CSV for the currently filtered dataset', async () => {
+      render(<UpcomingTable {...defaultProps} />);
+
+      const searchInput = screen.getByTestId('search-input');
+      fireEvent.change(searchInput, { target: { value: 'Ruby' } });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-row-Ruby 2.7 EOL')).toBeInTheDocument();
+        expect(screen.queryByTestId('table-row-PostgreSQL 15 Feature')).not.toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('download-csv'));
+      expect(mockedGenerateCsv).toHaveBeenCalled();
+      expect(mockedDownload).toHaveBeenCalled();
+    });
+
+    test('disables CSV export when there are no rows to export', async () => {
+      render(<UpcomingTable {...defaultProps} data={[]} />);
+      expect(screen.getByTestId('download-csv')).toBeDisabled();
     });
 
     test('updates when data prop changes', async () => {

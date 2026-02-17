@@ -1,25 +1,30 @@
 #pagination-options-menu-bottom-bottom-toggle {
-    // Not sure why but otherwise the bottom pagination count is displayed in block
-    display: flex;
+  // Not sure why but otherwise the bottom pagination count is displayed in block
+  display: flex;
 }
 
 .drf-upcoming__filter-formgroup {
-    display: flex;
-    gap: 16px;
-    flex-direction: row;
-    align-items: center;
-    padding-left: 16px;
-  
-    label {
-      color: #000;
-      font-size: 16px;
-      font-weight: 500;
-      line-height: 24px;
-    }
+  display: flex;
+  gap: 16px;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 16px;
+
+  label {
+    color: #000;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
   }
-  
-  .pf-v6-c-table thead .pf-v6-c-table__toggle {
-    .pf-v6-c-button {
-      margin-left: -4px;
-    }
+}
+
+.drf-upcoming__filter-download {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.pf-v6-c-table thead .pf-v6-c-table__toggle {
+  .pf-v6-c-button {
+    margin-left: -4px;
   }
+}

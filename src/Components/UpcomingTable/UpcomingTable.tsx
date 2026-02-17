@@ -18,6 +18,7 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
 import { DEFAULT_FILTERS } from '../../utils/utils';
+import { download, generateCsv, mkConfig } from 'export-to-csv';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -73,6 +74,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
   const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
+  const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   useEffect(() => {
     if (initialTypeFilters.size === 0) {
@@ -295,6 +297,20 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setExpandedRows(newExpandedRows);
   };
 
+  const downloadCSV = () => {
+    const data = sortedFilteredData.map((item) => ({
+      Name: item.name,
+      Type: item.type,
+      Release: item.release,
+      'Release date': item.date,
+      Summary: item.details?.summary ?? '',
+      'Affected systems': item.details?.potentiallyAffectedSystemsCount ?? '',
+      'Tracking ticket': item.details?.trainingTicket ?? '',
+    }));
+    const csv = generateCsv(csvConfig)(data);
+    download(csvConfig)(csv);
+  };
+
   return (
     <React.Fragment>
       <UpcomingTableFilters
@@ -321,6 +337,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         selectedViewFilter={selectedViewFilter}
         handleViewFilterChange={handleViewFilterChange}
         noDataAvailable={noDataAvailable}
+        downloadCSV={downloadCSV}
+        canDownloadCSV={sortedFilteredData.length > 0}
       />
       <Table
         aria-label="Upcoming changes, deprecations, and additions to your system"

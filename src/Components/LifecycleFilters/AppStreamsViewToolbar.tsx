@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Button,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -15,7 +14,7 @@ import {
   ToolbarItem,
   Tooltip,
 } from '@patternfly/react-core';
-import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
+import ExportDataButton from '../ExportDataButton/ExportDataButton';
 
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
 
@@ -116,15 +115,7 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
             </Form>
           </ToolbarItem>
           <ToolbarItem>
-            <Tooltip content="Export data">
-              <Button
-                className="drf-lifecycle__filter-download"
-                variant="plain"
-                aria-label="Download visible dataset as CSV"
-                onClick={downloadCSV}
-                icon={<ExportIcon />}
-              ></Button>
-            </Tooltip>
+            <ExportDataButton className="drf-lifecycle__filter-download" onClick={downloadCSV} />
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
