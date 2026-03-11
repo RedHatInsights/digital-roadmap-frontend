@@ -24,7 +24,7 @@ import {
 import { FilterIcon } from '@patternfly/react-icons';
 import ExportDataButton from '../ExportDataButton/ExportDataButton';
 
-const FIELD_OPTIONS = ['Name', 'Version'] as const;
+const FIELD_OPTIONS = ['Name', 'Version', 'Status'] as const;
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
 
 interface SystemsViewToolbarProps {
@@ -41,8 +41,16 @@ interface SystemsViewToolbarProps {
   setIsRhelSelectOpen: (open: boolean) => void;
   onRhelSelect: (event?: React.MouseEvent, value?: string | number) => void;
   rhelVersionOptions: string[];
+  selectedStatuses: string[];
+  setSelectedStatuses: (statuses: string[]) => void;
+  onStatusesChange?: (statuses: string[]) => void;
+  isStatusSelectOpen: boolean;
+  setIsStatusSelectOpen: (open: boolean) => void;
+  onStatusSelect: (event?: React.MouseEvent, value?: string | number) => void;
+  statusOptions: string[];
   nameSearchInput: React.ReactNode;
   rhelVersionSelect: React.ReactNode;
+  statusSelect: React.ReactNode;
   selectedViewFilter: string;
   handleItemClick: (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => void;
   noDataAvailable: boolean;
@@ -73,8 +81,16 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
   setIsRhelSelectOpen,
   onRhelSelect,
   rhelVersionOptions,
+  selectedStatuses,
+  setSelectedStatuses,
+  onStatusesChange,
+  isStatusSelectOpen,
+  setIsStatusSelectOpen,
+  onStatusSelect,
+  statusOptions,
   nameSearchInput,
   rhelVersionSelect,
+  statusSelect,
   selectedViewFilter,
   handleItemClick,
   noDataAvailable,
@@ -137,6 +153,8 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
             )}
 
             {selectedField === 'Version' && <ToolbarItem key="version-select">{rhelVersionSelect}</ToolbarItem>}
+
+            {selectedField === 'Status' && <ToolbarItem key="status-select">{statusSelect}</ToolbarItem>}
           </ToolbarGroup>
 
           <ToolbarGroup>
@@ -237,7 +255,7 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
       </div>
 
       {/* Chips row below the toolbar */}
-      {nameFilter !== '' || selectedRhelVersions.length > 0 ? (
+      {nameFilter !== '' || selectedRhelVersions.length > 0 || selectedStatuses.length > 0 ? (
         <div style={{ paddingLeft: '0px', paddingRight: '24px', paddingTop: '8px' }}>
           {nameFilter !== '' && (
             <LabelGroup categoryName="Name" numLabels={1}>
@@ -268,6 +286,32 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
                   }}
                 >
                   {version}
+                </Label>
+              ))}
+            </LabelGroup>
+          )}
+
+          {selectedStatuses.length > 0 && (
+            <LabelGroup
+              categoryName="Status"
+              numLabels={3}
+              isClosable
+              onClick={() => {
+                setSelectedStatuses([]);
+                onStatusesChange?.([]);
+              }}
+            >
+              {selectedStatuses.map((status) => (
+                <Label
+                  key={status}
+                  variant="outline"
+                  onClose={() => {
+                    const next = selectedStatuses.filter((s) => s !== status);
+                    setSelectedStatuses(next);
+                    onStatusesChange?.(next);
+                  }}
+                >
+                  {status}
                 </Label>
               ))}
             </LabelGroup>

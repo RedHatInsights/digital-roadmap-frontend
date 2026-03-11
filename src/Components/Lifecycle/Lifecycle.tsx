@@ -89,6 +89,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
 
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
   const [isSwitchingView, setIsSwitchingView] = useState(false);
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
 
@@ -200,7 +202,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     dropdownValue: string,
     nameFilterValue: string,
     field: 'Name' | 'Version' = filterField,
-    versions: string[] = rhelVersionFilter
+    versions: string[] = rhelVersionFilter,
+    statuses: string[] = statusFilter
   ) => {
     let filteredData = data;
 
@@ -209,16 +212,28 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         dropdownValue
       )
     ) {
+      let result = data as Stream[];
+
       if (nameFilterValue) {
-        filteredData = (data as Stream[]).filter((datum) =>
+        result = result.filter((datum) =>
           `${datum.display_name.toLowerCase()}`.includes(nameFilterValue.toLowerCase())
         );
       }
+
+      if (Array.isArray(statuses) && statuses.length > 0) {
+        result = result.filter((datum) => statuses.includes(datum.support_status));
+      }
+
+      filteredData = result;
     } else if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       let result = data as SystemLifecycleChanges[];
 
       if (Array.isArray(versions) && versions.length > 0) {
         result = result.filter((datum) => versions.includes(`RHEL ${datum.major}`));
+      }
+
+      if (Array.isArray(statuses) && statuses.length > 0) {
+        result = result.filter((datum) => statuses.includes(datum.support_status));
       }
 
       if (nameFilterValue) {
@@ -277,8 +292,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (isCrossDomainSwitch) {
       setNameFilter('');
       setRhelVersionFilter([]);
+      setStatusFilter([]);
       setFilterField('Name');
-      updateFilters({ name: '', versions: [] });
+      updateFilters({ name: '', versions: [], statuses: [] });
 
       setAppsSwitchKey((k) => k + 1);
     }
@@ -511,7 +527,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             RHEL_SYSTEMS_DROPDOWN_VALUE,
             nameQueryParam ?? '',
             'Version',
-            valid
+            valid,
+            statusFilter
           );
         }
       } else {
@@ -579,7 +596,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const systemData = selectSystemDataSource(viewFilter);
       const updatedSystems = updateLifecycleData(systemData);
       setSystemLifecycleChanges(updatedSystems);
-      applyAllActiveFilters(updatedSystems, dropdownValue, nameFilterValue);
+      applyAllActiveFilters(
+        updatedSystems,
+        dropdownValue,
+        nameFilterValue,
+        filterField,
+        rhelVersionFilter,
+        statusFilter
+      );
       return;
     }
 
@@ -587,7 +611,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFullAppLifecycleChanges([...appData]);
     const appStreams = filterAppDataByDropdown([...appData], dropdownValue);
     setAppLifecycleChanges(appStreams);
-    applyAllActiveFilters(appStreams, dropdownValue, nameFilterValue);
+    applyAllActiveFilters(appStreams, dropdownValue, nameFilterValue, 'Name', [], statusFilter);
   };
 
   // Count "systems" by summing the `count` field (not by number of rows).
@@ -722,7 +746,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (nameQueryParam !== null) {
       setNameFilter(nameQueryParam);
       // Use our unified filter function
-      applyAllActiveFilters(data, dropdownValue, nameQueryParam);
+      const isSystemsDropdown = dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+      applyAllActiveFilters(
+        data,
+        dropdownValue,
+        nameQueryParam,
+        isSystemsDropdown ? filterField : 'Name',
+        isSystemsDropdown ? rhelVersionFilter : [],
+        statusFilter
+      );
     } else {
       let chartData;
       if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
@@ -771,6 +803,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const orderParam = searchParams.get('chartOrder');
   const viewFilterParam = searchParams.get('viewFilter');
   const versionsParam = searchParams.get('versions');
+  const statusesParam = searchParams.get('statuses');
 
   useEffect(() => {
     // Get view filter from URL params
@@ -804,6 +837,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setRhelVersionFilter(raw);
     }
 
+    if (statusesParam) {
+      const raw = decodeURIComponent(statusesParam)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      initialFilters.statuses = raw;
+      setStatusFilter(raw);
+    }
+
     initialFilters.viewFilter = initialViewFilter;
 
     setLifecycleDropdownValue(initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE);
@@ -820,10 +862,18 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const dataSource =
       lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
 
-    applyAllActiveFilters(dataSource, lifecycleDropdownValue, nameFilter, filterField, rhelVersionFilter);
+    applyAllActiveFilters(
+      dataSource,
+      lifecycleDropdownValue,
+      nameFilter,
+      filterField,
+      rhelVersionFilter,
+      statusFilter
+    );
   }, [
     nameFilter,
     rhelVersionFilter,
+    statusFilter,
     filterField,
     lifecycleDropdownValue,
     systemLifecycleChanges,
@@ -884,8 +934,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (name !== '') {
       const dataSource =
         lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
-
-      applyAllActiveFilters(dataSource, lifecycleDropdownValue, name);
+      const isSystemsDropdown = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+      applyAllActiveFilters(
+        dataSource,
+        lifecycleDropdownValue,
+        name,
+        filterField,
+        isSystemsDropdown ? rhelVersionFilter : [],
+        statusFilter
+      );
     } else {
       resetDataFiltering();
     }
@@ -897,7 +954,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     } else {
       const dataSource =
         lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
-      applyAllActiveFilters(dataSource, lifecycleDropdownValue, '', filterField, rhelVersionFilter);
+      const isSystemsDropdown = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+      applyAllActiveFilters(
+        dataSource,
+        lifecycleDropdownValue,
+        '',
+        filterField,
+        isSystemsDropdown ? rhelVersionFilter : [],
+        statusFilter
+      );
     }
   };
 
@@ -916,6 +981,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setSelectedViewFilter('installed-only');
     setFilterField('Name');
     setRhelVersionFilter([]);
+    setStatusFilter([]);
     setSearchParams(buildURL(DEFAULT_FILTERS));
 
     // Use the cached data
@@ -1145,8 +1211,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
               setRhelVersionFilter(versions);
               updateFilters({ versions });
             }}
+            onStatusesChange={(statuses) => {
+              setStatusFilter(statuses);
+              updateFilters({ statuses });
+            }}
             rhelVersionOptions={rhelVersionOptions}
             initialRhelVersions={rhelVersionFilter}
+            initialStatuses={statusFilter}
             resetOnAppsSwitchKey={appsSwitchKey}
             disableInstalledOnly={disableInstalledOnly}
           />
