@@ -1,12 +1,18 @@
 import React from 'react';
 import {
+  Badge,
   Dropdown,
   DropdownItem,
   DropdownList,
   Form,
   FormGroup,
+  Label,
+  LabelGroup,
   MenuToggle,
   SearchInput,
+  Select,
+  SelectList,
+  SelectOption,
   ToggleGroup,
   ToggleGroupItem,
   ToolbarContent,
@@ -14,13 +20,28 @@ import {
   ToolbarItem,
   Tooltip,
 } from '@patternfly/react-core';
+import { FilterIcon } from '@patternfly/react-icons';
 import ExportDataButton from '../ExportDataButton/ExportDataButton';
 
+const FIELD_OPTIONS = ['Name', 'Status'] as const;
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
 
 interface AppStreamsViewToolbarProps {
+  selectedField: (typeof FIELD_OPTIONS)[number];
+  isFieldOpen: boolean;
+  onFieldToggle: () => void;
+  onFieldSelect: (_event?: React.MouseEvent, value?: string | number) => void;
   nameFilter: string;
   setNameFilter: (name: string) => void;
+  selectedStatuses: string[];
+  setSelectedStatuses: (statuses: string[]) => void;
+  onStatusesChange?: (statuses: string[]) => void;
+  isStatusSelectOpen: boolean;
+  setIsStatusSelectOpen: (open: boolean) => void;
+  onStatusSelect: (event?: React.MouseEvent, value?: string | number) => void;
+  statusOptions: string[];
+  nameSearchInput: React.ReactNode;
+  statusSelect: React.ReactNode;
   selectedViewFilter: string;
   handleItemClick: (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => void;
   noDataAvailable: boolean;
@@ -38,8 +59,21 @@ interface AppStreamsViewToolbarProps {
 }
 
 export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolbarProps> = ({
+  selectedField,
+  isFieldOpen,
+  onFieldToggle,
+  onFieldSelect,
   nameFilter,
   setNameFilter,
+  selectedStatuses,
+  setSelectedStatuses,
+  onStatusesChange,
+  isStatusSelectOpen,
+  setIsStatusSelectOpen,
+  onStatusSelect,
+  statusOptions,
+  nameSearchInput,
+  statusSelect,
   selectedViewFilter,
   handleItemClick,
   noDataAvailable,
@@ -53,118 +87,194 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
   disableInstalledOnly,
 }) => {
   return (
-    <div className="drf-lifecycle__toolbar-row">
-      <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
-        <ToolbarGroup>
-          <ToolbarItem>
-            {/* Name input for AppStreams view */}
-            <SearchInput
-              placeholder="Filter by name"
-              value={nameFilter}
-              onChange={(_event, value) => setNameFilter(value)}
-              onClear={() => setNameFilter('')}
-              aria-label="Filter by name"
-            />
-          </ToolbarItem>
-        </ToolbarGroup>
+    <>
+      <div className="drf-lifecycle__toolbar-row">
+        <ToolbarContent className="drf-lifecycle__filters-toolbar-group">
+          <ToolbarGroup variant="filter-group">
+            <ToolbarItem>
+              <Select
+                aria-label="Select filter field"
+                isOpen={isFieldOpen}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    onFieldToggle();
+                  }
+                }}
+                onSelect={onFieldSelect}
+                selected={selectedField}
+                toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={onFieldToggle}
+                    isExpanded={isFieldOpen}
+                    icon={<FilterIcon />}
+                  >
+                    {selectedField}
+                  </MenuToggle>
+                )}
+              >
+                <SelectList>
+                  {FIELD_OPTIONS.map((opt) => (
+                    <SelectOption key={opt} value={opt} isSelected={selectedField === opt}>
+                      {opt}
+                    </SelectOption>
+                  ))}
+                </SelectList>
+              </Select>
+            </ToolbarItem>
 
-        <ToolbarGroup>
-          <ToolbarItem>
-            <Form>
-              <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
-                <ToggleGroup
-                  className="drf-lifecycle__toggle-group-fixed-height"
-                  aria-label="Whether installed and related, only installed or all items are displayed"
-                >
-                  <Tooltip
-                    content={getTooltipContent('installed-and-related')}
-                    trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+            {selectedField === 'Name' && (
+              <ToolbarItem key="name-search">
+                <SearchInput
+                  placeholder="Filter by name"
+                  value={nameFilter}
+                  onChange={(_event, value) => setNameFilter(value)}
+                  onClear={() => setNameFilter('')}
+                  aria-label="Filter by name"
+                />
+              </ToolbarItem>
+            )}
+
+            {selectedField === 'Status' && <ToolbarItem key="status-select">{statusSelect}</ToolbarItem>}
+          </ToolbarGroup>
+
+          <ToolbarGroup>
+            <ToolbarItem>
+              <Form>
+                <FormGroup className="drf-lifecycle__filter-formgroup" label="View" fieldId="view-filter">
+                  <ToggleGroup
+                    className="drf-lifecycle__toggle-group-fixed-height"
+                    aria-label="Whether installed and related, only installed or all items are displayed"
                   >
+                    <Tooltip
+                      content={getTooltipContent('installed-and-related')}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
+                      <div>
+                        <ToggleGroupItem
+                          text="Installed and related"
+                          buttonId="installed-and-related"
+                          isSelected={selectedViewFilter === 'installed-and-related'}
+                          isDisabled={noDataAvailable}
+                          onChange={handleItemClick}
+                        />
+                      </div>
+                    </Tooltip>
+                    <Tooltip
+                      content={
+                        noDataAvailable
+                          ? getTooltipContent('installed-only')
+                          : disableInstalledOnly
+                          ? 'No installed application streams found for this RHEL major version. Use "Installed and related"' +
+                            ' instead.'
+                          : getTooltipContent('installed-only')
+                      }
+                      trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
+                    >
+                      <div>
+                        <ToggleGroupItem
+                          text="Installed only"
+                          buttonId="installed-only"
+                          isSelected={selectedViewFilter === 'installed-only'}
+                          isDisabled={noDataAvailable || disableInstalledOnly}
+                          onChange={handleItemClick}
+                        />
+                      </div>
+                    </Tooltip>
                     <div>
                       <ToggleGroupItem
-                        text="Installed and related"
-                        buttonId="installed-and-related"
-                        isSelected={selectedViewFilter === 'installed-and-related'}
-                        isDisabled={noDataAvailable}
+                        text="All"
+                        buttonId="all"
+                        isSelected={selectedViewFilter === 'all'}
                         onChange={handleItemClick}
                       />
                     </div>
-                  </Tooltip>
-                  <Tooltip
-                    content={
-                      noDataAvailable
-                        ? getTooltipContent('installed-only')
-                        : disableInstalledOnly
-                        ? 'No installed application streams found for this RHEL major version. Use "Installed and related"' +
-                          ' instead.'
-                        : getTooltipContent('installed-only')
-                    }
-                    trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
+                  </ToggleGroup>
+                </FormGroup>
+              </Form>
+            </ToolbarItem>
+            <ToolbarItem>
+              <ExportDataButton className="drf-lifecycle__filter-download" onClick={downloadCSV} />
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarContent>
+        <ToolbarContent className="drf-lifecycle__sort-toolbar-content">
+          <ToolbarGroup className="drf-lifecycle__sort-group">
+            <ToolbarItem>
+              <Form>
+                <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
+                  <Dropdown
+                    isOpen={isOpen}
+                    onSelect={onSelect}
+                    onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+                      <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
+                        {selectedChartSortBy}
+                      </MenuToggle>
+                    )}
+                    ouiaId="Value to sort lifecycle chart by"
+                    shouldFocusToggleOnSelect
+                    popperProps={{ enableFlip: true, position: 'end' }}
                   >
-                    <div>
-                      <ToggleGroupItem
-                        text="Installed only"
-                        buttonId="installed-only"
-                        isSelected={selectedViewFilter === 'installed-only'}
-                        isDisabled={noDataAvailable || disableInstalledOnly}
-                        onChange={handleItemClick}
-                      />
-                    </div>
-                  </Tooltip>
-                  <div>
-                    <ToggleGroupItem
-                      text="All"
-                      buttonId="all"
-                      isSelected={selectedViewFilter === 'all'}
-                      onChange={handleItemClick}
-                    />
-                  </div>
-                </ToggleGroup>
-              </FormGroup>
-            </Form>
-          </ToolbarItem>
-          <ToolbarItem>
-            <ExportDataButton className="drf-lifecycle__filter-download" onClick={downloadCSV} />
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarContent>
-      <ToolbarContent className="drf-lifecycle__sort-toolbar-content">
-        <ToolbarGroup className="drf-lifecycle__sort-group">
-          <ToolbarItem>
-            <Form>
-              <FormGroup className="drf-lifecycle__filter-formgroup" label="Sort by" fieldId="sort-chart-by">
-                <Dropdown
-                  isOpen={isOpen}
-                  onSelect={onSelect}
-                  onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
-                  toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-                    <MenuToggle ref={toggleRef} onClick={onToggleClick} isExpanded={isOpen}>
-                      {selectedChartSortBy}
-                    </MenuToggle>
-                  )}
-                  ouiaId="Value to sort lifecycle chart by"
-                  shouldFocusToggleOnSelect
-                  popperProps={{ enableFlip: true, position: 'end' }}
+                    <DropdownList>
+                      {DROPDOWN_ITEMS.map((item) => (
+                        <DropdownItem
+                          value={item}
+                          key={item}
+                          isSelected={item === selectedChartSortBy}
+                          isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
+                        >
+                          {item}
+                        </DropdownItem>
+                      ))}
+                    </DropdownList>
+                  </Dropdown>
+                </FormGroup>
+              </Form>
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarContent>
+      </div>
+
+      {/* Chips row below the toolbar */}
+      {nameFilter !== '' || selectedStatuses.length > 0 ? (
+        <div style={{ paddingLeft: '0px', paddingRight: '24px', paddingTop: '8px' }}>
+          {nameFilter !== '' && (
+            <LabelGroup categoryName="Name" numLabels={1}>
+              <Label variant="outline" onClose={() => setNameFilter('')}>
+                {nameFilter}
+              </Label>
+            </LabelGroup>
+          )}
+
+          {selectedStatuses.length > 0 && (
+            <LabelGroup
+              categoryName="Status"
+              numLabels={3}
+              isClosable
+              onClick={() => {
+                setSelectedStatuses([]);
+                onStatusesChange?.([]);
+              }}
+            >
+              {selectedStatuses.map((status) => (
+                <Label
+                  key={status}
+                  variant="outline"
+                  onClose={() => {
+                    const next = selectedStatuses.filter((s) => s !== status);
+                    setSelectedStatuses(next);
+                    onStatusesChange?.(next);
+                  }}
                 >
-                  <DropdownList>
-                    {DROPDOWN_ITEMS.map((item) => (
-                      <DropdownItem
-                        value={item}
-                        key={item}
-                        isSelected={item === selectedChartSortBy}
-                        isDisabled={item === 'Systems' && selectedViewFilter === 'all'}
-                      >
-                        {item}
-                      </DropdownItem>
-                    ))}
-                  </DropdownList>
-                </Dropdown>
-              </FormGroup>
-            </Form>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarContent>
-    </div>
+                  {status}
+                </Label>
+              ))}
+            </LabelGroup>
+          )}
+        </div>
+      ) : null}
+    </>
   );
 };
 

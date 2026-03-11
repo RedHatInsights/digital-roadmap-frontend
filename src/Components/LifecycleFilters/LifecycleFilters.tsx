@@ -40,13 +40,50 @@ interface LifecycleFiltersProps {
   noDataAvailable: boolean;
   onFilterFieldChange?: (field: 'Name' | 'Version') => void;
   onRhelVersionsChange?: (versions: string[]) => void;
+  onStatusesChange?: (statuses: string[]) => void;
   rhelVersionOptions: string[];
   initialRhelVersions?: string[];
+  initialStatuses?: string[];
   resetOnAppsSwitchKey?: number;
   disableInstalledOnly?: boolean;
 }
 
-const FIELD_OPTIONS = ['Name', 'Version'] as const;
+const SYSTEM_FIELD_OPTIONS = ['Name', 'Version', 'Status'] as const;
+const APP_FIELD_OPTIONS = ['Name', 'Status'] as const;
+
+// App streams status display labels (shown in UI)
+const ALL_APP_STATUS_OPTIONS = ['Supported', 'Support ends within 6 months', 'Retired', 'Upcoming release', 'Not installed'] as const;
+
+// Systems status display labels (shown in UI)
+const ALL_SYSTEM_STATUS_OPTIONS = ['Supported', 'Support ends within 3 months', 'Retired', 'Upcoming release', 'Not installed'] as const;
+
+// Mapping from display labels to API data values
+const STATUS_DISPLAY_TO_VALUE: Record<string, string> = {
+  'Supported': 'Supported',
+  'Support ends within 6 months': 'Near retirement',
+  'Support ends within 3 months': 'Near retirement',
+  'Retired': 'Retired',
+  'Upcoming release': 'Upcoming release',
+  'Not installed': 'Not installed',
+};
+
+// Mapping from API data values to display labels (for app streams)
+const STATUS_VALUE_TO_APP_DISPLAY: Record<string, string> = {
+  'Supported': 'Supported',
+  'Near retirement': 'Support ends within 6 months',
+  'Retired': 'Retired',
+  'Upcoming release': 'Upcoming release',
+  'Not installed': 'Not installed',
+};
+
+// Mapping from API data values to display labels (for systems)
+const STATUS_VALUE_TO_SYSTEM_DISPLAY: Record<string, string> = {
+  'Supported': 'Supported',
+  'Near retirement': 'Support ends within 3 months',
+  'Retired': 'Retired',
+  'Upcoming release': 'Upcoming release',
+  'Not installed': 'Not installed',
+};
 
 export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = ({
   nameFilter,
@@ -62,20 +99,41 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   noDataAvailable,
   onFilterFieldChange,
   onRhelVersionsChange,
+  onStatusesChange,
   rhelVersionOptions,
   initialRhelVersions,
+  initialStatuses,
   resetOnAppsSwitchKey,
   disableInstalledOnly,
 }: LifecycleFiltersProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const [selectedField, setSelectedField] = React.useState<(typeof FIELD_OPTIONS)[number]>('Name');
+  const [selectedField, setSelectedField] = React.useState<(typeof SYSTEM_FIELD_OPTIONS)[number]>('Name');
   const [isFieldOpen, setIsFieldOpen] = React.useState(false);
 
   const [isRhelSelectOpen, setIsRhelSelectOpen] = React.useState(false);
 
   const [selectedRhelVersions, setSelectedRhelVersions] = React.useState<string[]>([]);
   const hasInitializedFromParent = React.useRef(false);
+
+  // App streams filter states
+  const [selectedAppField, setSelectedAppField] = React.useState<(typeof APP_FIELD_OPTIONS)[number]>('Name');
+  const [isAppFieldOpen, setIsAppFieldOpen] = React.useState(false);
+  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  const [isStatusSelectOpen, setIsStatusSelectOpen] = React.useState(false);
+
+  // Compute available status options based on view filter and lifecycle type
+  const statusOptions = React.useMemo(() => {
+    const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+    const baseOptions = isSystemsView ? ALL_SYSTEM_STATUS_OPTIONS : ALL_APP_STATUS_OPTIONS;
+
+    // "Not installed" should not be available in "all" view
+    if (selectedViewFilter === 'all') {
+      return baseOptions.filter((status) => status !== 'Not installed');
+    }
+    return Array.from(baseOptions);
+  }, [selectedViewFilter, lifecycleDropdownValue]);
+
   // Handle switching to "all" view when sort is set to "Systems"
   React.useEffect(() => {
     if (selectedViewFilter === 'all' && selectedChartSortBy === 'Systems') {
@@ -83,6 +141,19 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       updateChartSortValue('Retirement date', 'asc');
     }
   }, [selectedViewFilter, selectedChartSortBy, updateChartSortValue]);
+
+  // Clear "Not installed" status when switching to "all" view
+  const prevViewFilter = React.useRef(selectedViewFilter);
+  React.useEffect(() => {
+    if (prevViewFilter.current !== 'all' && selectedViewFilter === 'all' && selectedStatuses.includes('Not installed')) {
+      const filtered = selectedStatuses.filter((s) => s !== 'Not installed');
+      setSelectedStatuses(filtered);
+      // Convert display labels to API values before passing to parent
+      const apiValues = filtered.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+      onStatusesChange?.(apiValues);
+    }
+    prevViewFilter.current = selectedViewFilter;
+  }, [selectedViewFilter]);
 
   // When filter select options changes
   React.useEffect(() => {
@@ -104,11 +175,22 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   }, [initialRhelVersions, rhelVersionOptions]);
 
   React.useEffect(() => {
+    if (!initialStatuses) return;
+    // Convert API values to display labels based on lifecycle type
+    const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+    const mapping = isSystemsView ? STATUS_VALUE_TO_SYSTEM_DISPLAY : STATUS_VALUE_TO_APP_DISPLAY;
+    const displayLabels = initialStatuses.map((apiValue) => mapping[apiValue] || apiValue);
+    setSelectedStatuses(displayLabels);
+  }, [initialStatuses, lifecycleDropdownValue]);
+
+  React.useEffect(() => {
     if (resetOnAppsSwitchKey === undefined) return;
     setNameFilter('');
     setSelectedRhelVersions([]);
     onRhelVersionsChange?.([]);
     setSelectedField('Name');
+    setSelectedAppField('Name');
+    setSelectedStatuses([]);
     onFilterFieldChange?.('Name');
   }, [resetOnAppsSwitchKey]);
 
@@ -189,7 +271,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const onFieldToggle = () => setIsFieldOpen((prev) => !prev);
   const onFieldSelect = (_event?: React.MouseEvent, value?: string | number) => {
     if (typeof value === 'string') {
-      setSelectedField(value as (typeof FIELD_OPTIONS)[number]);
+      setSelectedField(value as (typeof SYSTEM_FIELD_OPTIONS)[number]);
       onFilterFieldChange?.(value === 'Name' ? 'Name' : 'Version');
     }
     setIsFieldOpen(false);
@@ -208,11 +290,37 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     });
   };
 
+  // App streams field toggle handlers
+  const onAppFieldToggle = () => setIsAppFieldOpen((prev) => !prev);
+  const onAppFieldSelect = (_event?: React.MouseEvent, value?: string | number) => {
+    if (typeof value === 'string') {
+      setSelectedAppField(value as (typeof APP_FIELD_OPTIONS)[number]);
+    }
+    setIsAppFieldOpen(false);
+  };
+
+  // Status multi-select handlers (checkbox select)
+  const onStatusSelect = (event?: React.MouseEvent, value?: string | number) => {
+    if (value == null) return;
+    const v = String(value);
+    const checked = (event?.target as HTMLInputElement | undefined)?.checked ?? false;
+
+    setSelectedStatuses((prev) => {
+      const next = checked ? (prev.includes(v) ? prev : [...prev, v]) : prev.filter((x) => x !== v);
+      // Convert display labels to API values before passing to parent
+      const apiValues = next.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+      onStatusesChange?.(apiValues);
+      return next;
+    });
+  };
+
   const handleClearAllFilters = () => {
     setNameFilter('');
     const none: string[] = [];
     setSelectedRhelVersions(none);
+    setSelectedStatuses(none);
     onRhelVersionsChange?.(none);
+    onStatusesChange?.(none);
     onFilterFieldChange?.('Name');
   };
 
@@ -247,6 +355,31 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       <SelectList>
         {rhelVersionOptions.map((opt) => (
           <SelectOption key={opt} value={opt} hasCheckbox isSelected={selectedRhelVersions.includes(opt)}>
+            {opt}
+          </SelectOption>
+        ))}
+      </SelectList>
+    </Select>
+  );
+
+  const statusSelect = (
+    <Select
+      aria-label="Status"
+      isOpen={isStatusSelectOpen}
+      onOpenChange={(open) => setIsStatusSelectOpen(open)}
+      onSelect={onStatusSelect}
+      selected={selectedStatuses}
+      toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
+        <MenuToggle ref={toggleRef} onClick={() => setIsStatusSelectOpen((p) => !p)} isExpanded={isStatusSelectOpen}>
+          Status
+          {selectedStatuses.length > 0 && <Badge isRead>{selectedStatuses.length}</Badge>}
+        </MenuToggle>
+      )}
+      role="menu"
+    >
+      <SelectList>
+        {statusOptions.map((opt) => (
+          <SelectOption key={opt} value={opt} hasCheckbox isSelected={selectedStatuses.includes(opt)}>
             {opt}
           </SelectOption>
         ))}
@@ -309,8 +442,21 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             setIsRhelSelectOpen={setIsRhelSelectOpen}
             onRhelSelect={onRhelSelect}
             rhelVersionOptions={rhelVersionOptions}
+            selectedStatuses={selectedStatuses}
+            setSelectedStatuses={setSelectedStatuses}
+            onStatusesChange={(statuses) => {
+              setSelectedStatuses(statuses);
+              // Convert display labels to API values before passing to parent
+              const apiValues = statuses.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+              onStatusesChange?.(apiValues);
+            }}
+            isStatusSelectOpen={isStatusSelectOpen}
+            setIsStatusSelectOpen={setIsStatusSelectOpen}
+            onStatusSelect={onStatusSelect}
+            statusOptions={statusOptions}
             nameSearchInput={nameSearchInput}
             rhelVersionSelect={rhelVersionSelect}
+            statusSelect={statusSelect}
             selectedViewFilter={selectedViewFilter}
             handleItemClick={handleItemClick}
             noDataAvailable={noDataAvailable}
@@ -326,8 +472,26 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
         ) : (
           <AppStreamsViewToolbar
             key={lifecycleDropdownValue}
+            selectedField={selectedAppField}
+            isFieldOpen={isAppFieldOpen}
+            onFieldToggle={onAppFieldToggle}
+            onFieldSelect={onAppFieldSelect}
             nameFilter={nameFilter}
             setNameFilter={setNameFilter}
+            selectedStatuses={selectedStatuses}
+            setSelectedStatuses={setSelectedStatuses}
+            onStatusesChange={(statuses) => {
+              setSelectedStatuses(statuses);
+              // Convert display labels to API values before passing to parent
+              const apiValues = statuses.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+              onStatusesChange?.(apiValues);
+            }}
+            isStatusSelectOpen={isStatusSelectOpen}
+            setIsStatusSelectOpen={setIsStatusSelectOpen}
+            onStatusSelect={onStatusSelect}
+            statusOptions={statusOptions}
+            nameSearchInput={nameSearchInput}
+            statusSelect={statusSelect}
             selectedViewFilter={selectedViewFilter}
             handleItemClick={handleItemClick}
             noDataAvailable={noDataAvailable}
