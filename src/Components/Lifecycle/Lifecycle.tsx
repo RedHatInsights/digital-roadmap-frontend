@@ -596,7 +596,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       const systemData = selectSystemDataSource(viewFilter);
       const updatedSystems = updateLifecycleData(systemData);
       setSystemLifecycleChanges(updatedSystems);
-      applyAllActiveFilters(updatedSystems, dropdownValue, nameFilterValue, filterField, rhelVersionFilter, statusFilter);
+      applyAllActiveFilters(
+        updatedSystems,
+        dropdownValue,
+        nameFilterValue,
+        filterField,
+        rhelVersionFilter,
+        statusFilter
+      );
       return;
     }
 
@@ -855,7 +862,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const dataSource =
       lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE ? systemLifecycleChanges : appLifecycleChanges;
 
-    applyAllActiveFilters(dataSource, lifecycleDropdownValue, nameFilter, filterField, rhelVersionFilter, statusFilter);
+    applyAllActiveFilters(
+      dataSource,
+      lifecycleDropdownValue,
+      nameFilter,
+      filterField,
+      rhelVersionFilter,
+      statusFilter
+    );
   }, [
     nameFilter,
     rhelVersionFilter,

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Badge,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -43,7 +42,7 @@ interface AppStreamsViewToolbarProps {
   nameSearchInput: React.ReactNode;
   statusSelect: React.ReactNode;
   selectedViewFilter: string;
-  handleItemClick: (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => void;
+  handleItemClick: (event: React.MouseEvent<unknown> | React.KeyboardEvent | MouseEvent) => void;
   noDataAvailable: boolean;
   getTooltipContent: (buttonId: string) => string | undefined;
   selectedChartSortBy: string;
@@ -68,11 +67,6 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
   selectedStatuses,
   setSelectedStatuses,
   onStatusesChange,
-  isStatusSelectOpen,
-  setIsStatusSelectOpen,
-  onStatusSelect,
-  statusOptions,
-  nameSearchInput,
   statusSelect,
   selectedViewFilter,
   handleItemClick,
@@ -165,8 +159,8 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
                         noDataAvailable
                           ? getTooltipContent('installed-only')
                           : disableInstalledOnly
-                          ? 'No installed application streams found for this RHEL major version. Use "Installed and related"' +
-                            ' instead.'
+                          ? 'No installed application streams found for this RHEL major version. ' +
+                            'Use "Installed and related" instead.'
                           : getTooltipContent('installed-only')
                       }
                       trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}

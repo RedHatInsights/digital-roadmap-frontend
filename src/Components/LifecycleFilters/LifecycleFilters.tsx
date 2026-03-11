@@ -52,35 +52,47 @@ const SYSTEM_FIELD_OPTIONS = ['Name', 'Version', 'Status'] as const;
 const APP_FIELD_OPTIONS = ['Name', 'Status'] as const;
 
 // App streams status display labels (shown in UI)
-const ALL_APP_STATUS_OPTIONS = ['Supported', 'Support ends within 6 months', 'Retired', 'Upcoming release', 'Not installed'] as const;
+const ALL_APP_STATUS_OPTIONS = [
+  'Supported',
+  'Support ends within 6 months',
+  'Retired',
+  'Upcoming release',
+  'Not installed',
+] as const;
 
 // Systems status display labels (shown in UI)
-const ALL_SYSTEM_STATUS_OPTIONS = ['Supported', 'Support ends within 3 months', 'Retired', 'Upcoming release', 'Not installed'] as const;
+const ALL_SYSTEM_STATUS_OPTIONS = [
+  'Supported',
+  'Support ends within 3 months',
+  'Retired',
+  'Upcoming release',
+  'Not installed',
+] as const;
 
 // Mapping from display labels to API data values
 const STATUS_DISPLAY_TO_VALUE: Record<string, string> = {
-  'Supported': 'Supported',
+  Supported: 'Supported',
   'Support ends within 6 months': 'Near retirement',
   'Support ends within 3 months': 'Near retirement',
-  'Retired': 'Retired',
+  Retired: 'Retired',
   'Upcoming release': 'Upcoming release',
   'Not installed': 'Not installed',
 };
 
 // Mapping from API data values to display labels (for app streams)
 const STATUS_VALUE_TO_APP_DISPLAY: Record<string, string> = {
-  'Supported': 'Supported',
+  Supported: 'Supported',
   'Near retirement': 'Support ends within 6 months',
-  'Retired': 'Retired',
+  Retired: 'Retired',
   'Upcoming release': 'Upcoming release',
   'Not installed': 'Not installed',
 };
 
 // Mapping from API data values to display labels (for systems)
 const STATUS_VALUE_TO_SYSTEM_DISPLAY: Record<string, string> = {
-  'Supported': 'Supported',
+  Supported: 'Supported',
   'Near retirement': 'Support ends within 3 months',
-  'Retired': 'Retired',
+  Retired: 'Retired',
   'Upcoming release': 'Upcoming release',
   'Not installed': 'Not installed',
 };
@@ -145,7 +157,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   // Clear "Not installed" status when switching to "all" view
   const prevViewFilter = React.useRef(selectedViewFilter);
   React.useEffect(() => {
-    if (prevViewFilter.current !== 'all' && selectedViewFilter === 'all' && selectedStatuses.includes('Not installed')) {
+    if (
+      prevViewFilter.current !== 'all' &&
+      selectedViewFilter === 'all' &&
+      selectedStatuses.includes('Not installed')
+    ) {
       const filtered = selectedStatuses.filter((s) => s !== 'Not installed');
       setSelectedStatuses(filtered);
       // Convert display labels to API values before passing to parent
@@ -370,7 +386,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       onSelect={onStatusSelect}
       selected={selectedStatuses}
       toggle={(toggleRef: React.Ref<HTMLDivElement>) => (
-        <MenuToggle ref={toggleRef} onClick={() => setIsStatusSelectOpen((p) => !p)} isExpanded={isStatusSelectOpen}>
+        <MenuToggle
+          ref={toggleRef}
+          onClick={() => setIsStatusSelectOpen((p) => !p)}
+          isExpanded={isStatusSelectOpen}
+        >
           Status
           {selectedStatuses.length > 0 && <Badge isRead>{selectedStatuses.length}</Badge>}
         </MenuToggle>
@@ -447,7 +467,9 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onStatusesChange={(statuses) => {
               setSelectedStatuses(statuses);
               // Convert display labels to API values before passing to parent
-              const apiValues = statuses.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+              const apiValues = statuses.map(
+                (displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel
+              );
               onStatusesChange?.(apiValues);
             }}
             isStatusSelectOpen={isStatusSelectOpen}
@@ -483,7 +505,9 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onStatusesChange={(statuses) => {
               setSelectedStatuses(statuses);
               // Convert display labels to API values before passing to parent
-              const apiValues = statuses.map((displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel);
+              const apiValues = statuses.map(
+                (displayLabel) => STATUS_DISPLAY_TO_VALUE[displayLabel] || displayLabel
+              );
               onStatusesChange?.(apiValues);
             }}
             isStatusSelectOpen={isStatusSelectOpen}
