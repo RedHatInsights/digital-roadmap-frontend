@@ -38,7 +38,7 @@ interface LifecycleFiltersProps {
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable: boolean;
-  onFilterFieldChange?: (field: 'Name' | 'Version') => void;
+  onFilterFieldChange?: (field: 'Name' | 'Version' | 'Status') => void;
   onRhelVersionsChange?: (versions: string[]) => void;
   onStatusesChange?: (statuses: string[]) => void;
   rhelVersionOptions: string[];
@@ -183,32 +183,54 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
     });
   }, [rhelVersionOptions]);
 
+  // Combined effect to handle initialization from URL parameters
   React.useEffect(() => {
-    if (!initialRhelVersions) return;
-    const valid = initialRhelVersions.filter((v) => rhelVersionOptions.includes(v));
-    setSelectedRhelVersions(valid);
-    hasInitializedFromParent.current = true;
-  }, [initialRhelVersions, rhelVersionOptions]);
-
-  React.useEffect(() => {
-    if (!initialStatuses) return;
-    // Convert API values to display labels based on lifecycle type
     const isSystemsView = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
-    const mapping = isSystemsView ? STATUS_VALUE_TO_SYSTEM_DISPLAY : STATUS_VALUE_TO_APP_DISPLAY;
-    const displayLabels = initialStatuses.map((apiValue) => mapping[apiValue] || apiValue);
-    setSelectedStatuses(displayLabels);
-  }, [initialStatuses, lifecycleDropdownValue]);
 
+    // Initialize RHEL versions
+    if (initialRhelVersions) {
+      const valid = initialRhelVersions.filter((v) => rhelVersionOptions.includes(v));
+      setSelectedRhelVersions(valid);
+      hasInitializedFromParent.current = true;
+    }
+
+    // Initialize statuses and convert API values to display labels
+    if (initialStatuses) {
+      const mapping = isSystemsView ? STATUS_VALUE_TO_SYSTEM_DISPLAY : STATUS_VALUE_TO_APP_DISPLAY;
+      const displayLabels = initialStatuses.map((apiValue) => mapping[apiValue] || apiValue);
+      setSelectedStatuses(displayLabels);
+    }
+
+    // Set the appropriate field based on which filters are present (status takes precedence)
+    if (initialStatuses && initialStatuses.length > 0) {
+      // Status filters present - set field to 'Status'
+      if (isSystemsView) {
+        setSelectedField('Status');
+      } else {
+        setSelectedAppField('Status');
+      }
+    } else if (initialRhelVersions && initialRhelVersions.length > 0 && isSystemsView) {
+      // Version filters present (only for systems view) - set field to 'Version'
+      setSelectedField('Version');
+    }
+  }, [initialStatuses, initialRhelVersions, lifecycleDropdownValue, rhelVersionOptions]);
+
+  // Track previous resetOnAppsSwitchKey to only reset when it actually changes
+  const prevResetKey = React.useRef<number | undefined>(resetOnAppsSwitchKey);
   React.useEffect(() => {
     if (resetOnAppsSwitchKey === undefined) return;
-    setNameFilter('');
-    setSelectedRhelVersions([]);
-    onRhelVersionsChange?.([]);
-    setSelectedField('Name');
-    setSelectedAppField('Name');
-    setSelectedStatuses([]);
-    onFilterFieldChange?.('Name');
-  }, [resetOnAppsSwitchKey]);
+    // Only reset if the key has changed from a previous value (not on initial mount)
+    if (prevResetKey.current !== undefined && prevResetKey.current !== resetOnAppsSwitchKey) {
+      setNameFilter('');
+      setSelectedRhelVersions([]);
+      onRhelVersionsChange?.([]);
+      setSelectedField('Name');
+      setSelectedAppField('Name');
+      setSelectedStatuses([]);
+      onFilterFieldChange?.('Name');
+    }
+    prevResetKey.current = resetOnAppsSwitchKey;
+  }, [resetOnAppsSwitchKey, onRhelVersionsChange, onFilterFieldChange]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
@@ -288,7 +310,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const onFieldSelect = (_event?: React.MouseEvent, value?: string | number) => {
     if (typeof value === 'string') {
       setSelectedField(value as (typeof SYSTEM_FIELD_OPTIONS)[number]);
-      onFilterFieldChange?.(value === 'Name' ? 'Name' : 'Version');
+      onFilterFieldChange?.(value as 'Name' | 'Version' | 'Status');
     }
     setIsFieldOpen(false);
   };
@@ -311,6 +333,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   const onAppFieldSelect = (_event?: React.MouseEvent, value?: string | number) => {
     if (typeof value === 'string') {
       setSelectedAppField(value as (typeof APP_FIELD_OPTIONS)[number]);
+      onFilterFieldChange?.(value as 'Name' | 'Status');
     }
     setIsAppFieldOpen(false);
   };

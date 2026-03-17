@@ -553,7 +553,7 @@ describe('Status Filter Functionality', () => {
   });
 
   describe('Initial Status from URL Parameters', () => {
-    it('should initialize app stream status from initialStatuses prop with correct display labels', () => {
+    it('should initialize app stream status from initialStatuses prop with correct display labels', async () => {
       render(
         <LifecycleFilters
           {...defaultProps}
@@ -562,12 +562,19 @@ describe('Status Filter Functionality', () => {
         />
       );
 
-      // Should convert "Near retirement" to "Support ends within 6 months" for display
-      // This would be verified in the UI when the status select is opened
-      expect(true).toBe(true); // Placeholder - full UI verification would require opening menu
+      // Field should automatically be set to "Status"
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        // First button should be the field selector showing "Status"
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
+
+      // Should show status chips for selected filters
+      expect(screen.getByText('Support ends within 6 months')).toBeInTheDocument();
+      expect(screen.getByText('Supported')).toBeInTheDocument();
     });
 
-    it('should initialize system status from initialStatuses prop with correct display labels', () => {
+    it('should initialize system status from initialStatuses prop with correct display labels', async () => {
       render(
         <LifecycleFilters
           {...defaultProps}
@@ -576,8 +583,48 @@ describe('Status Filter Functionality', () => {
         />
       );
 
-      // Should convert "Near retirement" to "Support ends within 3 months" for display
-      expect(true).toBe(true); // Placeholder - full UI verification would require opening menu
+      // Field should automatically be set to "Status"
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
+
+      // Should show status chips with correct system labels
+      expect(screen.getByText('Support ends within 3 months')).toBeInTheDocument();
+      expect(screen.getByText('Retired')).toBeInTheDocument();
+    });
+
+    it('should set field to "Version" when initialRhelVersions is provided for systems', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialRhelVersions={['RHEL 8', 'RHEL 9']}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+        />
+      );
+
+      // Field should automatically be set to "Version"
+      await waitFor(() => {
+        const versionButton = screen.getByRole('button', { name: /^Version$/i });
+        expect(versionButton).toHaveClass('pf-v6-c-menu-toggle');
+      });
+    });
+
+    it('should prioritize Status field when both initialStatuses and initialRhelVersions are provided', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialStatuses={['Supported']}
+          initialRhelVersions={['RHEL 8']}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+        />
+      );
+
+      // Field should be set to "Status" (takes precedence)
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
     });
   });
 

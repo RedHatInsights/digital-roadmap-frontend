@@ -85,7 +85,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
   const [dataInitialized, setDataInitialized] = useState<boolean>(false);
 
-  const [filterField, setFilterField] = useState<'Name' | 'Version'>('Name');
+  const [filterField, setFilterField] = useState<'Name' | 'Version' | 'Status'>('Name');
   const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
 
@@ -201,7 +201,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     data: Stream[] | SystemLifecycleChanges[],
     dropdownValue: string,
     nameFilterValue: string,
-    field: 'Name' | 'Version' = filterField,
+    field: 'Name' | 'Version' | 'Status' = filterField,
     versions: string[] = rhelVersionFilter,
     statuses: string[] = statusFilter
   ) => {
@@ -848,6 +848,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     initialFilters.viewFilter = initialViewFilter;
 
+    // Set filterField based on which filters are present in URL (status takes precedence)
+    if (statusesParam && decodeURIComponent(statusesParam).trim()) {
+      setFilterField('Status');
+    } else if (versionsParam && decodeURIComponent(versionsParam).trim()) {
+      setFilterField('Version');
+    }
+
     setLifecycleDropdownValue(initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE);
     setChartSortByValue(initialFilters.chartSortBy ?? DEFAULT_CHART_SORTBY_VALUE);
     setChartDirection(initialFilters.chartOrder as 'asc' | 'desc');
@@ -1170,7 +1177,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <>
         <ChartComponent
-          key={`${isSystemsView ? 'systems' : 'apps'}:${selectedViewFilter}:${chartSortByValue}`}
+          key={`${isSystemsView ? 'systems' : 'apps'}:${selectedViewFilter}`}
           lifecycleData={reversedChartData}
           viewFilter={selectedViewFilter}
         />
