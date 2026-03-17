@@ -1,4 +1,4 @@
-import React, { lazy, useEffect } from 'react';
+import React, { lazy } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -178,19 +178,25 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
     }
   };
 
-  // Effect to handle data changes - reset sorting and pagination
+  // Effect to handle data changes - maintain current sort or reset if no sort is active
   React.useEffect(() => {
-    setActiveAppSortDirection(undefined);
-    setActiveSystemSortDirection(undefined);
-    setActiveAppSortIndex(undefined);
-    setActiveSystemSortIndex(undefined);
-    setPage(1);
-    setPerPage(10);
+    const currentSortIndex = type === 'streams' ? activeAppSortIndex : activeSystemSortIndex;
+    const currentSortDirection = type === 'streams' ? activeAppSortDirection : activeSystemSortDirection;
 
-    // Set initial data without sorting
-    setSortedRows(data);
-    setPaginatedRows(data.slice(0, 10));
-  }, [data]);
+    // If there's an active sort, re-apply it to the new data
+    if (currentSortIndex !== undefined && currentSortDirection !== undefined) {
+      const sortedData = applySorting(data, currentSortIndex, currentSortDirection);
+      setSortedRows(sortedData);
+      setPaginatedRows(sortedData.slice(0, perPage));
+    } else {
+      // No active sort, just use data as-is
+      setSortedRows(data);
+      setPaginatedRows(data.slice(0, perPage));
+    }
+
+    // Reset to first page when data changes
+    setPage(1);
+  }, [data, type]);
 
   // Effect to synchronize chart sorting with table
   React.useEffect(() => {

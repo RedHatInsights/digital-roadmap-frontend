@@ -1132,7 +1132,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       </Bullseye>
     );
 
-    if (nameFilter !== '' && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
+    // Check if any filters are active
+    const hasActiveFilters =
+      nameFilter !== '' || rhelVersionFilter.length > 0 || statusFilter.length > 0;
+
+    if (hasActiveFilters && (filteredTableData.length === 0 || filteredChartData.length === 0)) {
       return emptyState;
     }
 
