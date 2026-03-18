@@ -50,7 +50,7 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
   // Hidden series state - disabled for now to prevent hiding legend items
-  const hiddenSeries = new Set();
+  const hiddenSeries = React.useMemo(() => new Set(), []);
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
