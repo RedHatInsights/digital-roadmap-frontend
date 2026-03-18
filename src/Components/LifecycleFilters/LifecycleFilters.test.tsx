@@ -630,17 +630,31 @@ describe('Status Filter Functionality', () => {
 
   describe('Status Filter Reset Behavior', () => {
     it('should clear status filters when resetOnAppsSwitchKey changes', () => {
+      const onStatusesChange = jest.fn();
       const { rerender } = render(
-        <LifecycleFilters {...defaultProps} resetOnAppsSwitchKey={0} initialStatuses={['Supported', 'Retired']} />
+        <LifecycleFilters
+          {...defaultProps}
+          onStatusesChange={onStatusesChange}
+          resetOnAppsSwitchKey={0}
+          initialStatuses={['Supported', 'Retired']}
+        />
       );
+
+      // Clear the mock after initial render
+      onStatusesChange.mockClear();
 
       // Change the resetOnAppsSwitchKey to trigger reset
       rerender(
-        <LifecycleFilters {...defaultProps} resetOnAppsSwitchKey={1} initialStatuses={['Supported', 'Retired']} />
+        <LifecycleFilters
+          {...defaultProps}
+          onStatusesChange={onStatusesChange}
+          resetOnAppsSwitchKey={1}
+          initialStatuses={['Supported', 'Retired']}
+        />
       );
 
-      // Status filters should be cleared (verified internally in component)
-      expect(true).toBe(true); // Placeholder - internal state verification
+      // Status filters should be cleared
+      expect(onStatusesChange).toHaveBeenCalledWith([]);
     });
   });
 });

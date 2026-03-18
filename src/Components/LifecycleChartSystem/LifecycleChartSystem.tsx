@@ -265,11 +265,6 @@ const LifecycleChartSystem: React.FC<LifecycleChartProps> = ({
       };
     });
 
-  // Legend click disabled - no hiding/showing series
-  const handleLegendClick = (_props: { index: number }) => {
-    // No-op: clicking legend items no longer hides/shows series
-  };
-
   const getPackageColor = (datum: string) => {
     switch (datum) {
       case 'Retired':
@@ -569,10 +564,6 @@ End: ${formatDate(tooltipData.y)}`;
               {
                 target: 'data',
                 eventHandlers: {
-                  onClick: (_event, props) => {
-                    handleLegendClick({ index: props.index });
-                    return [];
-                  },
                   onMouseOver: (_event, props) => {
                     setHoveredLegendIndex(props.index);
                     return [];
@@ -586,10 +577,6 @@ End: ${formatDate(tooltipData.y)}`;
               {
                 target: 'labels',
                 eventHandlers: {
-                  onClick: (_event, props) => {
-                    handleLegendClick({ index: props.index });
-                    return [];
-                  },
                   onMouseOver: (_event, props) => {
                     setHoveredLegendIndex(props.index);
                     return [];

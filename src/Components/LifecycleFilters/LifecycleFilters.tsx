@@ -227,10 +227,11 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
       setSelectedField('Name');
       setSelectedAppField('Name');
       setSelectedStatuses([]);
+      onStatusesChange?.([]);
       onFilterFieldChange?.('Name');
     }
     prevResetKey.current = resetOnAppsSwitchKey;
-  }, [resetOnAppsSwitchKey, onRhelVersionsChange, onFilterFieldChange]);
+  }, [resetOnAppsSwitchKey, onRhelVersionsChange, onStatusesChange, onFilterFieldChange]);
 
   const handleItemClick = (event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent) => {
     const id = event.currentTarget.id;
