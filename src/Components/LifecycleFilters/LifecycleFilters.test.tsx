@@ -192,11 +192,8 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
     />
   );
 
-  // Switch Field -> Version to initialize internal version selection
-  const fieldMenu = await openMenuByButton(/Name/i);
-  await act(async () => {
-    await userEvent.click(await within(fieldMenu).findByText(/^Version$/i));
-  });
+  // Field is already set to "Version" due to initialRhelVersions being provided
+  // Rerender with updated version options to test dynamic sync
 
   rerender(
     <LifecycleFilters
