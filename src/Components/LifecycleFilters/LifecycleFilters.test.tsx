@@ -113,10 +113,14 @@ describe('LifecycleFilters', () => {
   });
 });
 
-// helper: open a PF Select/Menu by toggle button name and return the latest portal menu
-const openMenuByButton = async (buttonName: RegExp | string) => {
+// helper: open a PF Select/Menu by toggle button name or element and return the latest portal menu
+const openMenuByButton = async (buttonNameOrElement: RegExp | string | HTMLElement) => {
   await act(async () => {
-    await userEvent.click(screen.getByRole('button', { name: buttonName }));
+    if (typeof buttonNameOrElement === 'string' || buttonNameOrElement instanceof RegExp) {
+      await userEvent.click(screen.getByRole('button', { name: buttonNameOrElement }));
+    } else {
+      await userEvent.click(buttonNameOrElement);
+    }
   });
   // PF sometimes uses role=listbox, sometimes role=menu; take the last one (newest opened)
   const menus = (await screen.findAllByRole('listbox').catch(() => [])) as HTMLElement[];
@@ -188,11 +192,8 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
     />
   );
 
-  // Switch Field -> Version to initialize internal version selection
-  const fieldMenu = await openMenuByButton(/Name/i);
-  await act(async () => {
-    await userEvent.click(await within(fieldMenu).findByText(/^Version$/i));
-  });
+  // Field is already set to "Version" due to initialRhelVersions being provided
+  // Rerender with updated version options to test dynamic sync
 
   rerender(
     <LifecycleFilters
@@ -281,4 +282,376 @@ it('keeps both Name keyword and Version selection effective when switching Field
   const calls = onRhelVersionsChange.mock.calls.map((args) => args[0]);
   const lastSelection = calls[calls.length - 1] as string[];
   expect(lastSelection).not.toEqual(['RHEL 7', 'RHEL 8', 'RHEL 9', 'RHEL 10']);
+});
+
+// ============================================================================
+// Status Filter Tests
+// ============================================================================
+
+describe('Status Filter Functionality', () => {
+  const defaultProps = {
+    nameFilter: '',
+    setNameFilter: jest.fn(),
+    setError: jest.fn(),
+    setIsLoading: jest.fn(),
+    lifecycleDropdownValue: 'RHEL 9 Application Streams',
+    setLifecycleDropdownValue: jest.fn(),
+    onLifecycleDropdownSelect: jest.fn(),
+    selectedChartSortBy: 'Retirement date',
+    updateChartSortValue: jest.fn(),
+    downloadCSV: jest.fn(),
+    selectedViewFilter: 'installed-only',
+    handleViewFilterChange: jest.fn(),
+    noDataAvailable: false,
+    rhelVersionOptions: ['RHEL 8', 'RHEL 9'],
+    onFilterFieldChange: jest.fn(),
+    onRhelVersionsChange: jest.fn(),
+    onStatusesChange: jest.fn(),
+  };
+
+  describe('App Streams Status Options', () => {
+    it('should show "Support ends within 6 months" for app streams in installed view', async () => {
+      render(<LifecycleFilters {...defaultProps} selectedViewFilter="installed-only" />);
+
+      // Switch to Status field
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      // Open Status multiselect - after switching fields, there are two "Status" buttons
+      // We want the status filter toggle (second one)
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      // Should show app stream specific text
+      expect(await within(statusMenu).findByText('Support ends within 6 months')).toBeInTheDocument();
+      expect(within(statusMenu).queryByText('Support ends within 3 months')).not.toBeInTheDocument();
+    });
+
+    it('should include all 5 status options for app streams in installed views', async () => {
+      render(<LifecycleFilters {...defaultProps} selectedViewFilter="installed-only" />);
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      // All 5 options should be present
+      const expectedOptions = [
+        'Supported',
+        'Support ends within 6 months',
+        'Retired',
+        'Upcoming release',
+        'Not installed',
+      ];
+      for (const option of expectedOptions) {
+        expect(await within(statusMenu).findByText(option)).toBeInTheDocument();
+      }
+    });
+
+    it('should exclude "Not installed" in "all" view for app streams', async () => {
+      render(<LifecycleFilters {...defaultProps} selectedViewFilter="all" />);
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      // "Not installed" should not be present
+      expect(within(statusMenu).queryByText('Not installed')).not.toBeInTheDocument();
+
+      // Other 4 options should be present
+      expect(await within(statusMenu).findByText('Supported')).toBeInTheDocument();
+      expect(await within(statusMenu).findByText('Support ends within 6 months')).toBeInTheDocument();
+      expect(await within(statusMenu).findByText('Retired')).toBeInTheDocument();
+      expect(await within(statusMenu).findByText('Upcoming release')).toBeInTheDocument();
+    });
+  });
+
+  describe('Systems Status Options', () => {
+    it('should show "Support ends within 3 months" for RHEL systems', async () => {
+      render(<LifecycleFilters {...defaultProps} lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE} />);
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      // Should show systems specific text
+      expect(await within(statusMenu).findByText('Support ends within 3 months')).toBeInTheDocument();
+      expect(within(statusMenu).queryByText('Support ends within 6 months')).not.toBeInTheDocument();
+    });
+
+    it('should include all 5 status options for systems in installed views', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+          selectedViewFilter="installed-only"
+        />
+      );
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      const expectedOptions = [
+        'Supported',
+        'Support ends within 3 months',
+        'Retired',
+        'Upcoming release',
+        'Not installed',
+      ];
+      for (const option of expectedOptions) {
+        expect(await within(statusMenu).findByText(option)).toBeInTheDocument();
+      }
+    });
+
+    it('should exclude "Not installed" in "all" view for systems', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+          selectedViewFilter="all"
+        />
+      );
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      expect(within(statusMenu).queryByText('Not installed')).not.toBeInTheDocument();
+      expect(await within(statusMenu).findByText('Supported')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status Selection and API Value Mapping', () => {
+    it('should call onStatusesChange with "Near retirement" when selecting app stream status', async () => {
+      const onStatusesChange = jest.fn();
+      render(<LifecycleFilters {...defaultProps} onStatusesChange={onStatusesChange} />);
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+      await act(async () => {
+        // Select "Support ends within 6 months"
+        await userEvent.click(await within(statusMenu).findByText('Support ends within 6 months'));
+      });
+
+      // Should convert to API value "Near retirement"
+      await waitFor(() => {
+        expect(onStatusesChange).toHaveBeenCalledWith(expect.arrayContaining(['Near retirement']));
+      });
+    });
+
+    it('should call onStatusesChange with "Near retirement" when selecting system status', async () => {
+      const onStatusesChange = jest.fn();
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+          onStatusesChange={onStatusesChange}
+        />
+      );
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+      await act(async () => {
+        // Select "Support ends within 3 months"
+        await userEvent.click(await within(statusMenu).findByText('Support ends within 3 months'));
+      });
+
+      // Should convert to API value "Near retirement"
+      await waitFor(() => {
+        expect(onStatusesChange).toHaveBeenCalledWith(expect.arrayContaining(['Near retirement']));
+      });
+    });
+
+    it('should handle multiple status selections correctly', async () => {
+      const onStatusesChange = jest.fn();
+      render(<LifecycleFilters {...defaultProps} onStatusesChange={onStatusesChange} />);
+
+      const fieldMenu = await openMenuByButton(/Name/i);
+      await act(async () => {
+        await userEvent.click(await within(fieldMenu).findByText(/^Status$/i));
+      });
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button', { name: /Status/i })).toHaveLength(2);
+      });
+      const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+      const statusMenu = await openMenuByButton(statusButtons[1]);
+
+      // Select multiple statuses
+      await act(async () => {
+        await userEvent.click(await within(statusMenu).findByText('Supported'));
+        await userEvent.click(await within(statusMenu).findByText('Retired'));
+      });
+
+      await waitFor(() => {
+        expect(onStatusesChange).toHaveBeenCalled();
+        const calls = onStatusesChange.mock.calls;
+        const lastCall = calls[calls.length - 1][0];
+        expect(lastCall).toContain('Supported');
+        expect(lastCall).toContain('Retired');
+      });
+    });
+  });
+
+  describe('Initial Status from URL Parameters', () => {
+    it('should initialize app stream status from initialStatuses prop with correct display labels', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialStatuses={['Near retirement', 'Supported']}
+          lifecycleDropdownValue="RHEL 9 Application Streams"
+        />
+      );
+
+      // Field should automatically be set to "Status"
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        // First button should be the field selector showing "Status"
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
+
+      // Should show status chips for selected filters
+      expect(screen.getByText('Support ends within 6 months')).toBeInTheDocument();
+      expect(screen.getByText('Supported')).toBeInTheDocument();
+    });
+
+    it('should initialize system status from initialStatuses prop with correct display labels', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialStatuses={['Near retirement', 'Retired']}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+        />
+      );
+
+      // Field should automatically be set to "Status"
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
+
+      // Should show status chips with correct system labels
+      expect(screen.getByText('Support ends within 3 months')).toBeInTheDocument();
+      expect(screen.getByText('Retired')).toBeInTheDocument();
+    });
+
+    it('should set field to "Version" when initialRhelVersions is provided for systems', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialRhelVersions={['RHEL 8', 'RHEL 9']}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+        />
+      );
+
+      // Field should automatically be set to "Version"
+      await waitFor(() => {
+        const versionButton = screen.getByRole('button', { name: /^Version$/i });
+        expect(versionButton).toHaveClass('pf-v6-c-menu-toggle');
+      });
+    });
+
+    it('should prioritize Status field when both initialStatuses and initialRhelVersions are provided', async () => {
+      render(
+        <LifecycleFilters
+          {...defaultProps}
+          initialStatuses={['Supported']}
+          initialRhelVersions={['RHEL 8']}
+          lifecycleDropdownValue={RHEL_SYSTEMS_DROPDOWN_VALUE}
+        />
+      );
+
+      // Field should be set to "Status" (takes precedence)
+      await waitFor(() => {
+        const statusButtons = screen.getAllByRole('button', { name: /Status/i });
+        expect(statusButtons[0]).toHaveTextContent('Status');
+      });
+    });
+  });
+
+  describe('Status Filter Reset Behavior', () => {
+    it('should clear status filters when resetOnAppsSwitchKey changes', () => {
+      const onStatusesChange = jest.fn();
+      const { rerender } = render(
+        <LifecycleFilters
+          {...defaultProps}
+          onStatusesChange={onStatusesChange}
+          resetOnAppsSwitchKey={0}
+          initialStatuses={['Supported', 'Retired']}
+        />
+      );
+
+      // Clear the mock after initial render
+      onStatusesChange.mockClear();
+
+      // Change the resetOnAppsSwitchKey to trigger reset
+      rerender(
+        <LifecycleFilters
+          {...defaultProps}
+          onStatusesChange={onStatusesChange}
+          resetOnAppsSwitchKey={1}
+          initialStatuses={['Supported', 'Retired']}
+        />
+      );
+
+      // Status filters should be cleared
+      expect(onStatusesChange).toHaveBeenCalledWith([]);
+    });
+  });
 });

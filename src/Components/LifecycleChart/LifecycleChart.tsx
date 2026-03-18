@@ -8,8 +8,6 @@ import {
   ChartLegend,
   ChartLine,
   ChartTooltip,
-  getInteractiveLegendEvents,
-  getInteractiveLegendItemStyles,
 } from '@patternfly/react-charts/victory';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
@@ -48,8 +46,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   const [showDateTooltip, setShowDateTooltip] = React.useState<boolean>(false);
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
-  // Hidden series state with forced re-render counter
-  const [hiddenSeries, setHiddenSeries] = React.useState(new Set());
+  // Hidden series state - disabled for now to prevent hiding legend items
+  const hiddenSeries = React.useMemo(() => new Set(), []);
 
   //check data type and contruct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -247,70 +245,22 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   );
   const legendComponentName = `${chartId}-ChartLegend`;
   const getSeriesName = (index: number) => `${chartId}-ChartBar-${index}`;
-  const chartNames = legendNames.map((_, index) => [getSeriesName(index)]) as [string[]];
   const [hoveredLegendIndex, setHoveredLegendIndex] = React.useState<number | null>(null);
   const LEGEND_NAME_PREFIX = '\u00A0\u00A0\u00A0'; // Nonbreakable space - fix issue with legend hover spacing bug
 
   const getLegendData = () =>
     legendNames.map((s, index) => {
       const dimmed = hoveredLegendIndex !== null && hoveredLegendIndex !== index;
-      const interactiveStyles = getInteractiveLegendItemStyles(hiddenSeries.has(index));
 
       return {
         childName: getSeriesName(index),
         name: `${LEGEND_NAME_PREFIX}${s.packageType}`,
         symbol: {
           fill: getPackageColor(s.packageType),
-          ...(dimmed && { opacity: 0.3 }),
-          ...interactiveStyles.symbol,
-        },
-        labels: {
-          ...(dimmed && { opacity: 0.3 }),
-          ...interactiveStyles.labels,
+          opacity: dimmed ? 0.3 : 1,
         },
       };
     });
-
-  const handleLegendClick = (props: { index: number }) => {
-    setHiddenSeries((prevHiddenSeries) => {
-      const newHiddenSeries = new Set(prevHiddenSeries);
-
-      // Get only series that have actual data
-      const seriesWithData = legendNames
-        .map((series, index) => ({ series, index }))
-        .filter(({ series }) => series.datapoints.length > 0);
-
-      // Count how many series with data are currently visible
-      const currentlyVisibleSeriesWithData = seriesWithData.filter(({ index }) => !prevHiddenSeries.has(index));
-
-      const isCurrentlyHidden = newHiddenSeries.has(props.index);
-      const clickedSeriesHasData = legendNames[props.index]?.datapoints.length > 0;
-
-      // Only prevent hiding if:
-      // - the series is not currently hidden (without this it wouldn't be possible to unhide series
-      //   in case the last one is showing) and
-      // - the clicked series has data (if it doesn't, it can be hidden anyway) and
-      // - it would be the last visible series with data (hiding last visible series results in empty chart)
-      if (!isCurrentlyHidden && clickedSeriesHasData && currentlyVisibleSeriesWithData.length <= 1) {
-        console.log('Cannot hide all series - at least one with data must remain visible');
-        return prevHiddenSeries;
-      }
-
-      // Normal toggle behavior
-      if (isCurrentlyHidden) {
-        newHiddenSeries.delete(props.index);
-      } else {
-        newHiddenSeries.add(props.index);
-      }
-
-      return newHiddenSeries;
-    });
-
-    // Clear any active tooltips when legend is clicked
-    setShowTooltip(false);
-    setShowDateTooltip(false);
-    setTooltipData(null);
-  };
 
   const getPackageColor = (datum: string) => {
     switch (datum) {
@@ -335,19 +285,15 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   const getVisibleTicks = () => {
     const visibleNames = new Set<string>();
 
-    legendNames.forEach((series, index) => {
-      if (!hiddenSeries.has(index)) {
-        series.datapoints.forEach((datapoint) => {
-          visibleNames.add(datapoint.x);
-        });
-      }
+    legendNames.forEach((series) => {
+      series.datapoints.forEach((datapoint) => {
+        visibleNames.add(datapoint.x);
+      });
     });
 
     // Maintain the original order from updatedLifecycleData
     return updatedLifecycleData.map((data) => data[0].x).filter((name) => visibleNames.has(name));
   };
-
-  const isHidden = (index: number) => hiddenSeries.has(index);
 
   // Function to position tooltip - always to the right of the bar
   const calculateTooltipPosition = (x: number): number => {
@@ -476,12 +422,10 @@ End: ${formatDate(tooltipData.y)}`;
         // This can be removed once we remove duplicates from the backend api
         const visibleNames = new Set<string>();
 
-        legendNames.forEach((series, index) => {
-          if (!hiddenSeries.has(index)) {
-            series.datapoints.forEach((datapoint) => {
-              visibleNames.add(datapoint.name);
-            });
-          }
+        legendNames.forEach((series) => {
+          series.datapoints.forEach((datapoint) => {
+            visibleNames.add(datapoint.name);
+          });
         });
 
         const uniqueItemCount = visibleNames.size;
@@ -526,7 +470,7 @@ End: ${formatDate(tooltipData.y)}`;
       window.removeEventListener('resize', updateDimensions);
       window.removeEventListener('zoom', handleZoom);
     };
-  }, [updatedLifecycleData.length, hiddenSeries]);
+  }, [updatedLifecycleData.length]);
 
   // QE: Add data attributes to rendered bar elements
   useChartDataAttributes(chartContainerRef, legendNames, hiddenSeries);
@@ -610,12 +554,6 @@ End: ${formatDate(tooltipData.y)}`;
       <Chart
         legendAllowWrap
         ariaDesc="Support timelines of packages and RHEL versions"
-        events={getInteractiveLegendEvents({
-          chartNames,
-          isHidden,
-          legendName: legendComponentName,
-          onLegendClick: handleLegendClick,
-        })}
         legendComponent={
           <ChartLegend
             name={legendComponentName}
@@ -623,10 +561,6 @@ End: ${formatDate(tooltipData.y)}`;
               {
                 target: 'data',
                 eventHandlers: {
-                  onClick: (_event, props) => {
-                    handleLegendClick({ index: props.index });
-                    return [];
-                  },
                   onMouseOver: (_event, props) => {
                     setHoveredLegendIndex(props.index);
                     return [];
@@ -640,10 +574,6 @@ End: ${formatDate(tooltipData.y)}`;
               {
                 target: 'labels',
                 eventHandlers: {
-                  onClick: (_event, props) => {
-                    handleLegendClick({ index: props.index });
-                    return [];
-                  },
                   onMouseOver: (_event, props) => {
                     setHoveredLegendIndex(props.index);
                     return [];
@@ -705,8 +635,8 @@ End: ${formatDate(tooltipData.y)}`;
         />
         <ChartGroup horizontal>
           {legendNames.map((s, index) => {
-            // Skip rendering entirely if the series is hidden
-            if (hiddenSeries.has(index) || s.datapoints.length === 0) {
+            // Skip rendering if no data
+            if (s.datapoints.length === 0) {
               return null;
             }
             return (
@@ -719,10 +649,7 @@ End: ${formatDate(tooltipData.y)}`;
                   data: {
                     fill: getPackageColor(s.packageType),
                     stroke: getPackageColor(s.packageType),
-                    fillOpacity:
-                      hiddenSeries.has(index) || (hoveredLegendIndex !== null && hoveredLegendIndex !== index)
-                        ? 0.3
-                        : 1,
+                    fillOpacity: hoveredLegendIndex !== null && hoveredLegendIndex !== index ? 0.3 : 1,
                   },
                 }}
                 events={[
@@ -735,11 +662,6 @@ End: ${formatDate(tooltipData.y)}`;
                             target: 'data',
                             mutation: (props) => {
                               const { datum, x, y } = props;
-
-                              // Don't show tooltip if series is hidden
-                              if (hiddenSeries.has(index)) {
-                                return null;
-                              }
 
                               // Regular bar tooltip positioning
                               const tooltipX = calculateTooltipPosition(x);

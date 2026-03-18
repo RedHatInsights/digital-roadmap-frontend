@@ -78,6 +78,9 @@ export const buildURL = (filter: Filter) => {
   if (filter['versions'] && filter['versions'].length > 0) {
     encodedData += `&versions=${filter['versions'].join(',')}`;
   }
+  if (filter['statuses'] && filter['statuses'].length > 0) {
+    encodedData += `&statuses=${filter['statuses'].join(',')}`;
+  }
   if (filter['type'] && filter['type'].size > 0) {
     encodedData += `&type=${Array.from(filter['type']).join(',')}`;
   }

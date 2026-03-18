@@ -8,6 +8,7 @@ export interface Filter {
   date?: string;
   chartOrder?: string;
   versions?: string[];
+  statuses?: string[];
 }
 
 export interface ExtendedFilter extends Filter {
