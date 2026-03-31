@@ -113,30 +113,22 @@ objects:
                   subPath: insights-qa.pem
               terminationMessagePath: /dev/termination-log
               terminationMessagePolicy: File
-            - name: iqe-sel-${IMAGE_TAG}-${UID}
-              image: ${IQE_SEL_IMAGE}
+            - name: iqe-pw-${IMAGE_TAG}-${UID}
+              image: ${IQE_PW_IMAGE}
               env:
-                - name: VNC_GEOMETRY
-                  value: ${VNC_GEOMETRY}
-                - name: SE_NODE_MAX_SESSIONS
-                  value: ${SE_NODE_MAX_SESSIONS}
-              readinessProbe:
-                httpGet:
-                  path: /status
-                  port: 4444
-                initialDelaySeconds: 10
-                periodSeconds: 10
-                timeoutSeconds: 5
-                failureThreshold: 3
+                - name: PW_BROWSER
+                  value: "chrome"
+                - name: PW_HEADLESS
+                  value: "false"
               resources:
                 limits:
-                  cpu: ${SELENIUM_CPU_LIMIT}
-                  memory: ${SELENIUM_MEMORY_LIMIT}
+                  cpu: ${PW_CPU_LIMIT}
+                  memory: ${PW_MEMORY_LIMIT}
                 requests:
-                  cpu: ${SELENIUM_CPU_REQUEST}
-                  memory: ${SELENIUM_MEMORY_REQUEST}
+                  cpu: ${PW_CPU_REQUEST}
+                  memory: ${PW_MEMORY_REQUEST}
               volumeMounts:
-                - name: sel-shm
+                - name: pw-shm
                   mountPath: /dev/shm
 parameters:
   - name: IMAGE_TAG
@@ -170,8 +162,8 @@ parameters:
     value: ''
   - name: IQE_TEST_IMPORTANCE
     value: 'critical'
-  - name: IQE_SEL_IMAGE
-    value: 'quay.io/cloudservices/selenium-standalone-chrome:latest'
+  - name: IQE_PW_IMAGE
+    value: 'quay.io/insights-qe/playwright-vnc:ubi9-chrome-1.58.2'
   - name: IQE_CPU_LIMIT
     value: '1'
   - name: IQE_MEMORY_LIMIT
@@ -180,18 +172,14 @@ parameters:
     value: 500m
   - name: IQE_MEMORY_REQUEST
     value: 1Gi
-  - name: SELENIUM_CPU_LIMIT
+  - name: PW_CPU_LIMIT
     value: '2'
-  - name: SELENIUM_MEMORY_LIMIT
+  - name: PW_MEMORY_LIMIT
     value: 4Gi
-  - name: SELENIUM_CPU_REQUEST
+  - name: PW_CPU_REQUEST
     value: 500m
-  - name: SELENIUM_MEMORY_REQUEST
+  - name: PW_MEMORY_REQUEST
     value: 2Gi
-  - name: VNC_GEOMETRY
-    value: '1920x1080'
   - name: IQE_PARALLEL_ENABLED
     value: 'false'
-  - name: SE_NODE_MAX_SESSIONS
-    value: '2'
 
