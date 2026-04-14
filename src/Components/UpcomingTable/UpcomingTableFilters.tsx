@@ -52,6 +52,8 @@ interface UpcomingTableFiltersProps {
   setDateSelection: (value: string) => void;
   releaseSelections: string[];
   setReleaseSelections: (values: string[]) => void;
+  addedToRoadmapSelection: string;
+  setAddedToRoadmapSelection: (value: string) => void;
   releaseOptions: {
     release: string;
   }[];
@@ -86,6 +88,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   setDateSelection,
   releaseSelections,
   setReleaseSelections,
+  addedToRoadmapSelection,
+  setAddedToRoadmapSelection,
   releaseOptions,
   dateOptions,
   typeOptions,
@@ -101,7 +105,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState<boolean>(false);
-  const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Date'>('Name');
+  const [isAddedToRoadmapMenuOpen, setIsAddedToRoadmapMenuOpen] = useState<boolean>(false);
+  const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap'>('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
@@ -225,7 +230,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             } as React.CSSProperties
           }
         >
-          Filter by date
+          Filter by release date
         </MenuToggle>
       )}
       ouiaId="attribute-search-type-menu"
@@ -235,6 +240,73 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
         {dateOptions.map((option) => (
           <DropdownItem key={option.date} isSelected={dateSelection === option.date} itemId={option.date}>
             {option.date}
+          </DropdownItem>
+        ))}
+      </DropdownList>
+    </Dropdown>
+  );
+
+  const onAddedToRoadmapToggleClick = (ev: React.MouseEvent) => {
+    setIsAddedToRoadmapMenuOpen(!isAddedToRoadmapMenuOpen);
+  };
+
+  function onAddedToRoadmapSelect(event: React.MouseEvent | undefined, itemId: string | number | undefined) {
+    if (typeof itemId === 'undefined') {
+      return;
+    }
+    const itemIdAsString = itemId.toString();
+    setAddedToRoadmapSelection(itemIdAsString);
+    setIsAddedToRoadmapMenuOpen(!isAddedToRoadmapMenuOpen);
+    const newFilters = structuredClone(filtersForURL);
+    newFilters['addedToRoadmap'] = itemIdAsString;
+    setFiltersForURL(newFilters);
+  }
+
+  const addedToRoadmapFilterOptions = [
+    { label: 'Last month to date', value: 'lastMonthToDate' },
+    { label: 'Last 90 days', value: 'last90Days' },
+    { label: 'Last year', value: 'lastYear' },
+    { label: 'More than 1 year ago', value: 'moreThan1YearAgo' },
+  ];
+
+  // Get label for added to roadmap filter value
+  const getAddedToRoadmapLabel = (value: string): string => {
+    const option = addedToRoadmapFilterOptions.find((opt) => opt.value === value);
+    return option ? option.label : value;
+  };
+
+  const addedToRoadmapSelect = (
+    <Dropdown
+      isOpen={isAddedToRoadmapMenuOpen}
+      id="attribute-search-added-to-roadmap-menu"
+      onSelect={onAddedToRoadmapSelect}
+      selected={addedToRoadmapSelection}
+      onOpenChange={(isOpen: boolean) => setIsAddedToRoadmapMenuOpen(isOpen)}
+      toggle={(toggleRef) => (
+        <MenuToggle
+          ref={toggleRef}
+          onClick={onAddedToRoadmapToggleClick}
+          isExpanded={isAddedToRoadmapMenuOpen}
+          style={
+            {
+              width: '200px',
+            } as React.CSSProperties
+          }
+        >
+          Filter by date added
+        </MenuToggle>
+      )}
+      ouiaId="attribute-search-added-to-roadmap-menu"
+      shouldFocusToggleOnSelect
+    >
+      <DropdownList>
+        {addedToRoadmapFilterOptions.map((option) => (
+          <DropdownItem
+            key={option.value}
+            isSelected={addedToRoadmapSelection === option.value}
+            itemId={option.value}
+          >
+            {option.label}
           </DropdownItem>
         ))}
       </DropdownList>
@@ -310,7 +382,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     <Dropdown
       isOpen={isAttributeMenuOpen}
       onSelect={(_ev, itemId) => {
-        setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Date');
+        setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap');
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
       onOpenChange={(isOpen: boolean) => setIsAttributeMenuOpen(isOpen)}
@@ -337,8 +409,11 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
         <DropdownItem value="Release" key="release">
           Release
         </DropdownItem>
-        <DropdownItem value="Date" key="date">
-          Date
+        <DropdownItem value="Release date" key="date">
+          Release date
+        </DropdownItem>
+        <DropdownItem value="Added to roadmap" key="addedToRoadmap">
+          Added to roadmap
         </DropdownItem>
       </DropdownList>
     </Dropdown>
@@ -362,6 +437,13 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     setDateSelection('');
     const newFilters = structuredClone(filtersForURL);
     delete newFilters['date'];
+    setFiltersForURL(newFilters);
+  };
+
+  const resetAddedToRoadmap = () => {
+    setAddedToRoadmapSelection('');
+    const newFilters = structuredClone(filtersForURL);
+    delete newFilters['addedToRoadmap'];
     setFiltersForURL(newFilters);
   };
 
@@ -422,10 +504,19 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               labels={dateSelection !== '' ? [dateSelection] : ([] as string[])}
               deleteLabel={resetDate}
               deleteLabelGroup={resetDate}
-              categoryName="Date"
-              showToolbarItem={activeAttributeMenu === 'Date'}
+              categoryName="Release date"
+              showToolbarItem={activeAttributeMenu === 'Release date'}
             >
               {dateSelect}
+            </ToolbarFilter>
+            <ToolbarFilter
+              labels={addedToRoadmapSelection !== '' ? [getAddedToRoadmapLabel(addedToRoadmapSelection)] : ([] as string[])}
+              deleteLabel={resetAddedToRoadmap}
+              deleteLabelGroup={resetAddedToRoadmap}
+              categoryName="Added to roadmap"
+              showToolbarItem={activeAttributeMenu === 'Added to roadmap'}
+            >
+              {addedToRoadmapSelect}
             </ToolbarFilter>
             <ToolbarItem>
               <Form>

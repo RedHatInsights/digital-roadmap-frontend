@@ -24,6 +24,8 @@ jest.mock('./UpcomingTableFilters', () => {
     setDateSelection,
     releaseSelections,
     setReleaseSelections,
+    addedToRoadmapSelection,
+    setAddedToRoadmapSelection,
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
@@ -44,6 +46,7 @@ jest.mock('./UpcomingTableFilters', () => {
         <div data-testid="type-selections">{Array.from(typeSelections).join(',')}</div>
         <div data-testid="date-selection">{dateSelection}</div>
         <div data-testid="release-selections">{releaseSelections.join(',')}</div>
+        <div data-testid="added-to-roadmap-selection">{addedToRoadmapSelection}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
         <button data-testid="set-type-filter" onClick={() => setTypeSelections(new Set(['Deprecation']))}>
@@ -54,6 +57,9 @@ jest.mock('./UpcomingTableFilters', () => {
         </button>
         <button data-testid="set-release-filter" onClick={() => setReleaseSelections(['9.0'])}>
           Set Release Filter
+        </button>
+        <button data-testid="set-added-to-roadmap-filter" onClick={() => setAddedToRoadmapSelection('2024-07-09')}>
+          Set Added to Roadmap Filter
         </button>
         <button data-testid="change-view-filter" onClick={() => handleViewFilterChange('all')}>
           Change View Filter
@@ -140,6 +146,7 @@ const mockColumnNames = {
   name: 'Name',
   type: 'Type',
   release: 'Release',
+  addedToRoadmap: 'Added to roadmap',
   date: 'Release date',
 };
 
@@ -151,6 +158,7 @@ const defaultProps = {
   initialNameFilter: '',
   initialDateFilter: '',
   initialReleaseFilters: [],
+  initialAddedToRoadmapFilter: '',
   filtersForURL: DEFAULT_FILTERS,
   setFiltersForURL: jest.fn(),
   selectedViewFilter: 'relevant',

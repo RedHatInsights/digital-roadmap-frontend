@@ -38,6 +38,7 @@ export const UPCOMING_COLUMN_NAMES = {
   name: 'Name',
   type: 'Type',
   release: 'Release',
+  addedToRoadmap: 'Added to roadmap',
   date: 'Release date',
 };
 
@@ -65,6 +66,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [currentDateFilter, setCurrentDateFilter] = React.useState('');
   const [currentNameFilter, setCurrentNameFilters] = React.useState('');
   const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<string[]>([]);
+  const [currentAddedToRoadmapFilter, setCurrentAddedToRoadmapFilter] = React.useState('');
   const [error, setError] = React.useState<ErrorObject>();
   const [noAllDataAvailable, setNoAllDataAvailable] = useState<boolean>(false);
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
@@ -78,6 +80,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const typeParam = searchParams.get('type');
   const releaseParam = searchParams.get('release');
   const dateParam = searchParams.get('date');
+  const addedToRoadmapParam = searchParams.get('addedToRoadmap');
   const viewFilterParam = searchParams.get('viewFilter');
 
   // Type comes in as Release1,Release2 or Release1 or any other permutation
@@ -90,6 +93,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const isValidDate = (data: UpcomingChanges[], date: string) => {
     return Array.from(new Set(data.map((repo) => repo.date))).includes(date);
+  };
+
+  const isValidAddedToRoadmap = (data: UpcomingChanges[], addedToRoadmap: string) => {
+    return Array.from(new Set(data.map((repo) => repo.details?.dateAdded).filter(Boolean))).includes(addedToRoadmap);
   };
 
   // Type comes in as Type1,Type2,Type3 or Type1 or any other permutation
@@ -306,6 +313,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentDateFilter(date);
         newFilters['date'] = date;
       }
+      if (addedToRoadmapParam && isValidAddedToRoadmap(upcomingChanges, decodeURIComponent(addedToRoadmapParam))) {
+        const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
+        setCurrentAddedToRoadmapFilter(addedToRoadmap);
+        newFilters['addedToRoadmap'] = addedToRoadmap;
+      }
 
       // Include view filter in URL
       newFilters['viewFilter'] = selectedViewFilter;
@@ -339,6 +351,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setCurrentDateFilter('');
     setCurrentNameFilters('');
     setCurrentReleaseFilters([]);
+    setCurrentAddedToRoadmapFilter('');
 
     // Don't reset to relevant if no relevant data available
     if (!noDataAvailable) {
@@ -571,6 +584,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           initialDateFilter={currentDateFilter}
           initialNameFilter={currentNameFilter}
           initialReleaseFilters={currentReleaseFilters}
+          initialAddedToRoadmapFilter={currentAddedToRoadmapFilter}
           filtersForURL={filtersForURL}
           setFiltersForURL={updateChildFilters}
           selectedViewFilter={selectedViewFilter}
