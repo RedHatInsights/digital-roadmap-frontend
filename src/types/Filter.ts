@@ -6,6 +6,7 @@ export interface Filter {
   type?: Set<string>;
   release?: string[];
   date?: string;
+  addedToRoadmap?: string;
   chartOrder?: string;
   versions?: string[];
   statuses?: string[];

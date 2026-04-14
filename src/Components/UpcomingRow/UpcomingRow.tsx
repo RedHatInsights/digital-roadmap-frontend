@@ -14,6 +14,7 @@ export const columnNames = {
   name: 'Name',
   type: 'Type',
   release: 'Release',
+  addedToRoadmap: 'Added to roadmap',
   date: 'Date',
 };
 
@@ -112,6 +113,9 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
           <Td dataLabel={columnNames.release} modifier="truncate">
             {repo.release}
           </Td>
+          <Td dataLabel={columnNames.addedToRoadmap} modifier="truncate">
+            {repo.details?.dateAdded ?? ''}
+          </Td>
           <Td dataLabel={columnNames.date} modifier="truncate">
             {formatDate(repo.date)}
           </Td>
@@ -119,7 +123,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
         {repo.details ? (
           <Tr isExpanded={isExpanded}>
             {!childIsFullWidth ? <Td /> : null}
-            <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding colSpan={4}>
+            <Td className="drf-lifecycle__upcoming-row" dataLabel="Summary" noPadding colSpan={5}>
               <ExpandableRowContent>
                 <div className="drf-lifecycle__upcoming-row-text-container">
                   <Content className="drf-lifecycle__upcoming-row-text">
@@ -127,14 +131,19 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                   </Content>
 
                   <Content className="drf-lifecycle__upcoming-row-text">
-                    <Content component={ContentVariants.dl} style={{ gridRowGap: '0px', gridColumnGap: '120px' }}>
-                      <Content
-                        component={ContentVariants.dt}
-                        style={{ paddingBottom: '16px', whiteSpace: 'nowrap' }}
-                      >
+                    <Content
+                      component={ContentVariants.dl}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'max-content 1fr',
+                        gridRowGap: '8px',
+                        gridColumnGap: '16px',
+                      }}
+                    >
+                      <Content component={ContentVariants.dt} style={{ whiteSpace: 'nowrap' }}>
                         Potentially affected systems
                       </Content>
-                      <Content component={ContentVariants.dd}>
+                      <Content component={ContentVariants.dd} style={{ margin: 0 }}>
                         {repo.details.potentiallyAffectedSystemsCount &&
                         repo.details.potentiallyAffectedSystemsCount > 0 ? (
                           <Button
@@ -144,27 +153,18 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                               setModalDataName(String(repo.package));
                               setModalData(repo.details?.potentiallyAffectedSystemsDetail);
                             }}
-                            style={{
-                              marginTop: '-4px',
-                              fontSize: '14px',
-                              marginLeft: '-16px',
-                            }}
+                            isInline
                           >
                             {repo.details.potentiallyAffectedSystemsCount}
                           </Button>
                         ) : (
-                          <span
-                            style={{
-                              fontSize: '14px',
-                              marginLeft: '-2px',
-                            }}
-                          >
-                            {repo.details.potentiallyAffectedSystemsCount}
-                          </span>
+                          <span>{repo.details.potentiallyAffectedSystemsCount}</span>
                         )}
                       </Content>
-                      <Content component={ContentVariants.dt}>Tracking ticket</Content>
-                      <Content component={ContentVariants.dd}>
+                      <Content component={ContentVariants.dt} style={{ whiteSpace: 'nowrap' }}>
+                        Tracking ticket
+                      </Content>
+                      <Content component={ContentVariants.dd} style={{ margin: 0 }}>
                         <a
                           href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`}
                           rel="noreferrer"
@@ -172,10 +172,12 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                           {repo.details.trainingTicket}
                         </a>
                       </Content>
-                      <Content component={ContentVariants.dt}>Date added</Content>
-                      <Content component={ContentVariants.dd}>{repo.details.dateAdded}</Content>
-                      <Content component={ContentVariants.dt}>Last modified</Content>
-                      <Content component={ContentVariants.dd}>{repo.details.lastModified}</Content>
+                      <Content component={ContentVariants.dt} style={{ whiteSpace: 'nowrap' }}>
+                        Last modified
+                      </Content>
+                      <Content component={ContentVariants.dd} style={{ margin: 0 }}>
+                        {repo.details.lastModified}
+                      </Content>
                     </Content>
                   </Content>
                 </div>

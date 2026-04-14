@@ -27,6 +27,7 @@ interface UpcomingTableProps {
     type: string;
     release: string;
     date: string;
+    addedToRoadmap: string;
   };
   details?: {
     summary: string;
@@ -41,6 +42,7 @@ interface UpcomingTableProps {
   initialNameFilter: string;
   initialDateFilter: string;
   initialReleaseFilters: string[];
+  initialAddedToRoadmapFilter: string;
   filtersForURL: Filter;
   setFiltersForURL: (filters: Filter) => void;
   selectedViewFilter: string;
@@ -56,6 +58,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   initialNameFilter,
   initialDateFilter,
   initialReleaseFilters,
+  initialAddedToRoadmapFilter,
   filtersForURL,
   setFiltersForURL,
   selectedViewFilter,
@@ -66,6 +69,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [typeSelections, setTypeSelections] = useState<Set<string>>(initialTypeFilters);
   const [dateSelection, setDateSelection] = useState(initialDateFilter ?? '');
   const [releaseSelections, setReleaseSelections] = useState<string[]>(initialReleaseFilters ?? []);
+  const [addedToRoadmapSelection, setAddedToRoadmapSelection] = useState(initialAddedToRoadmapFilter ?? '');
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(10);
   const [paginatedRows, setPaginatedRows] = React.useState(data.slice(0, 10));
@@ -96,9 +100,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setReleaseSelections(initialReleaseFilters);
   }, [initialReleaseFilters]);
 
+  useEffect(() => {
+    setAddedToRoadmapSelection(initialAddedToRoadmapFilter);
+  }, [initialAddedToRoadmapFilter]);
+
   const getSortableRowValues = (repo: UpcomingChanges): (string | number)[] => {
     const { name, type, release, date } = repo;
-    return [name, type, release, date];
+    const addedToRoadmap = repo.details?.dateAdded ?? '';
+    return [name, type, release, addedToRoadmap, date];
   };
 
   const sortFilteredData = (dataToSort: UpcomingChanges[]) => {
@@ -193,6 +202,40 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     />
   );
 
+  // Helper function to check if a date falls within a date range
+  const isDateInRange = (dateString: string | undefined, rangeType: string): boolean => {
+    if (!dateString) return false;
+
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    switch (rangeType) {
+      case 'lastMonthToDate': {
+        // From the 1st of the previous month to today
+        const firstOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        return date >= firstOfLastMonth && date <= today;
+      }
+      case 'last90Days': {
+        const ninetyDaysAgo = new Date(today);
+        ninetyDaysAgo.setDate(today.getDate() - 90);
+        return date >= ninetyDaysAgo && date <= today;
+      }
+      case 'lastYear': {
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        return date >= oneYearAgo && date <= today;
+      }
+      case 'moreThan1YearAgo': {
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        return date < oneYearAgo;
+      }
+      default:
+        return false;
+    }
+  };
+
   const onFilter = (repo: UpcomingChanges) => {
     // Search name with search value
     let searchValueInput: RegExp;
@@ -212,11 +255,16 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     // Search date with date selection
     const matchesDateValue = repo.date.toLowerCase() === dateSelection.toLowerCase();
 
+    // Search added to roadmap with date range
+    const matchesAddedToRoadmapValue =
+      addedToRoadmapSelection === '' || isDateInRange(repo.details?.dateAdded, addedToRoadmapSelection);
+
     return (
       (searchValue === '' || matchesNameValue) &&
       (releaseSelections.length === 0 || matchesReleaseValue) &&
       (typeSelections.size === 0 || matchesTypeValue) &&
-      (dateSelection === '' || matchesDateValue)
+      (dateSelection === '' || matchesDateValue) &&
+      matchesAddedToRoadmapValue
     );
   };
 
@@ -225,6 +273,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setSearchValue('');
     setReleaseSelections([]);
     setDateSelection('');
+    setAddedToRoadmapSelection('');
     setPage(1);
     setFiltersForURL(DEFAULT_FILTERS);
   };
@@ -263,7 +312,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setPage(1);
     setSortedFilteredData(sortedData);
     setPaginatedRows(sortedData.slice(0, perPage));
-  }, [searchValue, typeSelections, dateSelection, releaseSelections]);
+  }, [searchValue, typeSelections, dateSelection, releaseSelections, addedToRoadmapSelection]);
 
   const releaseUniqueOptions = Array.from(new Set(data.map((repo) => repo.release))).map((release) => ({
     release: release,
@@ -328,6 +377,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         setDateSelection={setDateSelection}
         releaseSelections={releaseSelections}
         setReleaseSelections={setReleaseSelections}
+        addedToRoadmapSelection={addedToRoadmapSelection}
+        setAddedToRoadmapSelection={setAddedToRoadmapSelection}
         releaseOptions={releaseUniqueOptions}
         dateOptions={dateUniqueOptions}
         typeOptions={typeUniqueOptions}
@@ -377,6 +428,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                 {columnNames.release}
               </Th>
               <Th width={10} sort={getSortParams(3)}>
+                {columnNames.addedToRoadmap}
+              </Th>
+              <Th width={10} sort={getSortParams(4)}>
                 {columnNames.date}
               </Th>
             </Tr>
@@ -385,7 +439,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         {filteredData.length === 0 ? (
           <Tbody>
             <Tr>
-              <Td colSpan={4}>
+              <Td colSpan={5}>
                 <Bullseye>{emptyState}</Bullseye>
               </Td>
             </Tr>
