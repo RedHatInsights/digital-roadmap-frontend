@@ -151,7 +151,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       : [releaseStr, ...releaseSelections];
 
     setReleaseSelections(selections);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['release'] = selections;
     setFiltersForURL(newFilters);
   }
@@ -209,7 +209,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     const itemIdAsString = itemId.toString();
     setDateSelection(itemIdAsString);
     setIsDateMenuOpen(!isDateMenuOpen);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['date'] = itemIdAsString;
     setFiltersForURL(newFilters);
   }
@@ -259,7 +259,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     const itemIdAsString = itemId.toString();
     setAddedToRoadmapSelection(itemIdAsString);
     setIsAddedToRoadmapMenuOpen(!isAddedToRoadmapMenuOpen);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['addedToRoadmap'] = itemIdAsString;
     setFiltersForURL(newFilters);
   }
@@ -330,7 +330,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       : new Set([typeStr, ...typeSelections]);
 
     setTypeSelections(selections);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['type'] = selections;
     setFiltersForURL(newFilters);
   }
@@ -425,28 +425,28 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
 
   const resetName = () => {
     setSearchValue('');
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['name'] = '';
     setFiltersForURL(newFilters);
   };
 
   const resetRelease = () => {
     setReleaseSelections([]);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     delete newFilters['release'];
     setFiltersForURL(newFilters);
   };
 
   const resetDate = () => {
     setDateSelection('');
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     delete newFilters['date'];
     setFiltersForURL(newFilters);
   };
 
   const resetAddedToRoadmap = () => {
     setAddedToRoadmapSelection('');
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     delete newFilters['addedToRoadmap'];
     setFiltersForURL(newFilters);
   };
@@ -458,7 +458,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
       value={searchValue}
       onChange={(_event, value) => {
         setSearchValue(value);
-        const newFilters = structuredClone(filtersForURL);
+        const newFilters = { ...filtersForURL };
         newFilters['name'] = value;
         setFiltersForURL(newFilters);
       }}
@@ -485,7 +485,7 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               labels={[...typeSelections]}
               deleteLabel={(category, chip) => onTypeMenuSelect(undefined, chip as string)}
               deleteLabelGroup={() => {
-                const newFilters = structuredClone(filtersForURL);
+                const newFilters = { ...filtersForURL };
                 delete newFilters['type'];
                 setFiltersForURL(newFilters);
                 resetTypeFilter();
