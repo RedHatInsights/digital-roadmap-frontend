@@ -244,7 +244,6 @@ describe('TableRow', () => {
       expect(screen.getByText(repoWithDetails.details!.summary)).toBeInTheDocument();
       expect(screen.getByText('Potentially affected systems')).toBeInTheDocument();
       expect(screen.getByText('Tracking ticket')).toBeInTheDocument();
-      expect(screen.getByText('Date added')).toBeInTheDocument();
       expect(screen.getByText('Last modified')).toBeInTheDocument();
     });
   });

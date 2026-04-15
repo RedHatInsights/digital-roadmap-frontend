@@ -41,7 +41,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   const [modalData, setModalData] = React.useState<SystemsDetail[]>();
 
   let childIsFullWidth = false;
-  let childHasNoPadding = false;
 
   const onToggle = () => {
     if (isExpanded) {
@@ -83,7 +82,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   if (repo.details) {
     const { detailFormat } = repo.details;
     childIsFullWidth = [1, 3].includes(detailFormat);
-    childHasNoPadding = [2, 3].includes(detailFormat);
   }
 
   return (
