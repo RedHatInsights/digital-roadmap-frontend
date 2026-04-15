@@ -96,7 +96,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const isValidAddedToRoadmap = (data: UpcomingChanges[], addedToRoadmap: string) => {
-    return Array.from(new Set(data.map((repo) => repo.details?.dateAdded).filter(Boolean))).includes(addedToRoadmap);
+    return Array.from(new Set(data.map((repo) => repo.details?.dateAdded).filter(Boolean))).includes(
+      addedToRoadmap
+    );
   };
 
   // Type comes in as Type1,Type2,Type3 or Type1 or any other permutation
@@ -341,10 +343,6 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
     fetchData(initialViewFilter);
   }, []);
-
-  const deprecationId = 'filter-by-type-deprecation';
-  const changeId = 'filter-by-type-change';
-  const additionId = 'filter-by-type-addition';
 
   const resetFilters = () => {
     setCurrentTypeFilters(new Set());

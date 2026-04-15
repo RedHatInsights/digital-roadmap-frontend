@@ -106,7 +106,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState<boolean>(false);
   const [isAddedToRoadmapMenuOpen, setIsAddedToRoadmapMenuOpen] = useState<boolean>(false);
-  const [activeAttributeMenu, setActiveAttributeMenu] = useState<'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap'>('Name');
+  const [activeAttributeMenu, setActiveAttributeMenu] = useState<
+    'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap'
+  >('Name');
   const [isAttributeMenuOpen, setIsAttributeMenuOpen] = useState(false);
 
   const buildPagination = (variant: 'bottom' | 'top' | PaginationVariant, isCompact: boolean) => (
@@ -382,7 +384,9 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
     <Dropdown
       isOpen={isAttributeMenuOpen}
       onSelect={(_ev, itemId) => {
-        setActiveAttributeMenu(itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap');
+        setActiveAttributeMenu(
+          itemId?.toString() as 'Name' | 'Type' | 'Release' | 'Release date' | 'Added to roadmap'
+        );
         setIsAttributeMenuOpen(!isAttributeMenuOpen);
       }}
       onOpenChange={(isOpen: boolean) => setIsAttributeMenuOpen(isOpen)}
@@ -510,7 +514,11 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               {dateSelect}
             </ToolbarFilter>
             <ToolbarFilter
-              labels={addedToRoadmapSelection !== '' ? [getAddedToRoadmapLabel(addedToRoadmapSelection)] : ([] as string[])}
+              labels={
+                addedToRoadmapSelection !== ''
+                  ? [getAddedToRoadmapLabel(addedToRoadmapSelection)]
+                  : ([] as string[])
+              }
               deleteLabel={resetAddedToRoadmap}
               deleteLabelGroup={resetAddedToRoadmap}
               categoryName="Added to roadmap"
