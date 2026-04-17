@@ -95,10 +95,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return Array.from(new Set(data.map((repo) => repo.date))).includes(date);
   };
 
-  const isValidAddedToRoadmap = (data: UpcomingChanges[], addedToRoadmap: string) => {
-    return Array.from(new Set(data.map((repo) => repo.details?.dateAdded).filter(Boolean))).includes(
-      addedToRoadmap
-    );
+  const isValidAddedToRoadmap = (_data: UpcomingChanges[], addedToRoadmap: string) => {
+    const validRanges = ['lastMonthToDate', 'last90Days', 'lastYear', 'moreThan1YearAgo'];
+    return validRanges.includes(addedToRoadmap);
   };
 
   // Type comes in as Type1,Type2,Type3 or Type1 or any other permutation
@@ -183,7 +182,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     setSelectedViewFilter(filter);
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['viewFilter'] = filter;
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
@@ -228,7 +227,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setSelectedViewFilter('all');
 
       // Update URL and filters
-      const newFilters = structuredClone(filtersForURL);
+      const newFilters = { ...filtersForURL };
       newFilters['viewFilter'] = 'all';
       setFiltersForURL(newFilters);
       setSearchParams(buildURL(newFilters));
@@ -292,7 +291,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Apply URL parameters
-      const newFilters = structuredClone(filtersForURL);
+      const newFilters = { ...filtersForURL };
 
       // Apply URL parameters if this is the initial load
       if (nameParam) {
@@ -375,14 +374,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     // Update filters for URL
-    const newFilters: any = structuredClone(DEFAULT_FILTERS);
+    const newFilters: any = { ...DEFAULT_FILTERS };
     newFilters['viewFilter'] = noDataAvailable ? 'all' : 'relevant';
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
   };
 
   const setTypeParam = (type: Set<string>) => {
-    const newFilters = structuredClone(filtersForURL);
+    const newFilters = { ...filtersForURL };
     newFilters['type'] = type;
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
