@@ -274,6 +274,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Determine which data to display based on current view filter
+      const dataToUse = currentViewFilter === 'all' ? allData : relevantData;
+
       if (currentViewFilter === 'all') {
         setUpcomingChanges(allData);
         processData(allData);
@@ -293,28 +295,28 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       // Apply URL parameters
       const newFilters = { ...filtersForURL };
 
-      // Apply URL parameters if this is the initial load
+      // Apply URL parameters if this is the initial load - use local data instead of state
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
         setCurrentNameFilters(name);
         newFilters['name'] = name;
       }
-      if (releaseParam && isValidRelease(upcomingChanges, decodeURIComponent(releaseParam))) {
+      if (releaseParam && isValidRelease(dataToUse, decodeURIComponent(releaseParam))) {
         const release = decodeURIComponent(releaseParam).split(',');
         setCurrentReleaseFilters(release);
         newFilters['release'] = release;
       }
-      if (typeParam && isValidType(upcomingChanges, decodeURIComponent(typeParam))) {
+      if (typeParam && isValidType(dataToUse, decodeURIComponent(typeParam))) {
         const type = new Set(decodeURIComponent(typeParam).split(','));
         setCurrentTypeFilters(type);
         newFilters['type'] = type;
       }
-      if (dateParam && isValidDate(upcomingChanges, decodeURIComponent(dateParam))) {
+      if (dateParam && isValidDate(dataToUse, decodeURIComponent(dateParam))) {
         const date = decodeURIComponent(dateParam);
         setCurrentDateFilter(date);
         newFilters['date'] = date;
       }
-      if (addedToRoadmapParam && isValidAddedToRoadmap(upcomingChanges, decodeURIComponent(addedToRoadmapParam))) {
+      if (addedToRoadmapParam && isValidAddedToRoadmap(dataToUse, decodeURIComponent(addedToRoadmapParam))) {
         const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
         setCurrentAddedToRoadmapFilter(addedToRoadmap);
         newFilters['addedToRoadmap'] = addedToRoadmap;
