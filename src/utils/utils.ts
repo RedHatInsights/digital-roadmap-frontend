@@ -90,6 +90,9 @@ export const buildURL = (filter: Filter) => {
   if (filter['release'] && filter['release'].length > 0) {
     encodedData += `&release=${filter['release'].join(',')}`;
   }
+  if (filter['addedToRoadmap']) {
+    encodedData += `&addedToRoadmap=${filter['addedToRoadmap']}`;
+  }
   return encodedData;
 };
 
