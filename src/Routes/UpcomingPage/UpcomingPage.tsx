@@ -31,7 +31,7 @@ const UpcomingPage = () => {
           <PageHeaderTitle title="Roadmap" />
           <Popover headerContent="About roadmap" bodyContent={popoverContent} position="right">
             <Button
-              icon={<OutlinedQuestionCircleIcon style={{ color: '#6a6e73' }} />}
+              icon={<OutlinedQuestionCircleIcon />}
               variant="plain"
               aria-label="Roadmap information"
             />

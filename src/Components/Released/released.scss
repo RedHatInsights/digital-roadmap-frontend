@@ -7,11 +7,11 @@
 }
 
 .non-relevant {
-  color: gray;
+  color: var(--pf-t--global--text--color--subtle);
 }
 
 .pf-v6-c-sidebar {
-  background-color: white;
+  background-color: var(--pf-t--global--background--color--primary--default);
 }
 
 .pf-v6-c-sidebar__main {

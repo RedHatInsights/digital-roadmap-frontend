@@ -333,14 +333,14 @@ End: ${formatDate(tooltipData.y)}`;
           position: 'absolute',
           left: `${tooltipPosition.x}px`,
           top: `${tooltipPosition.y}px`,
-          backgroundColor: 'black',
-          color: 'white',
+          backgroundColor: 'var(--pf-t--global--background--color--floating--default)',
+          color: 'var(--pf-t--global--text--color--regular)',
           padding: '10px',
           borderRadius: '5px',
           zIndex: 1000,
           pointerEvents: 'none',
           whiteSpace: 'pre-line',
-          border: '1px solid #888',
+          border: '1px solid var(--pf-t--global--border--color--default)',
           maxWidth: '250px',
           fontSize: '14px',
           lineHeight: '1.5',
@@ -357,7 +357,7 @@ End: ${formatDate(tooltipData.y)}`;
             transform: 'translateY(-50%)',
             borderTop: '10px solid transparent',
             borderBottom: '10px solid transparent',
-            borderRight: '10px solid black',
+            borderRight: '10px solid var(--pf-t--global--background--color--floating--default)',
           }}
         />
         {content}
@@ -379,14 +379,14 @@ End: ${formatDate(tooltipData.y)}`;
           position: 'fixed',
           left: `${mousePosition.x + xOffset}px`,
           top: `${mousePosition.y + yOffset}px`,
-          backgroundColor: 'black',
-          color: 'white',
+          backgroundColor: 'var(--pf-t--global--background--color--floating--default)',
+          color: 'var(--pf-t--global--text--color--regular)',
           padding: '10px',
           borderRadius: '5px',
           zIndex: 1000,
           pointerEvents: 'none',
           whiteSpace: 'pre-line',
-          border: '1px solid #888',
+          border: '1px solid var(--pf-t--global--border--color--default)',
           maxWidth: '250px',
           fontSize: '14px',
           lineHeight: '1.5',
@@ -402,7 +402,7 @@ End: ${formatDate(tooltipData.y)}`;
             transform: 'translateY(-50%)',
             borderTop: '10px solid transparent',
             borderBottom: '10px solid transparent',
-            borderRight: '10px solid black',
+            borderRight: '10px solid var(--pf-t--global--background--color--floating--default)',
           }}
         />
         Current Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -590,6 +590,11 @@ End: ${formatDate(tooltipData.y)}`;
             data={getLegendData()}
             height={50}
             gutter={20}
+            style={{
+              labels: {
+                fill: 'var(--pf-t--global--text--color--regular)',
+              },
+            }}
           />
         }
         legendPosition="bottom-left"
@@ -611,6 +616,17 @@ End: ${formatDate(tooltipData.y)}`;
             showGrid
             tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
+            style={{
+              tickLabels: {
+                fill: 'var(--pf-t--global--text--color--regular)',
+              },
+              axisLabel: {
+                fill: 'var(--pf-t--global--text--color--regular)',
+              },
+              grid: {
+                stroke: 'var(--pf-t--global--border--color--default)',
+              },
+            }}
           />
         )}
         {/*X axis with date timeline for the top of the chart */}
@@ -621,6 +637,11 @@ End: ${formatDate(tooltipData.y)}`;
             orientation="top"
             tickValues={yearTickValues}
             tickFormat={(t: Date) => t.toLocaleDateString('en-US', { year: 'numeric' })}
+            style={{
+              tickLabels: {
+                fill: 'var(--pf-t--global--text--color--regular)',
+              },
+            }}
           />
         )}
         {/*Y axis with the name of each stream/operating system */}
@@ -630,6 +651,13 @@ End: ${formatDate(tooltipData.y)}`;
           style={{
             tickLabels: {
               fontSize: () => Math.max(10, Math.min(14, chartDimensions.width / 60)),
+              fill: 'var(--pf-t--global--text--color--regular)',
+            },
+            axisLabel: {
+              fill: 'var(--pf-t--global--text--color--regular)',
+            },
+            grid: {
+              stroke: 'var(--pf-t--global--border--color--default)',
             },
           }}
         />
