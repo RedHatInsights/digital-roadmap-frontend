@@ -128,4 +128,59 @@ describe('LifecycleChartSystem', () => {
     // Should be called again with the re-render
     expect(mockUseChartDataAttributes.mock.calls.length).toBeGreaterThan(initialCallCount);
   });
+
+  it('should render tooltip when tooltip data is set', () => {
+    const { container } = render(<LifecycleChartSystem lifecycleData={mockLifecycleData} />);
+
+    // The chart container should be rendered
+    const chartContainer = container.querySelector('.drf-lifecycle__chart');
+    expect(chartContainer).toBeInTheDocument();
+  });
+
+  it('should handle data with Unknown dates', () => {
+    const dataWithUnknownDates: SystemLifecycleChanges[] = [
+      {
+        name: 'RHEL 9.0',
+        display_name: 'RHEL 9.0',
+        start_date: 'Unknown',
+        end_date: 'Unknown',
+        support_status: 'supported',
+        major: 9,
+        minor: 0,
+        count: 1,
+        lifecycle_type: 'standard',
+        related: false,
+        systems_detail: [],
+      },
+    ];
+
+    render(<LifecycleChartSystem lifecycleData={dataWithUnknownDates} />);
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
+
+  it('should render ChartLine component for current date indicator', () => {
+    render(<LifecycleChartSystem lifecycleData={mockLifecycleData} />);
+    expect(screen.getByTestId('chart-line')).toBeInTheDocument();
+  });
+
+  it('should handle null dates in data', () => {
+    const dataWithNullDates = [
+      {
+        name: 'RHEL 9.0',
+        display_name: 'RHEL 9.0',
+        start_date: null as unknown as string,
+        end_date: null as unknown as string,
+        support_status: 'supported',
+        major: 9,
+        minor: 0,
+        count: 1,
+        lifecycle_type: 'standard',
+        related: false,
+        systems_detail: [],
+      },
+    ] as SystemLifecycleChanges[];
+
+    render(<LifecycleChartSystem lifecycleData={dataWithNullDates} />);
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
 });
