@@ -347,17 +347,18 @@ End: ${formatDate(tooltipData.y)}`;
           transform: 'translate(10px, -50%)',
         }}
       >
+        {/* Pointer */}
         <div
           style={{
             position: 'absolute',
-            width: 0,
-            height: 0,
-            left: '-10px',
+            width: '8px',
+            height: '8px',
+            left: '-4px',
             top: '50%',
-            transform: 'translateY(-50%)',
-            borderTop: '10px solid transparent',
-            borderBottom: '10px solid transparent',
-            borderRight: '10px solid var(--pf-t--global--background--color--floating--default)',
+            transform: 'translateY(-50%) rotate(45deg)',
+            backgroundColor: 'var(--pf-t--global--background--color--floating--default)',
+            borderLeft: '1px solid var(--pf-t--global--border--color--default)',
+            borderBottom: '1px solid var(--pf-t--global--border--color--default)',
           }}
         />
         {content}
@@ -392,17 +393,18 @@ End: ${formatDate(tooltipData.y)}`;
           lineHeight: '1.5',
         }}
       >
+        {/* Pointer */}
         <div
           style={{
             position: 'absolute',
-            width: 0,
-            height: 0,
-            left: '-10px',
+            width: '8px',
+            height: '8px',
+            left: '-4px',
             top: '50%',
-            transform: 'translateY(-50%)',
-            borderTop: '10px solid transparent',
-            borderBottom: '10px solid transparent',
-            borderRight: '10px solid var(--pf-t--global--background--color--floating--default)',
+            transform: 'translateY(-50%) rotate(45deg)',
+            backgroundColor: 'var(--pf-t--global--background--color--floating--default)',
+            borderLeft: '1px solid var(--pf-t--global--border--color--default)',
+            borderBottom: '1px solid var(--pf-t--global--border--color--default)',
           }}
         />
         Current Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -743,7 +745,7 @@ End: ${formatDate(tooltipData.y)}`;
             y0={() => Date.now()}
             style={{
               data: {
-                stroke: 'black',
+                stroke: 'var(--pf-t--global--text--color--regular)',
                 strokeWidth: 2,
               },
             }}
@@ -764,7 +766,7 @@ End: ${formatDate(tooltipData.y)}`;
 
                           return {
                             style: {
-                              stroke: 'black',
+                              stroke: 'var(--pf-t--global--text--color--regular)',
                               strokeWidth: 3,
                             },
                           };
@@ -782,7 +784,7 @@ End: ${formatDate(tooltipData.y)}`;
 
                           return {
                             style: {
-                              stroke: '#151515',
+                              stroke: 'var(--pf-t--global--text--color--regular)',
                               strokeWidth: 2,
                             },
                           };
