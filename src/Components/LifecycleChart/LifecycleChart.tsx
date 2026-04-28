@@ -38,7 +38,7 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
   });
 
   // Bar tooltip state
-  const [tooltipData, setTooltipData] = React.useState<any>(null);
+  const [tooltipData, setTooltipData] = React.useState<ChartDataObject | null>(null);
   const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
   const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
 
@@ -324,8 +324,8 @@ const LifecycleChart: React.FC<LifecycleChartProps> = ({ lifecycleData, viewFilt
 Release: ${tooltipData.version}
 Support Type: ${tooltipData.packageType}
 Systems: ${tooltipData.numSystems}
-Start: ${formatDate(tooltipData.y0)}
-End: ${formatDate(tooltipData.y)}`;
+Start: ${formatDate(tooltipData.y0.toISOString())}
+End: ${formatDate(tooltipData.y.toISOString())}`;
 
     return (
       <div
