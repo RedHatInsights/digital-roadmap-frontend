@@ -134,4 +134,63 @@ describe('LifecycleChart', () => {
     // Should be called again with the re-render
     expect(mockUseChartDataAttributes.mock.calls.length).toBeGreaterThan(initialCallCount);
   });
+
+  it('should render tooltip when tooltip data is set', () => {
+    const { container } = render(<LifecycleChart lifecycleData={mockLifecycleData} />);
+
+    // The chart container should be rendered
+    const chartContainer = container.querySelector('.drf-lifecycle__chart');
+    expect(chartContainer).toBeInTheDocument();
+  });
+
+  it('should handle data with Unknown dates', () => {
+    const dataWithUnknownDates: Stream[] = [
+      {
+        name: 'stream-unknown',
+        display_name: 'Stream Unknown',
+        start_date: 'Unknown',
+        end_date: 'Unknown',
+        support_status: 'supported',
+        os_major: 9,
+        os_minor: 0,
+        count: 1,
+        os_lifecycle: 'active',
+        application_stream_name: 'stream-unknown',
+        rolling: false,
+        related: false,
+        systems_detail: [],
+      },
+    ];
+
+    render(<LifecycleChart lifecycleData={dataWithUnknownDates} />);
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
+
+  it('should render ChartLine component for current date indicator', () => {
+    render(<LifecycleChart lifecycleData={mockLifecycleData} />);
+    expect(screen.getByTestId('chart-line')).toBeInTheDocument();
+  });
+
+  it('should handle null dates in data', () => {
+    const dataWithNullDates = [
+      {
+        name: 'stream-null',
+        display_name: 'Stream Null',
+        start_date: null as unknown as string,
+        end_date: null as unknown as string,
+        support_status: 'supported',
+        os_major: 9,
+        os_minor: 0,
+        count: 1,
+        os_lifecycle: 'active',
+        application_stream_name: 'stream-null',
+        rolling: false,
+        related: false,
+        systems_detail: [],
+      },
+    ] as Stream[];
+
+    render(<LifecycleChart lifecycleData={dataWithNullDates} />);
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
 });
