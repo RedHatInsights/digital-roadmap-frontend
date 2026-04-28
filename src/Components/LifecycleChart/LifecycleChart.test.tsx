@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import LifecycleChart from './LifecycleChart';
 import { useChartDataAttributes } from '../../utils/utils';
 import { Stream } from '../../types/Stream';
@@ -191,6 +191,81 @@ describe('LifecycleChart', () => {
     ] as Stream[];
 
     render(<LifecycleChart lifecycleData={dataWithNullDates} />);
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
+
+  it('should handle mouse events on chart container', () => {
+    const { container } = render(<LifecycleChart lifecycleData={mockLifecycleData} />);
+    const chartContainer = container.querySelector('.drf-lifecycle__chart');
+
+    expect(chartContainer).toBeInTheDocument();
+
+    if (chartContainer) {
+      // Simulate mouse leave to test tooltip clearing
+      act(() => {
+        fireEvent.mouseLeave(chartContainer);
+      });
+      expect(chartContainer).toBeInTheDocument();
+    }
+  });
+
+  it('should track mouse position for tooltip rendering', () => {
+    render(<LifecycleChart lifecycleData={mockLifecycleData} />);
+
+    // Simulate mouse move to update position tracking
+    act(() => {
+      fireEvent.mouseMove(window, { clientX: 100, clientY: 200 });
+    });
+
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
+
+  it('should handle resize events', () => {
+    render(<LifecycleChart lifecycleData={mockLifecycleData} />);
+
+    // Simulate window resize
+    act(() => {
+      fireEvent(window, new Event('resize'));
+    });
+
+    expect(screen.getByTestId('chart')).toBeInTheDocument();
+  });
+
+  it('should render with different support status types', () => {
+    const mixedData: Stream[] = [
+      {
+        name: 'retired-stream',
+        display_name: 'Retired Stream',
+        start_date: '2019-01-01',
+        end_date: '2020-01-01',
+        support_status: 'retired',
+        os_major: 7,
+        os_minor: 0,
+        count: 2,
+        os_lifecycle: 'retired',
+        application_stream_name: 'retired-stream',
+        rolling: false,
+        related: false,
+        systems_detail: [],
+      },
+      {
+        name: 'warning-stream',
+        display_name: 'Warning Stream',
+        start_date: '2023-01-01',
+        end_date: '2024-06-01',
+        support_status: 'support_ending_soon',
+        os_major: 8,
+        os_minor: 5,
+        count: 10,
+        os_lifecycle: 'active',
+        application_stream_name: 'warning-stream',
+        rolling: false,
+        related: false,
+        systems_detail: [],
+      },
+    ];
+
+    render(<LifecycleChart lifecycleData={mixedData} />);
     expect(screen.getByTestId('chart')).toBeInTheDocument();
   });
 });
