@@ -469,6 +469,106 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       });
     });
+
+    test('preserves viewFilter=all in URL when a type card is clicked after URL-initialized load', async () => {
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      // Simulate clicking the Changes type card
+      const buttons = screen.getAllByRole('button');
+      const changesButton = buttons.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+
+      const lastCall = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0] as string;
+      expect(lastCall).toContain('viewFilter=all');
+      expect(lastCall).not.toContain('viewFilter=relevant');
+    });
+
+    test('preserves viewFilter=all across two sequential type card clicks after URL-initialized load', async () => {
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const buttons = screen.getAllByRole('button');
+
+      const deprecationsButton = buttons.find((btn) => btn.getAttribute('aria-labelledby') === 'Deprecations');
+      expect(deprecationsButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(deprecationsButton!);
+      });
+
+      const changesButton = buttons.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalledTimes(2);
+      });
+
+      for (const call of mockSetSearchParams.mock.calls) {
+        const urlString = call[0] as string;
+        expect(urlString).toContain('viewFilter=all');
+        expect(urlString).not.toContain('viewFilter=relevant');
+      }
+    });
+
+    test('uses viewFilter=relevant (default) in URL when no viewFilter param is set and a card is clicked', async () => {
+      setupSearchParamsMock({});
+
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const buttons = screen.getAllByRole('button');
+      const changesButton = buttons.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+
+      const lastCall = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0] as string;
+      expect(lastCall).not.toContain('viewFilter=all');
+    });
   });
 
   describe('Empty States', () => {
