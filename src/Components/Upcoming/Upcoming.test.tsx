@@ -469,6 +469,45 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       });
     });
+
+    test('preserves viewFilter=all in URL when clicking a type card after page load with viewFilter=all', async () => {
+      // Regression test for RSPEED-2766:
+      // After a page refresh with viewFilter=all in the URL, clicking a type card
+      // was incorrectly resetting viewFilter back to 'relevant' due to a stale
+      // closure in fetchData that read selectedViewFilter (initial 'relevant')
+      // instead of currentViewFilter (the URL-provided 'all').
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      // Clear prior setSearchParams calls from mount
+      mockSetSearchParams.mockClear();
+
+      // Click the "Changes" type card
+      const changesButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      // viewFilter must still be 'all' in the URL after clicking the type card
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+        const lastCall = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+        const params = typeof lastCall === 'string' ? lastCall : lastCall.toString();
+        expect(params).toContain('viewFilter=all');
+        expect(params).not.toContain('viewFilter=relevant');
+      });
+    });
   });
 
   describe('Empty States', () => {
