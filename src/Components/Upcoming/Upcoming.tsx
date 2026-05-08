@@ -323,7 +323,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
 
       // Include view filter in URL
-      newFilters['viewFilter'] = selectedViewFilter;
+      newFilters['viewFilter'] = currentViewFilter;
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {

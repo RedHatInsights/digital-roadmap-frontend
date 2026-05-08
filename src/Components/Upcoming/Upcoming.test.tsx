@@ -469,6 +469,77 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       });
     });
+
+    test('preserves viewFilter=all in URL when clicking a type card after page refresh', async () => {
+      // Simulate: page loaded with viewFilter=all already in URL (e.g. after a refresh)
+      setupSearchParamsMock({ viewFilter: 'all', type: 'Deprecation' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all&type=Deprecation');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      // Click the "Changes" type card (second card, aria-labelledby="filter-by-type-2")
+      const buttons = screen.getAllByRole('button');
+      const changesCardButton = buttons.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesCardButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesCardButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+
+      const lastCall = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0] as string;
+      expect(lastCall).toContain('viewFilter=all');
+      expect(lastCall).not.toContain('viewFilter=relevant');
+    });
+
+    test('preserves viewFilter=all across sequential card clicks after refresh', async () => {
+      // Simulate: page refreshed with viewFilter=all in URL, then user clicks a different type card
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      // Click the "Deprecations" type card (first card)
+      const deprecationsButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.getAttribute('aria-labelledby') === 'Deprecations');
+      await act(async () => {
+        fireEvent.click(deprecationsButton!);
+      });
+
+      // Click the "Changes" type card (second card)
+      const changesButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+
+      const lastCall = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0] as string;
+      expect(lastCall).toContain('viewFilter=all');
+      expect(lastCall).not.toContain('viewFilter=relevant');
+    });
   });
 
   describe('Empty States', () => {
