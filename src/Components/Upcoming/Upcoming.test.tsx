@@ -469,6 +469,126 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       });
     });
+
+    // RSPEED-2766: verify that clicking a type card preserves viewFilter=all when set via URL on page load
+    test('U1: clicking Changes card preserves viewFilter=all after URL-initialized load', async () => {
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const allButtonsU1 = screen.getAllByRole('button');
+      const changesButton = allButtonsU1.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+        const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+        expect(callArg).toContain('viewFilter=all');
+        expect(callArg).toContain('type=Change');
+      });
+    });
+
+    test('U2: clicking Deprecations card preserves viewFilter=all after URL-initialized load', async () => {
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const allButtonsU2 = screen.getAllByRole('button');
+      const deprecationsButton = allButtonsU2.find(
+        (btn) => btn.getAttribute('aria-labelledby') === 'Deprecations'
+      );
+      expect(deprecationsButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(deprecationsButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+        const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+        expect(callArg).toContain('viewFilter=all');
+        expect(callArg).toContain('type=Deprecation');
+      });
+    });
+
+    test('U3: clicking Additions card preserves viewFilter=all after URL-initialized load', async () => {
+      setupSearchParamsMock({ viewFilter: 'all' });
+
+      await act(async () => {
+        renderComponent('viewFilter=all');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const allButtonsU3 = screen.getAllByRole('button');
+      const additionsButton = allButtonsU3.find(
+        (btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-3'
+      );
+      expect(additionsButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(additionsButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+        const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+        expect(callArg).toContain('viewFilter=all');
+        expect(callArg).toContain('type=Addition');
+      });
+    });
+
+    test('U4: clicking a type card with default viewFilter preserves viewFilter=relevant', async () => {
+      // No viewFilter param — default is 'relevant'
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
+      });
+
+      mockSetSearchParams.mockClear();
+
+      const allButtonsU4 = screen.getAllByRole('button');
+      const changesButton = allButtonsU4.find((btn) => btn.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(changesButton!);
+      });
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+        const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+        expect(callArg).toContain('viewFilter=relevant');
+        expect(callArg).toContain('type=Change');
+      });
+    });
   });
 
   describe('Empty States', () => {
