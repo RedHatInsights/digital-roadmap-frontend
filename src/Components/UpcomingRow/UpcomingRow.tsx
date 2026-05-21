@@ -164,7 +164,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                       </Content>
                       <Content component={ContentVariants.dd} style={{ margin: 0 }}>
                         <a
-                          href={`https://issues.redhat.com/browse/${repo.details.trainingTicket}`}
+                          href={`https://redhat.atlassian.net/browse/${repo.details.trainingTicket}`}
                           rel="noreferrer"
                         >
                           {repo.details.trainingTicket}

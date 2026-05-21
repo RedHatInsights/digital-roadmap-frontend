@@ -6,7 +6,7 @@
 description text...
 
 Jira link:
-[RSPEED-XXX](https://issues.redhat.com/browse/RSPEED-XXX)
+[RSPEED-XXX](https://redhat.atlassian.net/browse/RSPEED-XXX)
 
 ---
 

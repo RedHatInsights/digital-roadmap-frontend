@@ -272,7 +272,7 @@ describe('TableRow', () => {
       });
 
       const ticketLink = screen.getByRole('link', { name: 'RUBY-123' });
-      expect(ticketLink).toHaveAttribute('href', 'https://issues.redhat.com/browse/RUBY-123');
+      expect(ticketLink).toHaveAttribute('href', 'https://redhat.atlassian.net/browse/RUBY-123');
       expect(ticketLink).toHaveAttribute('rel', 'noreferrer');
     });
 
