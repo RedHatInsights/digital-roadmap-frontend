@@ -1103,7 +1103,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     } else if (error.status_code) {
       if (error.status_code === 504) {
         // Corner case, making user experience a little bit better.
-        // can be removed when https://issues.redhat.com/browse/RSPEED-1515 is fixed
+        // can be removed when https://redhat.atlassian.net/browse/RSPEED-1515 is fixed
         return timeoutState;
       }
     }
