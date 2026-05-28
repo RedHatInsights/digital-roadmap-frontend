@@ -96,8 +96,8 @@ objects:
 
       module:
         analytics:
-          APIKey: apRCg9V6oMXCcnTingqRYW6m1er4hkCW
-          APIKeyDev: aMINBssUhXV1okzk7ZBaqwdTgtA0ySpg
+          APIKey: HYwIDCAEy3o3xmI6sPXT8XhEAdkXS46u
+          APIKeyDev: opUqCKxRlCTMP6xgwSuUqSYkAjFyk8AC
         manifestLocation: "/apps/roadmap/fed-mods.json"
         config:
           supportCaseData:
