@@ -282,6 +282,23 @@ describe('UpcomingTab', () => {
         expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
       });
     });
+
+    test('handles non-504 error with status code', async () => {
+      const serverError = { message: 'Internal Server Error', status_code: 500 };
+
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
+      mockGetRelevantUpcomingChanges.mockRejectedValue(serverError);
+
+      await act(async () => {
+        renderComponent();
+      });
+
+      // Should show generic error message
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+        expect(screen.getByTestId('error-description')).toHaveTextContent('Internal Server Error');
+      });
+    });
   });
 
   describe('View Filter Switching', () => {

@@ -349,6 +349,19 @@ describe('LifecycleTab Component', () => {
         expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
       });
     });
+
+    test('displays generic error state for non-504 status codes', async () => {
+      const serverError = new Error('Internal Server Error') as any;
+      serverError.status_code = 500;
+      mockApiCalls.getAllLifecycleSystems.mockRejectedValue(serverError);
+
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to load data')).toBeInTheDocument();
+        expect(screen.getByText('Internal Server Error')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Filtering Functionality', () => {
