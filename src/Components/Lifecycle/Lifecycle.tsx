@@ -1100,14 +1100,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (error.status_code) {
-      if (error.status_code === 504) {
-        // Corner case, making user experience a little bit better.
-        // can be removed when https://redhat.atlassian.net/browse/RSPEED-1515 is fixed
-        return timeoutState;
-      }
+    } else if (error.status_code === 504) {
+      // Corner case, making user experience a little bit better.
+      // can be removed when https://redhat.atlassian.net/browse/RSPEED-1515 is fixed
+      return timeoutState;
+    } else {
+      return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
     }
-    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
   const emptyState = (
