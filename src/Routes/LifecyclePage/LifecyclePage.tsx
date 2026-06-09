@@ -29,6 +29,17 @@ const LifecyclePage = () => {
         </a>
         .
       </p>
+      <p>
+        Learn more about{' '}
+        <a
+          href="https://docs.redhat.com/en/documentation/red_hat_lightspeed/1-latest/html/dynamically_creating_a_digital_roadmap_to_manage_rhel_systems/using-the-digital-roadmap-dashboard#life-cycle"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Using Red Hat Lightspeed for RHEL planning Dashboard
+        </a>
+        .
+      </p>
     </Content>
   );
 
