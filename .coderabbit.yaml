@@ -1,0 +1,411 @@
+# CodeRabbit configuration for frontend repositories
+# React/TypeScript/Next.js focused with modern web security practices
+#
+# Schema: https://coderabbit.ai/integrations/schema.v2.json
+# Validate: comment "@coderabbitai configuration" on any PR
+#
+language: "en-US"
+tone_instructions: "Security-focused. State risk severity and impact. Focus on production readiness and user data protection."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+
+  path_filters:
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!coverage/**"
+    - "!.next/**"
+    - "!.cache/**"
+    - "!*.min.js"
+    - "!*.min.css"
+    - "!public/vendor/**"
+    # yarn.lock excluded: high churn, low signal
+    - "!yarn.lock"
+    # Keep package-lock.json and pnpm-lock.yaml for supply chain review
+    - "!.turbo/**"
+    - "!.vercel/**"
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+      - "develop"
+      - "release/.*"
+
+  path_instructions:
+
+    # ── React & TypeScript ───────────────────────────────────────
+    - path: "**/*.{tsx,ts,jsx,js}"
+      instructions: |
+        React/TypeScript security:
+        - XSS prevention: no dangerouslySetInnerHTML with user data
+        - DOM manipulation: no innerHTML, document.write with user input
+        - URL construction: validate and sanitize user-provided URLs
+        - Event handlers: sanitize user input before use
+        - TypeScript: enable strict mode, no any types for user data
+        - Props validation: proper TypeScript interfaces, no loose types
+        - State management: don't store sensitive data in client state
+        - React hooks: proper dependency arrays to prevent memory leaks
+        - Keys: use stable, unique keys in lists (not array index)
+        - Error boundaries: catch errors, don't expose stack traces
+        - Memoization: React.memo, useMemo, useCallback for performance
+        - No eval(), new Function(), setTimeout/setInterval with string code
+
+    # ── Authentication & session management ──────────────────────
+    - path: "**/*{auth,login,session,token}*.{ts,tsx,js,jsx}"
+      instructions: |
+        Frontend authentication security:
+        - Tokens: store in httpOnly cookies, not localStorage
+        - JWT: verify on backend, never trust client-side validation
+        - Refresh tokens: automatic rotation, secure storage
+        - Logout: clear all auth state, invalidate tokens on backend
+        - Session timeout: implement client-side session expiry
+        - No credentials in URLs or localStorage
+        - No bearer tokens in query parameters
+        - CSRF: include tokens on state-changing requests
+        - Login forms: prevent credential stuffing with rate limits
+        - Password visibility toggle: ensure it's accessible
+
+    # ── API calls & data fetching ────────────────────────────────
+    - path: "**/{api,services,hooks}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        API security:
+        - Input validation: validate all user input before API calls
+        - Output sanitization: sanitize API responses before rendering
+        - Error handling: don't expose API errors to UI
+        - Rate limiting: implement client-side throttling
+        - Request cancellation: clean up pending requests on unmount
+        - CORS: backend should enforce strict origin policies
+        - Authentication: include auth headers, handle 401/403
+        - No sensitive data in URL parameters
+        - Use HTTPS only for API calls
+        - Timeout handling: set reasonable request timeouts
+
+    # ── Forms & input validation ─────────────────────────────────
+    - path: "**/*{form,input}*.{tsx,jsx}"
+      instructions: |
+        Form security:
+        - Client-side validation: regex patterns, length limits
+        - Server-side validation: always validate on backend too
+        - Sanitization: escape user input before display
+        - File uploads: validate type by magic bytes, size limits
+        - No autocomplete on sensitive fields (password, CC)
+        - CSRF tokens on all state-changing forms
+        - Prevent double submission
+        - Clear sensitive fields on unmount
+        - Proper ARIA labels for accessibility
+
+    # ── Routing & navigation ─────────────────────────────────────
+    - path: "**/{routes,router,navigation}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Routing security:
+        - Route guards: verify authentication before protected routes
+        - Authorization: check user permissions per route
+        - URL parameters: validate and sanitize route params
+        - Deep linking: validate state when routing from external links
+        - Redirect validation: no open redirects, whitelist destinations
+        - Query parameters: don't trust user-provided params
+        - Browser history: no sensitive data in history state
+
+    # ── State management (Redux/Zustand/Context) ─────────────────
+    - path: "**/{store,state,redux,zustand,context}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        State management security:
+        - No sensitive data in client state (tokens, PII, secrets)
+        - Redux DevTools: disable in production
+        - State persistence: encrypt sensitive data if persisting
+        - Immutability: prevent accidental state mutations
+        - Actions: validate payloads before dispatch
+        - Selectors: memoize expensive computations
+        - No PII in state that could leak via error reporting
+
+    # ── Environment & configuration ──────────────────────────────
+    - path: "**/.env*"
+      instructions: |
+        Environment variables security:
+        - No secrets in .env files committed to git
+        - Use .env.example for templates
+        - Public variables: prefix with NEXT_PUBLIC_, VITE_, REACT_APP_
+        - Private variables: never expose to client bundle
+        - API keys: use backend proxy, not client-side
+        - Validate required env vars at build time
+
+    - path: "**/config.{ts,js}"
+      instructions: |
+        Configuration security:
+        - No hardcoded API keys, secrets, tokens
+        - Feature flags: validate before use
+        - Environment detection: proper dev/staging/prod separation
+        - No default admin credentials
+        - CSP directives: strict Content Security Policy
+        - Security headers: HSTS, X-Frame-Options, etc.
+
+    # ── Next.js specific ─────────────────────────────────────────
+    - path: "**/pages/**/*.{tsx,jsx}"
+      instructions: |
+        Next.js pages security:
+        - getServerSideProps: validate user input, check auth
+        - getStaticProps: no sensitive data in static builds
+        - API routes: proper auth middleware, input validation
+        - Middleware: enforce auth on protected routes
+        - No client-side secrets in getInitialProps
+        - Server components: verify auth before data fetching
+        - Metadata: no user PII in page metadata
+
+    - path: "**/app/**/*.{tsx,jsx}"
+      instructions: |
+        Next.js App Router security:
+        - Server actions: validate all inputs, check auth
+        - Server components: proper error boundaries
+        - Client components: 'use client' only when needed
+        - Route handlers: authentication middleware
+        - Streaming: handle errors gracefully
+        - Metadata: validate dynamic metadata sources
+
+    # ── CSS & styling ────────────────────────────────────────────
+    - path: "**/*.{css,scss,sass,less,styled.ts,styled.js}"
+      instructions: |
+        CSS security:
+        - No user input in CSS (CSS injection risk)
+        - Styled components: sanitize props before interpolation
+        - CSS modules: prefer over global styles
+        - External stylesheets: verify integrity with SRI
+        - No expression() or behavior() (IE-specific XSS)
+        - CSP-compliant: no inline styles if CSP is strict
+
+    # ── Third-party integrations ─────────────────────────────────
+    - path: "**/{analytics,tracking,monitoring}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Third-party integration security:
+        - Analytics: anonymize user data, no PII
+        - Tracking: GDPR consent before loading
+        - Scripts: load from trusted CDNs with SRI hashes
+        - Iframes: sandbox attribute, restrict permissions
+        - Widgets: CSP to limit script sources
+        - Error reporting (Sentry): scrub sensitive data
+        - No tracking in development/test environments
+
+    # ── Web security headers & meta tags ─────────────────────────
+    - path: "**/{middleware,headers,security}.{ts,js}"
+      instructions: |
+        Security headers:
+        - CSP: strict Content-Security-Policy, no unsafe-inline/eval
+        - HSTS: Strict-Transport-Security with max-age
+        - X-Frame-Options: DENY or SAMEORIGIN
+        - X-Content-Type-Options: nosniff
+        - Referrer-Policy: strict-origin-when-cross-origin
+        - Permissions-Policy: restrict dangerous features
+        - CORP/COEP/COOP for cross-origin isolation
+
+    # ── Testing ──────────────────────────────────────────────────
+    - path: "**/{__tests__,test,tests,spec}/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Test security:
+        - No hardcoded credentials in tests
+        - Mock API calls, don't hit production
+        - Test authentication flows
+        - Test XSS prevention (user input sanitization)
+        - Test CSRF protection
+        - Test authorization (role-based access)
+        - Clean up side effects (localStorage, cookies) after tests
+        - Integration tests: use test databases/accounts
+
+    # ── Dependencies & supply chain ──────────────────────────────
+    - path: "package.json"
+      instructions: |
+        Dependency security:
+        - Review new dependencies: maintenance, CVEs, bundle size
+        - No dependencies from untrusted sources
+        - Lock file: ensure package-lock.json is committed
+        - Scripts: validate npm scripts, no arbitrary code execution
+        - Peer dependencies: verify compatibility
+        - Dev dependencies: separate from production
+        - License compliance: check for incompatible licenses
+        - Regular updates: keep React, Next.js, TypeScript current
+
+    - path: "{package-lock.json,pnpm-lock.yaml}"
+      instructions: |
+        Lock file security:
+        - Verify integrity hashes present
+        - Check for known vulnerabilities (npm audit, pnpm audit)
+        - No pre-release packages in production
+        - Review dependency resolution overrides
+
+    # ── Build configuration ──────────────────────────────────────
+    - path: "{webpack,vite,next,rollup}.config.{ts,js,mjs}"
+      instructions: |
+        Build security:
+        - Source maps: disable or restrict in production
+        - Environment variables: validate build-time injection
+        - Code splitting: ensure auth checks in all chunks
+        - Bundle analysis: watch for accidentally bundled secrets
+        - Minification: enable for production
+        - Tree shaking: remove unused code
+        - SRI: generate integrity hashes for static assets
+
+    - path: "tsconfig.json"
+      instructions: |
+        TypeScript configuration:
+        - strict: true (enable strict type checking)
+        - noImplicitAny: true
+        - strictNullChecks: true
+        - No allowJs for production code
+        - Verify target/lib for browser compatibility
+
+    # ── CI/CD workflows ──────────────────────────────────────────
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: |
+        CI/CD security:
+        - Pin GitHub Actions by full commit SHA
+        - Minimal GITHUB_TOKEN permissions
+        - No secrets in logs; mask sensitive outputs
+        - Dependency scanning: npm audit, Snyk, or OSV
+        - SAST tools: ESLint security rules, Semgrep
+        - No pull_request_target with untrusted code
+        - Build artifact verification
+        - Deploy preview: no production secrets
+        - Code coverage: ensure it doesn't decrease
+
+    # ── Docker & containers ──────────────────────────────────────
+    - path: "**/Dockerfile*"
+      instructions: |
+        Container security:
+        - Base: node:alpine or distroless
+        - Multi-stage: build in one stage, run in minimal final
+        - USER node (non-root)
+        - COPY package*.json first for layer caching
+        - No secrets in ENV or ARG
+        - npm ci --only=production in final stage
+        - HEALTHCHECK for container orchestration
+        - Minimize layers, clean npm cache
+
+    # ── Public assets ────────────────────────────────────────────
+    - path: "public/**/*"
+      instructions: |
+        Public assets security:
+        - No sensitive data in public folder
+        - Verify uploaded files (if user-generated)
+        - robots.txt: ensure no sensitive paths exposed
+        - .well-known: validate security.txt, CORS config
+        - Static files: no PII, credentials, or source code
+
+    # ── Service workers & PWA ────────────────────────────────────
+    - path: "**/{service-worker,sw,pwa}.{ts,js}"
+      instructions: |
+        Service worker security:
+        - Cache strategy: validate cached resources
+        - No caching of sensitive endpoints
+        - Update mechanism: prompt user for updates
+        - Offline fallback: no sensitive data in offline pages
+        - HTTPS only
+        - Permissions: minimal scope
+
+  # ── Security scanners ────────────────────────────────────────
+  tools:
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    eslint:
+      enabled: true
+    trivy:
+      enabled: true
+    osvScanner:
+      enabled: true
+    actionlint:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+
+  # ── Pre-merge checks (hard gates) ───────────────────────────
+  pre_merge_checks:
+    description:
+      mode: "warning"
+    custom_checks:
+      - name: "no-hardcoded-secrets"
+        instructions: |
+          Flag hardcoded secrets: API keys, tokens, passwords, OAuth
+          secrets. Also flag base64 strings >32 chars, URLs with
+          embedded credentials, localStorage/sessionStorage writes
+          of sensitive data.
+        mode: "error"
+
+      - name: "xss-prevention"
+        instructions: |
+          Flag XSS vectors: dangerouslySetInnerHTML, innerHTML,
+          document.write, eval, new Function, unescaped user input
+          in JSX, unvalidated URLs in href/src attributes.
+        mode: "error"
+
+      - name: "csrf-protection"
+        instructions: |
+          Verify CSRF tokens present on state-changing requests
+          (POST, PUT, DELETE). Flag fetch/axios calls without
+          CSRF headers on mutation endpoints.
+        mode: "warning"
+
+      - name: "authentication-checks"
+        instructions: |
+          Flag protected routes without authentication guards.
+          Verify auth state is checked before rendering sensitive
+          components or making privileged API calls.
+        mode: "warning"
+
+      - name: "no-sensitive-data-client-side"
+        instructions: |
+          Flag storage of tokens, passwords, PII in localStorage,
+          sessionStorage, cookies without Secure/HttpOnly, or
+          Redux state. Flag exposure of backend secrets to client.
+        mode: "error"
+
+      - name: "dependency-vulnerabilities"
+        instructions: |
+          Flag known CVEs in dependencies. Suggest running
+          npm audit fix or upgrading vulnerable packages.
+          Flag use of deprecated packages.
+        mode: "warning"
+
+      - name: "typescript-strict"
+        instructions: |
+          For new files, verify TypeScript strict mode compliance.
+          Flag any types for user data, missing return types on
+          functions handling sensitive data.
+        mode: "warning"
+
+      - name: "test-coverage"
+        instructions: |
+          For new components or security-critical code (auth,
+          forms, API calls), verify corresponding tests exist.
+          Flag missing tests for XSS, CSRF, auth flows.
+        mode: "warning"
+
+      - name: "csp-compliance"
+        instructions: |
+          Flag inline event handlers (onclick=), inline styles
+          if CSP is strict. Verify external scripts have integrity
+          hashes. Check for unsafe-inline/unsafe-eval usage.
+        mode: "warning"
+
+# ── Knowledge base ───────────────────────────────────────────
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/CLAUDE.md"
+      - "**/CONTRIBUTING.md"
+      - "**/README.md"
+      - "**/SECURITY.md"
+      - "**/CODE_OF_CONDUCT.md"
+
+  issues:
+    scope: "auto"
+  pull_requests:
+    scope: "auto"
