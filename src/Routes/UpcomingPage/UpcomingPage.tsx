@@ -16,8 +16,8 @@ const UpcomingPage = () => {
   const popoverContent = (
     <Content>
       <p>
-        View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems. Add systems
-        to{' '}
+        View the latest updates on upcoming Red Hat Enterprise Linux features, tailored to your systems. Add
+        systems to{' '}
         <a href="https://console.redhat.com/insights/inventory" target="_blank" rel="noopener noreferrer">
           Inventory
         </a>{' '}
@@ -26,7 +26,11 @@ const UpcomingPage = () => {
       <p>
         Learn more about{' '}
         <a
-          href="https://docs.redhat.com/en/documentation/red_hat_lightspeed/1-latest/html/dynamically_creating_a_digital_roadmap_to_manage_rhel_systems/using-the-digital-roadmap-dashboard#upcoming-features"
+          href={
+            'https://docs.redhat.com/en/documentation/red_hat_lightspeed/1-latest/html/' +
+            'dynamically_creating_a_digital_roadmap_to_manage_rhel_systems/' +
+            'using-the-digital-roadmap-dashboard#upcoming-features'
+          }
           target="_blank"
           rel="noopener noreferrer"
         >
