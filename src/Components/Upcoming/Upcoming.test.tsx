@@ -30,6 +30,9 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
     return (
       <div data-testid="upcoming-table">
         <div data-testid="table-data-count">{data.length}</div>
+        <div data-testid="table-deployed-dates">
+          {JSON.stringify(data.map((d: any) => d.details?.deployedDate ?? null))}
+        </div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
         <button onClick={resetInitialFilters} data-testid="reset-filters">
@@ -679,6 +682,43 @@ describe('UpcomingTab', () => {
       expect(screen.getByText('Deprecations')).toBeInTheDocument();
       expect(screen.getByText('Changes')).toBeInTheDocument();
       expect(screen.getByText('Additions and enhancements')).toBeInTheDocument();
+    });
+
+    test('fills in todays date when deployedDate is null', async () => {
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      const dataWithNullDeployedDate: UpcomingChanges[] = [
+        {
+          name: 'Null Date Item',
+          type: 'deprecation',
+          release: 'R1',
+          date: '2024-12-01',
+          package: 'ruby',
+          details: {
+            summary: 'Test summary',
+            architecture: 'x86_64',
+            potentiallyAffectedSystemsCount: 0,
+            potentiallyAffectedSystemsDetail: [],
+            trainingTicket: 'TEST-1',
+            deployedDate: null,
+            lastModified: '2024-01-01',
+            detailFormat: 0,
+          },
+        },
+      ];
+
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNullDeployedDate });
+      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: dataWithNullDeployedDate });
+
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      const deployedDates = JSON.parse(screen.getByTestId('table-deployed-dates').textContent!);
+      expect(deployedDates).toEqual([todayStr]);
     });
   });
 

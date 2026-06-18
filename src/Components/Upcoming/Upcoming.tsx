@@ -127,6 +127,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   // Optimized function to fetch both API endpoints in parallel
   const fetchBothDataSources = async () => {
+    // Used when we don't have deployedDate available - basically when there are
+    // new items which weren't deployed to production. This is for easier testing on stage.
+    // Format as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones.
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+
     try {
       // Fetch both APIs in parallel
       const [allResponse, relevantResponse] = await Promise.allSettled([
@@ -141,6 +149,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         allData = allData.map((item) => ({
           ...item,
           type: capitalizeFirstLetter(item.type),
+          ...(item.details && {
+            details: {
+              ...item.details,
+              // when deployedDate is not available, use todays date for easier testing
+              deployedDate: item.details.deployedDate ?? todayStr,
+            },
+          }),
         }));
         setAllUpcomingChangesData(allData);
         setDataFetchStatus((prev) => ({ ...prev, all: true }));
@@ -156,6 +171,13 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         relevantData = relevantData.map((item) => ({
           ...item,
           type: capitalizeFirstLetter(item.type),
+          ...(item.details && {
+            details: {
+              ...item.details,
+              // when deployedDate is not available, use todays date for easier testing
+              deployedDate: item.details.deployedDate ?? todayStr,
+            },
+          }),
         }));
         setRelevantUpcomingChangesData(relevantData);
         setDataFetchStatus((prev) => ({ ...prev, relevant: true }));

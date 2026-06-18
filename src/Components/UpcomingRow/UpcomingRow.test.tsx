@@ -66,7 +66,7 @@ const repoWithDetails: UpcomingChanges = {
     // Use type assertion to bypass TypeScript error for now
     potentiallyAffectedSystemsDetail: ['system1.example.com', 'system2.example.com', 'system3.example.com'] as any,
     trainingTicket: 'RUBY-123',
-    dateAdded: '2024-01-15',
+    deployedDate: '2024-01-15',
     lastModified: '2024-02-01',
     detailFormat: 0,
     architecture: 'x86_64',
