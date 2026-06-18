@@ -129,8 +129,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const fetchBothDataSources = async () => {
     // Used when we don't have deployedDate available - basically when there are
     // new items which weren't deployed to production. This is for easier testing on stage.
-    // en-CA locale formats as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones
-    const todayStr = new Date().toLocaleDateString('en-CA');
+    // Format as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones.
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
 
     try {
       // Fetch both APIs in parallel
