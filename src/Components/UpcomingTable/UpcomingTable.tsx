@@ -206,11 +206,13 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const isDateInRange = (dateString: string | undefined, rangeType: string): boolean => {
     if (!dateString) return false;
 
-    // Append T00:00:00 to parse as local time — without it, "YYYY-MM-DD" is parsed
-    // as UTC midnight which breaks comparisons against local-time "today"
-    const date = new Date(dateString + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Normalize the target date: Force to local midnight to avoid time drift
+    // Once year, month and day is set, time is the default local midnight
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // months are zero-indexed.
+    // Define "today" normalized to midnight
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     switch (rangeType) {
       case 'lastMonthToDate': {
