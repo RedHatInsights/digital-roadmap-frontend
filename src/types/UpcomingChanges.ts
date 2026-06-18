@@ -12,7 +12,7 @@ export type UpcomingChanges = {
     potentiallyAffectedSystemsCount: number;
     potentiallyAffectedSystemsDetail: SystemsDetail[];
     trainingTicket: string;
-    dateAdded: string;
+    deployedDate: string | null;
     lastModified: string;
     detailFormat: 0 | 1 | 2 | 3;
   };

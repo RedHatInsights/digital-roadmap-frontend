@@ -112,7 +112,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
             {repo.release}
           </Td>
           <Td dataLabel={columnNames.addedToRoadmap} modifier="truncate">
-            {repo.details?.dateAdded ?? ''}
+            {repo.details?.deployedDate ?? ''}
           </Td>
           <Td dataLabel={columnNames.date} modifier="truncate">
             {formatDate(repo.date)}

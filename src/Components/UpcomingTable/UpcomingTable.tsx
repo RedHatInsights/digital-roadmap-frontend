@@ -33,7 +33,7 @@ interface UpcomingTableProps {
     summary: string;
     potentiallyAffectedSystems: number;
     trainingTicket: string;
-    dateAdded: string;
+    deployedDate: string | null;
     lastModified: string;
     detailFormat: 0 | 1 | 2 | 3;
   };
@@ -106,7 +106,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
 
   const getSortableRowValues = (repo: UpcomingChanges): (string | number)[] => {
     const { name, type, release, date } = repo;
-    const addedToRoadmap = repo.details?.dateAdded ?? '';
+    const addedToRoadmap = repo.details?.deployedDate ?? '';
     return [name, type, release, addedToRoadmap, date];
   };
 
@@ -206,7 +206,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const isDateInRange = (dateString: string | undefined, rangeType: string): boolean => {
     if (!dateString) return false;
 
-    const date = new Date(dateString);
+    // Append T00:00:00 to parse as local time — without it, "YYYY-MM-DD" is parsed
+    // as UTC midnight which breaks comparisons against local-time "today"
+    const date = new Date(dateString + 'T00:00:00');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -257,7 +259,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
 
     // Search added to roadmap with date range
     const matchesAddedToRoadmapValue =
-      addedToRoadmapSelection === '' || isDateInRange(repo.details?.dateAdded, addedToRoadmapSelection);
+      addedToRoadmapSelection === '' ||
+      isDateInRange(repo.details?.deployedDate ?? undefined, addedToRoadmapSelection);
 
     return (
       (searchValue === '' || matchesNameValue) &&
