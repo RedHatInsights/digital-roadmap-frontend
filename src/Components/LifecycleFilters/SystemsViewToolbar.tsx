@@ -165,48 +165,55 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
                     className="drf-lifecycle__toggle-group-fixed-height"
                     aria-label="Whether installed and related, only installed or all items are displayed"
                   >
-                    <Tooltip
-                      content={getTooltipContent('installed-and-related')}
-                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
-                    >
-                      <div>
+                    {noDataAvailable ? (
+                      <Tooltip content={getTooltipContent('installed-and-related')} trigger="mouseenter">
                         <ToggleGroupItem
                           text="Installed and related"
                           buttonId="installed-and-related"
                           isSelected={selectedViewFilter === 'installed-and-related'}
-                          isDisabled={noDataAvailable}
+                          isDisabled
                           onChange={handleItemClick}
                         />
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      content={
-                        noDataAvailable
-                          ? getTooltipContent('installed-only')
-                          : disableInstalledOnly
-                          ? 'No installed RHEL releases found for this major version. Use "Installed and related" instead.'
-                          : getTooltipContent('installed-only')
-                      }
-                      trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
-                    >
-                      <div>
+                      </Tooltip>
+                    ) : (
+                      <ToggleGroupItem
+                        text="Installed and related"
+                        buttonId="installed-and-related"
+                        isSelected={selectedViewFilter === 'installed-and-related'}
+                        onChange={handleItemClick}
+                      />
+                    )}
+                    {noDataAvailable || disableInstalledOnly ? (
+                      <Tooltip
+                        content={
+                          disableInstalledOnly && !noDataAvailable
+                            ? 'No installed RHEL releases found for this major version. Use "Installed and related" instead.'
+                            : getTooltipContent('installed-only')
+                        }
+                        trigger="mouseenter"
+                      >
                         <ToggleGroupItem
                           text="Installed only"
                           buttonId="installed-only"
                           isSelected={selectedViewFilter === 'installed-only'}
-                          isDisabled={noDataAvailable || disableInstalledOnly}
+                          isDisabled
                           onChange={handleItemClick}
                         />
-                      </div>
-                    </Tooltip>
-                    <div>
+                      </Tooltip>
+                    ) : (
                       <ToggleGroupItem
-                        text="All"
-                        buttonId="all"
-                        isSelected={selectedViewFilter === 'all'}
+                        text="Installed only"
+                        buttonId="installed-only"
+                        isSelected={selectedViewFilter === 'installed-only'}
                         onChange={handleItemClick}
                       />
-                    </div>
+                    )}
+                    <ToggleGroupItem
+                      text="All"
+                      buttonId="all"
+                      isSelected={selectedViewFilter === 'all'}
+                      onChange={handleItemClick}
+                    />
                   </ToggleGroup>
                 </FormGroup>
               </Form>
