@@ -419,8 +419,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const handleCardClick = (variant: 'additions' | 'changes' | 'deprecations') => {
     switch (variant) {
       case 'additions':
-        setCurrentTypeFilters(new Set(['Addition']));
-        setTypeParam(new Set(['Addition']));
+        setCurrentTypeFilters(new Set(['Addition', 'Enhancement']));
+        setTypeParam(new Set(['Addition', 'Enhancement']));
         break;
       case 'changes':
         setCurrentTypeFilters(new Set(['Change']));

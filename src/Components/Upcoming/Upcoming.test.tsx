@@ -411,7 +411,7 @@ describe('UpcomingTab', () => {
       });
     });
 
-    test('clicking additions card filters by addition type', async () => {
+    test('clicking additions card filters by addition and enhancement types', async () => {
       await act(async () => {
         renderComponent();
       });
@@ -578,7 +578,8 @@ describe('UpcomingTab', () => {
         expect(mockSetSearchParams).toHaveBeenCalled();
         const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
         expect(callArg).toContain('viewFilter=all');
-        expect(callArg).toContain('type=Addition');
+        expect(callArg).toContain('Addition');
+        expect(callArg).toContain('Enhancement');
       });
     });
 
