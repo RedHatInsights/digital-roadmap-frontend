@@ -2,6 +2,8 @@ import * as React from 'react';
 import { To } from 'react-router-dom';
 import { Filter } from '../types/Filter';
 
+export const KNOWN_TYPES = ['Addition', 'Enhancement', 'Change', 'Deprecation'] as const;
+
 // default for upcoming only
 export const DEFAULT_FILTERS = {
   name: '',

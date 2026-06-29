@@ -27,7 +27,7 @@ import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclam
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
-import { DEFAULT_FILTERS, buildURL, pluralize } from '../../utils/utils';
+import { DEFAULT_FILTERS, KNOWN_TYPES, buildURL, pluralize } from '../../utils/utils';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
 import { Filter } from '../../types/Filter';
@@ -100,14 +100,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return validRanges.includes(addedToRoadmap);
   };
 
-  // Type comes in as Type1,Type2,Type3 or Type1 or any other permutation
+  // Validates against KNOWN_TYPES plus data-derived types so URL params work
+  // even when the current view doesn't contain all types, while also accepting
+  // any novel types the API may return (matching what typeOptions shows).
   const isValidType = (data: UpcomingChanges[], type: string) => {
-    const typeAsArr = type.split(',');
-    return typeAsArr.every((type) =>
-      Array.from(new Set(data.map((repo) => repo.type)))
-        .map((type) => type)
-        .includes(type)
-    );
+    const validTypes = new Set<string>([...KNOWN_TYPES, ...data.map((d) => d.type)]);
+    return type.split(',').every((t) => validTypes.has(t));
   };
 
   // Process data and update counts
