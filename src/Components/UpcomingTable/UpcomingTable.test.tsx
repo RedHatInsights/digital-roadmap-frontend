@@ -29,6 +29,7 @@ jest.mock('./UpcomingTableFilters', () => {
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
+    typeOptions,
     downloadCSV,
     canDownloadCSV,
   }: any) {
@@ -44,6 +45,7 @@ jest.mock('./UpcomingTableFilters', () => {
           Reset Filters
         </button>
         <div data-testid="type-selections">{Array.from(typeSelections).join(',')}</div>
+        <div data-testid="type-options">{JSON.stringify(typeOptions.map((o: any) => o.type))}</div>
         <div data-testid="date-selection">{dateSelection}</div>
         <div data-testid="release-selections">{releaseSelections.join(',')}</div>
         <div data-testid="added-to-roadmap-selection">{addedToRoadmapSelection}</div>
@@ -486,6 +488,47 @@ describe('UpcomingTable', () => {
         expect(screen.getByTestId('table-row-New Item')).toBeInTheDocument();
         expect(screen.queryByTestId('table-row-Ruby 2.7 EOL')).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Type Filter Options', () => {
+    test('includes all known types even when data only contains Addition items', () => {
+      const additionOnlyData: UpcomingChanges[] = [
+        { name: 'Feature A', type: 'Addition', release: '9.0', date: '2024-12-01', package: 'ruby' },
+      ];
+
+      render(<UpcomingTable {...defaultProps} data={additionOnlyData} />);
+
+      const typeOptions = JSON.parse(screen.getByTestId('type-options').textContent!);
+      expect(typeOptions).toContain('Addition');
+      expect(typeOptions).toContain('Enhancement');
+      expect(typeOptions).toContain('Change');
+      expect(typeOptions).toContain('Deprecation');
+    });
+
+    test('includes all known types when data is empty', () => {
+      render(<UpcomingTable {...defaultProps} data={[]} />);
+
+      const typeOptions = JSON.parse(screen.getByTestId('type-options').textContent!);
+      expect(typeOptions).toContain('Addition');
+      expect(typeOptions).toContain('Enhancement');
+      expect(typeOptions).toContain('Change');
+      expect(typeOptions).toContain('Deprecation');
+    });
+
+    test('includes extra types from data alongside known types', () => {
+      const dataWithExtraType: UpcomingChanges[] = [
+        { name: 'Feature A', type: 'NewType', release: '9.0', date: '2024-12-01', package: 'ruby' },
+      ];
+
+      render(<UpcomingTable {...defaultProps} data={dataWithExtraType} />);
+
+      const typeOptions = JSON.parse(screen.getByTestId('type-options').textContent!);
+      expect(typeOptions).toContain('Addition');
+      expect(typeOptions).toContain('Enhancement');
+      expect(typeOptions).toContain('Change');
+      expect(typeOptions).toContain('Deprecation');
+      expect(typeOptions).toContain('NewType');
     });
   });
 

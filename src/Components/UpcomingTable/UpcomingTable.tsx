@@ -17,7 +17,7 @@ import './upcoming-table.scss';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
-import { DEFAULT_FILTERS } from '../../utils/utils';
+import { DEFAULT_FILTERS, KNOWN_TYPES } from '../../utils/utils';
 import { download, generateCsv, mkConfig } from 'export-to-csv';
 
 interface UpcomingTableProps {
@@ -327,9 +327,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     date: date,
   }));
 
-  const typeUniqueOptions = Array.from(new Set(data.map((repo) => repo.type))).map((type) => ({
-    type: type,
-  }));
+  const typeUniqueOptions = Array.from(
+    new Set([...KNOWN_TYPES, ...data.map((repo) => repo.type)])
+  ).map((type) => ({ type }));
 
   const onClickArrow = () => {
     if (expandedRows.size < paginatedRows.length) {

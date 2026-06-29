@@ -23,6 +23,7 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
   return function MockUpcomingTable({
     data,
     resetInitialFilters,
+    initialTypeFilters,
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
@@ -33,6 +34,7 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
         <div data-testid="table-deployed-dates">
           {JSON.stringify(data.map((d: any) => d.details?.deployedDate ?? null))}
         </div>
+        <div data-testid="initial-type-filters">{JSON.stringify([...initialTypeFilters])}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
         <button onClick={resetInitialFilters} data-testid="reset-filters">
@@ -579,6 +581,93 @@ describe('UpcomingTab', () => {
         const callArg = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
         expect(callArg).toContain('viewFilter=all');
         expect(callArg).toContain('type=Addition');
+      });
+    });
+
+    test('accepts type=Change URL param even when data only contains addition items', async () => {
+      const additionOnlyData: UpcomingChanges[] = [
+        { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
+      ];
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+
+      setupSearchParamsMock({ type: 'Change' });
+
+      await act(async () => {
+        renderComponent('type=Change');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const typeFilters = JSON.parse(screen.getByTestId('initial-type-filters').textContent!);
+        expect(typeFilters).toContain('Change');
+      });
+    });
+
+    test('accepts type=Deprecation URL param even when data only contains addition items', async () => {
+      const additionOnlyData: UpcomingChanges[] = [
+        { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
+      ];
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+
+      setupSearchParamsMock({ type: 'Deprecation' });
+
+      await act(async () => {
+        renderComponent('type=Deprecation');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const typeFilters = JSON.parse(screen.getByTestId('initial-type-filters').textContent!);
+        expect(typeFilters).toContain('Deprecation');
+      });
+    });
+
+    test('accepts compound type URL param with types not in data', async () => {
+      const additionOnlyData: UpcomingChanges[] = [
+        { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
+      ];
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+
+      setupSearchParamsMock({ type: 'Change,Deprecation' });
+
+      await act(async () => {
+        renderComponent('type=Change%2CDeprecation');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const typeFilters = JSON.parse(screen.getByTestId('initial-type-filters').textContent!);
+        expect(typeFilters).toContain('Change');
+        expect(typeFilters).toContain('Deprecation');
+      });
+    });
+
+    test('rejects invalid type URL param', async () => {
+      setupSearchParamsMock({ type: 'InvalidType' });
+
+      await act(async () => {
+        renderComponent('type=InvalidType');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const typeFilters = JSON.parse(screen.getByTestId('initial-type-filters').textContent!);
+        expect(typeFilters).toEqual([]);
       });
     });
 
