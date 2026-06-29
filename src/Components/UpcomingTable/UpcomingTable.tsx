@@ -327,9 +327,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     date: date,
   }));
 
-  const typeUniqueOptions = Array.from(
-    new Set([...KNOWN_TYPES, ...data.map((repo) => repo.type)])
-  ).map((type) => ({ type }));
+  const typeUniqueOptions = Array.from(new Set([...KNOWN_TYPES, ...data.map((repo) => repo.type)])).map(
+    (type) => ({ type })
+  );
 
   const onClickArrow = () => {
     if (expandedRows.size < paginatedRows.length) {

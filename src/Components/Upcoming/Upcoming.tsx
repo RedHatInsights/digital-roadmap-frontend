@@ -100,11 +100,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return validRanges.includes(addedToRoadmap);
   };
 
-  // Validates against static known types rather than data, so that URL params
-  // work even when the current view doesn't contain all types.
-  const isValidType = (type: string) => {
-    const typeAsArr = type.split(',');
-    return typeAsArr.every((t) => (KNOWN_TYPES as readonly string[]).includes(t));
+  // Validates against KNOWN_TYPES plus data-derived types so URL params work
+  // even when the current view doesn't contain all types, while also accepting
+  // any novel types the API may return (matching what typeOptions shows).
+  const isValidType = (data: UpcomingChanges[], type: string) => {
+    const validTypes = new Set<string>([...KNOWN_TYPES, ...data.map((d) => d.type)]);
+    return type.split(',').every((t) => validTypes.has(t));
   };
 
   // Process data and update counts
@@ -325,7 +326,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         setCurrentReleaseFilters(release);
         newFilters['release'] = release;
       }
-      if (typeParam && isValidType(decodeURIComponent(typeParam))) {
+      if (typeParam && isValidType(dataToUse, decodeURIComponent(typeParam))) {
         const type = new Set(decodeURIComponent(typeParam).split(','));
         setCurrentTypeFilters(type);
         newFilters['type'] = type;
