@@ -530,30 +530,26 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               <Form>
                 <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
-                    {noDataAvailable ? (
-                      <Tooltip content={getTooltipContent()} trigger="mouseenter">
-                        <ToggleGroupItem
-                          text="Relevant only"
-                          buttonId="relevant"
-                          isSelected={selectedViewFilter === 'relevant'}
-                          isDisabled
-                          onChange={handleItemClick}
-                        />
-                      </Tooltip>
-                    ) : (
+                    <Tooltip
+                      content={noDataAvailable ? getTooltipContent() : undefined}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
                       <ToggleGroupItem
                         text="Relevant only"
                         buttonId="relevant"
                         isSelected={selectedViewFilter === 'relevant'}
+                        isDisabled={noDataAvailable}
                         onChange={handleItemClick}
                       />
-                    )}
-                    <ToggleGroupItem
-                      text="All"
-                      buttonId="all"
-                      isSelected={selectedViewFilter === 'all'}
-                      onChange={handleItemClick}
-                    />
+                    </Tooltip>
+                    <Tooltip content="" trigger="manual">
+                      <ToggleGroupItem
+                        text="All"
+                        buttonId="all"
+                        isSelected={selectedViewFilter === 'all'}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                   </ToggleGroup>
                 </FormGroup>
               </Form>

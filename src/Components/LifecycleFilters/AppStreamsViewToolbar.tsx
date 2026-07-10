@@ -140,56 +140,45 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
                     className="drf-lifecycle__toggle-group-fixed-height"
                     aria-label="Whether installed and related, only installed or all items are displayed"
                   >
-                    {noDataAvailable ? (
-                      <Tooltip content={getTooltipContent('installed-and-related')} trigger="mouseenter">
-                        <ToggleGroupItem
-                          text="Installed and related"
-                          buttonId="installed-and-related"
-                          isSelected={selectedViewFilter === 'installed-and-related'}
-                          isDisabled
-                          onChange={handleItemClick}
-                        />
-                      </Tooltip>
-                    ) : (
+                    <Tooltip
+                      content={noDataAvailable ? getTooltipContent('installed-and-related') : undefined}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
                       <ToggleGroupItem
                         text="Installed and related"
                         buttonId="installed-and-related"
                         isSelected={selectedViewFilter === 'installed-and-related'}
+                        isDisabled={noDataAvailable}
                         onChange={handleItemClick}
                       />
-                    )}
-                    {noDataAvailable || disableInstalledOnly ? (
-                      <Tooltip
-                        content={
-                          disableInstalledOnly && !noDataAvailable
+                    </Tooltip>
+                    <Tooltip
+                      content={
+                        noDataAvailable || disableInstalledOnly
+                          ? disableInstalledOnly && !noDataAvailable
                             ? 'No installed application streams found for this RHEL major version. ' +
                               'Use "Installed and related" instead.'
                             : getTooltipContent('installed-only')
-                        }
-                        trigger="mouseenter"
-                      >
-                        <ToggleGroupItem
-                          text="Installed only"
-                          buttonId="installed-only"
-                          isSelected={selectedViewFilter === 'installed-only'}
-                          isDisabled
-                          onChange={handleItemClick}
-                        />
-                      </Tooltip>
-                    ) : (
+                          : undefined
+                      }
+                      trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
+                    >
                       <ToggleGroupItem
                         text="Installed only"
                         buttonId="installed-only"
                         isSelected={selectedViewFilter === 'installed-only'}
+                        isDisabled={noDataAvailable || disableInstalledOnly}
                         onChange={handleItemClick}
                       />
-                    )}
-                    <ToggleGroupItem
-                      text="All"
-                      buttonId="all"
-                      isSelected={selectedViewFilter === 'all'}
-                      onChange={handleItemClick}
-                    />
+                    </Tooltip>
+                    <Tooltip content="" trigger="manual">
+                      <ToggleGroupItem
+                        text="All"
+                        buttonId="all"
+                        isSelected={selectedViewFilter === 'all'}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                   </ToggleGroup>
                 </FormGroup>
               </Form>
