@@ -18,6 +18,21 @@
   }
 }
 
+/* Fix border-radius when ToggleGroupItems are wrapped in Tooltip */
+.pf-v6-c-toggle-group > * .pf-v6-c-toggle-group__button {
+  border-radius: 0;
+}
+
+.pf-v6-c-toggle-group > *:first-child .pf-v6-c-toggle-group__button {
+  border-start-start-radius: var(--pf-v6-c-toggle-group__item--first-child__button--BorderStartStartRadius);
+  border-end-start-radius: var(--pf-v6-c-toggle-group__item--first-child__button--BorderEndStartRadius);
+}
+
+.pf-v6-c-toggle-group > *:last-child .pf-v6-c-toggle-group__button {
+  border-start-end-radius: var(--pf-v6-c-toggle-group__item--last-child__button--BorderStartEndRadius);
+  border-end-end-radius: var(--pf-v6-c-toggle-group__item--last-child__button--BorderEndEndRadius);
+}
+
 .drf-upcoming__filter-download {
   padding-left: 8px;
   padding-right: 8px;
