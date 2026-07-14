@@ -50,7 +50,7 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
     onLifecycleDropdownSelect,
     selectedChartSortBy = 'Retirement date', // Default value
     updateChartSortValue,
-    downloadCSV,
+    onExport,
     selectedViewFilter = 'installed-only', // Default value
     handleViewFilterChange,
     noDataAvailable,
@@ -91,8 +91,14 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
         <option value="installed-only">Installed Only</option>
         <option value="installed-and-related">Installed and Related</option>
       </select>
-      <button data-testid="download-csv" onClick={downloadCSV}>
-        Download CSV
+      <button data-testid="export-csv" onClick={() => onExport?.('csv')}>
+        Export CSV
+      </button>
+      <button data-testid="export-json" onClick={() => onExport?.('json')}>
+        Export JSON
+      </button>
+      <button data-testid="export-xml" onClick={() => onExport?.('xml')}>
+        Export XML
       </button>
 
       <ul data-testid="rhel-version-options">
@@ -154,6 +160,10 @@ jest.mock('export-to-csv', () => ({
   generateCsv: jest.fn(() => () => 'csv,data'),
   download: jest.fn(() => () => {}),
 }));
+
+// Mock URL.createObjectURL for JSON/XML export tests
+URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+URL.revokeObjectURL = jest.fn();
 
 // Test data
 const mockSystemData: SystemLifecycleChanges[] = [
@@ -478,21 +488,50 @@ describe('LifecycleTab Component', () => {
     });
   });
 
-  describe('CSV Download', () => {
-    test('downloads CSV when button is clicked', async () => {
+  describe('Data Export', () => {
+    test('exports CSV when button is clicked', async () => {
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      const downloadButton = screen.getByTestId('download-csv');
+      const exportButton = screen.getByTestId('export-csv');
       await act(async () => {
-        fireEvent.click(downloadButton);
+        fireEvent.click(exportButton);
       });
 
-      // Verify that the download function was called
-      expect(downloadButton).toBeInTheDocument();
+      expect(exportButton).toBeInTheDocument();
+    });
+
+    test('exports JSON when button is clicked', async () => {
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      const exportButton = screen.getByTestId('export-json');
+      await act(async () => {
+        fireEvent.click(exportButton);
+      });
+
+      expect(exportButton).toBeInTheDocument();
+    });
+
+    test('exports XML when button is clicked', async () => {
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      const exportButton = screen.getByTestId('export-xml');
+      await act(async () => {
+        fireEvent.click(exportButton);
+      });
+
+      expect(exportButton).toBeInTheDocument();
     });
   });
 

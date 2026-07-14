@@ -30,8 +30,8 @@ jest.mock('./UpcomingTableFilters', () => {
     handleViewFilterChange,
     noDataAvailable,
     typeOptions,
-    downloadCSV,
-    canDownloadCSV,
+    onExport,
+    canExport,
   }: any) {
     return (
       <div data-testid="upcoming-table-filters">
@@ -66,8 +66,8 @@ jest.mock('./UpcomingTableFilters', () => {
         <button data-testid="change-view-filter" onClick={() => handleViewFilterChange('all')}>
           Change View Filter
         </button>
-        <button data-testid="download-csv" onClick={downloadCSV} disabled={!canDownloadCSV}>
-          Download CSV
+        <button data-testid="export-csv" onClick={() => onExport?.('csv')} disabled={!canExport}>
+          Export CSV
         </button>
       </div>
     );
@@ -457,14 +457,14 @@ describe('UpcomingTable', () => {
         expect(screen.queryByTestId('table-row-PostgreSQL 15 Feature')).not.toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByTestId('download-csv'));
+      fireEvent.click(screen.getByTestId('export-csv'));
       expect(mockedGenerateCsv).toHaveBeenCalled();
       expect(mockedDownload).toHaveBeenCalled();
     });
 
-    test('disables CSV export when there are no rows to export', async () => {
+    test('disables export when there are no rows to export', async () => {
       render(<UpcomingTable {...defaultProps} data={[]} />);
-      expect(screen.getByTestId('download-csv')).toBeDisabled();
+      expect(screen.getByTestId('export-csv')).toBeDisabled();
     });
 
     test('updates when data prop changes', async () => {

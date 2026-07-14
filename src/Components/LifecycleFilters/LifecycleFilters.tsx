@@ -13,6 +13,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
+import { ExportFormat } from '../ExportDataButton/ExportDataButton';
 import { ErrorObject } from '../../types/ErrorObject';
 import LifecycleDropdown from '../FilterComponents/LifecycleDropdown';
 import {
@@ -34,7 +35,7 @@ interface LifecycleFiltersProps {
   onLifecycleDropdownSelect: (value: string) => void;
   selectedChartSortBy: string;
   updateChartSortValue: (name: string, order: string) => void;
-  downloadCSV: () => void;
+  onExport: (format: ExportFormat) => void;
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable: boolean;
@@ -105,7 +106,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   onLifecycleDropdownSelect,
   selectedChartSortBy,
   updateChartSortValue,
-  downloadCSV,
+  onExport,
   selectedViewFilter,
   handleViewFilterChange,
   noDataAvailable,
@@ -512,7 +513,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onToggleClick={onToggleClick}
             onSelect={onSelect}
             setIsOpen={setIsOpen}
-            downloadCSV={downloadCSV}
+            onExport={onExport}
             disableInstalledOnly={disableInstalledOnly ?? false}
           />
         ) : (
@@ -549,7 +550,7 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onToggleClick={onToggleClick}
             onSelect={onSelect}
             setIsOpen={setIsOpen}
-            downloadCSV={downloadCSV}
+            onExport={onExport}
             disableInstalledOnly={disableInstalledOnly ?? false}
           />
         )}

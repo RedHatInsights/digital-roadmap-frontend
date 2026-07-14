@@ -20,7 +20,7 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons';
-import ExportDataButton from '../ExportDataButton/ExportDataButton';
+import ExportDataButton, { ExportFormat } from '../ExportDataButton/ExportDataButton';
 
 const FIELD_OPTIONS = ['Name', 'Status'] as const;
 const DROPDOWN_ITEMS = ['Retirement date', 'Name', 'Release version', 'Release date', 'Systems'];
@@ -53,7 +53,7 @@ interface AppStreamsViewToolbarProps {
     value: string | number | undefined
   ) => void;
   setIsOpen: (open: boolean) => void;
-  downloadCSV: () => void;
+  onExport: (format: ExportFormat) => void;
   disableInstalledOnly: boolean;
 }
 
@@ -77,7 +77,7 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
   onToggleClick,
   onSelect,
   setIsOpen,
-  downloadCSV,
+  onExport,
   disableInstalledOnly,
 }) => {
   return (
@@ -184,7 +184,7 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
               </Form>
             </ToolbarItem>
             <ToolbarItem>
-              <ExportDataButton className="drf-lifecycle__filter-download" onClick={downloadCSV} />
+              <ExportDataButton className="drf-lifecycle__filter-download" onExport={onExport} />
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarContent>

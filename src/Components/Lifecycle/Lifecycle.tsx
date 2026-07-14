@@ -43,6 +43,7 @@ const LifecycleChartSystem = lazy(() => import('../../Components/LifecycleChartS
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
 import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { ExportFormat } from '../ExportDataButton/ExportDataButton';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { formatDate, getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
@@ -1007,34 +1008,110 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return data;
   };
 
-  const downloadCSV = () => {
+  const buildExportData = () => {
     const data: { [key: string]: string | number }[] = [];
     if (
       lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
       lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE ||
       lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE
     ) {
-      (filteredTableData as Stream[]).forEach((item: Stream) =>
-        data.push({
-          Name: item.display_name,
-          Release: item.os_major,
-          'Release date': formatDate(item.start_date),
-          'Retirement date': formatDate(item.end_date),
-          Systems: item.count,
-        })
-      );
+      (filteredTableData as Stream[]).forEach((stream: Stream) => {
+        const hosts = stream.systems_detail ?? [];
+        if (hosts.length > 0) {
+          hosts.forEach((host, index) => {
+            data.push({
+              hostname: host.display_name,
+              host_id: host.id,
+              appstream_module: stream.display_name,
+              release: stream.os_major,
+              release_date: formatDate(stream.start_date),
+              retirement_date: formatDate(stream.end_date),
+              lifecycle_status: stream.support_status,
+              rhel_version: `${stream.os_major}.${stream.os_minor}`,
+              system_index: `${index + 1} of ${stream.count}`,
+            });
+          });
+        } else {
+          data.push({
+            appstream_module: stream.display_name,
+            release: stream.os_major,
+            release_date: formatDate(stream.start_date),
+            retirement_date: formatDate(stream.end_date),
+            lifecycle_status: stream.support_status,
+            rhel_version: `${stream.os_major}.${stream.os_minor}`,
+          });
+        }
+      });
     } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) =>
-        data.push({
-          Name: item.name,
-          'Start date': formatDate(item.start_date),
-          'End date': formatDate(item.end_date),
-          Systems: item.count,
-        })
-      );
+      (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) => {
+        const hosts = item.systems_detail ?? [];
+        if (hosts.length > 0) {
+          hosts.forEach((host, index) => {
+            data.push({
+              hostname: host.display_name,
+              host_id: host.id,
+              release: item.name,
+              release_date: formatDate(item.start_date),
+              retirement_date: formatDate(item.end_date),
+              lifecycle_status: item.support_status,
+              rhel_version: `${item.major}.${item.minor}`,
+              system_index: `${index + 1} of ${item.count}`,
+            });
+          });
+        } else {
+          data.push({
+            release: item.name,
+            release_date: formatDate(item.start_date),
+            retirement_date: formatDate(item.end_date),
+            lifecycle_status: item.support_status,
+            rhel_version: `${item.major}.${item.minor}`,
+          });
+        }
+      });
     }
-    const csv = generateCsv(csvConfig)(data);
-    download(csvConfig)(csv);
+    return data;
+  };
+
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportData = (format: ExportFormat) => {
+    const data = buildExportData();
+
+    switch (format) {
+      case 'csv': {
+        const csv = generateCsv(csvConfig)(data);
+        download(csvConfig)(csv);
+        break;
+      }
+      case 'json': {
+        downloadFile(JSON.stringify(data, null, 2), 'export.json', 'application/json');
+        break;
+      }
+      case 'xml': {
+        const xmlRows = data
+          .map((row) => {
+            const fields = Object.entries(row)
+              .map(([key, value]) => {
+                const tag = key.replace(/\s+/g, '_');
+                return `      <${tag}>${value}</${tag}>`;
+              })
+              .join('\n');
+            return `    <row>\n${fields}\n    </row>`;
+          })
+          .join('\n');
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<data>\n${xmlRows}\n</data>`;
+        downloadFile(xml, 'export.xml', 'application/xml');
+        break;
+      }
+    }
   };
 
   if (isLoading) {
@@ -1209,7 +1286,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
             updateChartSortValue={setOrderingStates}
-            downloadCSV={downloadCSV}
+            onExport={exportData}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}
