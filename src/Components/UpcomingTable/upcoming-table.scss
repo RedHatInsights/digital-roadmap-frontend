@@ -18,7 +18,9 @@
   }
 }
 
-/* Fix border-radius when ToggleGroupItems are wrapped in Tooltip */
+/* Fix toggle group styling when ToggleGroupItems are wrapped in Tooltip.
+   Tooltip wrappers break the sibling selectors PatternFly relies on for
+   border-radius, negative-margin overlap, and z-index on selected/disabled items. */
 .pf-v6-c-toggle-group > * .pf-v6-c-toggle-group__button {
   border-radius: 0;
 }
@@ -31,6 +33,10 @@
 .pf-v6-c-toggle-group > *:last-child .pf-v6-c-toggle-group__button {
   border-start-end-radius: var(--pf-v6-c-toggle-group__item--last-child__button--BorderStartEndRadius);
   border-end-end-radius: var(--pf-v6-c-toggle-group__item--last-child__button--BorderEndEndRadius);
+}
+
+.pf-v6-c-toggle-group > * + * .pf-v6-c-toggle-group__item {
+  margin-inline-start: var(--pf-v6-c-toggle-group__item--item--MarginInlineStart);
 }
 
 .drf-upcoming__filter-download {
