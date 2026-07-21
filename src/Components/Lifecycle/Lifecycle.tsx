@@ -1020,9 +1020,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         if (hosts.length > 0) {
           hosts.forEach((host, index) => {
             data.push({
+              appstream_module: stream.display_name,
               hostname: host.display_name,
               host_id: host.id,
-              appstream_module: stream.display_name,
               release: stream.os_major,
               release_date: formatDate(stream.start_date),
               retirement_date: formatDate(stream.end_date),
