@@ -116,6 +116,73 @@ export const getNewName = (name: string, major: number, minor: number, lifecycle
   return `${name} ${major}.${minor}${lifecycleText}`;
 };
 
+import { Stream } from '../types/Stream';
+import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
+
+export const buildExportData = (
+  filteredTableData: Stream[] | SystemLifecycleChanges[],
+  lifecycleDropdownValue: string,
+  appStreamDropdownValues: string[]
+): { [key: string]: string | number }[] => {
+  const data: { [key: string]: string | number }[] = [];
+  if (appStreamDropdownValues.includes(lifecycleDropdownValue)) {
+    (filteredTableData as Stream[]).forEach((stream: Stream) => {
+      const hosts = stream.systems_detail ?? [];
+      if (hosts.length > 0) {
+        hosts.forEach((host, index) => {
+          data.push({
+            appstream_module: stream.display_name,
+            hostname: host.display_name,
+            host_id: host.id,
+            release: stream.os_major,
+            release_date: formatDate(stream.start_date),
+            retirement_date: formatDate(stream.end_date),
+            lifecycle_status: stream.support_status,
+            rhel_version: `${stream.os_major}.${stream.os_minor}`,
+            system_index: `${index + 1} of ${stream.count}`,
+          });
+        });
+      } else {
+        data.push({
+          appstream_module: stream.display_name,
+          release: stream.os_major,
+          release_date: formatDate(stream.start_date),
+          retirement_date: formatDate(stream.end_date),
+          lifecycle_status: stream.support_status,
+          rhel_version: `${stream.os_major}.${stream.os_minor}`,
+        });
+      }
+    });
+  } else {
+    (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) => {
+      const hosts = item.systems_detail ?? [];
+      if (hosts.length > 0) {
+        hosts.forEach((host, index) => {
+          data.push({
+            hostname: host.display_name,
+            host_id: host.id,
+            release: item.name,
+            release_date: formatDate(item.start_date),
+            retirement_date: formatDate(item.end_date),
+            lifecycle_status: item.support_status,
+            rhel_version: `${item.major}.${item.minor}`,
+            system_index: `${index + 1} of ${item.count}`,
+          });
+        });
+      } else {
+        data.push({
+          release: item.name,
+          release_date: formatDate(item.start_date),
+          retirement_date: formatDate(item.end_date),
+          lifecycle_status: item.support_status,
+          rhel_version: `${item.major}.${item.minor}`,
+        });
+      }
+    });
+  }
+  return data;
+};
+
 export const getNewChartName = (name: string, major: number, minor: number, lifecycleType: string) => {
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${lifecycleText}`;

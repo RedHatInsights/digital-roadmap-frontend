@@ -25,7 +25,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildURL, checkValidityOfQueryParam } from '../../utils/utils';
+import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -42,10 +42,9 @@ const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/Lifecy
 const LifecycleChartSystem = lazy(() => import('../../Components/LifecycleChartSystem/LifecycleChartSystem'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
-import { download, generateCsv, mkConfig } from 'export-to-csv';
-import { ExportFormat } from '../ExportDataButton/ExportDataButton';
+import { exportData as exportToFile } from '../../utils/export';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
-import { formatDate, getNewName } from '../../utils/utils';
+import { getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 
@@ -96,8 +95,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
 
   const [disableInstalledOnly, setDisableInstalledOnly] = useState<boolean>(false);
-
-  const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const isAppStream = (v: string) =>
     v === DEFAULT_DROPDOWN_VALUE || v === RHEL_8_STREAMS_DROPDOWN_VALUE || v === RHEL_10_STREAMS_DROPDOWN_VALUE;
@@ -1008,110 +1005,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return data;
   };
 
-  const buildExportData = () => {
-    const data: { [key: string]: string | number }[] = [];
-    if (
-      lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE
-    ) {
-      (filteredTableData as Stream[]).forEach((stream: Stream) => {
-        const hosts = stream.systems_detail ?? [];
-        if (hosts.length > 0) {
-          hosts.forEach((host, index) => {
-            data.push({
-              appstream_module: stream.display_name,
-              hostname: host.display_name,
-              host_id: host.id,
-              release: stream.os_major,
-              release_date: formatDate(stream.start_date),
-              retirement_date: formatDate(stream.end_date),
-              lifecycle_status: stream.support_status,
-              rhel_version: `${stream.os_major}.${stream.os_minor}`,
-              system_index: `${index + 1} of ${stream.count}`,
-            });
-          });
-        } else {
-          data.push({
-            appstream_module: stream.display_name,
-            release: stream.os_major,
-            release_date: formatDate(stream.start_date),
-            retirement_date: formatDate(stream.end_date),
-            lifecycle_status: stream.support_status,
-            rhel_version: `${stream.os_major}.${stream.os_minor}`,
-          });
-        }
-      });
-    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) => {
-        const hosts = item.systems_detail ?? [];
-        if (hosts.length > 0) {
-          hosts.forEach((host, index) => {
-            data.push({
-              hostname: host.display_name,
-              host_id: host.id,
-              release: item.name,
-              release_date: formatDate(item.start_date),
-              retirement_date: formatDate(item.end_date),
-              lifecycle_status: item.support_status,
-              rhel_version: `${item.major}.${item.minor}`,
-              system_index: `${index + 1} of ${item.count}`,
-            });
-          });
-        } else {
-          data.push({
-            release: item.name,
-            release_date: formatDate(item.start_date),
-            retirement_date: formatDate(item.end_date),
-            lifecycle_status: item.support_status,
-            rhel_version: `${item.major}.${item.minor}`,
-          });
-        }
-      });
-    }
-    return data;
-  };
+  const appStreamDropdownValues = [
+    DEFAULT_DROPDOWN_VALUE,
+    RHEL_8_STREAMS_DROPDOWN_VALUE,
+    RHEL_10_STREAMS_DROPDOWN_VALUE,
+  ];
 
-  const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportData = (format: ExportFormat) => {
-    const data = buildExportData();
-
-    switch (format) {
-      case 'csv': {
-        const csv = generateCsv(csvConfig)(data);
-        download(csvConfig)(csv);
-        break;
-      }
-      case 'json': {
-        downloadFile(JSON.stringify(data, null, 2), 'export.json', 'application/json');
-        break;
-      }
-      case 'xml': {
-        const xmlRows = data
-          .map((row) => {
-            const fields = Object.entries(row)
-              .map(([key, value]) => {
-                const tag = key.replace(/\s+/g, '_');
-                return `      <${tag}>${value}</${tag}>`;
-              })
-              .join('\n');
-            return `    <row>\n${fields}\n    </row>`;
-          })
-          .join('\n');
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<data>\n${xmlRows}\n</data>`;
-        downloadFile(xml, 'export.xml', 'application/xml');
-        break;
-      }
-    }
+  const handleExport = (format: 'csv' | 'json' | 'xml') => {
+    const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
+    exportToFile(format, data);
   };
 
   if (isLoading) {
@@ -1286,7 +1188,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
             updateChartSortValue={setOrderingStates}
-            onExport={exportData}
+            onExport={handleExport}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}

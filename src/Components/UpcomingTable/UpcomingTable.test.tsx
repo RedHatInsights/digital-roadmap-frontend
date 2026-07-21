@@ -4,12 +4,9 @@ import '@testing-library/jest-dom';
 import UpcomingTable from './UpcomingTable';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { DEFAULT_FILTERS } from '../../utils/utils';
-import { download, generateCsv } from 'export-to-csv';
-
-jest.mock('export-to-csv', () => ({
-  mkConfig: jest.fn(() => ({})),
-  generateCsv: jest.fn(() => () => 'csv,data'),
-  download: jest.fn(() => () => {}),
+const mockExportData = jest.fn();
+jest.mock('../../utils/export', () => ({
+  exportData: (...args: any[]) => mockExportData(...args),
 }));
 
 // Mock the UpcomingTableFilters component
@@ -169,9 +166,6 @@ const defaultProps = {
 };
 
 describe('UpcomingTable', () => {
-  const mockedDownload = download as jest.Mock;
-  const mockedGenerateCsv = generateCsv as jest.Mock;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -458,8 +452,7 @@ describe('UpcomingTable', () => {
       });
 
       fireEvent.click(screen.getByTestId('export-csv'));
-      expect(mockedGenerateCsv).toHaveBeenCalled();
-      expect(mockedDownload).toHaveBeenCalled();
+      expect(mockExportData).toHaveBeenCalledWith('csv', expect.any(Array));
     });
 
     test('disables export when there are no rows to export', async () => {

@@ -129,6 +129,7 @@ jest.mock('../../Components/LifecycleTable/LifecycleTable', () => {
 
 // Mock utils
 jest.mock('../../utils/utils', () => ({
+  buildExportData: jest.fn(() => [{ appstream_module: 'test', release: 9 }]),
   buildURL: jest.fn((filters) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -146,6 +147,7 @@ jest.mock('./filteringUtils', () => ({
   DEFAULT_CHART_SORTBY_VALUE: 'Retirement date',
   DEFAULT_DROPDOWN_VALUE: 'rhel-9-appstreams',
   RHEL_8_STREAMS_DROPDOWN_VALUE: 'rhel-8-appstreams',
+  RHEL_10_STREAMS_DROPDOWN_VALUE: 'rhel-10-appstreams',
   RHEL_SYSTEMS_DROPDOWN_VALUE: 'rhel-systems',
   filterChartDataByName: jest.fn((data) => data.sort((a: any, b: any) => a.name?.localeCompare(b.name))),
   filterChartDataByRelease: jest.fn((data) => data),
@@ -154,16 +156,11 @@ jest.mock('./filteringUtils', () => ({
   filterChartDataBySystems: jest.fn((data) => data),
 }));
 
-// Mock export-to-csv
-jest.mock('export-to-csv', () => ({
-  mkConfig: jest.fn(() => ({})),
-  generateCsv: jest.fn(() => () => 'csv,data'),
-  download: jest.fn(() => () => {}),
+// Mock shared export utility
+const mockExportData = jest.fn();
+jest.mock('../../utils/export', () => ({
+  exportData: (...args: any[]) => mockExportData(...args),
 }));
-
-// Mock URL.createObjectURL for JSON/XML export tests
-URL.createObjectURL = jest.fn(() => 'blob:mock-url');
-URL.revokeObjectURL = jest.fn();
 
 // Test data
 const mockSystemData: SystemLifecycleChanges[] = [
@@ -489,6 +486,10 @@ describe('LifecycleTab Component', () => {
   });
 
   describe('Data Export', () => {
+    beforeEach(() => {
+      mockExportData.mockClear();
+    });
+
     test('exports CSV when button is clicked', async () => {
       renderWithRouter(<LifecycleTab />);
 
@@ -496,12 +497,11 @@ describe('LifecycleTab Component', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      const exportButton = screen.getByTestId('export-csv');
       await act(async () => {
-        fireEvent.click(exportButton);
+        fireEvent.click(screen.getByTestId('export-csv'));
       });
 
-      expect(exportButton).toBeInTheDocument();
+      expect(mockExportData).toHaveBeenCalledWith('csv', expect.any(Array));
     });
 
     test('exports JSON when button is clicked', async () => {
@@ -511,12 +511,11 @@ describe('LifecycleTab Component', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      const exportButton = screen.getByTestId('export-json');
       await act(async () => {
-        fireEvent.click(exportButton);
+        fireEvent.click(screen.getByTestId('export-json'));
       });
 
-      expect(exportButton).toBeInTheDocument();
+      expect(mockExportData).toHaveBeenCalledWith('json', expect.any(Array));
     });
 
     test('exports XML when button is clicked', async () => {
@@ -526,12 +525,11 @@ describe('LifecycleTab Component', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      const exportButton = screen.getByTestId('export-xml');
       await act(async () => {
-        fireEvent.click(exportButton);
+        fireEvent.click(screen.getByTestId('export-xml'));
       });
 
-      expect(exportButton).toBeInTheDocument();
+      expect(mockExportData).toHaveBeenCalledWith('xml', expect.any(Array));
     });
   });
 

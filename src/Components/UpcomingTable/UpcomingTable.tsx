@@ -18,8 +18,7 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
 import { DEFAULT_FILTERS, KNOWN_TYPES } from '../../utils/utils';
-import { download, generateCsv, mkConfig } from 'export-to-csv';
-import { ExportFormat } from '../ExportDataButton/ExportDataButton';
+import { exportData as exportToFile } from '../../utils/export';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -79,8 +78,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
   const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
-  const csvConfig = mkConfig({ useKeysAsHeaders: true });
-
   useEffect(() => {
     if (initialTypeFilters.size === 0) {
       setTypeSelections(new Set());
@@ -363,46 +360,9 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
       'Tracking ticket': item.details?.trainingTicket ?? '',
     }));
 
-  const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportData = (format: ExportFormat) => {
+  const handleExport = (format: 'csv' | 'json' | 'xml') => {
     const data = buildExportData();
-
-    switch (format) {
-      case 'csv': {
-        const csv = generateCsv(csvConfig)(data);
-        download(csvConfig)(csv);
-        break;
-      }
-      case 'json': {
-        downloadFile(JSON.stringify(data, null, 2), 'export.json', 'application/json');
-        break;
-      }
-      case 'xml': {
-        const xmlRows = data
-          .map((row) => {
-            const fields = Object.entries(row)
-              .map(([key, value]) => {
-                const tag = key.replace(/\s+/g, '_');
-                return `      <${tag}>${value}</${tag}>`;
-              })
-              .join('\n');
-            return `    <row>\n${fields}\n    </row>`;
-          })
-          .join('\n');
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<data>\n${xmlRows}\n</data>`;
-        downloadFile(xml, 'export.xml', 'application/xml');
-        break;
-      }
-    }
+    exportToFile(format, data);
   };
 
   return (
@@ -433,7 +393,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         selectedViewFilter={selectedViewFilter}
         handleViewFilterChange={handleViewFilterChange}
         noDataAvailable={noDataAvailable}
-        onExport={exportData}
+        onExport={handleExport}
         canExport={sortedFilteredData.length > 0}
       />
       <Table
