@@ -137,6 +137,48 @@ describe('UpcomingTableFilters', () => {
       const relevantButton = screen.getByRole('button', { name: 'Relevant only' });
       expect(relevantButton).toHaveAttribute('disabled');
     });
+
+    test('wraps "Relevant only" in tooltip only when disabled (noDataAvailable)', () => {
+      const { rerender } = render(<UpcomingTableFilters {...defaultProps} noDataAvailable={false} />);
+
+      // When not disabled, should not be wrapped in tooltip
+      const relevantButton = screen.getByRole('button', { name: 'Relevant only' });
+      expect(relevantButton).not.toBeDisabled();
+
+      // When disabled, should be wrapped in tooltip
+      rerender(<UpcomingTableFilters {...defaultProps} noDataAvailable={true} />);
+      const disabledButton = screen.getByRole('button', { name: 'Relevant only' });
+      expect(disabledButton).toBeDisabled();
+    });
+
+    test('"All" button is never wrapped in tooltip', () => {
+      render(<UpcomingTableFilters {...defaultProps} noDataAvailable={true} />);
+
+      const allButton = screen.getByRole('button', { name: 'All' });
+      expect(allButton).not.toBeDisabled();
+      // Should be a direct child of toggle group item
+      expect(allButton.closest('.pf-v6-c-toggle-group__item, .pf-v5-c-toggle-group__item')).toBeInTheDocument();
+    });
+
+    test('calls handleViewFilterChange when clicking "Relevant only" if not disabled', async () => {
+      render(<UpcomingTableFilters {...defaultProps} noDataAvailable={false} />);
+
+      const relevantButton = screen.getByRole('button', { name: 'Relevant only' });
+      fireEvent.click(relevantButton);
+
+      expect(mockHandleViewFilterChange).toHaveBeenCalledWith('relevant');
+    });
+
+    test('does not call handleViewFilterChange when clicking disabled "Relevant only" button', async () => {
+      render(<UpcomingTableFilters {...defaultProps} noDataAvailable={true} />);
+
+      const relevantButton = screen.getByRole('button', { name: 'Relevant only' });
+      expect(relevantButton).toBeDisabled();
+
+      // Attempting to click a disabled button should not call the handler
+      fireEvent.click(relevantButton);
+      expect(mockHandleViewFilterChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('Type Filter', () => {

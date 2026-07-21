@@ -530,7 +530,10 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               <Form>
                 <FormGroup className="drf-upcoming__filter-formgroup" label="View" fieldId="view-filter">
                   <ToggleGroup aria-label="Whether only relevant or all items are displayed">
-                    <Tooltip content={getTooltipContent()} trigger={noDataAvailable ? 'mouseenter' : 'manual'}>
+                    <Tooltip
+                      content={noDataAvailable ? getTooltipContent() : undefined}
+                      trigger={noDataAvailable ? 'mouseenter' : 'manual'}
+                    >
                       <ToggleGroupItem
                         text="Relevant only"
                         buttonId="relevant"
@@ -539,12 +542,14 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
                         onChange={handleItemClick}
                       />
                     </Tooltip>
-                    <ToggleGroupItem
-                      text="All"
-                      buttonId="all"
-                      isSelected={selectedViewFilter === 'all'}
-                      onChange={handleItemClick}
-                    />
+                    <Tooltip content="" trigger="manual">
+                      <ToggleGroupItem
+                        text="All"
+                        buttonId="all"
+                        isSelected={selectedViewFilter === 'all'}
+                        onChange={handleItemClick}
+                      />
+                    </Tooltip>
                   </ToggleGroup>
                 </FormGroup>
               </Form>

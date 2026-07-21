@@ -166,47 +166,43 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
                     aria-label="Whether installed and related, only installed or all items are displayed"
                   >
                     <Tooltip
-                      content={getTooltipContent('installed-and-related')}
+                      content={noDataAvailable ? getTooltipContent('installed-and-related') : undefined}
                       trigger={noDataAvailable ? 'mouseenter' : 'manual'}
                     >
-                      <div>
-                        <ToggleGroupItem
-                          text="Installed and related"
-                          buttonId="installed-and-related"
-                          isSelected={selectedViewFilter === 'installed-and-related'}
-                          isDisabled={noDataAvailable}
-                          onChange={handleItemClick}
-                        />
-                      </div>
+                      <ToggleGroupItem
+                        text="Installed and related"
+                        buttonId="installed-and-related"
+                        isSelected={selectedViewFilter === 'installed-and-related'}
+                        isDisabled={noDataAvailable}
+                        onChange={handleItemClick}
+                      />
                     </Tooltip>
                     <Tooltip
                       content={
-                        noDataAvailable
-                          ? getTooltipContent('installed-only')
-                          : disableInstalledOnly
-                          ? 'No installed RHEL releases found for this major version. Use "Installed and related" instead.'
-                          : getTooltipContent('installed-only')
+                        noDataAvailable || disableInstalledOnly
+                          ? disableInstalledOnly && !noDataAvailable
+                            ? 'No installed RHEL releases found for this major version. Use "Installed and related" instead.'
+                            : getTooltipContent('installed-only')
+                          : undefined
                       }
                       trigger={noDataAvailable || disableInstalledOnly ? 'mouseenter' : 'manual'}
                     >
-                      <div>
-                        <ToggleGroupItem
-                          text="Installed only"
-                          buttonId="installed-only"
-                          isSelected={selectedViewFilter === 'installed-only'}
-                          isDisabled={noDataAvailable || disableInstalledOnly}
-                          onChange={handleItemClick}
-                        />
-                      </div>
+                      <ToggleGroupItem
+                        text="Installed only"
+                        buttonId="installed-only"
+                        isSelected={selectedViewFilter === 'installed-only'}
+                        isDisabled={noDataAvailable || disableInstalledOnly}
+                        onChange={handleItemClick}
+                      />
                     </Tooltip>
-                    <div>
+                    <Tooltip content="" trigger="manual">
                       <ToggleGroupItem
                         text="All"
                         buttonId="all"
                         isSelected={selectedViewFilter === 'all'}
                         onChange={handleItemClick}
                       />
-                    </div>
+                    </Tooltip>
                   </ToggleGroup>
                 </FormGroup>
               </Form>
