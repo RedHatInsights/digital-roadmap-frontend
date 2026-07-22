@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { To } from 'react-router-dom';
 import { Filter } from '../types/Filter';
+import { Stream } from '../types/Stream';
+import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 
 export const KNOWN_TYPES = ['Addition', 'Enhancement', 'Change', 'Deprecation'] as const;
 
@@ -115,9 +117,6 @@ export const getNewName = (name: string, major: number, minor: number, lifecycle
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${major}.${minor}${lifecycleText}`;
 };
-
-import { Stream } from '../types/Stream';
-import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 
 export const buildExportData = (
   filteredTableData: Stream[] | SystemLifecycleChanges[],
