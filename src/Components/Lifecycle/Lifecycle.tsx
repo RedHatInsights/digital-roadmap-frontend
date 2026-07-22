@@ -25,7 +25,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildURL, checkValidityOfQueryParam } from '../../utils/utils';
+import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -42,9 +42,9 @@ const LifecycleChart = lazy(() => import('../../Components/LifecycleChart/Lifecy
 const LifecycleChartSystem = lazy(() => import('../../Components/LifecycleChartSystem/LifecycleChartSystem'));
 const LifecycleFilters = lazy(() => import('../../Components/LifecycleFilters/LifecycleFilters'));
 const LifecycleTable = lazy(() => import('../../Components/LifecycleTable/LifecycleTable'));
-import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { exportData as exportToFile } from '../../utils/export';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
-import { formatDate, getNewName } from '../../utils/utils';
+import { getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 
@@ -95,8 +95,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
 
   const [disableInstalledOnly, setDisableInstalledOnly] = useState<boolean>(false);
-
-  const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
   const isAppStream = (v: string) =>
     v === DEFAULT_DROPDOWN_VALUE || v === RHEL_8_STREAMS_DROPDOWN_VALUE || v === RHEL_10_STREAMS_DROPDOWN_VALUE;
@@ -1007,34 +1005,15 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return data;
   };
 
-  const downloadCSV = () => {
-    const data: { [key: string]: string | number }[] = [];
-    if (
-      lifecycleDropdownValue === DEFAULT_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_8_STREAMS_DROPDOWN_VALUE ||
-      lifecycleDropdownValue === RHEL_10_STREAMS_DROPDOWN_VALUE
-    ) {
-      (filteredTableData as Stream[]).forEach((item: Stream) =>
-        data.push({
-          Name: item.display_name,
-          Release: item.os_major,
-          'Release date': formatDate(item.start_date),
-          'Retirement date': formatDate(item.end_date),
-          Systems: item.count,
-        })
-      );
-    } else if (lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) =>
-        data.push({
-          Name: item.name,
-          'Start date': formatDate(item.start_date),
-          'End date': formatDate(item.end_date),
-          Systems: item.count,
-        })
-      );
-    }
-    const csv = generateCsv(csvConfig)(data);
-    download(csvConfig)(csv);
+  const appStreamDropdownValues = [
+    DEFAULT_DROPDOWN_VALUE,
+    RHEL_8_STREAMS_DROPDOWN_VALUE,
+    RHEL_10_STREAMS_DROPDOWN_VALUE,
+  ];
+
+  const handleExport = (format: 'csv' | 'json' | 'xml') => {
+    const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
+    exportToFile(format, data);
   };
 
   if (isLoading) {
@@ -1209,7 +1188,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             onLifecycleDropdownSelect={onLifecycleDropdownSelect}
             selectedChartSortBy={chartSortByValue}
             updateChartSortValue={setOrderingStates}
-            downloadCSV={downloadCSV}
+            onExport={handleExport}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}

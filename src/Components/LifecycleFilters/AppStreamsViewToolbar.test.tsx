@@ -35,7 +35,7 @@ describe('AppStreamsViewToolbar', () => {
     onToggleClick: jest.fn(),
     onSelect: jest.fn(),
     setIsOpen: jest.fn(),
-    downloadCSV: jest.fn(),
+    onExport: jest.fn(),
     disableInstalledOnly: false,
   };
 
@@ -260,19 +260,16 @@ describe('AppStreamsViewToolbar', () => {
     });
   });
 
-  describe('Download CSV Button', () => {
-    test('calls downloadCSV when download button is clicked', () => {
-      const downloadCSV = jest.fn();
-      render(<AppStreamsViewToolbar {...defaultProps} downloadCSV={downloadCSV} />);
+  describe('Export Button', () => {
+    test('renders successfully with onExport prop', () => {
+      render(<AppStreamsViewToolbar {...defaultProps} />);
 
-      // Component should render successfully with downloadCSV prop
       expect(screen.getByRole('button', { name: 'Installed and related' })).toBeInTheDocument();
     });
 
-    test('renders successfully with downloadCSV prop', () => {
+    test('renders all view filter buttons', () => {
       render(<AppStreamsViewToolbar {...defaultProps} />);
 
-      // Component should still render even when download is present
       expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
     });
   });

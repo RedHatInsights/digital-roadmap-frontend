@@ -18,7 +18,7 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
 import { DEFAULT_FILTERS, KNOWN_TYPES } from '../../utils/utils';
-import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { exportData as exportToFile } from '../../utils/export';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -78,8 +78,6 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
   const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
-  const csvConfig = mkConfig({ useKeysAsHeaders: true });
-
   useEffect(() => {
     if (initialTypeFilters.size === 0) {
       setTypeSelections(new Set());
@@ -351,8 +349,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     setExpandedRows(newExpandedRows);
   };
 
-  const downloadCSV = () => {
-    const data = sortedFilteredData.map((item) => ({
+  const buildExportData = () =>
+    sortedFilteredData.map((item) => ({
       Name: item.name,
       Type: item.type,
       Release: item.release,
@@ -361,8 +359,10 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
       'Affected systems': item.details?.potentiallyAffectedSystemsCount ?? '',
       'Tracking ticket': item.details?.trainingTicket ?? '',
     }));
-    const csv = generateCsv(csvConfig)(data);
-    download(csvConfig)(csv);
+
+  const handleExport = (format: 'csv' | 'json' | 'xml') => {
+    const data = buildExportData();
+    exportToFile(format, data);
   };
 
   return (
@@ -393,8 +393,8 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         selectedViewFilter={selectedViewFilter}
         handleViewFilterChange={handleViewFilterChange}
         noDataAvailable={noDataAvailable}
-        downloadCSV={downloadCSV}
-        canDownloadCSV={sortedFilteredData.length > 0}
+        onExport={handleExport}
+        canExport={sortedFilteredData.length > 0}
       />
       <Table
         aria-label="Upcoming changes, deprecations, and additions to your system"

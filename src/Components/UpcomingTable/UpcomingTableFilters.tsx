@@ -23,7 +23,7 @@ import {
 import FilterIcon from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import './upcoming-table.scss';
 import { Filter } from '../../types/Filter';
-import ExportDataButton from '../ExportDataButton/ExportDataButton';
+import ExportDataButton, { ExportFormat } from '../ExportDataButton/ExportDataButton';
 
 interface UpcomingTableFiltersProps {
   resetFilters: () => void;
@@ -69,8 +69,8 @@ interface UpcomingTableFiltersProps {
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable?: boolean; // Add noDataAvailable prop with optional flag
-  downloadCSV: () => void;
-  canDownloadCSV: boolean;
+  onExport: (format: ExportFormat) => void;
+  canExport: boolean;
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -99,8 +99,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   selectedViewFilter,
   handleViewFilterChange,
   noDataAvailable = false, // Default to false if not provided
-  downloadCSV,
-  canDownloadCSV,
+  onExport,
+  canExport,
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -557,8 +557,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
             <ToolbarItem>
               <ExportDataButton
                 className="drf-upcoming__filter-download"
-                onClick={downloadCSV}
-                isDisabled={!canDownloadCSV}
+                onExport={onExport}
+                isDisabled={!canExport}
                 disabledTooltipContent="No data to export"
               />
             </ToolbarItem>

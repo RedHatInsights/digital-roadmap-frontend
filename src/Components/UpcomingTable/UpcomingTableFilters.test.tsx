@@ -15,7 +15,7 @@ const mockSetAddedToRoadmapSelection = jest.fn();
 const mockResetTypeFilter = jest.fn();
 const mockSetFiltersForURL = jest.fn();
 const mockHandleViewFilterChange = jest.fn();
-const mockDownloadCSV = jest.fn();
+const mockOnExport = jest.fn();
 
 const defaultProps = {
   itemCount: 50,
@@ -43,8 +43,8 @@ const defaultProps = {
   selectedViewFilter: 'relevant',
   handleViewFilterChange: mockHandleViewFilterChange,
   noDataAvailable: false,
-  downloadCSV: mockDownloadCSV,
-  canDownloadCSV: true,
+  onExport: mockOnExport,
+  canExport: true,
 };
 
 describe('UpcomingTableFilters', () => {

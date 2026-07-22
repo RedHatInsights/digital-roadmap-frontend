@@ -23,7 +23,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         updateChartSortValue={jest.fn()}
-        downloadCSV={jest.fn()}
+        onExport={jest.fn()}
         selectedViewFilter="all"
         handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
@@ -50,7 +50,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         updateChartSortValue={jest.fn()}
-        downloadCSV={jest.fn()}
+        onExport={jest.fn()}
         selectedViewFilter="all"
         handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
@@ -75,7 +75,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         updateChartSortValue={jest.fn()}
-        downloadCSV={jest.fn()}
+        onExport={jest.fn()}
         selectedViewFilter="all"
         handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
@@ -99,7 +99,7 @@ describe('LifecycleFilters', () => {
         onLifecycleDropdownSelect={jest.fn()}
         selectedChartSortBy="Retirement date"
         updateChartSortValue={jest.fn()}
-        downloadCSV={jest.fn()}
+        onExport={jest.fn()}
         selectedViewFilter="all"
         handleViewFilterChange={jest.fn()}
         noDataAvailable={false}
@@ -144,7 +144,7 @@ it('shows dynamic RHEL version options when in Systems view and Field=Version', 
       onLifecycleDropdownSelect={jest.fn()}
       selectedChartSortBy="Retirement date"
       updateChartSortValue={jest.fn()}
-      downloadCSV={jest.fn()}
+      onExport={jest.fn()}
       selectedViewFilter="installed-only"
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
@@ -181,7 +181,7 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
       onLifecycleDropdownSelect={jest.fn()}
       selectedChartSortBy="Retirement date"
       updateChartSortValue={jest.fn()}
-      downloadCSV={jest.fn()}
+      onExport={jest.fn()}
       selectedViewFilter="installed-only"
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
@@ -206,7 +206,7 @@ it('syncs selection with new dynamic options (intersection or fallback to all) a
       onLifecycleDropdownSelect={jest.fn()}
       selectedChartSortBy="Retirement date"
       updateChartSortValue={jest.fn()}
-      downloadCSV={jest.fn()}
+      onExport={jest.fn()}
       selectedViewFilter="installed-only"
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
@@ -239,7 +239,7 @@ it('keeps both Name keyword and Version selection effective when switching Field
       onLifecycleDropdownSelect={jest.fn()}
       selectedChartSortBy="Retirement date"
       updateChartSortValue={jest.fn()}
-      downloadCSV={jest.fn()}
+      onExport={jest.fn()}
       selectedViewFilter="installed-only"
       handleViewFilterChange={jest.fn()}
       noDataAvailable={false}
@@ -299,7 +299,7 @@ describe('Status Filter Functionality', () => {
     onLifecycleDropdownSelect: jest.fn(),
     selectedChartSortBy: 'Retirement date',
     updateChartSortValue: jest.fn(),
-    downloadCSV: jest.fn(),
+    onExport: jest.fn(),
     selectedViewFilter: 'installed-only',
     handleViewFilterChange: jest.fn(),
     noDataAvailable: false,

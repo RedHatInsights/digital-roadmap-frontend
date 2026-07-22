@@ -50,7 +50,7 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
     onLifecycleDropdownSelect,
     selectedChartSortBy = 'Retirement date', // Default value
     updateChartSortValue,
-    downloadCSV,
+    onExport,
     selectedViewFilter = 'installed-only', // Default value
     handleViewFilterChange,
     noDataAvailable,
@@ -91,8 +91,14 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
         <option value="installed-only">Installed Only</option>
         <option value="installed-and-related">Installed and Related</option>
       </select>
-      <button data-testid="download-csv" onClick={downloadCSV}>
-        Download CSV
+      <button data-testid="export-csv" onClick={() => onExport?.('csv')}>
+        Export CSV
+      </button>
+      <button data-testid="export-json" onClick={() => onExport?.('json')}>
+        Export JSON
+      </button>
+      <button data-testid="export-xml" onClick={() => onExport?.('xml')}>
+        Export XML
       </button>
 
       <ul data-testid="rhel-version-options">
@@ -123,6 +129,7 @@ jest.mock('../../Components/LifecycleTable/LifecycleTable', () => {
 
 // Mock utils
 jest.mock('../../utils/utils', () => ({
+  buildExportData: jest.fn(() => [{ appstream_module: 'test', release: 9 }]),
   buildURL: jest.fn((filters) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -140,6 +147,7 @@ jest.mock('./filteringUtils', () => ({
   DEFAULT_CHART_SORTBY_VALUE: 'Retirement date',
   DEFAULT_DROPDOWN_VALUE: 'rhel-9-appstreams',
   RHEL_8_STREAMS_DROPDOWN_VALUE: 'rhel-8-appstreams',
+  RHEL_10_STREAMS_DROPDOWN_VALUE: 'rhel-10-appstreams',
   RHEL_SYSTEMS_DROPDOWN_VALUE: 'rhel-systems',
   filterChartDataByName: jest.fn((data) => data.sort((a: any, b: any) => a.name?.localeCompare(b.name))),
   filterChartDataByRelease: jest.fn((data) => data),
@@ -148,11 +156,10 @@ jest.mock('./filteringUtils', () => ({
   filterChartDataBySystems: jest.fn((data) => data),
 }));
 
-// Mock export-to-csv
-jest.mock('export-to-csv', () => ({
-  mkConfig: jest.fn(() => ({})),
-  generateCsv: jest.fn(() => () => 'csv,data'),
-  download: jest.fn(() => () => {}),
+// Mock shared export utility
+const mockExportData = jest.fn();
+jest.mock('../../utils/export', () => ({
+  exportData: (...args: any[]) => mockExportData(...args),
 }));
 
 // Test data
@@ -478,21 +485,51 @@ describe('LifecycleTab Component', () => {
     });
   });
 
-  describe('CSV Download', () => {
-    test('downloads CSV when button is clicked', async () => {
+  describe('Data Export', () => {
+    beforeEach(() => {
+      mockExportData.mockClear();
+    });
+
+    test('exports CSV when button is clicked', async () => {
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      const downloadButton = screen.getByTestId('download-csv');
       await act(async () => {
-        fireEvent.click(downloadButton);
+        fireEvent.click(screen.getByTestId('export-csv'));
       });
 
-      // Verify that the download function was called
-      expect(downloadButton).toBeInTheDocument();
+      expect(mockExportData).toHaveBeenCalledWith('csv', expect.any(Array));
+    });
+
+    test('exports JSON when button is clicked', async () => {
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('export-json'));
+      });
+
+      expect(mockExportData).toHaveBeenCalledWith('json', expect.any(Array));
+    });
+
+    test('exports XML when button is clicked', async () => {
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('export-xml'));
+      });
+
+      expect(mockExportData).toHaveBeenCalledWith('xml', expect.any(Array));
     });
   });
 
