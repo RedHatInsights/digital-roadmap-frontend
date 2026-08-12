@@ -75,10 +75,6 @@ objects:
                   value: ${IQE_FILTER_EXPRESSION}
                 - name: IQE_LOG_LEVEL
                   value: ${IQE_LOG_LEVEL}
-                - name: IQE_REQUIREMENTS
-                  value: ${IQE_REQUIREMENTS}
-                - name: IQE_REQUIREMENTS_PRIORITY
-                  value: ${IQE_REQUIREMENTS_PRIORITY}
                 - name: IQE_TEST_IMPORTANCE
                   value: ${IQE_TEST_IMPORTANCE}
                 - name: IQE_PARALLEL_ENABLED
@@ -148,15 +144,11 @@ parameters:
   - name: IQE_PLUGINS
     value: digital_roadmap
   - name: IQE_MARKER_EXPRESSION
-    value: 'ui'
+    value: 'ui,digital_roadmap,digital_roadmap_lifecycle,digital_roadmap_roadmap'
   - name: IQE_FILTER_EXPRESSION
     value: ''
   - name: IQE_LOG_LEVEL
     value: info
-  - name: IQE_REQUIREMENTS
-    value: 'DIGITAL_ROADMAP,DIGITAL_ROADMAP-ROADMAP,DIGITAL_ROADMAP-LIFECYCLE'
-  - name: IQE_REQUIREMENTS_PRIORITY
-    value: ''
   - name: IQE_TEST_IMPORTANCE
     value: 'critical'
   - name: IQE_PLAYWRIGHT_IMAGE
