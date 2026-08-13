@@ -144,7 +144,7 @@ parameters:
   - name: IQE_PLUGINS
     value: digital_roadmap
   - name: IQE_MARKER_EXPRESSION
-    value: 'ui,digital_roadmap,digital_roadmap_lifecycle,digital_roadmap_roadmap'
+    value: 'ui and (digital_roadmap or digital_roadmap_lifecycle or digital_roadmap_roadmap)'
   - name: IQE_FILTER_EXPRESSION
     value: ''
   - name: IQE_LOG_LEVEL
