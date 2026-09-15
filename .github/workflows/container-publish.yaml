@@ -18,7 +18,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: quay.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: "iop/digital-roadmap-frontend"
+  IMAGE_NAME: "iop/roadmap-frontend"
 
 
 jobs:
