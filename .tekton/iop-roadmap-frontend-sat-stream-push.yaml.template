@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  annotations:
+    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/digital-roadmap-frontend?rev={{revision}}
+    build.appstudio.redhat.com/commit_sha: '{{revision}}'
+    build.appstudio.redhat.com/target_branch: '{{target_branch}}'
+    pipelinesascode.tekton.dev/cancel-in-progress: "false"
+    pipelinesascode.tekton.dev/max-keep-runs: "3"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
+      == "main"
+    pipelinesascode.tekton.dev/pipeline: https://github.com/RedHatInsights/konflux-pipelines/raw/v1.73.0/pipelines/docker-build-oci-ta.yaml
+  creationTimestamp: null
+  labels:
+    appstudio.openshift.io/application: iop-roadmap-frontend-sat-stream
+    appstudio.openshift.io/component: iop-roadmap-frontend-sat-stream
+    pipelines.appstudio.openshift.io/type: build
+  name: iop-roadmap-frontend-sat-stream-on-push
+  namespace: insights-management-tenant
+spec:
+  params:
+  - name: git-url
+    value: '{{source_url}}'
+  - name: revision
+    value: '{{revision}}'
+  - name: output-image
+    value: quay.io/redhat-user-workloads/insights-management-tenant/satellite-iop/iop-roadmap-frontend-sat-stream:{{revision}}
+  - name: dockerfile
+    value: build-tools/Dockerfile.hermetic
+  - name: path-context
+    value: .
+  - name: build-source-image
+    value: "true"
+  - name: hermetic
+    value: "true"
+  - name: prefetch-input
+    value: '{"type": "npm", "path": "."}'
+  - name: prefetch-dev-package-managers
+    value: "true"
+  - name: labels
+    value:
+      - 'url="https://www.redhat.com"'
+      - 'name=satellite/iop-roadmap-frontend-rhel9'
+      - 'description="This adds the satellite/iop-roadmap-frontend-rhel9 image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.redhat.io/satellite/iop-roadmap-frontend-rhel9"'
+      - 'summary="A new satellite/iop-roadmap-frontend-rhel9 container image is now generally available in the Red Hat container registry."'
+      - 'com.redhat.component="iop-roadmap-frontend"'
+      - 'io.k8s.display-name="IoP Roadmap-Frontend"'
+      - 'io.k8s.description="This adds the satellite/iop-roadmap-frontend-rhel9 image to the Red Hat container registry. To pull this container image, run the following command: podman pull registry.redhat.io/satellite/iop-roadmap-frontend-rhel9"'
+      - 'io.openshift.tags="insights satellite iop roadmap-frontend"'
+  pipelineRef:
+    name: docker-build-oci-ta
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-iop-roadmap-frontend-sat-stream
+  workspaces:
+  - name: git-auth
+    secret:
+      secretName: '{{ git_auth_secret }}'
+status: {}
