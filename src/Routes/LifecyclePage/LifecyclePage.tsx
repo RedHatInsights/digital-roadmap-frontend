@@ -89,7 +89,7 @@ const LifecyclePage = () => {
           </a>
         </p>
       </Alert>
-      <section className="pf-l-page__main-sectioFn pf-c-page__main-section" id="lifecycle">
+      <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
           <LifecycleTab />
         </Suspense>
