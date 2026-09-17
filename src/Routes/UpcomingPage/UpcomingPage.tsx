@@ -60,6 +60,30 @@ const UpcomingPage = () => {
         isPlain
         style={{ paddingLeft: '28px' }}
       />
+      <Alert
+        id="roadmap-info"
+        className="drf-upcoming-page__info-alert"
+        isExpandable
+        isInline
+        variant="info"
+        title="Get notified about roadmap changes"
+        component="h2"
+        toggleAriaLabel="Get notified about roadmap changes"
+      >
+        <p>
+          Subscribe to roadmap notifications about additions, enhancements, changes, and deprecations that may
+          affect your environment.
+          <br />
+          <br />
+          <a
+            href={`${window.location.origin}/settings/notifications/user-preferences?bundle=rhel&app=roadmap`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Manage notification settings
+          </a>
+        </p>
+      </Alert>
       <section className="pf-l-page__main-section pf-c-page__main-section" id="roadmap">
         <Suspense fallback={<Spinner />}>
           <UpcomingTab />

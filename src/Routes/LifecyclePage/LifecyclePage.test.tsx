@@ -32,6 +32,34 @@ describe('LifecyclePage', () => {
     expect(screen.getByText('Dates are approximations and subject to change.')).toBeInTheDocument();
   });
 
+  it('renders the expandable info alert', () => {
+    render(<LifecyclePage />);
+    expect(screen.getByText('Get notified about lifecycle changes')).toBeInTheDocument();
+  });
+
+  it('shows the info alert description after expanding', async () => {
+    const user = userEvent.setup();
+    render(<LifecyclePage />);
+
+    expect(
+      screen.queryByText(/Subscribe to lifecycle notifications about RHEL and Application Stream retirement/i)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /get notified about lifecycle changes/i }));
+
+    expect(
+      await screen.findByText(/Subscribe to lifecycle notifications about RHEL and Application Stream retirement/i)
+    ).toBeInTheDocument();
+
+    const settingsLink = screen.getByRole('link', { name: /manage notification settings/i });
+    expect(settingsLink).toHaveAttribute(
+      'href',
+      `${window.location.origin}/settings/notifications/user-preferences?bundle=rhel&app=life-cycle`
+    );
+    expect(settingsLink).toHaveAttribute('target', '_blank');
+    expect(settingsLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('renders the lifecycle tab component', () => {
     render(<LifecyclePage />);
     expect(screen.getByTestId('lifecycle-tab')).toBeInTheDocument();

@@ -32,6 +32,34 @@ describe('UpcomingPage', () => {
     expect(screen.getByText('Upcoming features and dates are subject to change.')).toBeInTheDocument();
   });
 
+  it('renders the expandable info alert', () => {
+    render(<UpcomingPage />);
+    expect(screen.getByText('Get notified about roadmap changes')).toBeInTheDocument();
+  });
+
+  it('shows the info alert description after expanding', async () => {
+    const user = userEvent.setup();
+    render(<UpcomingPage />);
+
+    expect(
+      screen.queryByText(/Subscribe to roadmap notifications about additions, enhancements, changes/i)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /get notified about roadmap changes/i }));
+
+    expect(
+      await screen.findByText(/Subscribe to roadmap notifications about additions, enhancements, changes/i)
+    ).toBeInTheDocument();
+
+    const settingsLink = screen.getByRole('link', { name: /manage notification settings/i });
+    expect(settingsLink).toHaveAttribute(
+      'href',
+      `${window.location.origin}/settings/notifications/user-preferences?bundle=rhel&app=roadmap`
+    );
+    expect(settingsLink).toHaveAttribute('target', '_blank');
+    expect(settingsLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('renders the upcoming tab component', () => {
     render(<UpcomingPage />);
     expect(screen.getByTestId('upcoming-tab')).toBeInTheDocument();
