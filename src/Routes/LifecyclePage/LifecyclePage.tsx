@@ -65,6 +65,30 @@ const LifecyclePage = () => {
         isPlain
         style={{ paddingLeft: '28px' }}
       />
+      <Alert
+        id="lifecycle-info"
+        className="drf-lifecycle-page__info-alert"
+        isExpandable
+        isInline
+        variant="info"
+        title="Get notified about lifecycle changes"
+        component="h2"
+        toggleAriaLabel="Get notified about lifecycle changes"
+      >
+        <p>
+          Subscribe to lifecycle notifications about RHEL and Application Stream retirement and support status
+          changes that may affect your environment.
+          <br />
+          <br />
+          <a
+            href={`${window.location.origin}/settings/notifications/user-preferences?bundle=rhel&app=life-cycle`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Manage notification settings
+          </a>
+        </p>
+      </Alert>
       <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
           <LifecycleTab />
