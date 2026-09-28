@@ -19,7 +19,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
-import { getAllUpcomingChanges, getRelevantUpcomingChanges } from '../../api';
+import { getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
@@ -48,14 +48,19 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+// The "all" response is a superset of the "relevant" one: it carries the same items plus
+// those with a count of 0. Deriving the relevant view here instead of issuing a second
+// request mirrors the backend's `all=false` filter and halves the inventory work per page load.
+const isRelevant = (item: UpcomingChanges) => (item.details?.potentiallyAffectedSystemsCount ?? 0) > 0;
+
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const emptyUpcomingChanges: UpcomingChanges[] = [];
   const [upcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
 
-  // Add new state variables to store both API responses
+  // Both views come from a single "all" response; relevant is derived from it
   const [allUpcomingChangesData, setAllUpcomingChangesData] = React.useState(emptyUpcomingChanges);
   const [relevantUpcomingChangesData, setRelevantUpcomingChangesData] = React.useState(emptyUpcomingChanges);
-  const [dataFetchStatus, setDataFetchStatus] = React.useState({ all: false, relevant: false });
+  const [hasFetchedData, setHasFetchedData] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
@@ -123,8 +128,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setVisibleData(data);
   };
 
-  // Optimized function to fetch both API endpoints in parallel
-  const fetchBothDataSources = async () => {
+  // Single request for the whole roadmap; the relevant view is filtered out of it
+  const fetchUpcomingChanges = async () => {
     // Used when we don't have deployedDate available - basically when there are
     // new items which weren't deployed to production. This is for easier testing on stage.
     // Format as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones.
@@ -133,65 +138,30 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       now.getDate()
     ).padStart(2, '0')}`;
 
-    try {
-      // Fetch both APIs in parallel
-      const [allResponse, relevantResponse] = await Promise.allSettled([
-        getAllUpcomingChanges(),
-        getRelevantUpcomingChanges(),
-      ]);
+    const response = await getAllUpcomingChanges();
+    const allData: UpcomingChanges[] = (response && response.data ? response.data : []).map(
+      (item: UpcomingChanges) => ({
+        ...item,
+        type: capitalizeFirstLetter(item.type),
+        ...(item.details && {
+          details: {
+            ...item.details,
+            // when deployedDate is not available, use todays date for easier testing
+            deployedDate: item.details.deployedDate ?? todayStr,
+          },
+        }),
+      })
+    );
+    const relevantData = allData.filter(isRelevant);
 
-      // Process "all" data
-      let allData: UpcomingChanges[] = [];
-      if (allResponse.status === 'fulfilled') {
-        allData = allResponse.value && allResponse.value.data ? allResponse.value.data : [];
-        allData = allData.map((item) => ({
-          ...item,
-          type: capitalizeFirstLetter(item.type),
-          ...(item.details && {
-            details: {
-              ...item.details,
-              // when deployedDate is not available, use todays date for easier testing
-              deployedDate: item.details.deployedDate ?? todayStr,
-            },
-          }),
-        }));
-        setAllUpcomingChangesData(allData);
-        setDataFetchStatus((prev) => ({ ...prev, all: true }));
-      } else {
-        console.error('Error fetching all changes:', allResponse.reason);
-        throw new Error(allResponse.reason.message);
-      }
+    setAllUpcomingChangesData(allData);
+    setRelevantUpcomingChangesData(relevantData);
+    setHasFetchedData(true);
 
-      // Process "relevant" data
-      let relevantData: UpcomingChanges[] = [];
-      if (relevantResponse.status === 'fulfilled') {
-        relevantData = relevantResponse.value && relevantResponse.value.data ? relevantResponse.value.data : [];
-        relevantData = relevantData.map((item) => ({
-          ...item,
-          type: capitalizeFirstLetter(item.type),
-          ...(item.details && {
-            details: {
-              ...item.details,
-              // when deployedDate is not available, use todays date for easier testing
-              deployedDate: item.details.deployedDate ?? todayStr,
-            },
-          }),
-        }));
-        setRelevantUpcomingChangesData(relevantData);
-        setDataFetchStatus((prev) => ({ ...prev, relevant: true }));
-      } else {
-        console.error('Error fetching relevant changes:', relevantResponse.reason);
-        throw new Error(relevantResponse.reason.message);
-      }
-
-      return {
-        allData,
-        relevantData,
-      };
-    } catch (error) {
-      console.error('Unexpected error in fetchBothDataSources:', error);
-      throw error;
-    }
+    return {
+      allData,
+      relevantData,
+    };
   };
 
   // Handle view filter changes
@@ -208,26 +178,19 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setSearchParams(buildURL(newFilters));
 
     // Use cached data if available, otherwise fetch it
+    if (!hasFetchedData) {
+      fetchData(filter);
+      return;
+    }
+
     if (filter === 'all') {
-      if (dataFetchStatus.all) {
-        // Use cached data
-        setUpcomingChanges(allUpcomingChangesData);
-        processData(allUpcomingChangesData);
-      } else {
-        // Fetch data
-        fetchData(filter);
-      }
+      setUpcomingChanges(allUpcomingChangesData);
+      processData(allUpcomingChangesData);
     } else {
-      if (dataFetchStatus.relevant) {
-        // Use cached data
-        setUpcomingChanges(relevantUpcomingChangesData);
-        processData(relevantUpcomingChangesData);
-        // Set noDataAvailable based on cached data
-        setNoDataAvailable(relevantUpcomingChangesData.length === 0);
-      } else {
-        // Fetch data
-        fetchData(filter);
-      }
+      setUpcomingChanges(relevantUpcomingChangesData);
+      processData(relevantUpcomingChangesData);
+      // Set noDataAvailable based on cached data
+      setNoDataAvailable(relevantUpcomingChangesData.length === 0);
     }
   };
 
@@ -235,9 +198,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     // If we've loaded relevant data and it's empty, and all data is available and not empty
     // then automatically switch to "all" view regardless of current view
     if (
-      dataFetchStatus.relevant &&
+      hasFetchedData &&
       relevantUpcomingChangesData.length === 0 &&
-      dataFetchStatus.all &&
       allUpcomingChangesData.length > 0 &&
       selectedViewFilter === 'relevant'
     ) {
@@ -256,12 +218,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setUpcomingChanges(allUpcomingChangesData);
       processData(allUpcomingChangesData);
     }
-  }, [
-    dataFetchStatus.relevant,
-    dataFetchStatus.all,
-    relevantUpcomingChangesData.length,
-    allUpcomingChangesData.length,
-  ]);
+  }, [hasFetchedData, relevantUpcomingChangesData.length, allUpcomingChangesData.length]);
 
   const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
@@ -270,20 +227,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     const currentViewFilter = viewFilter || selectedViewFilter;
 
     try {
-      // Check if we need to fetch any data
-      const needsAllData = !dataFetchStatus.all;
-      const needsRelevantData = !dataFetchStatus.relevant;
-
       let allData = allUpcomingChangesData;
       let relevantData = relevantUpcomingChangesData;
 
-      // If we need to fetch data, use parallel fetching
-      if (needsAllData || needsRelevantData) {
-        const { allData: fetchedAllData, relevantData: fetchedRelevantData } = await fetchBothDataSources();
-
-        // Update local variables with fetched data
-        if (needsAllData) allData = fetchedAllData;
-        if (needsRelevantData) relevantData = fetchedRelevantData;
+      if (!hasFetchedData) {
+        ({ allData, relevantData } = await fetchUpcomingChanges());
       }
 
       // Check if ALL data source is empty
@@ -378,7 +326,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     // Use cached relevant data if available
-    if (dataFetchStatus.relevant) {
+    if (hasFetchedData) {
       if (relevantUpcomingChangesData.length === 0 && allUpcomingChangesData.length > 0) {
         // If relevant data is empty but all data exists, use all data
         setUpcomingChanges(allUpcomingChangesData);

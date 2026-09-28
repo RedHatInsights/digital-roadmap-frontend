@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import UpcomingTab from './Upcoming';
-import { getAllUpcomingChanges, getRelevantUpcomingChanges } from '../../api';
+import { getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Polyfill for structuredClone in test environment
@@ -15,7 +15,6 @@ if (!global.structuredClone) {
 // Mock the API functions
 jest.mock('../../api', () => ({
   getAllUpcomingChanges: jest.fn(),
-  getRelevantUpcomingChanges: jest.fn(),
 }));
 
 // Mock the lazy-loaded UpcomingTable component
@@ -31,6 +30,8 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
     return (
       <div data-testid="upcoming-table">
         <div data-testid="table-data-count">{data.length}</div>
+        <div data-testid="table-types">{JSON.stringify(data.map((d: any) => d.type))}</div>
+        <div data-testid="table-names">{JSON.stringify(data.map((d: any) => d.name))}</div>
         <div data-testid="table-deployed-dates">
           {JSON.stringify(data.map((d: any) => d.details?.deployedDate ?? null))}
         </div>
@@ -77,11 +78,21 @@ const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useS
 const mockSetSearchParams = jest.fn();
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
-const mockGetRelevantUpcomingChanges = getRelevantUpcomingChanges as jest.MockedFunction<
-  typeof getRelevantUpcomingChanges
->;
 
-// Test data
+// The "relevant" view is derived from the "all" response, so the affected-systems count
+// is what decides whether an item shows up there.
+const detailsWithCount = (potentiallyAffectedSystemsCount: number) => ({
+  summary: 'Test summary',
+  architecture: 'x86_64',
+  potentiallyAffectedSystemsCount,
+  potentiallyAffectedSystemsDetail: [],
+  trainingTicket: 'TEST-1',
+  deployedDate: '2024-11-01',
+  lastModified: '2024-01-01',
+  detailFormat: 0 as const,
+});
+
+// Test data: 3 items, of which only the first is relevant (count > 0)
 const mockAllData: UpcomingChanges[] = [
   {
     name: 'Test Change 1',
@@ -89,6 +100,7 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 1.0',
     date: '2024-12-01',
     package: 'ruby',
+    details: detailsWithCount(4),
   },
   {
     name: 'Test Change 2',
@@ -96,6 +108,7 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 2.0',
     date: '2024-12-15',
     package: 'postgresql',
+    details: detailsWithCount(0),
   },
   {
     name: 'Test Change 3',
@@ -103,18 +116,15 @@ const mockAllData: UpcomingChanges[] = [
     release: 'Release 1.0',
     date: '2024-12-01',
     package: 'rust',
+    details: detailsWithCount(0),
   },
 ];
 
-const mockRelevantData: UpcomingChanges[] = [
-  {
-    name: 'Test Change 1',
-    type: 'deprecation',
-    release: 'Release 1.0',
-    date: '2024-12-01',
-    package: 'ruby',
-  },
-];
+// Every count is 0, so nothing is relevant
+const mockNoRelevantData: UpcomingChanges[] = mockAllData.map((item) => ({
+  ...item,
+  details: detailsWithCount(0),
+}));
 
 const renderComponent = (searchParams = '') => {
   return render(
@@ -154,24 +164,18 @@ describe('UpcomingTab', () => {
 
     // Reset mocks to default successful state
     mockGetAllUpcomingChanges.mockResolvedValue({ data: mockAllData });
-    mockGetRelevantUpcomingChanges.mockResolvedValue({ data: mockRelevantData });
   });
 
   describe('Initial Loading', () => {
     test('displays loading spinner initially', async () => {
       let resolveAll: (value: any) => void;
-      let resolveRelevant: (value: any) => void;
 
-      // Create promises that we can control
+      // Create a promise that we can control
       const allPromise = new Promise((resolve) => {
         resolveAll = resolve;
       });
-      const relevantPromise = new Promise((resolve) => {
-        resolveRelevant = resolve;
-      });
 
       mockGetAllUpcomingChanges.mockReturnValue(allPromise as any);
-      mockGetRelevantUpcomingChanges.mockReturnValue(relevantPromise as any);
 
       // Render the component and wait for the loading state to be set
       await act(async () => {
@@ -183,10 +187,9 @@ describe('UpcomingTab', () => {
       // Check loading spinner is present
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
-      // Resolve the promises
+      // Resolve the promise
       await act(async () => {
         resolveAll!({ data: mockAllData });
-        resolveRelevant!({ data: mockRelevantData });
       });
 
       // Wait for loading to complete
@@ -218,29 +221,46 @@ describe('UpcomingTab', () => {
   });
 
   describe('Data Fetching', () => {
-    test('handles successful data fetching from both APIs', async () => {
+    // RHINENG-30470: page load must issue a single inventory request, not two
+    test('fetches upcoming changes with one request and derives the relevant view', async () => {
       await act(async () => {
         renderComponent();
-      });
-
-      await waitFor(() => {
-        expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
-        expect(mockGetRelevantUpcomingChanges).toHaveBeenCalledTimes(1);
       });
 
       await waitFor(() => {
         expect(screen.getByTestId('table-data-count')).toBeInTheDocument();
       });
 
-      // Should display relevant data initially
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+
+      // Should display relevant data initially - only the item with count > 0
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
       expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
+    });
+
+    test('does not refetch when toggling between views', async () => {
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('switch-to-all'));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('switch-to-relevant'));
+      });
+
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
     });
 
     test('handles API failure gracefully', async () => {
       const errorMessage = 'Not authorized to access host inventory';
       mockGetAllUpcomingChanges.mockRejectedValue(new Error(errorMessage));
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
       await act(async () => {
         renderComponent();
@@ -255,12 +275,9 @@ describe('UpcomingTab', () => {
     });
 
     test('handles workspace filtering error', async () => {
-      // The component shows the "no roadmap data available" state when one API succeeds
-      // with empty data and one fails - this is the actual behavior
       const errorMessage = 'Error: Workspace filtering is not yet implemented';
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error(errorMessage));
+      mockGetAllUpcomingChanges.mockRejectedValue(new Error(errorMessage));
 
       await act(async () => {
         renderComponent();
@@ -275,8 +292,7 @@ describe('UpcomingTab', () => {
     test('handles timeout error (504)', async () => {
       const timeoutError = { message: 'Timeout reached when calculating response', status_code: 504 };
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockRejectedValue(timeoutError);
+      mockGetAllUpcomingChanges.mockRejectedValue(timeoutError);
 
       await act(async () => {
         renderComponent();
@@ -291,8 +307,7 @@ describe('UpcomingTab', () => {
     test('handles non-504 error with status code', async () => {
       const serverError = { message: 'Internal Server Error', status_code: 500 };
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockRejectedValue(serverError);
+      mockGetAllUpcomingChanges.mockRejectedValue(serverError);
 
       await act(async () => {
         renderComponent();
@@ -327,8 +342,34 @@ describe('UpcomingTab', () => {
       });
     });
 
-    test('auto-switches to all view when relevant data is empty', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+    test('relevant view excludes count 0 items that the all view keeps', async () => {
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-names')).toBeInTheDocument();
+      });
+
+      // Relevant: only the item with count > 0
+      expect(JSON.parse(screen.getByTestId('table-names').textContent!)).toEqual(['Test Change 1']);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('switch-to-all'));
+      });
+
+      // All: the count 0 items are back
+      await waitFor(() => {
+        expect(JSON.parse(screen.getByTestId('table-names').textContent!)).toEqual([
+          'Test Change 1',
+          'Test Change 2',
+          'Test Change 3',
+        ]);
+      });
+    });
+
+    test('auto-switches to all view when every count is 0', async () => {
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
 
       await act(async () => {
         renderComponent();
@@ -342,7 +383,7 @@ describe('UpcomingTab', () => {
     });
 
     test('prevents switching to relevant when no relevant data available', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
 
       await act(async () => {
         renderComponent();
@@ -460,7 +501,7 @@ describe('UpcomingTab', () => {
     });
 
     test('resets to all view when no relevant data available', async () => {
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
+      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
 
       await act(async () => {
         renderComponent();
@@ -590,7 +631,6 @@ describe('UpcomingTab', () => {
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
       mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
 
       setupSearchParamsMock({ type: 'Change' });
 
@@ -613,7 +653,6 @@ describe('UpcomingTab', () => {
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
       mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
 
       setupSearchParamsMock({ type: 'Deprecation' });
 
@@ -636,7 +675,6 @@ describe('UpcomingTab', () => {
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
       mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
 
       setupSearchParamsMock({ type: 'Change,Deprecation' });
 
@@ -704,7 +742,6 @@ describe('UpcomingTab', () => {
   describe('Empty States', () => {
     test('displays no data available state when all data sources are empty', async () => {
       mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
 
       await act(async () => {
         renderComponent();
@@ -724,13 +761,12 @@ describe('UpcomingTab', () => {
   describe('Data Processing', () => {
     test('correctly capitalizes type values', async () => {
       const dataWithLowerCaseTypes = [
-        { ...mockAllData[0], type: 'deprecation' },
-        { ...mockAllData[1], type: 'addition' },
-        { ...mockAllData[2], type: 'change' },
+        { ...mockNoRelevantData[0], type: 'deprecation' },
+        { ...mockNoRelevantData[1], type: 'addition' },
+        { ...mockNoRelevantData[2], type: 'change' },
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithLowerCaseTypes });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: [] });
 
       await act(async () => {
         renderComponent();
@@ -743,6 +779,9 @@ describe('UpcomingTab', () => {
       // Should auto-switch to all view and show the count
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+
+      const types = JSON.parse(screen.getByTestId('table-types').textContent!);
+      expect(types).toEqual(['Deprecation', 'Addition', 'Change']);
     });
 
     test('correctly calculates counts for different types', async () => {
@@ -755,7 +794,6 @@ describe('UpcomingTab', () => {
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: mixedData });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: mixedData });
 
       await act(async () => {
         renderComponent();
@@ -797,7 +835,6 @@ describe('UpcomingTab', () => {
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNullDeployedDate });
-      mockGetRelevantUpcomingChanges.mockResolvedValue({ data: dataWithNullDeployedDate });
 
       await act(async () => {
         renderComponent();
@@ -826,9 +863,6 @@ describe('UpcomingTab', () => {
       mockGetAllUpcomingChanges.mockImplementation(() => {
         throw workspaceError;
       });
-      mockGetRelevantUpcomingChanges.mockImplementation(() => {
-        throw workspaceError;
-      });
 
       await act(async () => {
         renderComponent();
@@ -849,7 +883,6 @@ describe('UpcomingTab', () => {
 
     test('handles general API errors', async () => {
       mockGetAllUpcomingChanges.mockRejectedValue(new Error('General API Error'));
-      mockGetRelevantUpcomingChanges.mockRejectedValue(new Error('General API Error'));
 
       await act(async () => {
         renderComponent();
