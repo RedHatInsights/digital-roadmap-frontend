@@ -5,9 +5,9 @@ import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-i
 import React, { lazy } from 'react';
 import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
-import { SystemsDetail } from '../../types/SystemsDetail';
 import { Button, Content, ContentVariants, Icon } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
+import { SystemsIdentifier } from '../LifecycleModalWindow/LifecycleModalWindow';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
 export const columnNames = {
@@ -38,7 +38,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
-  const [modalData, setModalData] = React.useState<SystemsDetail[]>();
+  const [modalIdentifier, setModalIdentifier] = React.useState<SystemsIdentifier>();
 
   let childIsFullWidth = false;
 
@@ -149,7 +149,11 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                             onClick={(event) => {
                               handleModalToggle(event);
                               setModalDataName(String(repo.package));
-                              setModalData(repo.details?.potentiallyAffectedSystemsDetail);
+                              setModalIdentifier({
+                                type: 'upcoming',
+                                name: repo.name,
+                                release: repo.release,
+                              });
                             }}
                             isInline
                           >
@@ -185,12 +189,11 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
         ) : null}
       </Tbody>
       <LifecycleModalWindow
-        name={modalDataName}
-        modalData={modalData}
-        setModalData={setModalData}
+        displayName={modalDataName}
+        identifier={modalIdentifier}
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
-      ></LifecycleModalWindow>
+      />
     </>
   );
 };

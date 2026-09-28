@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown, DropdownItem, DropdownList, MenuToggle, Tooltip } from '@patternfly/react-core';
+import { Dropdown, DropdownItem, DropdownList, MenuToggle, Spinner, Tooltip } from '@patternfly/react-core';
 import ExportIcon from '@patternfly/react-icons/dist/esm/icons/export-icon';
 
 export type ExportFormat = 'csv' | 'json' | 'xml';
@@ -7,6 +7,7 @@ export type ExportFormat = 'csv' | 'json' | 'xml';
 interface ExportDataButtonProps {
   onExport: (format: ExportFormat) => void;
   isDisabled?: boolean;
+  isExporting?: boolean;
   tooltipContent?: string;
   disabledTooltipContent?: string;
   className?: string;
@@ -15,13 +16,18 @@ interface ExportDataButtonProps {
 const ExportDataButton: React.FunctionComponent<ExportDataButtonProps> = ({
   onExport,
   isDisabled = false,
+  isExporting = false,
   tooltipContent = 'Export data',
   disabledTooltipContent,
   className,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const content = isDisabled && disabledTooltipContent ? disabledTooltipContent : tooltipContent;
+  const getTooltipContent = () => {
+    if (isExporting) return 'Generating export data, please wait...';
+    if (isDisabled && disabledTooltipContent) return disabledTooltipContent;
+    return tooltipContent;
+  };
 
   const onSelect = (_event: React.MouseEvent | undefined, value: string | number | undefined) => {
     setIsOpen(false);
@@ -31,7 +37,7 @@ const ExportDataButton: React.FunctionComponent<ExportDataButtonProps> = ({
   };
 
   return (
-    <Tooltip content={content}>
+    <Tooltip content={getTooltipContent()}>
       <Dropdown
         isOpen={isOpen}
         onSelect={onSelect}
@@ -43,10 +49,10 @@ const ExportDataButton: React.FunctionComponent<ExportDataButtonProps> = ({
             variant="plain"
             onClick={() => setIsOpen((prev) => !prev)}
             isExpanded={isOpen}
-            isDisabled={isDisabled}
-            aria-label="Export host list"
+            isDisabled={isDisabled || isExporting}
+            aria-label={isExporting ? 'Generating export data' : 'Export host list'}
           >
-            <ExportIcon />
+            {isExporting ? <Spinner size="md" aria-label="Generating export" /> : <ExportIcon />}
           </MenuToggle>
         )}
         popperProps={{ enableFlip: true, position: 'start' }}

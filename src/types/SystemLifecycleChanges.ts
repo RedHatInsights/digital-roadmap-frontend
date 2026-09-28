@@ -4,7 +4,7 @@ export type SystemLifecycleChanges = {
   name: string;
   display_name: string;
   major: number;
-  minor: number;
+  minor: number | null;
   start_date: string;
   end_date: string;
   count: number;

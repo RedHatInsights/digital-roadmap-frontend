@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import axios from 'axios';
+import LifecycleTable from '../LifecycleTable/LifecycleTable';
+import { strict as assert } from 'assert';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import LifecycleTab from './Lifecycle';
 import * as api from '../../api';
@@ -12,12 +15,19 @@ if (!global.structuredClone) {
   global.structuredClone = (obj: any) => JSON.parse(JSON.stringify(obj));
 }
 
+jest.mock('axios');
+
 // Mock the API functions
 jest.mock('../../api', () => ({
+  getRhelSystems: jest.requireActual('../../api').getRhelSystems,
   getAllLifecycleAppstreams: jest.fn(),
   getAllLifecycleSystems: jest.fn(),
   getRelevantLifecycleAppstreams: jest.fn(),
   getRelevantLifecycleSystems: jest.fn(),
+  getV1AllLifecycleAppstreams: jest.fn(),
+  getV1AllLifecycleSystems: jest.fn(),
+  getV1RelevantLifecycleAppstreams: jest.fn(),
+  getV1RelevantLifecycleSystems: jest.fn(),
 }));
 
 // Mock the lazy-loaded components to avoid suspense issues
@@ -124,11 +134,12 @@ jest.mock('../../Components/LifecycleTable/LifecycleTable', () => {
     </div>
   );
   MockComponent.displayName = 'MockLifecycleTable';
-  return MockComponent;
+  return jest.fn(MockComponent);
 });
 
 // Mock utils
 jest.mock('../../utils/utils', () => ({
+  ...jest.requireActual('../../utils/utils'),
   buildExportData: jest.fn(() => [{ appstream_module: 'test', release: 9 }]),
   buildURL: jest.fn((filters) => {
     const params = new URLSearchParams();
@@ -139,7 +150,6 @@ jest.mock('../../utils/utils', () => ({
   }),
   checkValidityOfQueryParam: jest.fn(() => true),
   formatDate: jest.fn((date) => date || 'N/A'),
-  getNewName: jest.fn((name, major, minor, type) => `${name} ${major}.${minor}`),
 }));
 
 // Mock filtering utils
@@ -268,6 +278,10 @@ describe('LifecycleTab Component', () => {
     mockApiCalls.getRelevantLifecycleAppstreams.mockResolvedValue({
       data: installedApps,
     });
+    jest.mocked(api.getV1AllLifecycleSystems).mockResolvedValue({ data: mockSystemData });
+    jest.mocked(api.getV1AllLifecycleAppstreams).mockResolvedValue({ data: mockAppData });
+    jest.mocked(api.getV1RelevantLifecycleSystems).mockResolvedValue({ data: installedSystems });
+    jest.mocked(api.getV1RelevantLifecycleAppstreams).mockResolvedValue({ data: installedApps });
   });
 
   describe('Initial Loading and Data Fetching', () => {
@@ -531,6 +545,103 @@ describe('LifecycleTab Component', () => {
 
       expect(mockExportData).toHaveBeenCalledWith('xml', expect.any(Array));
     });
+
+    test('preserves the RHEL version and lifecycle label when merging v1 host details', async () => {
+      const v1System: SystemLifecycleChanges = {
+        ...mockSystemData[0],
+        name: 'RHEL',
+        display_name: 'RHEL 9.4 EUS',
+        minor: 4,
+        lifecycle_type: 'EUS',
+        count: 1,
+        systems_detail: [{ id: 'eus-host', display_name: 'server-eus' }],
+      };
+      mockApiCalls.getRelevantLifecycleSystems.mockResolvedValue({
+        data: [{ ...v1System, systems_detail: [] }],
+      });
+      jest.mocked(api.getV1RelevantLifecycleSystems).mockResolvedValue({ data: [v1System] });
+      render(
+        <MemoryRouter initialEntries={['/?lifecycleDropdown=rhel-systems&viewFilter=installed-only']}>
+          <LifecycleTab />
+        </MemoryRouter>
+      );
+      expect(await screen.findByTestId('table-item-0')).toHaveTextContent('RHEL 9.4 EUS');
+      expect(api.getV1RelevantLifecycleSystems).not.toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('export-csv'));
+      });
+
+      expect(api.getV1RelevantLifecycleSystems).toHaveBeenCalledTimes(1);
+      expect(mockExportData).toHaveBeenCalledTimes(1);
+      const [format, rows] = mockExportData.mock.calls[0];
+      expect(format).toBe('csv');
+      assert.deepEqual(
+        rows.map((row: Record<string, string | number>) => ({
+          release: row.release,
+          host_id: row.host_id,
+          hostname: row.hostname,
+        })),
+        [{ release: 'RHEL 9.4 EUS', host_id: 'eus-host', hostname: 'server-eus' }],
+        'Merging v1 hosts must preserve the release label shown in the table'
+      );
+    });
+
+    test('keeps distinct app streams with the same module name and OS version separate in exports', async () => {
+      // Both stream versions exist for RHEL 8.10 in the backend catalog.
+      const node22: Stream = {
+        ...mockAppData[0],
+        name: 'nodejs',
+        application_stream_name: 'Node.js 22',
+        display_name: 'Node.js 22',
+        os_major: 8,
+        os_minor: 10,
+        start_date: '2024-05-22',
+        end_date: '2027-04-30',
+        count: 1,
+        systems_detail: [{ id: 'node22-host', display_name: 'uses-node22' }],
+      };
+      const node24: Stream = {
+        ...node22,
+        application_stream_name: 'Node.js 24',
+        display_name: 'Node.js 24',
+        end_date: '2028-04-30',
+        systems_detail: [{ id: 'node24-host', display_name: 'uses-node24' }],
+      };
+      mockApiCalls.getRelevantLifecycleAppstreams.mockResolvedValue({
+        data: [node22, node24].map((stream) => ({ ...stream, systems_detail: [] })),
+      });
+      jest.mocked(api.getV1RelevantLifecycleAppstreams).mockResolvedValue({ data: [node22, node24] });
+      render(
+        <MemoryRouter initialEntries={['/?lifecycleDropdown=rhel-8-appstreams&viewFilter=installed-only']}>
+          <LifecycleTab />
+        </MemoryRouter>
+      );
+      expect(await screen.findByTestId('lifecycle-table')).toHaveTextContent('Table with 2 items');
+      expect(api.getV1RelevantLifecycleAppstreams).not.toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('export-csv'));
+      });
+
+      expect(api.getV1RelevantLifecycleAppstreams).toHaveBeenCalledTimes(1);
+      expect(mockExportData).toHaveBeenCalledTimes(1);
+      const [format, rows] = mockExportData.mock.calls[0];
+      expect(format).toBe('csv');
+      assert.deepEqual(
+        rows
+          .map((row: Record<string, string | number>) => ({
+            appstream: row.appstream_module,
+            host: row.host_id,
+          }))
+          .sort((a: { appstream: string }, b: { appstream: string }) => a.appstream.localeCompare(b.appstream)),
+        [
+          { appstream: 'Node.js 22', host: 'node22-host' },
+          { appstream: 'Node.js 24', host: 'node24-host' },
+        ],
+        'Each app stream must retain its own label and host details'
+      );
+    });
   });
 
   describe('URL Parameter Handling', () => {
@@ -652,6 +763,96 @@ describe('LifecycleTab Component', () => {
   });
 
   describe('Component Integration', () => {
+    test('loads major-only hosts on demand and retries a failed v1 request without a null URL', async () => {
+      // Shape emitted by get_relevant_systems for an inventory profile with major=9, minor=null.
+      const row = {
+        name: 'RHEL',
+        display_name: 'RHEL 9',
+        major: 9,
+        minor: null,
+        start_date: '2022-05-17',
+        end_date: '2032-05-31',
+        count: 1,
+        lifecycle_type: 'mainline',
+        support_status: 'Supported',
+        related: false,
+        systems_detail: [],
+        systems: [],
+      };
+      jest.mocked(axios.get).mockClear();
+      jest
+        .mocked(api.getRelevantLifecycleSystems)
+        .mockImplementationOnce(jest.requireActual('../../api').getRelevantLifecycleSystems);
+      const tableMock = jest.mocked(LifecycleTable);
+      const originalTable = tableMock.getMockImplementation()!;
+      tableMock.mockImplementation(jest.requireActual('../LifecycleTable/LifecycleTable').default);
+      try {
+        let failV1 = true;
+        jest.mocked(axios.get).mockImplementation(async (url) => {
+          if (url === '/api/roadmap/v2/relevant/lifecycle/rhel') {
+            return { status: 200, data: { meta: { count: 1, total: 1 }, data: [row] } };
+          }
+          if (url === '/api/roadmap/v1/relevant/lifecycle/rhel') {
+            if (failV1) {
+              failV1 = false;
+              throw { response: { status: 503, data: { detail: 'Temporary unavailable' } } };
+            }
+            return {
+              status: 200,
+              data: {
+                data: [
+                  {
+                    ...row,
+                    systems_detail: [
+                      { id: 'major-only-host', display_name: 'server-major-only', os_major: 9, os_minor: null },
+                    ],
+                  },
+                ],
+              },
+            };
+          }
+          if (String(url).includes('/9/null/systems')) {
+            throw {
+              response: {
+                status: 422,
+                data: { detail: [{ loc: ['path', 'minor'], type: 'int_parsing', input: 'null' }] },
+              },
+            };
+          }
+          return { status: 200, data: { meta: { count: 0, total: 0 }, data: [] } };
+        });
+        await act(async () => {
+          render(
+            <MemoryRouter initialEntries={['/?lifecycleDropdown=rhel-systems&viewFilter=installed-only']}>
+              <Suspense fallback={null}>
+                <LifecycleTab />
+              </Suspense>
+            </MemoryRouter>
+          );
+        });
+        expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument();
+        expect(jest.mocked(axios.get).mock.calls.some(([url]) => String(url).startsWith('/api/roadmap/v1'))).toBe(
+          false
+        );
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: '1' }));
+        });
+        expect(screen.getByText('Unable to load systems')).toBeInTheDocument();
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        });
+        expect(screen.getByRole('button', { name: 'server-major-only' })).toBeInTheDocument();
+        expect(screen.queryByText('Unable to load systems')).not.toBeInTheDocument();
+        expect(
+          jest.mocked(axios.get).mock.calls.filter(([url]) => url === '/api/roadmap/v1/relevant/lifecycle/rhel')
+        ).toHaveLength(2);
+        expect(jest.mocked(axios.get).mock.calls.some(([url]) => String(url).includes('/null/'))).toBe(false);
+      } finally {
+        tableMock.mockImplementation(originalTable);
+        jest.mocked(axios.get).mockReset();
+      }
+    });
+
     test('passes correct props to child components', async () => {
       renderWithRouter(<LifecycleTab />);
 

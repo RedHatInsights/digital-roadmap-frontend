@@ -267,29 +267,25 @@ describe('buildExportData', () => {
     },
   ];
 
-  it('builds app stream export rows with host details', () => {
+  it('builds one row per app stream with system_count', () => {
     const result = buildExportData(streamWithHosts, 'rhel-9-appstreams', APP_STREAM_DROPDOWNS);
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
       expect.objectContaining({
         appstream_module: 'Node.js 18',
-        hostname: 'server-1',
-        host_id: 'host-1',
         release: 9,
         rhel_version: '9.0',
-        system_index: '1 of 2',
+        system_count: 2,
+        lifecycle_status: 'Supported',
       })
     );
-    expect(result[1]).toEqual(
-      expect.objectContaining({
-        hostname: 'server-2',
-        system_index: '2 of 2',
-      })
-    );
+    expect(result[0]).not.toHaveProperty('hostname');
+    expect(result[0]).not.toHaveProperty('host_id');
+    expect(result[0]).not.toHaveProperty('system_index');
   });
 
-  it('builds app stream export rows without host details', () => {
+  it('builds app stream export rows with zero count', () => {
     const result = buildExportData(streamWithoutHosts, 'rhel-8-appstreams', APP_STREAM_DROPDOWNS);
 
     expect(result).toHaveLength(1);
@@ -299,29 +295,30 @@ describe('buildExportData', () => {
         release: 9,
         rhel_version: '9.1',
         lifecycle_status: 'Retired',
+        system_count: 0,
       })
     );
-    expect(result[0]).not.toHaveProperty('hostname');
-    expect(result[0]).not.toHaveProperty('host_id');
   });
 
-  it('builds system export rows with host details', () => {
+  it('builds one row per RHEL system with system_count', () => {
     const result = buildExportData(systemWithHosts, 'rhel-systems', APP_STREAM_DROPDOWNS);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
       expect.objectContaining({
-        hostname: 'rhel-host-1',
-        host_id: 'sys-1',
         release: 'RHEL',
         rhel_version: '9.3',
-        system_index: '1 of 1',
+        system_count: 1,
+        lifecycle_status: 'Supported',
       })
     );
+    expect(result[0]).not.toHaveProperty('hostname');
+    expect(result[0]).not.toHaveProperty('host_id');
+    expect(result[0]).not.toHaveProperty('system_index');
     expect(result[0]).not.toHaveProperty('appstream_module');
   });
 
-  it('builds system export rows without host details', () => {
+  it('builds system export rows with zero count', () => {
     const result = buildExportData(systemWithoutHosts, 'rhel-systems', APP_STREAM_DROPDOWNS);
 
     expect(result).toHaveLength(1);
@@ -330,9 +327,9 @@ describe('buildExportData', () => {
         release: 'RHEL',
         rhel_version: '8.9',
         lifecycle_status: 'Retired',
+        system_count: 0,
       })
     );
-    expect(result[0]).not.toHaveProperty('hostname');
   });
 
   it('returns empty array for empty input', () => {

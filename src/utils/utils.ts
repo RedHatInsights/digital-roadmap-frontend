@@ -113,12 +113,52 @@ export const getLifecycleType = (lifecycleType: string) => {
   }
 };
 
-export const getNewName = (name: string, major: number, minor: number, lifecycleType: string) => {
+export const getNewName = (name: string, major: number, minor: number | null, lifecycleType: string) => {
   const lifecycleText = getLifecycleType(lifecycleType);
   return `${name} ${major}.${minor}${lifecycleText}`;
 };
 
 export const buildExportData = (
+  filteredTableData: Stream[] | SystemLifecycleChanges[],
+  lifecycleDropdownValue: string,
+  appStreamDropdownValues: string[]
+): { [key: string]: string | number }[] => {
+  const data: { [key: string]: string | number }[] = [];
+  if (appStreamDropdownValues.includes(lifecycleDropdownValue)) {
+    (filteredTableData as Stream[]).forEach((stream: Stream) => {
+      data.push({
+        appstream_module: stream.display_name,
+        release: stream.os_major,
+        release_date: formatDate(stream.start_date),
+        retirement_date: formatDate(stream.end_date),
+        lifecycle_status: stream.support_status,
+        rhel_version: `${stream.os_major}.${stream.os_minor}`,
+        system_count: stream.count,
+      });
+    });
+  } else {
+    (filteredTableData as SystemLifecycleChanges[]).forEach((item: SystemLifecycleChanges) => {
+      data.push({
+        release: item.name,
+        release_date: formatDate(item.start_date),
+        retirement_date: formatDate(item.end_date),
+        lifecycle_status: item.support_status,
+        rhel_version: `${item.major}.${item.minor}`,
+        system_count: item.count,
+      });
+    });
+  }
+  return data;
+};
+
+/**
+ * Build per-host export rows from v1 data (which includes systems_detail).
+ *
+ * TODO: Replace with a v2 export implementation once a dedicated v2 export endpoint
+ * is available (RHINENG-31151/31152). Remove this function and update Lifecycle.tsx
+ * handleExport to use the new v2 export endpoint instead of fetching v1 data.
+ */
+export const buildV1ExportData = (
   filteredTableData: Stream[] | SystemLifecycleChanges[],
   lifecycleDropdownValue: string,
   appStreamDropdownValues: string[]

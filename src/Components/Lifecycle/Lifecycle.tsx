@@ -21,11 +21,15 @@ import {
   getAllLifecycleSystems,
   getRelevantLifecycleAppstreams,
   getRelevantLifecycleSystems,
+  getV1AllLifecycleAppstreams,
+  getV1AllLifecycleSystems,
+  getV1RelevantLifecycleAppstreams,
+  getV1RelevantLifecycleSystems,
 } from '../../api';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
+import { buildURL, buildV1ExportData, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
   DEFAULT_DROPDOWN_VALUE,
@@ -60,6 +64,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
@@ -1011,9 +1016,75 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     RHEL_10_STREAMS_DROPDOWN_VALUE,
   ];
 
-  const handleExport = (format: 'csv' | 'json' | 'xml') => {
-    const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
-    exportToFile(format, data);
+  /**
+   * Export with per-host detail by fetching v1 data (which includes systems_detail).
+   *
+   * TODO: Replace this v1 fallback with a dedicated v2 export endpoint (RHINENG-31151/31152).
+   * Currently fetches from /api/roadmap/v1 to get full host details for CSV export.
+   * Once a v2 export endpoint exists, remove the v1 fetch logic, getV1* imports,
+   * buildV1ExportData, and DR_API_V1 constant.
+   */
+  const handleExport = async (format: 'csv' | 'json' | 'xml') => {
+    const isAppStream = appStreamDropdownValues.includes(lifecycleDropdownValue);
+    setIsExporting(true);
+
+    try {
+      // Fetch v1 data with full host details
+      const v1Response = isAppStream
+        ? selectedViewFilter === 'all'
+          ? await getV1AllLifecycleAppstreams()
+          : await getV1RelevantLifecycleAppstreams()
+        : selectedViewFilter === 'all'
+        ? await getV1AllLifecycleSystems()
+        : await getV1RelevantLifecycleSystems();
+
+      // Build lookup from v1 items (keyed by identity fields)
+      const getItemKey = (item: Stream | SystemLifecycleChanges) =>
+        JSON.stringify(
+          isAppStream
+            ? [
+                (item as Stream).name,
+                (item as Stream).application_stream_name,
+                (item as Stream).os_major,
+                (item as Stream).os_minor,
+              ]
+            : [
+                (item as SystemLifecycleChanges).major,
+                (item as SystemLifecycleChanges).minor,
+                (item as SystemLifecycleChanges).lifecycle_type,
+              ]
+        );
+      const v1Map = new Map<string, Stream | SystemLifecycleChanges>();
+      (v1Response.data as (Stream | SystemLifecycleChanges)[]).forEach((item) => {
+        v1Map.set(getItemKey(item), item);
+      });
+
+      // Merge v1 host details into current filtered view
+      const mergedData = filteredTableData.map((item) => {
+        const v1Item = v1Map.get(getItemKey(item));
+        return v1Item
+          ? {
+              ...item,
+              systems_detail: v1Item.systems_detail ?? item.systems_detail,
+              count: v1Item.count ?? item.count,
+            }
+          : item;
+      });
+
+      const data = buildV1ExportData(
+        mergedData as Stream[] | SystemLifecycleChanges[],
+        lifecycleDropdownValue,
+        appStreamDropdownValues
+      );
+      exportToFile(format, data);
+    } catch {
+      console.error('Failed to fetch v1 data for export, falling back to summary export');
+      const { buildExportData } = await import('../../utils/utils');
+      const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
+      exportToFile(format, data);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isLoading) {
@@ -1189,6 +1260,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
             selectedChartSortBy={chartSortByValue}
             updateChartSortValue={setOrderingStates}
             onExport={handleExport}
+            isExporting={isExporting}
             selectedViewFilter={selectedViewFilter}
             handleViewFilterChange={handleViewFilterChange}
             noDataAvailable={noDataAvailable}

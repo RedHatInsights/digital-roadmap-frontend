@@ -7,15 +7,18 @@ import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 
 // Mock the lazy-loaded component
 jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
-  return function MockLifecycleModalWindow({ isModalOpen, name, modalData }: any) {
+  const MockLifecycleModalWindow = ({ isModalOpen, displayName, identifier, handleModalToggle }: any) => {
     if (!isModalOpen) return null;
     return (
       <div data-testid="lifecycle-modal">
-        <div>Modal Name: {name}</div>
-        <div>Modal Data: {JSON.stringify(modalData)}</div>
+        <div>Modal Name: {displayName}</div>
+        <div data-testid="modal-identifier">{JSON.stringify(identifier)}</div>
+        <button onClick={handleModalToggle}>Close systems modal</button>
       </div>
     );
   };
+  MockLifecycleModalWindow.SystemsIdentifier = {};
+  return MockLifecycleModalWindow;
 });
 
 // Mock the utils
@@ -438,7 +441,7 @@ describe('LifecycleTable', () => {
       expect(zeroElement).not.toHaveAttribute('role', 'button');
     });
 
-    it('passes correct modal data', async () => {
+    it('passes correct identifier for app stream modal', async () => {
       const user = userEvent.setup();
       await renderWithAct(<LifecycleTable data={mockStreamData} {...defaultProps} />);
 
@@ -448,7 +451,31 @@ describe('LifecycleTable', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText(/Modal Data:/)).toBeInTheDocument();
+        const identifierEl = screen.getByTestId('modal-identifier');
+        const identifier = JSON.parse(identifierEl.textContent!);
+        expect(identifier.type).toBe('appStream');
+        expect(identifier.name).toBe('nodejs');
+        expect(identifier.osMajor).toBe(9);
+        expect(identifier.osMinor).toBe(0);
+      });
+    });
+
+    it('passes correct identifier for RHEL system modal', async () => {
+      const user = userEvent.setup();
+      await renderWithAct(<LifecycleTable data={mockSystemData} {...defaultProps} />);
+
+      const countButton = screen.getByRole('button', { name: '100' });
+      await act(async () => {
+        await user.click(countButton);
+      });
+
+      await waitFor(() => {
+        const identifierEl = screen.getByTestId('modal-identifier');
+        const identifier = JSON.parse(identifierEl.textContent!);
+        expect(identifier.type).toBe('rhel');
+        expect(identifier.major).toBe(9);
+        expect(identifier.minor).toBe(3);
+        expect(identifier.lifecycleType).toBe('standard');
       });
     });
   });

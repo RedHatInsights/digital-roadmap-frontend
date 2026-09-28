@@ -2,7 +2,6 @@ import React, { lazy } from 'react';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
-import { SystemsDetail } from '../../types/SystemsDetail';
 import {
   Button,
   Pagination,
@@ -17,6 +16,7 @@ import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/excl
 import CheckCircleIcon from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import OutlinedQuestionCircleIcon from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { formatDate } from '../../utils/utils';
+import { SystemsIdentifier } from '../LifecycleModalWindow/LifecycleModalWindow';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 import {
   filterChartDataByName,
@@ -90,7 +90,7 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
   // Modal related
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalDataName, setModalDataName] = React.useState<string>();
-  const [modalData, setModalData] = React.useState<SystemsDetail[]>();
+  const [modalIdentifier, setModalIdentifier] = React.useState<SystemsIdentifier>();
 
   // Check data type and construct a chart array
   const checkDataType = (lifecycleData: Stream[] | SystemLifecycleChanges[]) => {
@@ -381,7 +381,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                     onClick={(event) => {
                       handleModalToggle(event);
                       setModalDataName(String(repo.display_name));
-                      setModalData(repo.systems_detail);
+                      setModalIdentifier({
+                        type: 'appStream',
+                        name: repo.name,
+                        osMajor: repo.os_major,
+                        osMinor: repo.os_minor,
+                      });
                     }}
                   >
                     {repo.count}
@@ -435,7 +440,12 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
                     onClick={(event) => {
                       handleModalToggle(event);
                       setModalDataName(String(repo.name));
-                      setModalData(repo.systems_detail);
+                      setModalIdentifier({
+                        type: 'rhel',
+                        major: repo.major,
+                        minor: repo.minor,
+                        lifecycleType: repo.lifecycle_type,
+                      });
                     }}
                   >
                     {repo.count}
@@ -582,9 +592,8 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
         <Tbody>{renderData()}</Tbody>
       </Table>
       <LifecycleModalWindow
-        name={modalDataName}
-        modalData={modalData}
-        setModalData={setModalData}
+        displayName={modalDataName}
+        identifier={modalIdentifier}
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
       />

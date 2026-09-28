@@ -6,44 +6,23 @@ import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Mock the lazy-loaded LifecycleModalWindow component
 jest.mock('../../Components/LifecycleModalWindow/LifecycleModalWindow', () => {
-  return function MockLifecycleModalWindow({ name, modalData, isModalOpen, handleModalToggle }: any) {
-    console.log('🔍 Mock Modal Props:', {
-      name,
-      modalData,
-      isModalOpen,
-      modalDataType: typeof modalData,
-      modalDataLength: modalData?.length,
-    });
-
+  const MockLifecycleModalWindow = ({ displayName, identifier, isModalOpen, handleModalToggle }: any) => {
     if (!isModalOpen) return null;
 
-    // Handle undefined explicitly to avoid rendering "undefined" as text
-    const displayName = name === undefined || name === null ? '' : String(name);
-
-    // Handle both string arrays and SystemsDetail objects
-    let joinedData = '';
-    if (modalData && Array.isArray(modalData)) {
-      if (typeof modalData[0] === 'string') {
-        // Handle string arrays
-        joinedData = modalData.join(', ');
-      } else if (modalData[0] && typeof modalData[0] === 'object') {
-        // Handle SystemsDetail objects - try common property names
-        joinedData = modalData
-          .map((item) => item.name || item.hostname || item.systemName || item.system || Object.values(item)[0])
-          .join(', ');
-      }
-    }
+    const name = displayName === undefined || displayName === null ? '' : String(displayName);
 
     return (
       <div data-testid="lifecycle-modal">
-        <div data-testid="modal-name">{displayName}</div>
-        <div data-testid="modal-data">{joinedData}</div>
+        <div data-testid="modal-name">{name}</div>
+        <div data-testid="modal-identifier">{JSON.stringify(identifier)}</div>
         <button data-testid="modal-close" onClick={handleModalToggle}>
           Close Modal
         </button>
       </div>
     );
   };
+  MockLifecycleModalWindow.SystemsIdentifier = {};
+  return MockLifecycleModalWindow;
 });
 
 // Mock PatternFly CSS import
@@ -351,9 +330,11 @@ describe('TableRow', () => {
       });
 
       expect(screen.getByTestId('modal-name')).toHaveTextContent('ruby');
-      expect(screen.getByTestId('modal-data')).toHaveTextContent(
-        'system1.example.com, system2.example.com, system3.example.com'
-      );
+      const identifierEl = screen.getByTestId('modal-identifier');
+      const identifier = JSON.parse(identifierEl.textContent!);
+      expect(identifier.type).toBe('upcoming');
+      expect(identifier.name).toBe('Ruby 2.7 EOL');
+      expect(identifier.release).toBe('9.0');
     });
 
     test('closes modal when close button is clicked', async () => {
@@ -503,8 +484,10 @@ describe('TableRow', () => {
         expect(screen.getByTestId('lifecycle-modal')).toBeInTheDocument();
       });
 
-      // Modal should still open but with no data
-      expect(screen.getByTestId('modal-data')).toBeEmptyDOMElement();
+      // Modal should still open with identifier
+      const identifierEl = screen.getByTestId('modal-identifier');
+      const identifier = JSON.parse(identifierEl.textContent!);
+      expect(identifier.type).toBe('upcoming');
     });
 
     test('handles undefined affected systems', () => {
@@ -583,9 +566,11 @@ describe('TableRow', () => {
       await waitFor(() => {
         expect(screen.getByTestId('lifecycle-modal')).toBeInTheDocument();
         expect(screen.getByTestId('modal-name')).toHaveTextContent('ruby');
-        expect(screen.getByTestId('modal-data')).toHaveTextContent(
-          'system1.example.com, system2.example.com, system3.example.com'
-        );
+        const identifierEl = screen.getByTestId('modal-identifier');
+        const identifier = JSON.parse(identifierEl.textContent!);
+        expect(identifier.type).toBe('upcoming');
+        expect(identifier.name).toBe('Ruby 2.7 EOL');
+        expect(identifier.release).toBe('9.0');
       });
     });
 
