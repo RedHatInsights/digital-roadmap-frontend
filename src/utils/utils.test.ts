@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { buildExportData, useChartDataAttributes } from './utils';
+import { buildExportData, getNewName, useChartDataAttributes } from './utils';
 import { Stream } from '../types/Stream';
 import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 
@@ -190,6 +190,16 @@ describe('useChartDataAttributes', () => {
     });
 
     expect(mockChartContainer.querySelectorAll).toHaveBeenCalled();
+  });
+});
+
+describe('getNewName', () => {
+  it('defaults a missing minor version to zero', () => {
+    expect(getNewName('RHEL', 9, undefined, 'mainline')).toBe('RHEL 9.0');
+  });
+
+  it('normalizes a null minor version to zero', () => {
+    expect(getNewName('RHEL', 9, null, 'mainline')).toBe('RHEL 9.0');
   });
 });
 

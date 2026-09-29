@@ -546,6 +546,24 @@ describe('LifecycleTab Component', () => {
       expect(mockExportData).toHaveBeenCalledWith('xml', expect.any(Array));
     });
 
+    test('shows a warning when host details cannot be loaded', async () => {
+      jest.mocked(api.getV1RelevantLifecycleAppstreams).mockRejectedValueOnce(new Error('request failed'));
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('export-csv'));
+      });
+
+      expect(
+        screen.getByText('Host details could not be loaded. This export contains system counts only.')
+      ).toBeInTheDocument();
+      expect(mockExportData).toHaveBeenCalledWith('csv', expect.any(Array));
+    });
+
     test('preserves the RHEL version and lifecycle label when merging v1 host details', async () => {
       const v1System: SystemLifecycleChanges = {
         ...mockSystemData[0],

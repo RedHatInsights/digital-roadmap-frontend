@@ -113,9 +113,9 @@ export const getLifecycleType = (lifecycleType: string) => {
   }
 };
 
-export const getNewName = (name: string, major: number, minor: number | null, lifecycleType: string) => {
+export const getNewName = (name: string, major: number, minor: number | null = 0, lifecycleType: string) => {
   const lifecycleText = getLifecycleType(lifecycleType);
-  return `${name} ${major}.${minor}${lifecycleText}`;
+  return `${name} ${major}.${minor ?? 0}${lifecycleText}`;
 };
 
 export const buildExportData = (

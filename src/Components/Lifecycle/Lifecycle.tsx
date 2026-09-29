@@ -2,6 +2,7 @@ import './Lifecycle.scss';
 import React, { lazy, useEffect, useState } from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
+  Alert,
   Bullseye,
   Button,
   Card,
@@ -65,6 +66,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportWarning, setExportWarning] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
@@ -1027,35 +1029,48 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const handleExport = async (format: 'csv' | 'json' | 'xml') => {
     const isAppStream = appStreamDropdownValues.includes(lifecycleDropdownValue);
     setIsExporting(true);
+    setExportWarning(false);
+
+    // Build lookup keys from the identity fields used by the v1 and v2 data.
+    const getItemKey = (item: Stream | SystemLifecycleChanges) =>
+      JSON.stringify(
+        isAppStream
+          ? [
+              (item as Stream).name,
+              (item as Stream).application_stream_name,
+              (item as Stream).os_major,
+              (item as Stream).os_minor,
+            ]
+          : [
+              (item as SystemLifecycleChanges).major,
+              (item as SystemLifecycleChanges).minor,
+              (item as SystemLifecycleChanges).lifecycle_type,
+            ]
+      );
 
     try {
-      // Fetch v1 data with full host details
-      const v1Response = isAppStream
-        ? selectedViewFilter === 'all'
-          ? await getV1AllLifecycleAppstreams()
-          : await getV1RelevantLifecycleAppstreams()
-        : selectedViewFilter === 'all'
-        ? await getV1AllLifecycleSystems()
-        : await getV1RelevantLifecycleSystems();
+      let v1Response: { data: (Stream | SystemLifecycleChanges)[] };
 
-      // Build lookup from v1 items (keyed by identity fields)
-      const getItemKey = (item: Stream | SystemLifecycleChanges) =>
-        JSON.stringify(
-          isAppStream
-            ? [
-                (item as Stream).name,
-                (item as Stream).application_stream_name,
-                (item as Stream).os_major,
-                (item as Stream).os_minor,
-              ]
-            : [
-                (item as SystemLifecycleChanges).major,
-                (item as SystemLifecycleChanges).minor,
-                (item as SystemLifecycleChanges).lifecycle_type,
-              ]
-        );
+      try {
+        // Fetch v1 data with full host details
+        v1Response = isAppStream
+          ? selectedViewFilter === 'all'
+            ? await getV1AllLifecycleAppstreams()
+            : await getV1RelevantLifecycleAppstreams()
+          : selectedViewFilter === 'all'
+          ? await getV1AllLifecycleSystems()
+          : await getV1RelevantLifecycleSystems();
+      } catch {
+        console.error('Failed to fetch v1 data for export, falling back to summary export');
+        setExportWarning(true);
+        const { buildExportData } = await import('../../utils/utils');
+        const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
+        exportToFile(format, data);
+        return;
+      }
+
       const v1Map = new Map<string, Stream | SystemLifecycleChanges>();
-      (v1Response.data as (Stream | SystemLifecycleChanges)[]).forEach((item) => {
+      v1Response.data.forEach((item) => {
         v1Map.set(getItemKey(item), item);
       });
 
@@ -1076,11 +1091,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         lifecycleDropdownValue,
         appStreamDropdownValues
       );
-      exportToFile(format, data);
-    } catch {
-      console.error('Failed to fetch v1 data for export, falling back to summary export');
-      const { buildExportData } = await import('../../utils/utils');
-      const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
       exportToFile(format, data);
     } finally {
       setIsExporting(false);
@@ -1249,6 +1259,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     <React.Fragment>
       <Stack hasGutter>
         <Card>
+          {exportWarning && (
+            <Alert
+              variant="warning"
+              isInline
+              title="Host details could not be loaded. This export contains system counts only."
+            />
+          )}
           <LifecycleFilters
             nameFilter={nameFilter}
             setNameFilter={(name: string) => onNameFilterChange(name)}
