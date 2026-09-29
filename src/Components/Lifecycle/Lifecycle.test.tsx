@@ -140,7 +140,7 @@ jest.mock('../../Components/LifecycleTable/LifecycleTable', () => {
 // Mock utils
 jest.mock('../../utils/utils', () => ({
   ...jest.requireActual('../../utils/utils'),
-  buildExportData: jest.fn(() => [{ appstream_module: 'test', release: 9 }]),
+  buildExportData: jest.fn(jest.requireActual('../../utils/utils').buildExportData),
   buildURL: jest.fn((filters) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -562,6 +562,31 @@ describe('LifecycleTab Component', () => {
         screen.getByText('Host details could not be loaded. This export contains system counts only.')
       ).toBeInTheDocument();
       expect(mockExportData).toHaveBeenCalledWith('csv', expect.any(Array));
+      const [format, rows] = mockExportData.mock.calls[0] as [string, Record<string, string | number>[]];
+      expect(format).toBe('csv');
+      expect(rows).toEqual([
+        {
+          appstream_module: 'Node.js 18',
+          release: 9,
+          release_date: 'Jan 2023',
+          retirement_date: 'Jan 2025',
+          lifecycle_status: 'Supported',
+          rhel_version: '9.0',
+          system_count: 25,
+        },
+        {
+          appstream_module: 'Python 3.11',
+          release: 9,
+          release_date: 'Jan 2022',
+          retirement_date: 'Jan 2024',
+          lifecycle_status: 'Supported',
+          rhel_version: '9.0',
+          system_count: 30,
+        },
+      ]);
+      expect(rows.every((row) => !('host_id' in row) && !('hostname' in row) && !('system_index' in row))).toBe(
+        true
+      );
     });
 
     test('preserves the RHEL version and lifecycle label when merging v1 host details', async () => {
