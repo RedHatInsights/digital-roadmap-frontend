@@ -300,6 +300,28 @@ describe('LifecycleTab Component', () => {
       });
     });
 
+    test('shows how many systems are loading under the spinner', async () => {
+      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation((onProgress) => {
+        onProgress?.({ requested: 5000, total: 12300 });
+        return new Promise((resolve) => {
+          resolveAppstreams = resolve;
+        });
+      });
+
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByText('Loading 5000 out of 12300 systems')).toBeInTheDocument();
+
+      await act(async () => {
+        resolveAppstreams({ data: [] });
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading 5000 out of 12300 systems')).not.toBeInTheDocument();
+      });
+    });
+
     test('displays content after loading', async () => {
       renderWithRouter(<LifecycleTab />);
 

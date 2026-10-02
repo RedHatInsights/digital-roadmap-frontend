@@ -60,6 +60,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState<{ requested: number; total: number } | null>(null);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
@@ -358,13 +359,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // First data fetch - called only once
   const initializeData = async (viewFilter: string) => {
     setIsLoading(true);
+    setLoadProgress(null);
     setNoDataAvailable(false);
 
     try {
       // Fetch data in parallel
       const results = await Promise.allSettled([
         getRelevantLifecycleSystems(),
-        getRelevantLifecycleAppstreams(),
+        getRelevantLifecycleAppstreams(setLoadProgress),
         getAllLifecycleSystems(),
         getAllLifecycleAppstreams(),
       ]);
@@ -572,6 +574,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setError({ message: error.message, status_code: error.status_code });
     } finally {
       setIsLoading(false);
+      setLoadProgress(null);
     }
   };
 
@@ -1020,7 +1023,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <div>
         <Bullseye>
-          <Spinner />
+          <div className="lifecycle-loading">
+            <Spinner />
+            {loadProgress && loadProgress.total > 0 ? (
+              <div>{`Loading ${loadProgress.requested} out of ${loadProgress.total} systems`}</div>
+            ) : null}
+          </div>
         </Bullseye>
       </div>
     );
