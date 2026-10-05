@@ -5,7 +5,6 @@ import {
   DR_ALL_LIFECYCLE_SYSTEMS,
   DR_ALL_UPCOMING,
   DR_API,
-  DR_API_V2,
   DR_LIFECYCLE_HOST_UUIDS,
   DR_RELEASE_NOTES,
   DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS,
@@ -174,11 +173,11 @@ export const getAllLifecycleSystems = async () => {
 };
 
 export const getAccessibleHostUuids = async () => {
-  return requestBackend('get', DR_API_V2.concat(DR_LIFECYCLE_HOST_UUIDS));
+  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS));
 };
 
 export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[]) => {
-  return requestBackend('post', DR_API_V2.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS), {
+  return requestBackend('post', DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS), {
     host_ids: hostIds,
   });
 };

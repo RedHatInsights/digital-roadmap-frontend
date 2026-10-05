@@ -1,5 +1,4 @@
 export const DR_API = '/api/roadmap/v1';
-export const DR_API_V2 = '/api/roadmap/v2';
 export const DR_RELEASE_NOTES = '/release-notes';
 export const DR_RELEVANT_LIFECYCLE_SYSTEMS = '/relevant/lifecycle/rhel';
 export const DR_ALL_LIFECYCLE_SYSTEMS = '/lifecycle/rhel';
