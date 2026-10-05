@@ -2,6 +2,7 @@ import { SystemsDetail } from '../types/SystemsDetail';
 import {
   BATCH_SIZE,
   MAX_CONCURRENT_REQUESTS,
+  MAX_FAILED_REQUESTS,
   RelevantAppStreamRow,
   RelevantAppstreamsClient,
   loadRelevantLifecycleAppstreams,
@@ -31,6 +32,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
   it('uses one request at a time and batches 5000 host ids', async () => {
     expect(BATCH_SIZE).toBe(5000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
+    expect(MAX_FAILED_REQUESTS).toBe(3);
 
     const ids = makeIds(BATCH_SIZE * 2 + 1);
     const calls: string[][] = [];
@@ -179,33 +181,40 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(fetchHosts).not.toHaveBeenCalled();
   });
 
-  it('rejects when a batch fails and does not request the next batch', async () => {
+  it('retries a failed batch with the same ids and does not advance progress', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
-    let rejectBatch: (error: Error) => void = () => undefined;
-    let started: () => void = () => undefined;
-    const startedPromise = new Promise<void>((resolve) => {
-      started = resolve;
-    });
-    const fetchHosts = jest.fn(
-      () =>
-        new Promise<{ data: RelevantAppStreamRow[] }>((_, reject) => {
-          started();
-          rejectBatch = reject;
-        })
-    );
+    const progress: Array<{ requested: number; total: number }> = [];
+    const fetchHosts = jest
+      .fn<Promise<{ data: RelevantAppStreamRow[] }>, [string[]]>()
+      .mockRejectedValueOnce(new Error('once'))
+      .mockResolvedValue({ data: [] });
     const client: RelevantAppstreamsClient = {
       getRelevantLifecycleAppstreamsForHosts: fetchHosts,
     };
 
-    const pending = loadRelevantLifecycleAppstreams(ids, client);
-    await startedPromise;
-    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    await loadRelevantLifecycleAppstreams(ids, client, (update) => progress.push(update));
 
+    expect(fetchHosts).toHaveBeenCalledTimes(3);
+    expect(fetchHosts.mock.calls[0][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
+    expect(progress).toEqual([
+      { requested: BATCH_SIZE, total: ids.length },
+      { requested: ids.length, total: ids.length },
+    ]);
+  });
+
+  it('rejects after three failed requests and does not start the next batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
     const error = new Error('boom');
-    rejectBatch(error);
+    const fetchHosts = jest.fn().mockRejectedValue(error);
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: fetchHosts,
+    };
 
-    await expect(pending).rejects.toBe(error);
-    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    await expect(loadRelevantLifecycleAppstreams(ids, client)).rejects.toBe(error);
+    expect(fetchHosts).toHaveBeenCalledTimes(MAX_FAILED_REQUESTS);
+    expect(fetchHosts.mock.calls.every(([hostIds]) => hostIds.length === BATCH_SIZE)).toBe(true);
   });
 });
 

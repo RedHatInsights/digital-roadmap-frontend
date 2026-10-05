@@ -7,6 +7,9 @@ export const BATCH_SIZE = 5000;
 /** In-flight app-stream requests. Keep this at 1 unless the API instances have spare capacity. */
 export const MAX_CONCURRENT_REQUESTS = 1;
 
+/** Stop the load after this many failed POSTs. */
+export const MAX_FAILED_REQUESTS = 3;
+
 export type AppstreamLoadProgress = {
   requested: number;
   total: number;
@@ -98,6 +101,7 @@ export const loadRelevantLifecycleAppstreams = async (
   const installed = new Map<string, RelevantAppStreamRow>();
   const related = new Map<string, RelevantAppStreamRow>();
   let requested = 0;
+  let failedRequests = 0;
   let failure: unknown;
 
   const mergeRows = (rows: RelevantAppStreamRow[]) => {
@@ -133,6 +137,26 @@ export const loadRelevantLifecycleAppstreams = async (
     }
   };
 
+  const postBatch = async (batch: string[]) => {
+    while (!failure) {
+      try {
+        const response = await client.getRelevantLifecycleAppstreamsForHosts(batch);
+        if (failure) {
+          return;
+        }
+        mergeRows(Array.isArray(response?.data) ? response.data : []);
+        return;
+      } catch (error) {
+        failedRequests += 1;
+        if (failedRequests >= MAX_FAILED_REQUESTS) {
+          failure = failure ?? error;
+          pending.length = 0;
+          return;
+        }
+      }
+    }
+  };
+
   const worker = async () => {
     while (!failure) {
       const batch = pending.splice(0, BATCH_SIZE);
@@ -145,14 +169,7 @@ export const loadRelevantLifecycleAppstreams = async (
       onProgress?.({ requested, total });
 
       try {
-        const response = await client.getRelevantLifecycleAppstreamsForHosts(batch);
-        if (failure) {
-          return;
-        }
-        mergeRows(Array.isArray(response?.data) ? response.data : []);
-      } catch (error) {
-        failure = failure ?? error;
-        pending.length = 0;
+        await postBatch(batch);
       } finally {
         batch.forEach((id) => waiting.delete(id));
       }
