@@ -1,10 +1,10 @@
 import { Stream } from '../types/Stream';
 import { SystemsDetail } from '../types/SystemsDetail';
 
-/** Hosts per app-stream request. The API accepts at most 10,000. */
+/** Hosts per app-stream request. Keep this below the API maximum of 10,000; these responses are heavier than RHEL. */
 export const BATCH_SIZE = 5000;
 
-/** In-flight app-stream requests. Raise this to use more API instances. */
+/** In-flight app-stream requests. Keep this at 1 unless the API instances have spare capacity. */
 export const MAX_CONCURRENT_REQUESTS = 1;
 
 export type AppstreamLoadProgress = {
@@ -21,7 +21,6 @@ export type RelevantAppStreamRow = Omit<Stream, 'os_minor' | 'start_date' | 'end
 };
 
 export interface RelevantAppstreamsClient {
-  getAccessibleHostUuids: () => Promise<{ accessible_host_uuids?: string[] }>;
   getRelevantLifecycleAppstreamsForHosts: (hostIds: string[]) => Promise<{ data?: RelevantAppStreamRow[] }>;
 }
 
@@ -80,15 +79,15 @@ const sortStreams = (rows: RelevantAppStreamRow[]) =>
   });
 
 /**
- * Fetch accessible host UUIDs, then load app streams for those hosts in batches.
+ * Load app streams for these host UUIDs in batches.
  * Returns one merged list in the same shape as the single relevant-app-streams call.
  */
 export const loadRelevantLifecycleAppstreams = async (
+  hostIds: string[],
   client: RelevantAppstreamsClient,
   onProgress?: (progress: AppstreamLoadProgress) => void
 ): Promise<{ data: Stream[] }> => {
-  const uuidResponse = await client.getAccessibleHostUuids();
-  const pending = [...(uuidResponse.accessible_host_uuids ?? [])];
+  const pending = [...hostIds];
   const total = pending.length;
 
   if (total === 0) {

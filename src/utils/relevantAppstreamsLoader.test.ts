@@ -40,7 +40,6 @@ describe('loadRelevantLifecycleAppstreams', () => {
     const progress: Array<{ requested: number; total: number }> = [];
 
     const client: RelevantAppstreamsClient = {
-      getAccessibleHostUuids: async () => ({ accessible_host_uuids: ids }),
       getRelevantLifecycleAppstreamsForHosts: (hostIds) => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
@@ -54,7 +53,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
       },
     };
 
-    const pending = loadRelevantLifecycleAppstreams(client, (update) => progress.push(update));
+    const pending = loadRelevantLifecycleAppstreams(ids, client, (update) => progress.push(update));
 
     await waitForCalls(calls, 1);
     expect(calls[0]).toHaveLength(5000);
@@ -98,7 +97,6 @@ describe('loadRelevantLifecycleAppstreams', () => {
     };
 
     const client: RelevantAppstreamsClient = {
-      getAccessibleHostUuids: async () => ({ accessible_host_uuids: ids }),
       getRelevantLifecycleAppstreamsForHosts: async (hostIds) => {
         if (hostIds[0] === firstHost) {
           return {
@@ -150,7 +148,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
       },
     };
 
-    const result = await loadRelevantLifecycleAppstreams(client);
+    const result = await loadRelevantLifecycleAppstreams(ids, client);
     const names = result.data.map((row) => row.name);
 
     expect(names).toEqual(['nodejs18', 'postgresql15', 'python39']);
@@ -174,11 +172,10 @@ describe('loadRelevantLifecycleAppstreams', () => {
   it('does not request app streams when there are no host uuids', async () => {
     const fetchHosts = jest.fn();
     const client: RelevantAppstreamsClient = {
-      getAccessibleHostUuids: async () => ({ accessible_host_uuids: [] }),
       getRelevantLifecycleAppstreamsForHosts: fetchHosts,
     };
 
-    await expect(loadRelevantLifecycleAppstreams(client)).resolves.toEqual({ data: [] });
+    await expect(loadRelevantLifecycleAppstreams([], client)).resolves.toEqual({ data: [] });
     expect(fetchHosts).not.toHaveBeenCalled();
   });
 
@@ -197,11 +194,10 @@ describe('loadRelevantLifecycleAppstreams', () => {
         })
     );
     const client: RelevantAppstreamsClient = {
-      getAccessibleHostUuids: async () => ({ accessible_host_uuids: ids }),
       getRelevantLifecycleAppstreamsForHosts: fetchHosts,
     };
 
-    const pending = loadRelevantLifecycleAppstreams(client);
+    const pending = loadRelevantLifecycleAppstreams(ids, client);
     await startedPromise;
     expect(fetchHosts).toHaveBeenCalledTimes(1);
 
