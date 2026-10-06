@@ -10,6 +10,11 @@ jest.mock('axios', () => ({
   },
 }));
 
+jest.mock('./constants', () => ({
+  DR_API: '/api/roadmap/v1',
+  DR_LIFECYCLE_HOST_UUIDS: '/lifecycle/host_uuids',
+}));
+
 const request = axios.request as jest.Mock;
 
 describe('requestBackend error status', () => {
