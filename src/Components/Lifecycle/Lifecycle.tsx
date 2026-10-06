@@ -400,6 +400,14 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setAppLoadProgress(null);
     setNoDataAvailable(false);
 
+    // Global lifecycle lists do not use host ids, so they overlap the UUID lookup.
+    // The extra handlers keep a UUID failure from leaving these requests unhandled.
+    // allSettled below still observes the original result.
+    const allSystemsPromise = getAllLifecycleSystems();
+    const allAppsPromise = getAllLifecycleAppstreams();
+    void allSystemsPromise.catch(() => undefined);
+    void allAppsPromise.catch(() => undefined);
+
     try {
       const uuidResponse = await getAccessibleHostUuids();
       const hostIds = uuidResponse.accessible_host_uuids ?? [];
@@ -416,8 +424,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
           setAppLoadProgress,
           setAppLoadProgress
         ),
-        getAllLifecycleSystems(),
-        getAllLifecycleAppstreams(),
+        allSystemsPromise,
+        allAppsPromise,
       ]);
 
       // If any of them has an error, propagate the exception to be handled and error is displayed

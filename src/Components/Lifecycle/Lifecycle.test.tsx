@@ -306,6 +306,34 @@ describe('LifecycleTab Component', () => {
       });
     });
 
+    test('starts global lifecycle requests before the host uuid lookup resolves', async () => {
+      let resolveUuids: (value: { accessible_host_uuids: string[] }) => void = () => undefined;
+      mockApiCalls.getAccessibleHostUuids.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveUuids = resolve;
+          })
+      );
+
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledTimes(1);
+        expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
+      });
+      expect(mockApiCalls.getRelevantLifecycleSystems).not.toHaveBeenCalled();
+      expect(mockApiCalls.getRelevantLifecycleAppstreams).not.toHaveBeenCalled();
+
+      await act(async () => {
+        resolveUuids({ accessible_host_uuids: ['host-1'] });
+      });
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+      });
+    });
+
     test('shows how many systems are loading under the spinner', async () => {
       let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
       mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation((_hostIds, onProgress) => {

@@ -1,4 +1,5 @@
 import { SystemsDetail } from '../types/SystemsDetail';
+import * as batchRetry from './batchRetry';
 import {
   BATCH_SIZE,
   MAX_CONCURRENT_REQUESTS,
@@ -7,6 +8,14 @@ import {
   RelevantAppstreamsClient,
   loadRelevantLifecycleAppstreams,
 } from './relevantAppstreamsLoader';
+
+jest.mock('./batchRetry', () => {
+  const actual = jest.requireActual('./batchRetry');
+  return {
+    ...actual,
+    waitBeforeRetry: jest.fn(() => Promise.resolve()),
+  };
+});
 
 const makeIds = (count: number) => Array.from({ length: count }, (_, index) => `host-${index}`);
 
@@ -29,6 +38,10 @@ const stream = (overrides: Partial<RelevantAppStreamRow> = {}): RelevantAppStrea
 const host = (id: string): SystemsDetail => ({ id, display_name: id });
 
 describe('loadRelevantLifecycleAppstreams', () => {
+  beforeEach(() => {
+    jest.mocked(batchRetry.waitBeforeRetry).mockClear();
+  });
+
   it('uses one request at a time and batches 5000 host ids', async () => {
     expect(BATCH_SIZE).toBe(5000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
@@ -171,6 +184,76 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(python?.systems_detail).toEqual([host(firstHost), host('extra'), host(lastHost)]);
   });
 
+  it.each([
+    ['after the related batch', true],
+    ['before the related batch', false],
+  ])('keeps the installed stream when it arrives %s', async (_order, installedLast) => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const installed = stream({
+      name: 'Node.js 24',
+      display_name: 'Node.js 24',
+      application_stream_name: 'Node.js 24',
+      os_major: 10,
+      os_minor: 1,
+      count: 1,
+      systems_detail: [host(installedLast ? ids[BATCH_SIZE] : ids[0])],
+    });
+    const related = stream({
+      name: 'Node.js 22',
+      display_name: 'Node.js 24',
+      application_stream_name: 'Node.js 24',
+      os_major: 10,
+      os_minor: 1,
+      related: true,
+      count: 0,
+      support_status: 'Not installed',
+      systems_detail: [],
+    });
+    const firstRow = installedLast ? related : installed;
+    const secondRow = installedLast ? installed : related;
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: async (hostIds) => ({
+        data: [hostIds[0] === ids[0] ? firstRow : secondRow],
+      }),
+    };
+
+    const result = await loadRelevantLifecycleAppstreams(ids, client);
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      name: 'Node.js 24',
+      display_name: 'Node.js 24',
+      related: false,
+      count: 1,
+      systems_detail: installed.systems_detail,
+    });
+  });
+
+  it('deduplicates a related stream found through different installed streams across batches', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: async (hostIds) => ({
+        data: [
+          stream({
+            name: hostIds[0] === ids[0] ? 'Node.js 22' : 'Node.js 24',
+            display_name: 'Node.js 26',
+            application_stream_name: 'Node.js 26',
+            os_major: 10,
+            os_minor: 3,
+            related: true,
+            count: 0,
+            systems_detail: [],
+          }),
+        ],
+      }),
+    };
+
+    const result = await loadRelevantLifecycleAppstreams(ids, client);
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({ display_name: 'Node.js 26', related: true, count: 0 });
+  });
+
   it('does not request app streams when there are no host uuids', async () => {
     const fetchHosts = jest.fn();
     const client: RelevantAppstreamsClient = {
@@ -195,6 +278,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
     await loadRelevantLifecycleAppstreams(ids, client, (update) => progress.push(update));
 
     expect(fetchHosts).toHaveBeenCalledTimes(3);
+    expect(batchRetry.waitBeforeRetry).toHaveBeenCalledTimes(1);
     expect(fetchHosts.mock.calls[0][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
@@ -214,7 +298,46 @@ describe('loadRelevantLifecycleAppstreams', () => {
 
     await expect(loadRelevantLifecycleAppstreams(ids, client)).rejects.toBe(error);
     expect(fetchHosts).toHaveBeenCalledTimes(MAX_FAILED_REQUESTS);
+    expect(batchRetry.waitBeforeRetry).toHaveBeenCalledTimes(MAX_FAILED_REQUESTS - 1);
     expect(fetchHosts.mock.calls.every(([hostIds]) => hostIds.length === BATCH_SIZE)).toBe(true);
+  });
+
+  it('gives each batch a fresh retry allowance after an earlier batch recovers', async () => {
+    const ids = makeIds(BATCH_SIZE * 2 + 1);
+    const fetchHosts = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('batch-1'))
+      .mockResolvedValueOnce({ data: [] })
+      .mockRejectedValueOnce(new Error('batch-2'))
+      .mockResolvedValueOnce({ data: [] })
+      .mockRejectedValueOnce(new Error('batch-3'))
+      .mockResolvedValue({ data: [] });
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: fetchHosts,
+    };
+
+    await loadRelevantLifecycleAppstreams(ids, client);
+
+    expect(fetchHosts).toHaveBeenCalledTimes(6);
+    expect(fetchHosts.mock.calls[0][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE, BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[3][0]).toEqual(ids.slice(BATCH_SIZE, BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[4][0]).toEqual(ids.slice(BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[5][0]).toEqual(ids.slice(BATCH_SIZE * 2));
+  });
+
+  it('does not retry a permanent client error', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const error = Object.assign(new Error('bad request'), { status_code: 400 });
+    const fetchHosts = jest.fn().mockRejectedValue(error);
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: fetchHosts,
+    };
+
+    await expect(loadRelevantLifecycleAppstreams(ids, client)).rejects.toBe(error);
+    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
   });
 });
 

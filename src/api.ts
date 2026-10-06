@@ -247,7 +247,8 @@ const throwAsApiError = (error: unknown): never => {
   } else if (roadmapError.detail) {
     throw new ApiError(detailMessage(roadmapError.detail));
   } else {
-    throw new ApiError(roadmapError.message ?? 'Unknown error');
+    // A 4xx/5xx with an empty body still has response.status. Without it, retry logic treats the call as a network failure.
+    throw new ApiError(roadmapError.message ?? 'Unknown error', roadmapError.response?.status);
   }
 };
 

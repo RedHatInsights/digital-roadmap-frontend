@@ -1,6 +1,6 @@
 export const DR_API = '/api/roadmap/v1';
 export const DR_RELEASE_NOTES = '/release-notes';
-export const DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS = '/relevant/lifecycle/rhel/hosts';
+export const DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS = '/relevant/lifecycle/rhel/hosts?related=true';
 export const DR_ALL_LIFECYCLE_SYSTEMS = '/lifecycle/rhel';
 export const DR_LIFECYCLE_HOST_UUIDS = '/lifecycle/host_uuids';
 export const DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS = '/relevant/lifecycle/app-streams/hosts?related=true';

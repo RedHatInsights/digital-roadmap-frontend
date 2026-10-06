@@ -1,5 +1,6 @@
 import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 import { SystemsDetail } from '../types/SystemsDetail';
+import { isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per RHEL request. RHEL responses are smaller, so this can sit at the API maximum of 10,000. */
 export const BATCH_SIZE = 10000;
@@ -7,7 +8,7 @@ export const BATCH_SIZE = 10000;
 /** In-flight RHEL lifecycle requests. One is enough because each batch is large. */
 export const MAX_CONCURRENT_REQUESTS = 1;
 
-/** Stop the load after this many failed POSTs. */
+/** Failed POSTs allowed for one batch. The next batch starts again at zero. */
 export const MAX_FAILED_REQUESTS = 3;
 
 export type RhelLoadProgress = {
@@ -105,7 +106,6 @@ export const loadRelevantLifecycleSystems = async (
   const installedVersions = new Set<string>();
   const related = new Map<string, RelevantRhelRow>();
   let requested = 0;
-  let failedRequests = 0;
   let failure: unknown;
 
   const mergeRows = (rows: RelevantRhelRow[]) => {
@@ -144,6 +144,7 @@ export const loadRelevantLifecycleSystems = async (
   };
 
   const postBatch = async (batch: string[]) => {
+    let failedRequests = 0;
     while (!failure) {
       try {
         const response = await client.getRelevantLifecycleSystemsForHosts(batch);
@@ -154,11 +155,12 @@ export const loadRelevantLifecycleSystems = async (
         return;
       } catch (error) {
         failedRequests += 1;
-        if (failedRequests >= MAX_FAILED_REQUESTS) {
+        if (!isTransientFailure(error) || failedRequests >= MAX_FAILED_REQUESTS) {
           failure = failure ?? error;
           pending.length = 0;
           return;
         }
+        await waitBeforeRetry();
       }
     }
   };

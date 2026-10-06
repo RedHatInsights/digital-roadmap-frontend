@@ -1,4 +1,5 @@
 import { SystemsDetail } from '../types/SystemsDetail';
+import * as batchRetry from './batchRetry';
 import {
   BATCH_SIZE,
   MAX_CONCURRENT_REQUESTS,
@@ -7,6 +8,14 @@ import {
   RelevantRhelRow,
   loadRelevantLifecycleSystems,
 } from './relevantRhelLoader';
+
+jest.mock('./batchRetry', () => {
+  const actual = jest.requireActual('./batchRetry');
+  return {
+    ...actual,
+    waitBeforeRetry: jest.fn(() => Promise.resolve()),
+  };
+});
 
 const makeIds = (count: number) => Array.from({ length: count }, (_, index) => `host-${index}`);
 
@@ -28,6 +37,10 @@ const system = (overrides: Partial<RelevantRhelRow> = {}): RelevantRhelRow => ({
 const host = (id: string): SystemsDetail => ({ id, display_name: id });
 
 describe('loadRelevantLifecycleSystems', () => {
+  beforeEach(() => {
+    jest.mocked(batchRetry.waitBeforeRetry).mockClear();
+  });
+
   it('uses one request at a time and batches 5000 host ids', async () => {
     expect(BATCH_SIZE).toBe(10000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
@@ -177,6 +190,7 @@ describe('loadRelevantLifecycleSystems', () => {
     await loadRelevantLifecycleSystems(ids, client, (update) => progress.push(update));
 
     expect(fetchHosts).toHaveBeenCalledTimes(3);
+    expect(batchRetry.waitBeforeRetry).toHaveBeenCalledTimes(1);
     expect(fetchHosts.mock.calls[0][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
@@ -196,7 +210,46 @@ describe('loadRelevantLifecycleSystems', () => {
 
     await expect(loadRelevantLifecycleSystems(ids, client)).rejects.toBe(error);
     expect(fetchHosts).toHaveBeenCalledTimes(MAX_FAILED_REQUESTS);
+    expect(batchRetry.waitBeforeRetry).toHaveBeenCalledTimes(MAX_FAILED_REQUESTS - 1);
     expect(fetchHosts.mock.calls.every(([hostIds]) => hostIds.length === BATCH_SIZE)).toBe(true);
+  });
+
+  it('gives each batch a fresh retry allowance after an earlier batch recovers', async () => {
+    const ids = makeIds(BATCH_SIZE * 2 + 1);
+    const fetchHosts = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('batch-1'))
+      .mockResolvedValueOnce({ data: [] })
+      .mockRejectedValueOnce(new Error('batch-2'))
+      .mockResolvedValueOnce({ data: [] })
+      .mockRejectedValueOnce(new Error('batch-3'))
+      .mockResolvedValue({ data: [] });
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: fetchHosts,
+    };
+
+    await loadRelevantLifecycleSystems(ids, client);
+
+    expect(fetchHosts).toHaveBeenCalledTimes(6);
+    expect(fetchHosts.mock.calls[0][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
+    expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE, BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[3][0]).toEqual(ids.slice(BATCH_SIZE, BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[4][0]).toEqual(ids.slice(BATCH_SIZE * 2));
+    expect(fetchHosts.mock.calls[5][0]).toEqual(ids.slice(BATCH_SIZE * 2));
+  });
+
+  it('does not retry a permanent client error', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const error = Object.assign(new Error('bad request'), { status_code: 400 });
+    const fetchHosts = jest.fn().mockRejectedValue(error);
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: fetchHosts,
+    };
+
+    await expect(loadRelevantLifecycleSystems(ids, client)).rejects.toBe(error);
+    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
   });
 });
 

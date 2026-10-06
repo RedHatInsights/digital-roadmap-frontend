@@ -1,5 +1,6 @@
 import { Stream } from '../types/Stream';
 import { SystemsDetail } from '../types/SystemsDetail';
+import { isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per app-stream request. Keep this below the API maximum of 10,000; these responses are heavier than RHEL. */
 export const BATCH_SIZE = 5000;
@@ -7,7 +8,7 @@ export const BATCH_SIZE = 5000;
 /** In-flight app-stream requests. Keep this at 1 unless the API instances have spare capacity. */
 export const MAX_CONCURRENT_REQUESTS = 1;
 
-/** Stop the load after this many failed POSTs. */
+/** Failed POSTs allowed for one batch. The next batch starts again at zero. */
 export const MAX_FAILED_REQUESTS = 3;
 
 export type AppstreamLoadProgress = {
@@ -28,8 +29,8 @@ export interface RelevantAppstreamsClient {
 }
 
 const streamKey = (
-  row: Pick<RelevantAppStreamRow, 'name' | 'application_stream_name' | 'os_major' | 'os_minor'>
-) => [row.name, row.application_stream_name, row.os_major ?? '', row.os_minor ?? ''].join('\0');
+  row: Pick<RelevantAppStreamRow, 'display_name' | 'application_stream_name' | 'os_major' | 'os_minor'>
+) => [row.display_name, row.application_stream_name, row.os_major ?? '', row.os_minor ?? ''].join('\0');
 
 const unionSystems = (current: SystemsDetail[], incoming: SystemsDetail[]): SystemsDetail[] => {
   const byId = new Map<string, SystemsDetail>();
@@ -101,7 +102,6 @@ export const loadRelevantLifecycleAppstreams = async (
   const installed = new Map<string, RelevantAppStreamRow>();
   const related = new Map<string, RelevantAppStreamRow>();
   let requested = 0;
-  let failedRequests = 0;
   let failure: unknown;
 
   const mergeRows = (rows: RelevantAppStreamRow[]) => {
@@ -138,6 +138,7 @@ export const loadRelevantLifecycleAppstreams = async (
   };
 
   const postBatch = async (batch: string[]) => {
+    let failedRequests = 0;
     while (!failure) {
       try {
         const response = await client.getRelevantLifecycleAppstreamsForHosts(batch);
@@ -148,11 +149,12 @@ export const loadRelevantLifecycleAppstreams = async (
         return;
       } catch (error) {
         failedRequests += 1;
-        if (failedRequests >= MAX_FAILED_REQUESTS) {
+        if (!isTransientFailure(error) || failedRequests >= MAX_FAILED_REQUESTS) {
           failure = failure ?? error;
           pending.length = 0;
           return;
         }
+        await waitBeforeRetry();
       }
     }
   };
