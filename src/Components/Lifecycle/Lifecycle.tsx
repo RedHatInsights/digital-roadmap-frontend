@@ -17,6 +17,7 @@ import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import {
+  getAccessibleHostUuids,
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
   getRelevantLifecycleAppstreams,
@@ -56,10 +57,47 @@ const DEFAULT_FILTERS: ExtendedFilter = {
   viewFilter: 'installed-only',
 };
 
+type LifecycleLoadProgress = {
+  requested: number;
+  total: number;
+  completed: boolean;
+};
+
+const LifecycleLoaderStatus = ({ label, progress }: { label: string; progress: LifecycleLoadProgress | null }) => {
+  if (progress?.completed) {
+    return <div>{`${label} loading completed`}</div>;
+  }
+
+  return (
+    <div className="lifecycle-loading-status">
+      <div>{label}</div>
+      {progress && progress.total > 0 ? (
+        <div>{`Loading ${progress.requested} out of ${progress.total} systems`}</div>
+      ) : null}
+    </div>
+  );
+};
+
+const trackLifecycleLoad = <T,>(
+  load: (onProgress: (progress: { requested: number; total: number }) => void) => Promise<T>,
+  setProgress: (progress: LifecycleLoadProgress | null) => void,
+  setProgressCompleted: (update: (current: LifecycleLoadProgress | null) => LifecycleLoadProgress) => void
+) =>
+  load((progress) => setProgress({ ...progress, completed: false })).then((result) => {
+    setProgressCompleted((current) => ({
+      requested: current?.requested ?? 0,
+      total: current?.total ?? 0,
+      completed: true,
+    }));
+    return result;
+  });
+
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [rhelLoadProgress, setRhelLoadProgress] = useState<LifecycleLoadProgress | null>(null);
+  const [appLoadProgress, setAppLoadProgress] = useState<LifecycleLoadProgress | null>(null);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
@@ -358,15 +396,36 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   // First data fetch - called only once
   const initializeData = async (viewFilter: string) => {
     setIsLoading(true);
+    setRhelLoadProgress(null);
+    setAppLoadProgress(null);
     setNoDataAvailable(false);
 
+    // Global lifecycle lists do not use host ids, so they overlap the UUID lookup.
+    // The extra handlers keep a UUID failure from leaving these requests unhandled.
+    // allSettled below still observes the original result.
+    const allSystemsPromise = getAllLifecycleSystems();
+    const allAppsPromise = getAllLifecycleAppstreams();
+    void allSystemsPromise.catch(() => undefined);
+    void allAppsPromise.catch(() => undefined);
+
     try {
-      // Fetch data in parallel
+      const uuidResponse = await getAccessibleHostUuids();
+      const hostIds = uuidResponse.data;
+
+      // Fetch data in parallel. Both lifecycle loaders use the same host ids.
       const results = await Promise.allSettled([
-        getRelevantLifecycleSystems(),
-        getRelevantLifecycleAppstreams(),
-        getAllLifecycleSystems(),
-        getAllLifecycleAppstreams(),
+        trackLifecycleLoad(
+          (onProgress) => getRelevantLifecycleSystems(hostIds, onProgress),
+          setRhelLoadProgress,
+          setRhelLoadProgress
+        ),
+        trackLifecycleLoad(
+          (onProgress) => getRelevantLifecycleAppstreams(hostIds, onProgress),
+          setAppLoadProgress,
+          setAppLoadProgress
+        ),
+        allSystemsPromise,
+        allAppsPromise,
       ]);
 
       // If any of them has an error, propagate the exception to be handled and error is displayed
@@ -572,6 +631,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setError({ message: error.message, status_code: error.status_code });
     } finally {
       setIsLoading(false);
+      setRhelLoadProgress(null);
+      setAppLoadProgress(null);
     }
   };
 
@@ -1020,7 +1081,11 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <div>
         <Bullseye>
-          <Spinner />
+          <div className="lifecycle-loading">
+            <Spinner />
+            <LifecycleLoaderStatus label="RHEL Lifecycle" progress={rhelLoadProgress} />
+            <LifecycleLoaderStatus label="AppStream Lifecycle" progress={appLoadProgress} />
+          </div>
         </Bullseye>
       </div>
     );

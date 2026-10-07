@@ -5,13 +5,16 @@ import {
   DR_ALL_LIFECYCLE_SYSTEMS,
   DR_ALL_UPCOMING,
   DR_API,
+  DR_LIFECYCLE_HOST_UUIDS,
   DR_RELEASE_NOTES,
-  DR_RELEVANT_LIFECYCLE_APPSTREAMS,
-  DR_RELEVANT_LIFECYCLE_SYSTEMS,
+  DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS,
+  DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS,
   DR_RELEVANT_UPCOMING,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
 } from './constants';
+import { AppstreamLoadProgress, loadRelevantLifecycleAppstreams } from './utils/relevantAppstreamsLoader';
+import { RhelLoadProgress, loadRelevantLifecycleSystems } from './utils/relevantRhelLoader';
 
 /* Digital Roadmap */
 
@@ -25,6 +28,11 @@ export class ApiError extends Error {
     this.status_code = status_code;
   }
 }
+
+type AccessibleHostUuidsResponse = {
+  meta: { count: number; total: number };
+  data: string[];
+};
 
 export const getRelevantReleaseNotes = async (major: number, minor: number, keyword: string) => {
   const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
@@ -114,32 +122,17 @@ export const getRelevantUpcomingChanges = async () => {
   return getResponseOrError(response);
 };
 
-export const getRelevantLifecycleSystems = async () => {
-  const path = DR_API.concat(DR_RELEVANT_LIFECYCLE_SYSTEMS);
-  const response = await axios
-    .get(path, {
-      validateStatus: function (status) {
-        return status === 200;
-      },
-    })
-    .catch(function (error) {
-      if (error.response.data.detail) {
-        if (error.response.status) {
-          throw new ApiError(error.response.data.detail, error.response.status);
-        }
-        throw new ApiError(error.response.data.detail);
-      } else if (error.request.response) {
-        if (error.request.status) {
-          throw new ApiError(error.request.response, error.request.status);
-        }
-        throw new ApiError(error.request.response);
-      } else if (error.detail) {
-        throw new ApiError(error.detail);
-      } else {
-        throw new ApiError(error.message);
-      }
-    });
-  return getResponseOrError(response);
+export const getRelevantLifecycleSystemsForHosts = async (hostIds: string[]) => {
+  return requestBackend('post', DR_API.concat(DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS), {
+    host_ids: hostIds,
+  });
+};
+
+export const getRelevantLifecycleSystems = (
+  hostIds: string[],
+  onProgress?: (progress: RhelLoadProgress) => void
+) => {
+  return loadRelevantLifecycleSystems(hostIds, { getRelevantLifecycleSystemsForHosts }, onProgress);
 };
 
 export const getAllLifecycleSystems = async () => {
@@ -170,32 +163,21 @@ export const getAllLifecycleSystems = async () => {
   return getResponseOrError(response);
 };
 
-export const getRelevantLifecycleAppstreams = async () => {
-  const path = DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS);
-  const response = await axios
-    .get(path, {
-      validateStatus: function (status) {
-        return status === 200;
-      },
-    })
-    .catch(function (error) {
-      if (error.response.data.detail) {
-        if (error.response.status) {
-          throw new ApiError(error.response.data.detail, error.response.status);
-        }
-        throw new ApiError(error.response.data.detail);
-      } else if (error.request.response) {
-        if (error.request.status) {
-          throw new ApiError(error.request.response, error.request.status);
-        }
-        throw new ApiError(error.request.response);
-      } else if (error.detail) {
-        throw new ApiError(error.detail);
-      } else {
-        throw new ApiError(error.message);
-      }
-    });
-  return getResponseOrError(response);
+export const getAccessibleHostUuids = async (): Promise<AccessibleHostUuidsResponse> => {
+  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS));
+};
+
+export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[]) => {
+  return requestBackend('post', DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS), {
+    host_ids: hostIds,
+  });
+};
+
+export const getRelevantLifecycleAppstreams = (
+  hostIds: string[],
+  onProgress?: (progress: AppstreamLoadProgress) => void
+) => {
+  return loadRelevantLifecycleAppstreams(hostIds, { getRelevantLifecycleAppstreamsForHosts }, onProgress);
 };
 
 export const getAllLifecycleAppstreams = async () => {
@@ -245,6 +227,51 @@ const getInventory = async (path: string) => {
 };
 
 /* Common functions */
+
+const detailMessage = (detail: unknown) => (typeof detail === 'string' ? detail : String(detail));
+
+const throwAsApiError = (error: unknown): never => {
+  const roadmapError = (error ?? {}) as {
+    response?: { data?: { detail?: unknown }; status?: number };
+    request?: { response?: string; status?: number };
+    detail?: unknown;
+    message?: string;
+  };
+
+  if (roadmapError.response?.data?.detail) {
+    const message = detailMessage(roadmapError.response.data.detail);
+    if (roadmapError.response.status) {
+      throw new ApiError(message, roadmapError.response.status);
+    }
+    throw new ApiError(message);
+  } else if (roadmapError.request?.response) {
+    if (roadmapError.request.status) {
+      throw new ApiError(roadmapError.request.response, roadmapError.request.status);
+    }
+    throw new ApiError(roadmapError.request.response);
+  } else if (roadmapError.detail) {
+    throw new ApiError(detailMessage(roadmapError.detail));
+  } else {
+    // A 4xx/5xx with an empty body still has response.status. Without it, retry logic treats the call as a network failure.
+    throw new ApiError(roadmapError.message ?? 'Unknown error', roadmapError.response?.status);
+  }
+};
+
+const requestBackend = async (method: 'get' | 'post', path: string, body?: unknown) => {
+  try {
+    const response = await axios.request({
+      method,
+      url: path,
+      data: body,
+      validateStatus: function (status) {
+        return status === 200;
+      },
+    });
+    return getResponseOrError(response);
+  } catch (error) {
+    throwAsApiError(error);
+  }
+};
 
 const getResponseOrError = (response: AxiosResponse) => {
   if (response.status === 200) {
