@@ -410,7 +410,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     try {
       const uuidResponse = await getAccessibleHostUuids();
-      const hostIds = uuidResponse.accessible_host_uuids ?? [];
+      const hostIds = uuidResponse.data;
 
       // Fetch data in parallel. Both lifecycle loaders use the same host ids.
       const results = await Promise.allSettled([

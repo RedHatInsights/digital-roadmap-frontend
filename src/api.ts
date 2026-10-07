@@ -29,6 +29,11 @@ export class ApiError extends Error {
   }
 }
 
+type AccessibleHostUuidsResponse = {
+  meta: { count: number; total: number };
+  data: string[];
+};
+
 export const getRelevantReleaseNotes = async (major: number, minor: number, keyword: string) => {
   const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
@@ -158,7 +163,7 @@ export const getAllLifecycleSystems = async () => {
   return getResponseOrError(response);
 };
 
-export const getAccessibleHostUuids = async () => {
+export const getAccessibleHostUuids = async (): Promise<AccessibleHostUuidsResponse> => {
   return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS));
 };
 

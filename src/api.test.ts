@@ -12,14 +12,24 @@ jest.mock('axios', () => ({
 
 jest.mock('./constants', () => ({
   DR_API: '/api/roadmap/v1',
-  DR_LIFECYCLE_HOST_UUIDS: '/lifecycle/host_uuids',
+  DR_LIFECYCLE_HOST_UUIDS: '/lifecycle/host-uuids',
 }));
 
 const request = axios.request as jest.Mock;
 
-describe('requestBackend error status', () => {
+describe('getAccessibleHostUuids', () => {
   beforeEach(() => {
     request.mockReset();
+  });
+
+  it('requests the hyphenated route and returns the response envelope', async () => {
+    const body = { meta: { count: 1, total: 1 }, data: ['host-1'] };
+    request.mockResolvedValue({ status: 200, data: body });
+
+    await expect(getAccessibleHostUuids()).resolves.toEqual(body);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'get', url: '/api/roadmap/v1/lifecycle/host-uuids' })
+    );
   });
 
   it('keeps the HTTP status when the error body has no detail', async () => {

@@ -262,7 +262,7 @@ describe('LifecycleTab Component', () => {
     const installedSystems = mockSystemData.filter((s) => !s.related);
     const installedApps = mockAppData.filter((s) => !s.related);
 
-    mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ accessible_host_uuids: ['host-1'] });
+    mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['host-1'] });
     mockApiCalls.getAllLifecycleSystems.mockResolvedValue({ data: mockSystemData });
     mockApiCalls.getAllLifecycleAppstreams.mockResolvedValue({ data: mockAppData });
     mockApiCalls.getRelevantLifecycleSystems.mockResolvedValue({
@@ -307,7 +307,8 @@ describe('LifecycleTab Component', () => {
     });
 
     test('starts global lifecycle requests before the host uuid lookup resolves', async () => {
-      let resolveUuids: (value: { accessible_host_uuids: string[] }) => void = () => undefined;
+      let resolveUuids: (value: { meta: { count: number; total: number }; data: string[] }) => void = () =>
+        undefined;
       mockApiCalls.getAccessibleHostUuids.mockImplementation(
         () =>
           new Promise((resolve) => {
@@ -325,12 +326,23 @@ describe('LifecycleTab Component', () => {
       expect(mockApiCalls.getRelevantLifecycleAppstreams).not.toHaveBeenCalled();
 
       await act(async () => {
-        resolveUuids({ accessible_host_uuids: ['host-1'] });
+        resolveUuids({ meta: { count: 1, total: 1 }, data: ['host-1'] });
       });
 
       await waitFor(() => {
         expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(['host-1'], expect.any(Function));
         expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+      });
+    });
+
+    test('passes an empty UUID list to the lifecycle loaders', async () => {
+      mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ meta: { count: 0, total: 0 }, data: [] });
+
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith([], expect.any(Function));
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith([], expect.any(Function));
       });
     });
 
