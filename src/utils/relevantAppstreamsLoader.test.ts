@@ -327,6 +327,42 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(fetchHosts.mock.calls[5][0]).toEqual(ids.slice(BATCH_SIZE * 2));
   });
 
+  it('does not request when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchHosts = jest.fn();
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: fetchHosts,
+    };
+
+    await expect(
+      loadRelevantLifecycleAppstreams(makeIds(1), client, undefined, controller.signal)
+    ).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    expect(fetchHosts).not.toHaveBeenCalled();
+  });
+
+  it('does not retry or continue after an aborted batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const controller = new AbortController();
+    const canceled = Object.assign(new Error('canceled'), { name: 'CanceledError', code: 'ERR_CANCELED' });
+    const fetchHosts = jest.fn().mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(canceled);
+    });
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: fetchHosts,
+    };
+
+    await expect(loadRelevantLifecycleAppstreams(ids, client, undefined, controller.signal)).rejects.toBe(
+      canceled
+    );
+    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    expect(fetchHosts).toHaveBeenCalledWith(ids.slice(0, BATCH_SIZE), controller.signal);
+    expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
+  });
+
   it('does not retry a permanent client error', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
     const error = Object.assign(new Error('bad request'), { status_code: 400 });

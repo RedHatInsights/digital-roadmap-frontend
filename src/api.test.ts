@@ -33,6 +33,15 @@ describe('getAccessibleHostUuids', () => {
     );
   });
 
+  it('forwards an abort signal on the host uuid request', async () => {
+    const controller = new AbortController();
+    request.mockResolvedValue({ status: 200, data: { meta: { count: 0, total: 0 }, data: [] } });
+
+    await getAccessibleHostUuids(controller.signal);
+
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+  });
+
   it('keeps the HTTP status when the error body has no detail', async () => {
     request.mockRejectedValue({
       message: 'Request failed with status code 403',
@@ -88,5 +97,14 @@ describe('getUpcomingChangesForHosts', () => {
         data: { host_ids: ['host-1', 'host-2'] },
       })
     );
+  });
+
+  it('forwards an abort signal on the hosts post', async () => {
+    const controller = new AbortController();
+    request.mockResolvedValue({ status: 200, data: { meta: { count: 0, total: 0 }, data: [] } });
+
+    await getUpcomingChangesForHosts(['host-1'], controller.signal);
+
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
   });
 });

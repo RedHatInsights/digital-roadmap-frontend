@@ -13,6 +13,7 @@ import {
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
 } from './constants';
+import { isAbortError } from './utils/batchRetry';
 import { AppstreamLoadProgress, loadRelevantLifecycleAppstreams } from './utils/relevantAppstreamsLoader';
 import { RhelLoadProgress, loadRelevantLifecycleSystems } from './utils/relevantRhelLoader';
 import { UpcomingLoadProgress, loadAllUpcomingChanges } from './utils/relevantUpcomingLoader';
@@ -65,17 +66,23 @@ export const getRelevantReleaseNotes = async (major: number, minor: number, keyw
   return getResponseOrError(response);
 };
 
-export const getUpcomingChangesForHosts = async (hostIds: string[]) => {
-  return requestBackend('post', DR_API.concat(DR_RELEVANT_UPCOMING_HOSTS), {
-    host_ids: hostIds,
-  });
+export const getUpcomingChangesForHosts = async (hostIds: string[], signal?: AbortSignal) => {
+  return requestBackend(
+    'post',
+    DR_API.concat(DR_RELEVANT_UPCOMING_HOSTS),
+    {
+      host_ids: hostIds,
+    },
+    signal
+  );
 };
 
 export const getAllUpcomingChanges = (
   hostIds: string[],
-  onProgress?: (progress: UpcomingLoadProgress) => void
+  onProgress?: (progress: UpcomingLoadProgress) => void,
+  signal?: AbortSignal
 ) => {
-  return loadAllUpcomingChanges(hostIds, { getUpcomingChangesForHosts }, onProgress);
+  return loadAllUpcomingChanges(hostIds, { getUpcomingChangesForHosts }, onProgress, signal);
 };
 
 export const getRelevantUpcomingChanges = async () => {
@@ -107,28 +114,38 @@ export const getRelevantUpcomingChanges = async () => {
   return getResponseOrError(response);
 };
 
-export const getRelevantLifecycleSystemsForHosts = async (hostIds: string[]) => {
-  return requestBackend('post', DR_API.concat(DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS), {
-    host_ids: hostIds,
-  });
+export const getRelevantLifecycleSystemsForHosts = async (hostIds: string[], signal?: AbortSignal) => {
+  return requestBackend(
+    'post',
+    DR_API.concat(DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS),
+    {
+      host_ids: hostIds,
+    },
+    signal
+  );
 };
 
 export const getRelevantLifecycleSystems = (
   hostIds: string[],
-  onProgress?: (progress: RhelLoadProgress) => void
+  onProgress?: (progress: RhelLoadProgress) => void,
+  signal?: AbortSignal
 ) => {
-  return loadRelevantLifecycleSystems(hostIds, { getRelevantLifecycleSystemsForHosts }, onProgress);
+  return loadRelevantLifecycleSystems(hostIds, { getRelevantLifecycleSystemsForHosts }, onProgress, signal);
 };
 
-export const getAllLifecycleSystems = async () => {
+export const getAllLifecycleSystems = async (signal?: AbortSignal) => {
   const path = DR_API.concat(DR_ALL_LIFECYCLE_SYSTEMS);
   const response = await axios
     .get(path, {
+      signal,
       validateStatus: function (status) {
         return status === 200;
       },
     })
     .catch(function (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
       if (error.response.data.detail) {
         if (error.response.status) {
           throw new ApiError(error.response.data.detail, error.response.status);
@@ -148,32 +165,42 @@ export const getAllLifecycleSystems = async () => {
   return getResponseOrError(response);
 };
 
-export const getAccessibleHostUuids = async (): Promise<AccessibleHostUuidsResponse> => {
-  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS));
+export const getAccessibleHostUuids = async (signal?: AbortSignal): Promise<AccessibleHostUuidsResponse> => {
+  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS), undefined, signal);
 };
 
-export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[]) => {
-  return requestBackend('post', DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS), {
-    host_ids: hostIds,
-  });
+export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[], signal?: AbortSignal) => {
+  return requestBackend(
+    'post',
+    DR_API.concat(DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS),
+    {
+      host_ids: hostIds,
+    },
+    signal
+  );
 };
 
 export const getRelevantLifecycleAppstreams = (
   hostIds: string[],
-  onProgress?: (progress: AppstreamLoadProgress) => void
+  onProgress?: (progress: AppstreamLoadProgress) => void,
+  signal?: AbortSignal
 ) => {
-  return loadRelevantLifecycleAppstreams(hostIds, { getRelevantLifecycleAppstreamsForHosts }, onProgress);
+  return loadRelevantLifecycleAppstreams(hostIds, { getRelevantLifecycleAppstreamsForHosts }, onProgress, signal);
 };
 
-export const getAllLifecycleAppstreams = async () => {
+export const getAllLifecycleAppstreams = async (signal?: AbortSignal) => {
   const path = DR_API.concat(DR_ALL_LIFECYCLE_APPSTREAMS);
   const response = await axios
     .get(path, {
+      signal,
       validateStatus: function (status) {
         return status === 200;
       },
     })
     .catch(function (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
       if (error.response.data.detail) {
         if (error.response.status) {
           throw new ApiError(error.response.data.detail, error.response.status);
@@ -242,18 +269,22 @@ const throwAsApiError = (error: unknown): never => {
   }
 };
 
-const requestBackend = async (method: 'get' | 'post', path: string, body?: unknown) => {
+const requestBackend = async (method: 'get' | 'post', path: string, body?: unknown, signal?: AbortSignal) => {
   try {
     const response = await axios.request({
       method,
       url: path,
       data: body,
+      signal,
       validateStatus: function (status) {
         return status === 200;
       },
     });
     return getResponseOrError(response);
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     throwAsApiError(error);
   }
 };
