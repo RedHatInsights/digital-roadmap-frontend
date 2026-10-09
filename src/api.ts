@@ -3,18 +3,19 @@ import axios, { AxiosResponse } from 'axios';
 import {
   DR_ALL_LIFECYCLE_APPSTREAMS,
   DR_ALL_LIFECYCLE_SYSTEMS,
-  DR_ALL_UPCOMING,
   DR_API,
   DR_LIFECYCLE_HOST_UUIDS,
   DR_RELEASE_NOTES,
   DR_RELEVANT_LIFECYCLE_APPSTREAMS_HOSTS,
   DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS,
   DR_RELEVANT_UPCOMING,
+  DR_RELEVANT_UPCOMING_HOSTS,
   INVENTORY_API_ROOT,
   INVENTORY_HOSTS_ROOT,
 } from './constants';
 import { AppstreamLoadProgress, loadRelevantLifecycleAppstreams } from './utils/relevantAppstreamsLoader';
 import { RhelLoadProgress, loadRelevantLifecycleSystems } from './utils/relevantRhelLoader';
+import { UpcomingLoadProgress, loadAllUpcomingChanges } from './utils/relevantUpcomingLoader';
 
 /* Digital Roadmap */
 
@@ -64,33 +65,17 @@ export const getRelevantReleaseNotes = async (major: number, minor: number, keyw
   return getResponseOrError(response);
 };
 
-export const getAllUpcomingChanges = async () => {
-  const path = DR_API.concat(DR_ALL_UPCOMING);
-  const response = await axios
-    .get(path, {
-      validateStatus: function (status) {
-        return status === 200;
-      },
-    })
-    .catch(function (error) {
-      if (error.response.data.detail) {
-        if (error.response.status) {
-          throw new ApiError(error.response.data.detail, error.response.status);
-        }
-        throw new ApiError(error.response.data.detail);
-      } else if (error.request.response) {
-        if (error.request.status) {
-          throw new ApiError(error.request.response, error.request.status);
-        }
-        throw new ApiError(error.request.response);
-      } else if (error.detail) {
-        throw new ApiError(error.detail);
-      } else {
-        throw new ApiError(error.message);
-      }
-    });
+export const getUpcomingChangesForHosts = async (hostIds: string[]) => {
+  return requestBackend('post', DR_API.concat(DR_RELEVANT_UPCOMING_HOSTS), {
+    host_ids: hostIds,
+  });
+};
 
-  return getResponseOrError(response);
+export const getAllUpcomingChanges = (
+  hostIds: string[],
+  onProgress?: (progress: UpcomingLoadProgress) => void
+) => {
+  return loadAllUpcomingChanges(hostIds, { getUpcomingChangesForHosts }, onProgress);
 };
 
 export const getRelevantUpcomingChanges = async () => {
