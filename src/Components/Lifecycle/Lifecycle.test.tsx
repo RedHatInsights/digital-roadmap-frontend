@@ -14,6 +14,7 @@ if (!global.structuredClone) {
 
 // Mock the API functions
 jest.mock('../../api', () => ({
+  getAccessibleHostUuids: jest.fn(),
   getAllLifecycleAppstreams: jest.fn(),
   getAllLifecycleSystems: jest.fn(),
   getRelevantLifecycleAppstreams: jest.fn(),
@@ -246,6 +247,7 @@ const renderWithRouter = (component: React.ReactElement, initialEntries = ['/'])
 
 describe('LifecycleTab Component', () => {
   const mockApiCalls = {
+    getAccessibleHostUuids: api.getAccessibleHostUuids as jest.Mock,
     getAllLifecycleSystems: api.getAllLifecycleSystems as jest.Mock,
     getAllLifecycleAppstreams: api.getAllLifecycleAppstreams as jest.Mock,
     getRelevantLifecycleSystems: api.getRelevantLifecycleSystems as jest.Mock,
@@ -260,6 +262,7 @@ describe('LifecycleTab Component', () => {
     const installedSystems = mockSystemData.filter((s) => !s.related);
     const installedApps = mockAppData.filter((s) => !s.related);
 
+    mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['host-1'] });
     mockApiCalls.getAllLifecycleSystems.mockResolvedValue({ data: mockSystemData });
     mockApiCalls.getAllLifecycleAppstreams.mockResolvedValue({ data: mockAppData });
     mockApiCalls.getRelevantLifecycleSystems.mockResolvedValue({
@@ -293,10 +296,153 @@ describe('LifecycleTab Component', () => {
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
+        expect(mockApiCalls.getAccessibleHostUuids).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledTimes(1);
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+      });
+    });
+
+    test('starts global lifecycle requests before the host uuid lookup resolves', async () => {
+      let resolveUuids: (value: { meta: { count: number; total: number }; data: string[] }) => void = () =>
+        undefined;
+      mockApiCalls.getAccessibleHostUuids.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveUuids = resolve;
+          })
+      );
+
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledTimes(1);
+        expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
+      });
+      expect(mockApiCalls.getRelevantLifecycleSystems).not.toHaveBeenCalled();
+      expect(mockApiCalls.getRelevantLifecycleAppstreams).not.toHaveBeenCalled();
+
+      await act(async () => {
+        resolveUuids({ meta: { count: 1, total: 1 }, data: ['host-1'] });
+      });
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+      });
+    });
+
+    test('aborts in-flight lifecycle requests when the page unmounts', async () => {
+      let signal: AbortSignal | undefined;
+      mockApiCalls.getAccessibleHostUuids.mockImplementation((incoming: AbortSignal) => {
+        signal = incoming;
+        return new Promise(() => undefined);
+      });
+
+      const view = renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(signal).toBeInstanceOf(AbortSignal);
+        expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledWith(signal);
+        expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledWith(signal);
+      });
+
+      view.unmount();
+      expect(signal?.aborted).toBe(true);
+    });
+
+    test('passes an empty UUID list to the lifecycle loaders', async () => {
+      mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ meta: { count: 0, total: 0 }, data: [] });
+
+      renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          [],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          [],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+      });
+    });
+
+    test('shows how many systems are loading under the spinner', async () => {
+      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation((_hostIds, onProgress) => {
+        onProgress?.({ requested: 5000, total: 12300 });
+        return new Promise((resolve) => {
+          resolveAppstreams = resolve;
+        });
+      });
+
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByText('AppStream Lifecycle')).toBeInTheDocument();
+      expect(screen.getByText('Loading 5000 out of 12300 systems')).toBeInTheDocument();
+
+      await act(async () => {
+        resolveAppstreams({ data: [] });
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading 5000 out of 12300 systems')).not.toBeInTheDocument();
+      });
+    });
+
+    test('shows RHEL loading progress and marks it completed while app streams are still loading', async () => {
+      let resolveRhel: (value: { data: Stream[] }) => void = () => undefined;
+      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleSystems.mockImplementation((_hostIds, onProgress) => {
+        onProgress?.({ requested: 5000, total: 12300 });
+        return new Promise((resolve) => {
+          resolveRhel = resolve;
+        });
+      });
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveAppstreams = resolve;
+          })
+      );
+
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByText('RHEL Lifecycle')).toBeInTheDocument();
+      expect(screen.getByText('Loading 5000 out of 12300 systems')).toBeInTheDocument();
+
+      await act(async () => {
+        resolveRhel({ data: [] });
+      });
+
+      expect(await screen.findByText('RHEL Lifecycle loading completed')).toBeInTheDocument();
+      expect(screen.getByText('AppStream Lifecycle')).toBeInTheDocument();
+      expect(screen.queryByText('Loading 5000 out of 12300 systems')).not.toBeInTheDocument();
+
+      await act(async () => {
+        resolveAppstreams({ data: [] });
       });
     });
 

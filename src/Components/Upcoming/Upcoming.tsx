@@ -1,5 +1,5 @@
 import './upcoming.scss';
-import React, { lazy, useEffect, useState } from 'react';
+import React, { lazy, useEffect, useRef, useState } from 'react';
 import {
   Bullseye,
   Button,
@@ -19,7 +19,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
-import { getAllUpcomingChanges } from '../../api';
+import { getAccessibleHostUuids, getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
@@ -27,6 +27,7 @@ import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclam
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
+import { isAbortError } from '../../utils/batchRetry';
 import { DEFAULT_FILTERS, KNOWN_TYPES, buildURL, pluralize } from '../../utils/utils';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
@@ -54,6 +55,7 @@ const capitalizeFirstLetter = (string: string) => {
 const isRelevant = (item: UpcomingChanges) => (item.details?.potentiallyAffectedSystemsCount ?? 0) > 0;
 
 const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
+  const loadAbortRef = useRef(new AbortController());
   const emptyUpcomingChanges: UpcomingChanges[] = [];
   const [upcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
 
@@ -63,6 +65,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [hasFetchedData, setHasFetchedData] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(false);
+  const [upcomingLoadProgress, setUpcomingLoadProgress] = React.useState<{
+    requested: number;
+    total: number;
+  } | null>(null);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
   const [numChanges, setNumChanges] = React.useState(0);
@@ -128,8 +134,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setVisibleData(data);
   };
 
-  // Single request for the whole roadmap; the relevant view is filtered out of it
-  const fetchUpcomingChanges = async () => {
+  // One all=true catalog, loaded in host batches. The relevant view is filtered out of it.
+  const fetchUpcomingChanges = async (signal: AbortSignal) => {
     // Used when we don't have deployedDate available - basically when there are
     // new items which weren't deployed to production. This is for easier testing on stage.
     // Format as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones.
@@ -138,20 +144,26 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       now.getDate()
     ).padStart(2, '0')}`;
 
-    const response = await getAllUpcomingChanges();
-    const allData: UpcomingChanges[] = (response && response.data ? response.data : []).map(
-      (item: UpcomingChanges) => ({
-        ...item,
-        type: capitalizeFirstLetter(item.type),
-        ...(item.details && {
-          details: {
-            ...item.details,
-            // when deployedDate is not available, use todays date for easier testing
-            deployedDate: item.details.deployedDate ?? todayStr,
-          },
-        }),
-      })
+    const uuidResponse = await getAccessibleHostUuids(signal);
+    const response = await getAllUpcomingChanges(
+      uuidResponse.data ?? [],
+      (progress) => {
+        setUpcomingLoadProgress(progress);
+      },
+      signal
     );
+    const rows = (response?.data ?? []) as UpcomingChanges[];
+    const allData: UpcomingChanges[] = rows.map((item) => ({
+      ...item,
+      type: capitalizeFirstLetter(item.type),
+      ...(item.details && {
+        details: {
+          ...item.details,
+          // when deployedDate is not available, use todays date for easier testing
+          deployedDate: item.details.deployedDate ?? todayStr,
+        },
+      }),
+    }));
     const relevantData = allData.filter(isRelevant);
 
     setAllUpcomingChangesData(allData);
@@ -222,16 +234,18 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
+    setUpcomingLoadProgress(null);
     setNoAllDataAvailable(false);
     setNoDataAvailable(false);
     const currentViewFilter = viewFilter || selectedViewFilter;
+    const signal = loadAbortRef.current.signal;
 
     try {
       let allData = allUpcomingChangesData;
       let relevantData = relevantUpcomingChangesData;
 
       if (!hasFetchedData) {
-        ({ allData, relevantData } = await fetchUpcomingChanges());
+        ({ allData, relevantData } = await fetchUpcomingChanges(signal));
       }
 
       // Check if ALL data source is empty
@@ -295,6 +309,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       setFiltersForURL(newFilters);
       setIsLoading(false);
     } catch (error: any) {
+      if (signal.aborted || isAbortError(error)) {
+        return;
+      }
       console.error('Error fetching changes:', error.message);
       setError({ message: error.message, status_code: error.status_code });
     } finally {
@@ -303,6 +320,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+
     // Get view filter from URL params or use default
     let initialViewFilter = 'relevant';
     if (viewFilterParam && (viewFilterParam === 'relevant' || viewFilterParam === 'all')) {
@@ -311,6 +331,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     fetchData(initialViewFilter);
+    return () => controller.abort();
   }, []);
 
   const resetFilters = () => {
@@ -383,7 +404,15 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <div>
         <Bullseye>
-          <Spinner role="progressbar" aria-label="Loading upcoming changes" />
+          <div className="lifecycle-loading">
+            <Spinner role="progressbar" aria-label="Loading upcoming changes" />
+            <div className="lifecycle-loading-status">
+              <div>Upcoming changes</div>
+              {upcomingLoadProgress && upcomingLoadProgress.total > 0 ? (
+                <div>{`Loading ${upcomingLoadProgress.requested} out of ${upcomingLoadProgress.total} systems`}</div>
+              ) : null}
+            </div>
+          </div>
         </Bullseye>
       </div>
     );
