@@ -19,7 +19,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
-import { getAllUpcomingChanges } from '../../api';
+import { getAccessibleHostUuids, getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
@@ -63,6 +63,10 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const [hasFetchedData, setHasFetchedData] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(false);
+  const [upcomingLoadProgress, setUpcomingLoadProgress] = React.useState<{
+    requested: number;
+    total: number;
+  } | null>(null);
   const [numDeprecations, setNumDeprecations] = React.useState(0);
   const [numAdditions, setNumAdditions] = React.useState(0);
   const [numChanges, setNumChanges] = React.useState(0);
@@ -128,7 +132,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setVisibleData(data);
   };
 
-  // Single request for the whole roadmap; the relevant view is filtered out of it
+  // One all=true catalog, loaded in host batches. The relevant view is filtered out of it.
   const fetchUpcomingChanges = async () => {
     // Used when we don't have deployedDate available - basically when there are
     // new items which weren't deployed to production. This is for easier testing on stage.
@@ -138,20 +142,22 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       now.getDate()
     ).padStart(2, '0')}`;
 
-    const response = await getAllUpcomingChanges();
-    const allData: UpcomingChanges[] = (response && response.data ? response.data : []).map(
-      (item: UpcomingChanges) => ({
-        ...item,
-        type: capitalizeFirstLetter(item.type),
-        ...(item.details && {
-          details: {
-            ...item.details,
-            // when deployedDate is not available, use todays date for easier testing
-            deployedDate: item.details.deployedDate ?? todayStr,
-          },
-        }),
-      })
-    );
+    const uuidResponse = await getAccessibleHostUuids();
+    const response = await getAllUpcomingChanges(uuidResponse.data ?? [], (progress) => {
+      setUpcomingLoadProgress(progress);
+    });
+    const rows = (response?.data ?? []) as UpcomingChanges[];
+    const allData: UpcomingChanges[] = rows.map((item) => ({
+      ...item,
+      type: capitalizeFirstLetter(item.type),
+      ...(item.details && {
+        details: {
+          ...item.details,
+          // when deployedDate is not available, use todays date for easier testing
+          deployedDate: item.details.deployedDate ?? todayStr,
+        },
+      }),
+    }));
     const relevantData = allData.filter(isRelevant);
 
     setAllUpcomingChangesData(allData);
@@ -222,6 +228,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
   const fetchData = async (viewFilter?: string) => {
     setIsLoading(true);
+    setUpcomingLoadProgress(null);
     setNoAllDataAvailable(false);
     setNoDataAvailable(false);
     const currentViewFilter = viewFilter || selectedViewFilter;
@@ -383,7 +390,15 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     return (
       <div>
         <Bullseye>
-          <Spinner role="progressbar" aria-label="Loading upcoming changes" />
+          <div className="lifecycle-loading">
+            <Spinner role="progressbar" aria-label="Loading upcoming changes" />
+            <div className="lifecycle-loading-status">
+              <div>Upcoming changes</div>
+              {upcomingLoadProgress && upcomingLoadProgress.total > 0 ? (
+                <div>{`Loading ${upcomingLoadProgress.requested} out of ${upcomingLoadProgress.total} systems`}</div>
+              ) : null}
+            </div>
+          </div>
         </Bullseye>
       </div>
     );
