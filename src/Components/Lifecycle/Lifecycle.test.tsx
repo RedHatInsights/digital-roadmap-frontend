@@ -301,8 +301,16 @@ describe('LifecycleTab Component', () => {
         expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledTimes(1);
         expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledTimes(1);
-        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(['host-1'], expect.any(Function));
-        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
       });
     });
 
@@ -330,9 +338,36 @@ describe('LifecycleTab Component', () => {
       });
 
       await waitFor(() => {
-        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(['host-1'], expect.any(Function));
-        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          ['host-1'],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
       });
+    });
+
+    test('aborts in-flight lifecycle requests when the page unmounts', async () => {
+      let signal: AbortSignal | undefined;
+      mockApiCalls.getAccessibleHostUuids.mockImplementation((incoming: AbortSignal) => {
+        signal = incoming;
+        return new Promise(() => undefined);
+      });
+
+      const view = renderWithRouter(<LifecycleTab />);
+
+      await waitFor(() => {
+        expect(signal).toBeInstanceOf(AbortSignal);
+        expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledWith(signal);
+        expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledWith(signal);
+      });
+
+      view.unmount();
+      expect(signal?.aborted).toBe(true);
     });
 
     test('passes an empty UUID list to the lifecycle loaders', async () => {
@@ -341,8 +376,16 @@ describe('LifecycleTab Component', () => {
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
-        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith([], expect.any(Function));
-        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith([], expect.any(Function));
+        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
+          [],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
+          [],
+          expect.any(Function),
+          expect.any(AbortSignal)
+        );
       });
     });
 

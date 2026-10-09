@@ -1,6 +1,6 @@
 import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 import { SystemsDetail } from '../types/SystemsDetail';
-import { isTransientFailure, waitBeforeRetry } from './batchRetry';
+import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per RHEL request. RHEL responses are smaller, so this can sit at the API maximum of 10,000. */
 export const BATCH_SIZE = 10000;
@@ -24,7 +24,10 @@ export type RelevantRhelRow = Omit<SystemLifecycleChanges, 'minor' | 'start_date
 };
 
 export interface RelevantRhelClient {
-  getRelevantLifecycleSystemsForHosts: (hostIds: string[]) => Promise<{ data?: RelevantRhelRow[] }>;
+  getRelevantLifecycleSystemsForHosts: (
+    hostIds: string[],
+    signal?: AbortSignal
+  ) => Promise<{ data?: RelevantRhelRow[] }>;
 }
 
 const installedKey = (row: Pick<RelevantRhelRow, 'name' | 'major' | 'minor' | 'lifecycle_type'>) =>
@@ -92,10 +95,15 @@ const sortSystems = (rows: RelevantRhelRow[]) =>
 export const loadRelevantLifecycleSystems = async (
   hostIds: string[],
   client: RelevantRhelClient,
-  onProgress?: (progress: RhelLoadProgress) => void
+  onProgress?: (progress: RhelLoadProgress) => void,
+  signal?: AbortSignal
 ): Promise<{ data: SystemLifecycleChanges[] }> => {
   const pending = [...hostIds];
   const total = pending.length;
+
+  if (signal?.aborted) {
+    throw abortedError(signal);
+  }
 
   if (total === 0) {
     return { data: [] };
@@ -143,30 +151,54 @@ export const loadRelevantLifecycleSystems = async (
     }
   };
 
+  const stopIfAborted = (error?: unknown) => {
+    if (!signal?.aborted && !isAbortError(error)) {
+      return false;
+    }
+    failure = failure ?? (isAbortError(error) ? error : abortedError(signal));
+    pending.length = 0;
+    return true;
+  };
+
   const postBatch = async (batch: string[]) => {
     let failedRequests = 0;
     while (!failure) {
+      if (stopIfAborted()) {
+        return;
+      }
       try {
-        const response = await client.getRelevantLifecycleSystemsForHosts(batch);
-        if (failure) {
+        const response = await client.getRelevantLifecycleSystemsForHosts(batch, signal);
+        if (failure || stopIfAborted()) {
           return;
         }
         mergeRows(Array.isArray(response?.data) ? response.data : []);
         return;
       } catch (error) {
+        if (stopIfAborted(error)) {
+          return;
+        }
         failedRequests += 1;
         if (!isTransientFailure(error) || failedRequests >= MAX_FAILED_REQUESTS) {
           failure = failure ?? error;
           pending.length = 0;
           return;
         }
-        await waitBeforeRetry();
+        try {
+          await waitBeforeRetry(signal);
+        } catch (waitError) {
+          failure = failure ?? waitError;
+          pending.length = 0;
+          return;
+        }
       }
     }
   };
 
   const worker = async () => {
     while (!failure) {
+      if (stopIfAborted()) {
+        return;
+      }
       const batch = pending.splice(0, BATCH_SIZE);
       if (batch.length === 0) {
         return;

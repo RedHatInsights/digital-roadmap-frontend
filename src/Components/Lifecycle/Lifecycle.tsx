@@ -1,5 +1,5 @@
 import './Lifecycle.scss';
-import React, { lazy, useEffect, useState } from 'react';
+import React, { lazy, useEffect, useRef, useState } from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
   Bullseye,
@@ -26,6 +26,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
+import { isAbortError } from '../../utils/batchRetry';
 import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
@@ -93,6 +94,7 @@ const trackLifecycleLoad = <T,>(
   });
 
 const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
+  const loadAbortRef = useRef(new AbortController());
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -403,24 +405,25 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // Global lifecycle lists do not use host ids, so they overlap the UUID lookup.
     // The extra handlers keep a UUID failure from leaving these requests unhandled.
     // allSettled below still observes the original result.
-    const allSystemsPromise = getAllLifecycleSystems();
-    const allAppsPromise = getAllLifecycleAppstreams();
+    const signal = loadAbortRef.current.signal;
+    const allSystemsPromise = getAllLifecycleSystems(signal);
+    const allAppsPromise = getAllLifecycleAppstreams(signal);
     void allSystemsPromise.catch(() => undefined);
     void allAppsPromise.catch(() => undefined);
 
     try {
-      const uuidResponse = await getAccessibleHostUuids();
+      const uuidResponse = await getAccessibleHostUuids(signal);
       const hostIds = uuidResponse.data;
 
       // Fetch data in parallel. Both lifecycle loaders use the same host ids.
       const results = await Promise.allSettled([
         trackLifecycleLoad(
-          (onProgress) => getRelevantLifecycleSystems(hostIds, onProgress),
+          (onProgress) => getRelevantLifecycleSystems(hostIds, onProgress, signal),
           setRhelLoadProgress,
           setRhelLoadProgress
         ),
         trackLifecycleLoad(
-          (onProgress) => getRelevantLifecycleAppstreams(hostIds, onProgress),
+          (onProgress) => getRelevantLifecycleAppstreams(hostIds, onProgress, signal),
           setAppLoadProgress,
           setAppLoadProgress
         ),
@@ -627,6 +630,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
       setNoDataAvailable(noDataValue);
     } catch (error: any) {
+      if (signal.aborted || isAbortError(error)) {
+        return;
+      }
       console.error('Error fetching lifecycle changes:', error);
       setError({ message: error.message, status_code: error.status_code });
     } finally {
@@ -865,6 +871,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const statusesParam = searchParams.get('statuses');
 
   useEffect(() => {
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+
     // Get view filter from URL params
     let initialViewFilter = 'installed-only';
 
@@ -922,6 +931,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     // Initialize data with the correct view filter
     fetchData(initialViewFilter);
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {

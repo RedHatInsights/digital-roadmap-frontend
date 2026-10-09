@@ -242,7 +242,12 @@ describe('UpcomingTab', () => {
 
       expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
-      expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith(['host-1'], expect.any(Function));
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledWith(expect.any(AbortSignal));
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith(
+        ['host-1'],
+        expect.any(Function),
+        expect.any(AbortSignal)
+      );
 
       // Should display relevant data initially - only the item with count > 0
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
@@ -278,8 +283,25 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith([], expect.any(Function));
+        expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith([], expect.any(Function), expect.any(AbortSignal));
       });
+    });
+
+    test('aborts in-flight upcoming requests when the page unmounts', async () => {
+      let signal: AbortSignal | undefined;
+      mockGetAccessibleHostUuids.mockImplementation((incoming?: AbortSignal) => {
+        signal = incoming;
+        return new Promise(() => undefined);
+      });
+
+      const view = renderComponent();
+
+      await waitFor(() => {
+        expect(signal).toBeInstanceOf(AbortSignal);
+      });
+
+      view.unmount();
+      expect(signal?.aborted).toBe(true);
     });
 
     test('shows how many systems are loading under the spinner', async () => {

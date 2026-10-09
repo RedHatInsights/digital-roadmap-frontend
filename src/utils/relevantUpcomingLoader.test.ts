@@ -46,8 +46,8 @@ describe('loadAllUpcomingChanges', () => {
     jest.mocked(batchRetry.waitBeforeRetry).mockClear();
   });
 
-  it('uses one request at a time and batches 2000 host ids', async () => {
-    expect(BATCH_SIZE).toBe(2000);
+  it('uses one request at a time and batches 5000 host ids', async () => {
+    expect(BATCH_SIZE).toBe(5000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
     expect(MAX_FAILED_REQUESTS).toBe(3);
 
@@ -213,7 +213,7 @@ describe('loadAllUpcomingChanges', () => {
     const result = await loadAllUpcomingChanges([], client);
 
     expect(fetchHosts).toHaveBeenCalledTimes(1);
-    expect(fetchHosts).toHaveBeenCalledWith([]);
+    expect(fetchHosts).toHaveBeenCalledWith([], undefined);
     expect(result.meta).toEqual({ count: 1, total: 1 });
     expect(result.data[0].details?.potentiallyAffectedSystemsCount).toBe(0);
   });
@@ -279,6 +279,38 @@ describe('loadAllUpcomingChanges', () => {
     expect(fetchHosts.mock.calls[3][0]).toEqual(ids.slice(BATCH_SIZE, BATCH_SIZE * 2));
     expect(fetchHosts.mock.calls[4][0]).toEqual(ids.slice(BATCH_SIZE * 2));
     expect(fetchHosts.mock.calls[5][0]).toEqual(ids.slice(BATCH_SIZE * 2));
+  });
+
+  it('does not request when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchHosts = jest.fn();
+    const client: UpcomingChangesClient = {
+      getUpcomingChangesForHosts: fetchHosts,
+    };
+
+    await expect(loadAllUpcomingChanges(makeIds(1), client, undefined, controller.signal)).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    expect(fetchHosts).not.toHaveBeenCalled();
+  });
+
+  it('does not retry or continue after an aborted batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const controller = new AbortController();
+    const canceled = Object.assign(new Error('canceled'), { name: 'CanceledError', code: 'ERR_CANCELED' });
+    const fetchHosts = jest.fn().mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(canceled);
+    });
+    const client: UpcomingChangesClient = {
+      getUpcomingChangesForHosts: fetchHosts,
+    };
+
+    await expect(loadAllUpcomingChanges(ids, client, undefined, controller.signal)).rejects.toBe(canceled);
+    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    expect(fetchHosts).toHaveBeenCalledWith(ids.slice(0, BATCH_SIZE), controller.signal);
+    expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
   });
 
   it('does not retry a permanent client error', async () => {

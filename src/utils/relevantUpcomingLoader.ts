@@ -1,4 +1,4 @@
-import { isTransientFailure, waitBeforeRetry } from './batchRetry';
+import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per upcoming request. These queries read installed packages, so keep batches smaller than RHEL. */
 export const BATCH_SIZE = 5000;
@@ -45,7 +45,7 @@ export type UpcomingChangeRow = {
 };
 
 export interface UpcomingChangesClient {
-  getUpcomingChangesForHosts: (hostIds: string[]) => Promise<{ data?: UpcomingChangeRow[] }>;
+  getUpcomingChangesForHosts: (hostIds: string[], signal?: AbortSignal) => Promise<{ data?: UpcomingChangeRow[] }>;
 }
 
 const itemKey = (row: Pick<UpcomingChangeRow, 'name' | 'release'>) => [row.name, row.release].join('\0');
@@ -81,8 +81,13 @@ const withSystems = (row: UpcomingChangeRow, systems: UpcomingSystemDetail[]): U
 export const loadAllUpcomingChanges = async (
   hostIds: string[],
   client: UpcomingChangesClient,
-  onProgress?: (progress: UpcomingLoadProgress) => void
+  onProgress?: (progress: UpcomingLoadProgress) => void,
+  signal?: AbortSignal
 ): Promise<{ meta: { count: number; total: number }; data: UpcomingChangeRow[] }> => {
+  if (signal?.aborted) {
+    throw abortedError(signal);
+  }
+
   const pending = [...hostIds];
   const total = pending.length;
   const merged = new Map<string, UpcomingChangeRow>();
@@ -106,24 +111,45 @@ export const loadAllUpcomingChanges = async (
     }
   };
 
+  const stopIfAborted = (error?: unknown) => {
+    if (!signal?.aborted && !isAbortError(error)) {
+      return false;
+    }
+    failure = failure ?? (isAbortError(error) ? error : abortedError(signal));
+    pending.length = 0;
+    return true;
+  };
+
   const postBatch = async (batch: string[]) => {
     let failedRequests = 0;
     while (!failure) {
+      if (stopIfAborted()) {
+        return;
+      }
       try {
-        const response = await client.getUpcomingChangesForHosts(batch);
-        if (failure) {
+        const response = await client.getUpcomingChangesForHosts(batch, signal);
+        if (failure || stopIfAborted()) {
           return;
         }
         mergeRows(Array.isArray(response?.data) ? response.data : []);
         return;
       } catch (error) {
+        if (stopIfAborted(error)) {
+          return;
+        }
         failedRequests += 1;
         if (!isTransientFailure(error) || failedRequests >= MAX_FAILED_REQUESTS) {
           failure = failure ?? error;
           pending.length = 0;
           return;
         }
-        await waitBeforeRetry();
+        try {
+          await waitBeforeRetry(signal);
+        } catch (waitError) {
+          failure = failure ?? waitError;
+          pending.length = 0;
+          return;
+        }
       }
     }
   };
@@ -134,6 +160,9 @@ export const loadAllUpcomingChanges = async (
   } else {
     const worker = async () => {
       while (!failure) {
+        if (stopIfAborted()) {
+          return;
+        }
         const batch = pending.splice(0, BATCH_SIZE);
         if (batch.length === 0) {
           return;
