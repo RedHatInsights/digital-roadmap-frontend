@@ -24,6 +24,9 @@ module.exports = {
     '/api/roadmap/v1': {
       host: 'http://localhost:8000/',
     },
+    '/api/roadmap/v2': {
+      host: 'http://localhost:8000/',
+    },
   },
 
   /**
