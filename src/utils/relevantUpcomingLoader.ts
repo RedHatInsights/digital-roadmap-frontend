@@ -48,7 +48,29 @@ export interface UpcomingChangesClient {
   getUpcomingChangesForHosts: (hostIds: string[], signal?: AbortSignal) => Promise<{ data?: UpcomingChangeRow[] }>;
 }
 
-const itemKey = (row: Pick<UpcomingChangeRow, 'name' | 'release'>) => [row.name, row.release].join('\0');
+/**
+ * Identity of one upcoming file entry. Affected-system lists stay out of the
+ * key so batches can union hosts. Name and release are not enough: an addition
+ * and a deprecation can share both.
+ */
+const itemKey = (row: UpcomingChangeRow): string => {
+  const packages = [...(row.packages ?? (row.package == null ? [] : [row.package]))].sort();
+  const details = row.details;
+  return JSON.stringify([
+    row.name,
+    row.type,
+    row.release,
+    row.date,
+    packages,
+    details?.summary ?? null,
+    details?.architecture ?? null,
+    details?.trainingTicket ?? null,
+    details?.deployedDate ?? null,
+    details?.lastModified ?? null,
+    details?.dateAdded ?? null,
+    details?.detailFormat ?? null,
+  ]);
+};
 
 const unionSystems = (
   current: UpcomingSystemDetail[],

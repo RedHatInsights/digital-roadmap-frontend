@@ -96,7 +96,7 @@ describe('loadAllUpcomingChanges', () => {
     expect(maxInFlight).toBe(1);
   });
 
-  it('merges rows that share a name and release and keeps zero-count items', async () => {
+  it('merges rows that share a full record and keeps zero-count items', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
     const firstHost = ids[0];
     const lastHost = ids[BATCH_SIZE];
@@ -130,6 +130,7 @@ describe('loadAllUpcomingChanges', () => {
             data: [
               nobody,
               change({
+                packages: ['ruby', 'ruby-libs'],
                 details: {
                   summary: 'Ruby leaves the default streams',
                   potentiallyAffectedSystemsCount: 2,
@@ -146,11 +147,20 @@ describe('loadAllUpcomingChanges', () => {
           data: [
             nobody,
             change({
+              packages: ['ruby-libs', 'ruby'],
               details: {
-                summary: 'A later batch must not replace the summary',
+                summary: 'Ruby leaves the default streams',
                 potentiallyAffectedSystemsCount: 2,
                 potentiallyAffectedSystemsDetail: [host(firstHost), host(lastHost)],
                 potentiallyAffectedSystems: [firstHost, lastHost],
+              },
+            }),
+            change({
+              details: {
+                summary: 'A later different summary stays its own row',
+                potentiallyAffectedSystemsCount: 1,
+                potentiallyAffectedSystemsDetail: [host(lastHost)],
+                potentiallyAffectedSystems: [lastHost],
               },
             }),
             change({
@@ -170,15 +180,17 @@ describe('loadAllUpcomingChanges', () => {
 
     const result = await loadAllUpcomingChanges(ids, client);
 
-    expect(result.data.map((row) => [row.name, row.release])).toEqual([
-      ['Test package that nobody has', '10.0'],
-      ['Ruby 3.3 Deprecation', '9.6'],
-      ['Ruby 3.3 Deprecation', '10.0'],
+    expect(result.data.map((row) => [row.name, row.release, row.details?.summary])).toEqual([
+      ['Test package that nobody has', '10.0', 'No hosts match'],
+      ['Ruby 3.3 Deprecation', '9.6', 'Ruby leaves the default streams'],
+      ['Ruby 3.3 Deprecation', '10.0', 'RHEL 10 ruby'],
+      ['Ruby 3.3 Deprecation', '9.6', 'A later different summary stays its own row'],
     ]);
-    expect(result.meta).toEqual({ count: 3, total: 3 });
+    expect(result.meta).toEqual({ count: 4, total: 4 });
 
     const ruby = result.data[1];
     expect(ruby.details?.summary).toBe('Ruby leaves the default streams');
+    expect(ruby.packages).toEqual(['ruby', 'ruby-libs']);
     expect(ruby.details?.potentiallyAffectedSystemsCount).toBe(3);
     expect(ruby.details?.potentiallyAffectedSystems).toEqual([firstHost, 'extra', lastHost]);
     expect(ruby.details?.potentiallyAffectedSystemsDetail).toEqual([
@@ -192,6 +204,78 @@ describe('loadAllUpcomingChanges', () => {
       potentiallyAffectedSystemsCount: 1,
       potentiallyAffectedSystems: [firstHost],
     });
+    expect(result.data[3].details).toMatchObject({
+      summary: 'A later different summary stays its own row',
+      potentiallyAffectedSystemsCount: 1,
+      potentiallyAffectedSystems: [lastHost],
+    });
+  });
+
+  it('keeps distinct items when name and release are the same', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const firstHost = ids[0];
+    const secondHost = ids[BATCH_SIZE];
+    const addition = change({
+      name: 'shared-item',
+      type: 'addition',
+      package: 'pkga',
+      packages: ['pkga'],
+      release: '9.0',
+      date: '2026-01-01',
+      details: {
+        potentiallyAffectedSystemsCount: 1,
+        potentiallyAffectedSystemsDetail: [host(firstHost)],
+        potentiallyAffectedSystems: [firstHost],
+      },
+    });
+    const deprecation = change({
+      name: 'shared-item',
+      type: 'deprecation',
+      package: 'pkgb',
+      packages: ['pkgb'],
+      release: '9.0',
+      date: '2026-02-01',
+      details: {
+        potentiallyAffectedSystemsCount: 1,
+        potentiallyAffectedSystemsDetail: [host(secondHost)],
+        potentiallyAffectedSystems: [secondHost],
+      },
+    });
+    const client: UpcomingChangesClient = {
+      getUpcomingChangesForHosts: async (hostIds) => ({
+        data: [hostIds[0] === firstHost ? addition : deprecation],
+      }),
+    };
+    const result = await loadAllUpcomingChanges(ids, client);
+    expect(result.data).toHaveLength(2);
+    expect(result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'shared-item',
+          release: '9.0',
+          type: 'addition',
+          package: 'pkga',
+          packages: ['pkga'],
+          date: '2026-01-01',
+          details: expect.objectContaining({
+            potentiallyAffectedSystems: [firstHost],
+            potentiallyAffectedSystemsCount: 1,
+          }),
+        }),
+        expect.objectContaining({
+          name: 'shared-item',
+          release: '9.0',
+          type: 'deprecation',
+          package: 'pkgb',
+          packages: ['pkgb'],
+          date: '2026-02-01',
+          details: expect.objectContaining({
+            potentiallyAffectedSystems: [secondHost],
+            potentiallyAffectedSystemsCount: 1,
+          }),
+        }),
+      ])
+    );
   });
 
   it('requests the full catalog once when there are no host uuids', async () => {
