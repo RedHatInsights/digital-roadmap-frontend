@@ -375,6 +375,27 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(fetchHosts).toHaveBeenCalledTimes(1);
     expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
   });
+
+  it('counts a repeated host id once when it appears in multiple batches', async () => {
+    const repeatedHost = 'host-0';
+    const ids = [...makeIds(BATCH_SIZE), repeatedHost];
+    const client: RelevantAppstreamsClient = {
+      getRelevantLifecycleAppstreamsForHosts: async () => ({
+        data: [
+          stream({
+            count: 1,
+            systems_detail: [host(repeatedHost)],
+          }),
+        ],
+      }),
+    };
+    const result = await loadRelevantLifecycleAppstreams(ids, client);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      count: 1,
+      systems_detail: [host(repeatedHost)],
+    });
+  });
 });
 
 const waitForCalls = async (calls: string[][], count: number) => {

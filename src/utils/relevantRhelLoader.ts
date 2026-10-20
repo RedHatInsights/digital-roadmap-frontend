@@ -46,6 +46,12 @@ const unionSystems = (current: SystemsDetail[], incoming: SystemsDetail[]): Syst
   return [...byId.values()];
 };
 
+/** One entry per host. Count follows that list, including after batches are merged. */
+const withUniqueSystems = (row: RelevantRhelRow): RelevantRhelRow => {
+  const systems_detail = unionSystems([], row.systems_detail ?? []);
+  return { ...row, systems_detail, count: systems_detail.length };
+};
+
 const compareDescending = (
   left: string | number | null | undefined,
   right: string | number | null | undefined
@@ -224,5 +230,6 @@ export const loadRelevantLifecycleSystems = async (
   }
 
   const relatedOnly = [...related.values()].filter((row) => !installedVersions.has(versionKey(row)));
-  return { data: sortSystems([...installed.values(), ...relatedOnly]) as SystemLifecycleChanges[] };
+  const rows = [...installed.values(), ...relatedOnly].map(withUniqueSystems);
+  return { data: sortSystems(rows) as SystemLifecycleChanges[] };
 };

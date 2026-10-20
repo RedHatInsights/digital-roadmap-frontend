@@ -45,6 +45,12 @@ const unionSystems = (current: SystemsDetail[], incoming: SystemsDetail[]): Syst
   return [...byId.values()];
 };
 
+/** One entry per host. Count follows that list, including after batches are merged. */
+const withUniqueSystems = (row: RelevantAppStreamRow): RelevantAppStreamRow => {
+  const systems_detail = unionSystems([], row.systems_detail ?? []);
+  return { ...row, systems_detail, count: systems_detail.length };
+};
+
 const compareSortValue = (left: string | number | null | undefined, right: string | number | null | undefined) => {
   const rank = (value: string | number | null | undefined) => {
     if (value == null) {
@@ -218,5 +224,6 @@ export const loadRelevantLifecycleAppstreams = async (
   }
 
   const relatedOnly = [...related.values()].filter((row) => !installed.has(streamKey(row)));
-  return { data: sortStreams([...installed.values(), ...relatedOnly]) as Stream[] };
+  const rows = [...installed.values(), ...relatedOnly].map(withUniqueSystems);
+  return { data: sortStreams(rows) as Stream[] };
 };

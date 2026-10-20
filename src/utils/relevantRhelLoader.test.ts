@@ -285,6 +285,61 @@ describe('loadRelevantLifecycleSystems', () => {
     expect(fetchHosts).toHaveBeenCalledTimes(1);
     expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
   });
+
+  it('drops a related version when it is installed in a later batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const firstHost = ids[0];
+    const lastHost = ids[BATCH_SIZE];
+    const related = system({
+      minor: 4,
+      related: true,
+      count: 0,
+      support_status: 'Not installed',
+      systems_detail: [],
+    });
+    const installed = system({
+      minor: 4,
+      related: false,
+      count: 1,
+      systems_detail: [host(lastHost)],
+    });
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: async (hostIds) => ({
+        data: [hostIds[0] === firstHost ? related : installed],
+      }),
+    };
+    const result = await loadRelevantLifecycleSystems(ids, client);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      name: 'RHEL',
+      major: 9,
+      minor: 4,
+      lifecycle_type: 'mainline',
+      related: false,
+      count: 1,
+      systems_detail: [host(lastHost)],
+    });
+  });
+  it('counts a repeated host id once when it appears in multiple batches', async () => {
+    const repeatedHost = 'host-0';
+    const ids = [...makeIds(BATCH_SIZE), repeatedHost];
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: async () => ({
+        data: [
+          system({
+            count: 1,
+            systems_detail: [host(repeatedHost)],
+          }),
+        ],
+      }),
+    };
+    const result = await loadRelevantLifecycleSystems(ids, client);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      count: 1,
+      systems_detail: [host(repeatedHost)],
+    });
+  });
 });
 
 const waitForCalls = async (calls: string[][], count: number) => {
