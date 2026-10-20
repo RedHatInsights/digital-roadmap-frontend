@@ -1,0 +1,61 @@
+.preparing-data-state.pf-v6-c-empty-state .pf-v6-c-empty-state__content {
+  max-width: 44rem;
+}
+
+.preparing-data-state__items {
+  // Full bar is a few spaces wider than the longest helper. The finished bar gives
+  // that same total width to the percentage and check by becoming shorter.
+  --preparing-data-state--bar-width: 21.5rem;
+  --preparing-data-state--measure-width: 2.25rem;
+  --preparing-data-state--icon-space: calc(1em + var(--pf-t--global--spacer--sm));
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: var(--pf-t--global--spacer--md);
+  row-gap: var(--pf-t--global--spacer--md);
+  align-items: start;
+  justify-content: center;
+  width: 100%;
+  margin-block-start: var(--pf-t--global--spacer--lg);
+}
+
+.preparing-data-state__label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: var(--pf-t--global--spacer--md);
+  font-weight: var(--pf-t--global--font--weight--body--bold, 700);
+  text-align: end;
+  white-space: nowrap;
+}
+
+.preparing-data-state__progress.pf-v6-c-progress.pf-m-singleline {
+  grid-template-columns: var(--preparing-data-state--bar-width) var(--preparing-data-state--measure-width);
+  column-gap: var(--pf-t--global--spacer--sm);
+  row-gap: var(--pf-t--global--spacer--xs);
+  align-items: center;
+  width: calc(
+    var(--preparing-data-state--bar-width) + var(--pf-t--global--spacer--sm) +
+      var(--preparing-data-state--measure-width)
+  );
+}
+
+.preparing-data-state__progress.pf-v6-c-progress.pf-m-success {
+  grid-template-columns: calc(var(--preparing-data-state--bar-width) - var(--preparing-data-state--icon-space))
+    calc(var(--preparing-data-state--measure-width) + var(--preparing-data-state--icon-space));
+}
+
+.preparing-data-state__progress .pf-v6-c-progress__status {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.preparing-data-state__progress .pf-v6-c-progress__helper-text {
+  grid-row: 2;
+  grid-column: 1 / 2;
+  margin-block-start: 0;
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--body--sm);
+  line-height: var(--pf-t--global--font--line-height--body);
+  text-align: start;
+  white-space: nowrap;
+}

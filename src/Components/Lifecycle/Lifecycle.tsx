@@ -48,7 +48,7 @@ import { exportData as exportToFile } from '../../utils/export';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
-import { ExclamationCircleIcon } from '@patternfly/react-icons';
+import PreparingDataState from '../PreparingDataState/PreparingDataState';
 
 // Define DEFAULT_FILTERS with the ExtendedFilter type
 const DEFAULT_FILTERS: ExtendedFilter = {
@@ -62,21 +62,6 @@ type LifecycleLoadProgress = {
   requested: number;
   total: number;
   completed: boolean;
-};
-
-const LifecycleLoaderStatus = ({ label, progress }: { label: string; progress: LifecycleLoadProgress | null }) => {
-  if (progress?.completed) {
-    return <div>{`${label} loading completed`}</div>;
-  }
-
-  return (
-    <div className="lifecycle-loading-status">
-      <div>{label}</div>
-      {progress && progress.total > 0 ? (
-        <div>{`Loading ${progress.requested} out of ${progress.total} systems`}</div>
-      ) : null}
-    </div>
-  );
 };
 
 const trackLifecycleLoad = <T,>(
@@ -1088,16 +1073,34 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   if (isLoading) {
-    return (
-      <div>
+    const hasKnownSystemTotal = (rhelLoadProgress?.total ?? 0) > 0 || (appLoadProgress?.total ?? 0) > 0;
+
+    if (!hasKnownSystemTotal) {
+      return (
         <Bullseye>
-          <div className="lifecycle-loading">
-            <Spinner />
-            <LifecycleLoaderStatus label="RHEL Lifecycle" progress={rhelLoadProgress} />
-            <LifecycleLoaderStatus label="AppStream Lifecycle" progress={appLoadProgress} />
-          </div>
+          <Spinner aria-label="Loading life cycle data" />
         </Bullseye>
-      </div>
+      );
+    }
+
+    return (
+      <PreparingDataState
+        title="Preparing life cycle data"
+        items={[
+          {
+            label: 'Red Hat Enterprise Linux',
+            loaded: rhelLoadProgress?.requested ?? 0,
+            total: rhelLoadProgress?.total ?? 0,
+            completed: rhelLoadProgress?.completed ?? false,
+          },
+          {
+            label: 'Application Streams',
+            loaded: appLoadProgress?.requested ?? 0,
+            total: appLoadProgress?.total ?? 0,
+            completed: appLoadProgress?.completed ?? false,
+          },
+        ]}
+      />
     );
   }
 
@@ -1128,39 +1131,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
-  // Cannot use the ErrorState with customFooter since there are errors with it.
-  // This is basically the same as ErrorState only with custom action at the bottom.
-  const timeoutState = (
-    <Bullseye>
-      <EmptyState
-        headingLevel="h2"
-        icon={ExclamationCircleIcon}
-        titleText="Timeout reached when calculating response"
-        variant={EmptyStateVariant.sm}
-      >
-        <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
-        <EmptyStateFooter>
-          <EmptyStateActions>
-            <Button variant="primary" onClick={redirectToDashboard}>
-              Return to home page
-            </Button>
-          </EmptyStateActions>
-        </EmptyStateFooter>
-      </EmptyState>
-    </Bullseye>
-  );
-
   if (error) {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (error.status_code === 504) {
-      // Corner case, making user experience a little bit better.
-      // can be removed when https://redhat.atlassian.net/browse/RSPEED-1515 is fixed
-      return timeoutState;
-    } else {
-      return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
     }
+    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
   const emptyState = (

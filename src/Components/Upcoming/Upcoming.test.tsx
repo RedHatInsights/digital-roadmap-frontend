@@ -192,8 +192,9 @@ describe('UpcomingTab', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
-      // Check loading spinner is present
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      // Host UUIDs can resolve before a system total is known. That short wait stays a spinner.
+      expect(screen.getByRole('progressbar', { name: 'Loading upcoming changes' })).toBeInTheDocument();
+      expect(screen.queryByText('Preparing upcoming changes')).not.toBeInTheDocument();
 
       // Resolve the promise
       await act(async () => {
@@ -304,7 +305,7 @@ describe('UpcomingTab', () => {
       expect(signal?.aborted).toBe(true);
     });
 
-    test('shows how many systems are loading under the spinner', async () => {
+    test('shows how many systems are loading once a system total is known', async () => {
       let resolveChanges: (value: Awaited<ReturnType<typeof getAllUpcomingChanges>>) => void = () => undefined;
       mockGetAllUpcomingChanges.mockImplementation((_hostIds, onProgress) => {
         onProgress?.({ requested: 2000, total: 4500 });
@@ -317,15 +318,20 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      expect(await screen.findByText('Upcoming changes')).toBeInTheDocument();
-      expect(screen.getByText('Loading 2000 out of 4500 systems')).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: 'Preparing upcoming changes' })).toBeInTheDocument();
+      expect(screen.getByText(/Loading data for 4,500 systems\./)).toBeInTheDocument();
+      expect(screen.getByText('Upcoming changes')).toBeInTheDocument();
+      expect(screen.getByText('Loading 2,000 out of 4,500 systems')).toBeInTheDocument();
+      expect(screen.getByText('44%')).toBeInTheDocument();
+      expect(screen.queryByRole('progressbar', { name: 'Loading upcoming changes' })).not.toBeInTheDocument();
 
       await act(async () => {
         resolveChanges(upcomingResponse(mockAllData));
       });
 
       await waitFor(() => {
-        expect(screen.queryByText('Loading 2000 out of 4500 systems')).not.toBeInTheDocument();
+        expect(screen.queryByText('Loading 2,000 out of 4,500 systems')).not.toBeInTheDocument();
+        expect(screen.queryByText('Preparing upcoming changes')).not.toBeInTheDocument();
       });
     });
 
@@ -360,8 +366,8 @@ describe('UpcomingTab', () => {
       });
     });
 
-    test('handles timeout error (504)', async () => {
-      const timeoutError = { message: 'Timeout reached when calculating response', status_code: 504 };
+    test('handles a 504 with the generic error state', async () => {
+      const timeoutError = { message: 'Gateway Timeout', status_code: 504 };
 
       mockGetAllUpcomingChanges.mockRejectedValue(timeoutError);
 
@@ -369,13 +375,13 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      // Should show timeout message
       await waitFor(() => {
-        expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+        expect(screen.getByTestId('error-description')).toHaveTextContent('Gateway Timeout');
       });
     });
 
-    test('handles non-504 error with status code', async () => {
+    test('handles an error with a status code', async () => {
       const serverError = { message: 'Internal Server Error', status_code: 500 };
 
       mockGetAllUpcomingChanges.mockRejectedValue(serverError);

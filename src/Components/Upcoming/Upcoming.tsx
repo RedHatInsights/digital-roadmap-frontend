@@ -32,6 +32,7 @@ import { DEFAULT_FILTERS, KNOWN_TYPES, buildURL, pluralize } from '../../utils/u
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
 import { Filter } from '../../types/Filter';
+import PreparingDataState from '../PreparingDataState/PreparingDataState';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -401,20 +402,26 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   if (isLoading) {
-    return (
-      <div>
+    if (!upcomingLoadProgress || upcomingLoadProgress.total <= 0) {
+      return (
         <Bullseye>
-          <div className="lifecycle-loading">
-            <Spinner role="progressbar" aria-label="Loading upcoming changes" />
-            <div className="lifecycle-loading-status">
-              <div>Upcoming changes</div>
-              {upcomingLoadProgress && upcomingLoadProgress.total > 0 ? (
-                <div>{`Loading ${upcomingLoadProgress.requested} out of ${upcomingLoadProgress.total} systems`}</div>
-              ) : null}
-            </div>
-          </div>
+          <Spinner aria-label="Loading upcoming changes" />
         </Bullseye>
-      </div>
+      );
+    }
+
+    return (
+      <PreparingDataState
+        title="Preparing upcoming changes"
+        items={[
+          {
+            label: 'Upcoming changes',
+            loaded: upcomingLoadProgress.requested,
+            total: upcomingLoadProgress.total,
+            completed: false,
+          },
+        ]}
+      />
     );
   }
 
@@ -445,39 +452,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
-  // Cannot use the ErrorState with customFooter since there are errors with it.
-  // This is basically the same as ErrorState only with custom action at the bottom.
-  const timeoutState = (
-    <Bullseye>
-      <EmptyState
-        headingLevel="h2"
-        icon={ExclamationCircleIcon}
-        titleText="Timeout reached when calculating response"
-        variant={EmptyStateVariant.sm}
-      >
-        <EmptyStateBody>This is a known issue that we are working to resolve.</EmptyStateBody>
-        <EmptyStateFooter>
-          <EmptyStateActions>
-            <Button variant="primary" onClick={redirectToDashboard}>
-              Return to home page
-            </Button>
-          </EmptyStateActions>
-        </EmptyStateFooter>
-      </EmptyState>
-    </Bullseye>
-  );
-
   if (error) {
     if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
       // corner case with workspace filtering, we need different error message
       return lockedState;
-    } else if (error.status_code === 504) {
-      // Corner case, making user experience a little bit better.
-      // can be removed when https://redhat.atlassian.net/browse/RSPEED-1515 is fixed
-      return timeoutState;
-    } else {
-      return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
     }
+    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
   // New error state for when no all data is available
