@@ -239,6 +239,40 @@ describe('loadRelevantLifecycleSystems', () => {
     expect(fetchHosts.mock.calls[5][0]).toEqual(ids.slice(BATCH_SIZE * 2));
   });
 
+  it('does not request when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchHosts = jest.fn();
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: fetchHosts,
+    };
+
+    await expect(
+      loadRelevantLifecycleSystems(makeIds(1), client, undefined, controller.signal)
+    ).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    expect(fetchHosts).not.toHaveBeenCalled();
+  });
+
+  it('does not retry or continue after an aborted batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const controller = new AbortController();
+    const canceled = Object.assign(new Error('canceled'), { name: 'CanceledError', code: 'ERR_CANCELED' });
+    const fetchHosts = jest.fn().mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(canceled);
+    });
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: fetchHosts,
+    };
+
+    await expect(loadRelevantLifecycleSystems(ids, client, undefined, controller.signal)).rejects.toBe(canceled);
+    expect(fetchHosts).toHaveBeenCalledTimes(1);
+    expect(fetchHosts).toHaveBeenCalledWith(ids.slice(0, BATCH_SIZE), controller.signal);
+    expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
+  });
+
   it('does not retry a permanent client error', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
     const error = Object.assign(new Error('bad request'), { status_code: 400 });
@@ -250,6 +284,61 @@ describe('loadRelevantLifecycleSystems', () => {
     await expect(loadRelevantLifecycleSystems(ids, client)).rejects.toBe(error);
     expect(fetchHosts).toHaveBeenCalledTimes(1);
     expect(batchRetry.waitBeforeRetry).not.toHaveBeenCalled();
+  });
+
+  it('drops a related version when it is installed in a later batch', async () => {
+    const ids = makeIds(BATCH_SIZE + 1);
+    const firstHost = ids[0];
+    const lastHost = ids[BATCH_SIZE];
+    const related = system({
+      minor: 4,
+      related: true,
+      count: 0,
+      support_status: 'Not installed',
+      systems_detail: [],
+    });
+    const installed = system({
+      minor: 4,
+      related: false,
+      count: 1,
+      systems_detail: [host(lastHost)],
+    });
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: async (hostIds) => ({
+        data: [hostIds[0] === firstHost ? related : installed],
+      }),
+    };
+    const result = await loadRelevantLifecycleSystems(ids, client);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      name: 'RHEL',
+      major: 9,
+      minor: 4,
+      lifecycle_type: 'mainline',
+      related: false,
+      count: 1,
+      systems_detail: [host(lastHost)],
+    });
+  });
+  it('counts a repeated host id once when it appears in multiple batches', async () => {
+    const repeatedHost = 'host-0';
+    const ids = [...makeIds(BATCH_SIZE), repeatedHost];
+    const client: RelevantRhelClient = {
+      getRelevantLifecycleSystemsForHosts: async () => ({
+        data: [
+          system({
+            count: 1,
+            systems_detail: [host(repeatedHost)],
+          }),
+        ],
+      }),
+    };
+    const result = await loadRelevantLifecycleSystems(ids, client);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toMatchObject({
+      count: 1,
+      systems_detail: [host(repeatedHost)],
+    });
   });
 });
 

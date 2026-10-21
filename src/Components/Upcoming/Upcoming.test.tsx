@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import UpcomingTab from './Upcoming';
-import { getAllUpcomingChanges } from '../../api';
+import { getAccessibleHostUuids, getAllUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Polyfill for structuredClone in test environment
@@ -14,6 +14,7 @@ if (!global.structuredClone) {
 
 // Mock the API functions
 jest.mock('../../api', () => ({
+  getAccessibleHostUuids: jest.fn(),
   getAllUpcomingChanges: jest.fn(),
 }));
 
@@ -78,6 +79,12 @@ const mockedUseSearchParams = useSearchParams as jest.MockedFunction<typeof useS
 const mockSetSearchParams = jest.fn();
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
+const mockGetAccessibleHostUuids = getAccessibleHostUuids as jest.MockedFunction<typeof getAccessibleHostUuids>;
+
+const upcomingResponse = (data: UpcomingChanges[]): Awaited<ReturnType<typeof getAllUpcomingChanges>> => ({
+  meta: { count: data.length, total: data.length },
+  data,
+});
 
 // The "relevant" view is derived from the "all" response, so the affected-systems count
 // is what decides whether an item shows up there.
@@ -163,7 +170,8 @@ describe('UpcomingTab', () => {
     setupSearchParamsMock(); // Reset to empty params
 
     // Reset mocks to default successful state
-    mockGetAllUpcomingChanges.mockResolvedValue({ data: mockAllData });
+    mockGetAccessibleHostUuids.mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['host-1'] });
+    mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mockAllData));
   });
 
   describe('Initial Loading', () => {
@@ -221,8 +229,9 @@ describe('UpcomingTab', () => {
   });
 
   describe('Data Fetching', () => {
-    // RHINENG-30470: page load must issue a single inventory request, not two
-    test('fetches upcoming changes with one request and derives the relevant view', async () => {
+    // The relevant view is derived from the all=true catalog, so the page loads host ids once
+    // and asks for that catalog once.
+    test('fetches host ids once and derives the relevant view', async () => {
       await act(async () => {
         renderComponent();
       });
@@ -231,7 +240,14 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('table-data-count')).toBeInTheDocument();
       });
 
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledWith(expect.any(AbortSignal));
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith(
+        ['host-1'],
+        expect.any(Function),
+        expect.any(AbortSignal)
+      );
 
       // Should display relevant data initially - only the item with count > 0
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
@@ -254,8 +270,63 @@ describe('UpcomingTab', () => {
         fireEvent.click(screen.getByTestId('switch-to-relevant'));
       });
 
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
+    });
+
+    test('passes an empty UUID list into the upcoming loader', async () => {
+      mockGetAccessibleHostUuids.mockResolvedValue({ meta: { count: 0, total: 0 }, data: [] });
+
+      await act(async () => {
+        renderComponent();
+      });
+
+      await waitFor(() => {
+        expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith([], expect.any(Function), expect.any(AbortSignal));
+      });
+    });
+
+    test('aborts in-flight upcoming requests when the page unmounts', async () => {
+      let signal: AbortSignal | undefined;
+      mockGetAccessibleHostUuids.mockImplementation((incoming?: AbortSignal) => {
+        signal = incoming;
+        return new Promise(() => undefined);
+      });
+
+      const view = renderComponent();
+
+      await waitFor(() => {
+        expect(signal).toBeInstanceOf(AbortSignal);
+      });
+
+      view.unmount();
+      expect(signal?.aborted).toBe(true);
+    });
+
+    test('shows how many systems are loading under the spinner', async () => {
+      let resolveChanges: (value: Awaited<ReturnType<typeof getAllUpcomingChanges>>) => void = () => undefined;
+      mockGetAllUpcomingChanges.mockImplementation((_hostIds, onProgress) => {
+        onProgress?.({ requested: 2000, total: 4500 });
+        return new Promise((resolve) => {
+          resolveChanges = resolve;
+        });
+      });
+
+      await act(async () => {
+        renderComponent();
+      });
+
+      expect(await screen.findByText('Upcoming changes')).toBeInTheDocument();
+      expect(screen.getByText('Loading 2000 out of 4500 systems')).toBeInTheDocument();
+
+      await act(async () => {
+        resolveChanges(upcomingResponse(mockAllData));
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Loading 2000 out of 4500 systems')).not.toBeInTheDocument();
+      });
     });
 
     test('handles API failure gracefully', async () => {
@@ -369,7 +440,7 @@ describe('UpcomingTab', () => {
     });
 
     test('auto-switches to all view when every count is 0', async () => {
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mockNoRelevantData));
 
       await act(async () => {
         renderComponent();
@@ -383,7 +454,7 @@ describe('UpcomingTab', () => {
     });
 
     test('prevents switching to relevant when no relevant data available', async () => {
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mockNoRelevantData));
 
       await act(async () => {
         renderComponent();
@@ -501,7 +572,7 @@ describe('UpcomingTab', () => {
     });
 
     test('resets to all view when no relevant data available', async () => {
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: mockNoRelevantData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mockNoRelevantData));
 
       await act(async () => {
         renderComponent();
@@ -630,7 +701,7 @@ describe('UpcomingTab', () => {
       const additionOnlyData: UpcomingChanges[] = [
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(additionOnlyData));
 
       setupSearchParamsMock({ type: 'Change' });
 
@@ -652,7 +723,7 @@ describe('UpcomingTab', () => {
       const additionOnlyData: UpcomingChanges[] = [
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(additionOnlyData));
 
       setupSearchParamsMock({ type: 'Deprecation' });
 
@@ -674,7 +745,7 @@ describe('UpcomingTab', () => {
       const additionOnlyData: UpcomingChanges[] = [
         { name: 'New Feature', type: 'addition', release: 'Release 1.0', date: '2024-12-01', package: 'ruby' },
       ];
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: additionOnlyData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(additionOnlyData));
 
       setupSearchParamsMock({ type: 'Change,Deprecation' });
 
@@ -741,7 +812,7 @@ describe('UpcomingTab', () => {
 
   describe('Empty States', () => {
     test('displays no data available state when all data sources are empty', async () => {
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: [] });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse([]));
 
       await act(async () => {
         renderComponent();
@@ -766,7 +837,7 @@ describe('UpcomingTab', () => {
         { ...mockNoRelevantData[2], type: 'change' },
       ];
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithLowerCaseTypes });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(dataWithLowerCaseTypes));
 
       await act(async () => {
         renderComponent();
@@ -793,7 +864,7 @@ describe('UpcomingTab', () => {
         { name: 'Test 5', type: 'Change', release: 'R1', date: '2024-01-01', package: 'nodejs' },
       ];
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: mixedData });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mixedData));
 
       await act(async () => {
         renderComponent();
@@ -834,7 +905,7 @@ describe('UpcomingTab', () => {
         },
       ];
 
-      mockGetAllUpcomingChanges.mockResolvedValue({ data: dataWithNullDeployedDate });
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(dataWithNullDeployedDate));
 
       await act(async () => {
         renderComponent();

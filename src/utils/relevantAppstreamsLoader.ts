@@ -1,6 +1,6 @@
 import { Stream } from '../types/Stream';
 import { SystemsDetail } from '../types/SystemsDetail';
-import { isTransientFailure, waitBeforeRetry } from './batchRetry';
+import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per app-stream request. Keep this below the API maximum of 10,000; these responses are heavier than RHEL. */
 export const BATCH_SIZE = 5000;
@@ -25,7 +25,10 @@ export type RelevantAppStreamRow = Omit<Stream, 'os_minor' | 'start_date' | 'end
 };
 
 export interface RelevantAppstreamsClient {
-  getRelevantLifecycleAppstreamsForHosts: (hostIds: string[]) => Promise<{ data?: RelevantAppStreamRow[] }>;
+  getRelevantLifecycleAppstreamsForHosts: (
+    hostIds: string[],
+    signal?: AbortSignal
+  ) => Promise<{ data?: RelevantAppStreamRow[] }>;
 }
 
 const streamKey = (
@@ -40,6 +43,12 @@ const unionSystems = (current: SystemsDetail[], incoming: SystemsDetail[]): Syst
     }
   }
   return [...byId.values()];
+};
+
+/** One entry per host. Count follows that list, including after batches are merged. */
+const withUniqueSystems = (row: RelevantAppStreamRow): RelevantAppStreamRow => {
+  const systems_detail = unionSystems([], row.systems_detail ?? []);
+  return { ...row, systems_detail, count: systems_detail.length };
 };
 
 const compareSortValue = (left: string | number | null | undefined, right: string | number | null | undefined) => {
@@ -89,10 +98,15 @@ const sortStreams = (rows: RelevantAppStreamRow[]) =>
 export const loadRelevantLifecycleAppstreams = async (
   hostIds: string[],
   client: RelevantAppstreamsClient,
-  onProgress?: (progress: AppstreamLoadProgress) => void
+  onProgress?: (progress: AppstreamLoadProgress) => void,
+  signal?: AbortSignal
 ): Promise<{ data: Stream[] }> => {
   const pending = [...hostIds];
   const total = pending.length;
+
+  if (signal?.aborted) {
+    throw abortedError(signal);
+  }
 
   if (total === 0) {
     return { data: [] };
@@ -137,30 +151,54 @@ export const loadRelevantLifecycleAppstreams = async (
     }
   };
 
+  const stopIfAborted = (error?: unknown) => {
+    if (!signal?.aborted && !isAbortError(error)) {
+      return false;
+    }
+    failure = failure ?? (isAbortError(error) ? error : abortedError(signal));
+    pending.length = 0;
+    return true;
+  };
+
   const postBatch = async (batch: string[]) => {
     let failedRequests = 0;
     while (!failure) {
+      if (stopIfAborted()) {
+        return;
+      }
       try {
-        const response = await client.getRelevantLifecycleAppstreamsForHosts(batch);
-        if (failure) {
+        const response = await client.getRelevantLifecycleAppstreamsForHosts(batch, signal);
+        if (failure || stopIfAborted()) {
           return;
         }
         mergeRows(Array.isArray(response?.data) ? response.data : []);
         return;
       } catch (error) {
+        if (stopIfAborted(error)) {
+          return;
+        }
         failedRequests += 1;
         if (!isTransientFailure(error) || failedRequests >= MAX_FAILED_REQUESTS) {
           failure = failure ?? error;
           pending.length = 0;
           return;
         }
-        await waitBeforeRetry();
+        try {
+          await waitBeforeRetry(signal);
+        } catch (waitError) {
+          failure = failure ?? waitError;
+          pending.length = 0;
+          return;
+        }
       }
     }
   };
 
   const worker = async () => {
     while (!failure) {
+      if (stopIfAborted()) {
+        return;
+      }
       const batch = pending.splice(0, BATCH_SIZE);
       if (batch.length === 0) {
         return;
@@ -186,5 +224,6 @@ export const loadRelevantLifecycleAppstreams = async (
   }
 
   const relatedOnly = [...related.values()].filter((row) => !installed.has(streamKey(row)));
-  return { data: sortStreams([...installed.values(), ...relatedOnly]) as Stream[] };
+  const rows = [...installed.values(), ...relatedOnly].map(withUniqueSystems);
+  return { data: sortStreams(rows) as Stream[] };
 };
