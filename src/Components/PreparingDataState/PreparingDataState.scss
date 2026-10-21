@@ -1,3 +1,10 @@
+.preparing-data-state.pf-v6-c-empty-state {
+  width: 100%;
+  min-width: 0;
+  container-name: preparing-data-state;
+  container-type: inline-size;
+}
+
 .preparing-data-state.pf-v6-c-empty-state .pf-v6-c-empty-state__content {
   max-width: 44rem;
 }
@@ -58,4 +65,44 @@
   line-height: var(--pf-t--global--font--line-height--body);
   text-align: start;
   white-space: nowrap;
+}
+
+// The fixed row is about 36rem. Stack once the content box can no longer hold it.
+@container preparing-data-state (max-width: calc(42rem - 1px)) {
+  .preparing-data-state.pf-v6-c-empty-state .pf-v6-c-empty-state__content {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .preparing-data-state__items {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  .preparing-data-state__label {
+    display: block;
+    height: auto;
+    min-width: 0;
+    text-align: start;
+    white-space: normal;
+  }
+
+  .preparing-data-state__progress.pf-v6-c-progress.pf-m-singleline,
+  .preparing-data-state__progress.pf-v6-c-progress.pf-m-success {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .preparing-data-state__progress .pf-v6-c-progress__bar {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .preparing-data-state__progress .pf-v6-c-progress__helper-text {
+    min-width: 0;
+    white-space: normal;
+  }
 }
