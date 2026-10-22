@@ -274,22 +274,14 @@ describe('LifecycleTab Component', () => {
   });
 
   describe('Initial Loading and Data Fetching', () => {
-    test('displays loading spinner initially', async () => {
+    test('displays loading spinner while host UUIDs are loading', async () => {
+      mockApiCalls.getAccessibleHostUuids.mockImplementation(() => new Promise(() => undefined));
+
       renderWithRouter(<LifecycleTab />);
 
-      // Check for PatternFly Spinner - look for the spinner element or loading text
-      const spinnerElement =
-        document.querySelector('.pf-v5-c-spinner') ||
-        document.querySelector('[role="progressbar"]') ||
-        screen.queryByText(/loading/i);
-
-      if (!spinnerElement) {
-        // If no spinner found, check that the component is initially in loading state
-        // by ensuring the content hasn't loaded yet
-        expect(screen.queryByTestId('lifecycle-filters')).not.toBeInTheDocument();
-      } else {
-        expect(spinnerElement).toBeInTheDocument();
-      }
+      expect(await screen.findByRole('progressbar', { name: 'Loading life cycle data' })).toBeInTheDocument();
+      expect(screen.queryByText('Preparing life cycle data')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('lifecycle-filters')).not.toBeInTheDocument();
     });
 
     test('fetches data on mount', async () => {
@@ -389,8 +381,15 @@ describe('LifecycleTab Component', () => {
       });
     });
 
-    test('shows how many systems are loading under the spinner', async () => {
+    test('shows how many systems are loading once a system total is known', async () => {
+      let resolveRhel: (value: { data: SystemLifecycleChanges[] }) => void = () => undefined;
       let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleSystems.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveRhel = resolve;
+          })
+      );
       mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation((_hostIds, onProgress) => {
         onProgress?.({ requested: 5000, total: 12300 });
         return new Promise((resolve) => {
@@ -400,15 +399,22 @@ describe('LifecycleTab Component', () => {
 
       renderWithRouter(<LifecycleTab />);
 
-      expect(await screen.findByText('AppStream Lifecycle')).toBeInTheDocument();
-      expect(screen.getByText('Loading 5000 out of 12300 systems')).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: 'Preparing life cycle data' })).toBeInTheDocument();
+      expect(screen.getByText(/Loading data for 12,300 systems\./)).toBeInTheDocument();
+      expect(screen.getByText(/Keep this page open to track progress\./)).toBeInTheDocument();
+      expect(screen.getByText('Application Streams')).toBeInTheDocument();
+      expect(screen.getByText('Red Hat Enterprise Linux')).toBeInTheDocument();
+      expect(screen.getByText('Loading 5,000 out of 12,300 systems')).toBeInTheDocument();
+      expect(screen.getByText('41%')).toBeInTheDocument();
+      expect(screen.queryByRole('progressbar', { name: 'Loading life cycle data' })).not.toBeInTheDocument();
 
       await act(async () => {
+        resolveRhel({ data: [] });
         resolveAppstreams({ data: [] });
       });
 
       await waitFor(() => {
-        expect(screen.queryByText('Loading 5000 out of 12300 systems')).not.toBeInTheDocument();
+        expect(screen.queryByText('Preparing life cycle data')).not.toBeInTheDocument();
       });
     });
 
@@ -430,16 +436,23 @@ describe('LifecycleTab Component', () => {
 
       renderWithRouter(<LifecycleTab />);
 
-      expect(await screen.findByText('RHEL Lifecycle')).toBeInTheDocument();
-      expect(screen.getByText('Loading 5000 out of 12300 systems')).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: 'Preparing life cycle data' })).toBeInTheDocument();
+      expect(screen.getByText(/Loading data for 12,300 systems\./)).toBeInTheDocument();
+      expect(screen.getByText('Red Hat Enterprise Linux')).toBeInTheDocument();
+      expect(screen.getByText('Loading 5,000 out of 12,300 systems')).toBeInTheDocument();
 
       await act(async () => {
         resolveRhel({ data: [] });
       });
 
-      expect(await screen.findByText('RHEL Lifecycle loading completed')).toBeInTheDocument();
-      expect(screen.getByText('AppStream Lifecycle')).toBeInTheDocument();
-      expect(screen.queryByText('Loading 5000 out of 12300 systems')).not.toBeInTheDocument();
+      expect(await screen.findByText(/This can take a few minutes for 12,300 systems\./)).toBeInTheDocument();
+      expect(screen.getByText('Red Hat Enterprise Linux data loaded for 12,300 systems')).toBeInTheDocument();
+      expect(screen.getByText('Application Streams')).toBeInTheDocument();
+      expect(screen.queryByText('Loading 5,000 out of 12,300 systems')).not.toBeInTheDocument();
+      expect(screen.getByRole('progressbar', { name: 'Red Hat Enterprise Linux' })).toHaveAttribute(
+        'aria-valuenow',
+        '100'
+      );
 
       await act(async () => {
         resolveAppstreams({ data: [] });
@@ -491,19 +504,20 @@ describe('LifecycleTab Component', () => {
       });
     });
 
-    test('displays timeout error state for 504 status', async () => {
-      const timeoutError = new Error('Timeout') as any;
+    test('displays generic error state for a 504 status', async () => {
+      const timeoutError = new Error('Gateway Timeout') as any;
       timeoutError.status_code = 504;
       mockApiCalls.getAllLifecycleSystems.mockRejectedValue(timeoutError);
 
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
-        expect(screen.getByText('Timeout reached when calculating response')).toBeInTheDocument();
+        expect(screen.getByText('Failed to load data')).toBeInTheDocument();
+        expect(screen.getByText('Gateway Timeout')).toBeInTheDocument();
       });
     });
 
-    test('displays generic error state for non-504 status codes', async () => {
+    test('displays generic error state for other status codes', async () => {
       const serverError = new Error('Internal Server Error') as any;
       serverError.status_code = 500;
       mockApiCalls.getAllLifecycleSystems.mockRejectedValue(serverError);
