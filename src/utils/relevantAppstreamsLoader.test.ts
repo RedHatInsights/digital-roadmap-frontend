@@ -42,8 +42,8 @@ describe('loadRelevantLifecycleAppstreams', () => {
     jest.mocked(batchRetry.waitBeforeRetry).mockClear();
   });
 
-  it('uses one request at a time and batches 5000 host ids', async () => {
-    expect(BATCH_SIZE).toBe(5000);
+  it('uses one request at a time and batches 1000 host ids', async () => {
+    expect(BATCH_SIZE).toBe(1000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
     expect(MAX_FAILED_REQUESTS).toBe(3);
 
@@ -71,20 +71,22 @@ describe('loadRelevantLifecycleAppstreams', () => {
     const pending = loadRelevantLifecycleAppstreams(ids, client, (update) => progress.push(update));
 
     await waitForCalls(calls, 1);
-    expect(calls[0]).toHaveLength(5000);
-    expect(calls[0]).toEqual(ids.slice(0, 5000));
-    expect(progress).toEqual([{ requested: 5000, total: ids.length }]);
+    expect(calls[0]).toHaveLength(1000);
+    expect(calls[0]).toEqual(ids.slice(0, 1000));
+    expect(progress).toEqual([{ requested: 1000, total: ids.length }]);
     expect(maxInFlight).toBe(1);
 
     releases[0]();
     await waitForCalls(calls, 2);
-    expect(calls[1]).toHaveLength(5000);
-    expect(progress[1]).toEqual({ requested: 10000, total: ids.length });
+    expect(calls[1]).toHaveLength(1000);
+    expect(calls[1]).toEqual(ids.slice(1000, 2000));
+    expect(progress[1]).toEqual({ requested: 2000, total: ids.length });
     expect(maxInFlight).toBe(1);
 
     releases[1]();
     await waitForCalls(calls, 3);
-    expect(calls[2]).toEqual(ids.slice(10000));
+    expect(calls[2]).toHaveLength(1);
+    expect(calls[2]).toEqual(ids.slice(2000));
     expect(progress[2]).toEqual({ requested: ids.length, total: ids.length });
 
     releases[2]();
