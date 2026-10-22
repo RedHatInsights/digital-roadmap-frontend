@@ -3,7 +3,7 @@ import { SystemsDetail } from '../types/SystemsDetail';
 import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per app-stream request. Keep this below the API maximum of 10,000; these responses are heavier than RHEL. */
-export const BATCH_SIZE = 5000;
+export const BATCH_SIZE = 1000;
 
 /** In-flight app-stream requests. Keep this at 1 unless the API instances have spare capacity. */
 export const MAX_CONCURRENT_REQUESTS = 1;

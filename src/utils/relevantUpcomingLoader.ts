@@ -1,7 +1,7 @@
 import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per upcoming request. These queries read installed packages, so keep batches smaller than RHEL. */
-export const BATCH_SIZE = 5000;
+export const BATCH_SIZE = 1000;
 
 /** In-flight upcoming requests. Keep this at 1 unless the API instances have spare capacity. */
 export const MAX_CONCURRENT_REQUESTS = 1;
