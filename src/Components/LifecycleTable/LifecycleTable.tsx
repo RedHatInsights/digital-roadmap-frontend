@@ -584,7 +584,6 @@ export const LifecycleTable: React.FunctionComponent<LifecycleTableProps> = ({
       <LifecycleModalWindow
         name={modalDataName}
         modalData={modalData}
-        setModalData={setModalData}
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
       />
