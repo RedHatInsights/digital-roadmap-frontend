@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-22:9.8-1785112057 as builder
+FROM registry.access.redhat.com/ubi10/nodejs-22:10.2-1793206167 as builder
 
 USER root
 
@@ -60,6 +60,13 @@ COPY --from=builder /opt/app-root/src/Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /opt/app-root/src/dist dist
 COPY ${PACKAGE_JSON_PATH} .
 
-RUN useradd --key HOME_MODE=0775 --system --gid 0 caddy
+# The caddy-ubi image above is itself built on ubi-minimal, which ships no
+# shadow-utils, so useradd is unavailable here and the account is written directly;
+# installing shadow-utils just to run useradd leaves ~14MB behind even after it is
+# removed again. uid 999 and gid 0 are what useradd picked before, and --system
+# never created the home directory, so neither do we. The shell is nologin rather
+# than useradd's default bash, as caddy is a service account that is exec'd by the
+# container runtime and never needs one.
+RUN echo 'caddy:x:999:0::/home/caddy:/usr/sbin/nologin' >> /etc/passwd
 
 USER caddy
