@@ -10,8 +10,6 @@ import {
   DR_RELEVANT_LIFECYCLE_SYSTEMS_HOSTS,
   DR_RELEVANT_UPCOMING,
   DR_RELEVANT_UPCOMING_HOSTS,
-  INVENTORY_API_ROOT,
-  INVENTORY_HOSTS_ROOT,
 } from './constants';
 import { isAbortError } from './utils/batchRetry';
 import { AppstreamLoadProgress, loadRelevantLifecycleAppstreams } from './utils/relevantAppstreamsLoader';
@@ -217,24 +215,6 @@ export const getAllLifecycleAppstreams = async (signal?: AbortSignal) => {
         throw new ApiError(error.message);
       }
     });
-  return getResponseOrError(response);
-};
-
-/* Inventory */
-
-export const inventoryFetchSystems = (path: string = '') => {
-  return getInventory(INVENTORY_HOSTS_ROOT.concat(path));
-};
-
-export const inventoryFetchSystemsByIds = (ids: string[], path: string = '') => {
-  return getInventory(INVENTORY_HOSTS_ROOT.concat('/').concat(ids.join(',')).concat(path));
-};
-
-const getInventory = async (path: string) => {
-  const response = await axios.get(INVENTORY_API_ROOT.concat(path)).catch(function (error) {
-    return error;
-  });
-
   return getResponseOrError(response);
 };
 
