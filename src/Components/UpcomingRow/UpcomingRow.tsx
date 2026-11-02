@@ -187,7 +187,6 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
       <LifecycleModalWindow
         name={modalDataName}
         modalData={modalData}
-        setModalData={setModalData}
         isModalOpen={isModalOpen}
         handleModalToggle={handleModalToggle}
       ></LifecycleModalWindow>
