@@ -42,7 +42,7 @@ describe('loadRelevantLifecycleSystems', () => {
   });
 
   it('uses one request at a time and batches 5000 host ids', async () => {
-    expect(BATCH_SIZE).toBe(10000);
+    expect(BATCH_SIZE).toBe(5000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
     expect(MAX_FAILED_REQUESTS).toBe(3);
 
