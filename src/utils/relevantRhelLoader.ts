@@ -1,6 +1,12 @@
 import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 import { SystemsDetail } from '../types/SystemsDetail';
-import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
+import {
+  SLOW_BATCH_TIMEOUT_MS,
+  abortedError,
+  isAbortError,
+  isTransientFailure,
+  waitBeforeRetry,
+} from './batchRetry';
 
 /** Hosts per RHEL request. RHEL responses are smaller, so this can sit at the API maximum of 10,000. */
 export const BATCH_SIZE = 5000;
@@ -12,7 +18,7 @@ export const MAX_CONCURRENT_REQUESTS = 1;
 export const MAX_FAILED_REQUESTS = 3;
 
 export type RhelLoadProgress = {
-  requested: number;
+  completed: number;
   total: number;
 };
 
@@ -102,7 +108,8 @@ export const loadRelevantLifecycleSystems = async (
   hostIds: string[],
   client: RelevantRhelClient,
   onProgress?: (progress: RhelLoadProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onBatchSlow?: (isSlow: boolean) => void
 ): Promise<{ data: SystemLifecycleChanges[] }> => {
   const pending = [...hostIds];
   const total = pending.length;
@@ -119,7 +126,7 @@ export const loadRelevantLifecycleSystems = async (
   const installed = new Map<string, RelevantRhelRow>();
   const installedVersions = new Set<string>();
   const related = new Map<string, RelevantRhelRow>();
-  let requested = 0;
+  let completed = 0;
   let failure: unknown;
 
   const mergeRows = (rows: RelevantRhelRow[]) => {
@@ -172,7 +179,15 @@ export const loadRelevantLifecycleSystems = async (
       if (stopIfAborted()) {
         return;
       }
+      let slowTimer: ReturnType<typeof setTimeout> | undefined;
+      let slowNotified = false;
       try {
+        slowTimer = setTimeout(() => {
+          if (!signal?.aborted && !failure) {
+            slowNotified = true;
+            onBatchSlow?.(true);
+          }
+        }, SLOW_BATCH_TIMEOUT_MS);
         const response = await client.getRelevantLifecycleSystemsForHosts(batch, signal);
         if (failure || stopIfAborted()) {
           return;
@@ -180,6 +195,7 @@ export const loadRelevantLifecycleSystems = async (
         mergeRows(Array.isArray(response?.data) ? response.data : []);
         return;
       } catch (error) {
+        if (slowTimer) clearTimeout(slowTimer);
         if (stopIfAborted(error)) {
           return;
         }
@@ -189,12 +205,20 @@ export const loadRelevantLifecycleSystems = async (
           pending.length = 0;
           return;
         }
+        if (slowNotified) {
+          onBatchSlow?.(false);
+        }
+        // The next attempt gets its own slow timer.
         try {
           await waitBeforeRetry(signal);
         } catch (waitError) {
           failure = failure ?? waitError;
           pending.length = 0;
           return;
+        }
+      } finally {
+        if (slowTimer) {
+          clearTimeout(slowTimer);
         }
       }
     }
@@ -211,13 +235,18 @@ export const loadRelevantLifecycleSystems = async (
       }
 
       batch.forEach((id) => waiting.add(id));
-      requested += batch.length;
-      onProgress?.({ requested, total });
+      let succeeded = false;
 
       try {
         await postBatch(batch);
+        succeeded = !failure;
       } finally {
         batch.forEach((id) => waiting.delete(id));
+      }
+
+      if (succeeded) {
+        completed += batch.length;
+        onProgress?.({ completed, total });
       }
     }
   };

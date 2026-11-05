@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { ApiError, getAccessibleHostUuids, getUpcomingChangesForHosts } from './api';
+import { ApiError, HOST_UUID_LOOKUP_TIMEOUT_MS, getAccessibleHostUuids, getUpcomingChangesForHosts } from './api';
 import { isTransientFailure } from './utils/batchRetry';
 
 jest.mock('axios', () => ({
@@ -29,7 +29,11 @@ describe('getAccessibleHostUuids', () => {
 
     await expect(getAccessibleHostUuids()).resolves.toEqual(body);
     expect(request).toHaveBeenCalledWith(
-      expect.objectContaining({ method: 'get', url: '/api/roadmap/v1/lifecycle/host-uuids' })
+      expect.objectContaining({
+        method: 'get',
+        url: '/api/roadmap/v1/lifecycle/host-uuids',
+        timeout: HOST_UUID_LOOKUP_TIMEOUT_MS,
+      })
     );
   });
 
