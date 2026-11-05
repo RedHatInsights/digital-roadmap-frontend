@@ -52,10 +52,16 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
     selectedChartSortBy = 'Retirement date', // Default value
     updateChartSortValue,
     onExport,
+    isExportDisabled: exportDisabled = false,
+    exportDisabledTooltipContent = 'Still loading',
     selectedViewFilter = 'installed-only', // Default value
     handleViewFilterChange,
     noDataAvailable,
     rhelVersionOptions = [],
+    onRhelVersionsChange,
+    initialRhelVersions = [],
+    onStatusesChange,
+    initialStatuses = [],
   }: any) => (
     <div data-testid="lifecycle-filters">
       <input
@@ -92,16 +98,25 @@ jest.mock('../../Components/LifecycleFilters/LifecycleFilters', () => {
         <option value="installed-only">Installed Only</option>
         <option value="installed-and-related">Installed and Related</option>
       </select>
-      <button data-testid="export-csv" onClick={() => onExport?.('csv')}>
+      <button data-testid="export-csv" disabled={exportDisabled} onClick={() => onExport?.('csv')}>
         Export CSV
       </button>
-      <button data-testid="export-json" onClick={() => onExport?.('json')}>
+      <button data-testid="export-json" disabled={exportDisabled} onClick={() => onExport?.('json')}>
         Export JSON
       </button>
-      <button data-testid="export-xml" onClick={() => onExport?.('xml')}>
+      <button data-testid="export-xml" disabled={exportDisabled} onClick={() => onExport?.('xml')}>
         Export XML
       </button>
+      <span data-testid="export-disabled-tooltip">{exportDisabledTooltipContent}</span>
 
+      <button data-testid="select-rhel9" onClick={() => onRhelVersionsChange(['RHEL 9'])}>
+        Select RHEL 9
+      </button>
+      <span data-testid="version-selection">{initialRhelVersions.join(',')}</span>
+      <button data-testid="select-supported" onClick={() => onStatusesChange(['Supported'])}>
+        Select Supported
+      </button>
+      <span data-testid="status-selection">{initialStatuses.join(',')}</span>
       <ul data-testid="rhel-version-options">
         {rhelVersionOptions.map((opt: string) => (
           <li key={opt}>{opt}</li>
@@ -245,6 +260,14 @@ const renderWithRouter = (component: React.ReactElement, initialEntries = ['/'])
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+};
+
 describe('LifecycleTab Component', () => {
   const mockApiCalls = {
     getAccessibleHostUuids: api.getAccessibleHostUuids as jest.Mock,
@@ -255,6 +278,7 @@ describe('LifecycleTab Component', () => {
   };
 
   beforeEach(() => {
+    window.history.replaceState({}, '', '/');
     jest.clearAllMocks();
 
     // Setup default mock responses with proper data structure
@@ -274,14 +298,19 @@ describe('LifecycleTab Component', () => {
   });
 
   describe('Initial Loading and Data Fetching', () => {
-    test('displays loading spinner while host UUIDs are loading', async () => {
+    test('keeps the toolbar mounted while host UUIDs are loading', async () => {
       mockApiCalls.getAccessibleHostUuids.mockImplementation(() => new Promise(() => undefined));
 
       renderWithRouter(<LifecycleTab />);
 
-      expect(await screen.findByRole('progressbar', { name: 'Loading life cycle data' })).toBeInTheDocument();
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /We're preparing life cycle data$/ })).toBeInTheDocument();
+      expect(screen.getByText(/Keep this tab open to watch progress\./)).toBeInTheDocument();
+      expect(screen.getByTestId('export-disabled-tooltip')).toHaveTextContent('Still loading');
+      expect(screen.queryByRole('progressbar', { name: 'Loading life cycle data' })).not.toBeInTheDocument();
       expect(screen.queryByText('Preparing life cycle data')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('lifecycle-filters')).not.toBeInTheDocument();
+      expect(screen.queryByText(/0 \/ 0/)).not.toBeInTheDocument();
+      expect(screen.getByTestId('export-csv')).toBeDisabled();
     });
 
     test('fetches data on mount', async () => {
@@ -296,12 +325,14 @@ describe('LifecycleTab Component', () => {
         expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
           ['host-1'],
           expect.any(Function),
-          expect.any(AbortSignal)
+          expect.any(AbortSignal),
+          expect.any(Function)
         );
         expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
           ['host-1'],
           expect.any(Function),
-          expect.any(AbortSignal)
+          expect.any(AbortSignal),
+          expect.any(Function)
         );
       });
     });
@@ -333,13 +364,37 @@ describe('LifecycleTab Component', () => {
         expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
           ['host-1'],
           expect.any(Function),
-          expect.any(AbortSignal)
+          expect.any(AbortSignal),
+          expect.any(Function)
         );
         expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
           ['host-1'],
           expect.any(Function),
-          expect.any(AbortSignal)
+          expect.any(AbortSignal),
+          expect.any(Function)
         );
+      });
+    });
+
+    test('keeps a dropdown selection made while the initial load is running', async () => {
+      let resolveRelevantAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveRelevantAppstreams = resolve;
+          })
+      );
+
+      renderWithRouter(<LifecycleTab />);
+      const dropdown = await screen.findByTestId('dropdown-select');
+
+      fireEvent.change(dropdown, { target: { value: 'rhel-systems' } });
+      await act(async () => {
+        resolveRelevantAppstreams({ data: mockAppData.filter((item) => item.related === false) });
+      });
+
+      await waitFor(() => {
+        expect(dropdown).toHaveValue('rhel-systems');
       });
     });
 
@@ -362,36 +417,26 @@ describe('LifecycleTab Component', () => {
       expect(signal?.aborted).toBe(true);
     });
 
-    test('passes an empty UUID list to the lifecycle loaders', async () => {
+    test('marks Relevant ready without a request when the host list is empty', async () => {
       mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ meta: { count: 0, total: 0 }, data: [] });
 
       renderWithRouter(<LifecycleTab />);
 
       await waitFor(() => {
-        expect(mockApiCalls.getRelevantLifecycleSystems).toHaveBeenCalledWith(
-          [],
-          expect.any(Function),
-          expect.any(AbortSignal)
-        );
-        expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledWith(
-          [],
-          expect.any(Function),
-          expect.any(AbortSignal)
-        );
+        expect(mockApiCalls.getRelevantLifecycleSystems).not.toHaveBeenCalled();
+        expect(mockApiCalls.getRelevantLifecycleAppstreams).not.toHaveBeenCalled();
       });
+      expect(
+        screen.queryByRole('progressbar', { name: 'Lifecycle data loading progress' })
+      ).not.toBeInTheDocument();
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
     });
 
-    test('shows how many systems are loading once a system total is known', async () => {
-      let resolveRhel: (value: { data: SystemLifecycleChanges[] }) => void = () => undefined;
+    test('shows one progress bar for the active lifecycle type', async () => {
       let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
-      mockApiCalls.getRelevantLifecycleSystems.mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolveRhel = resolve;
-          })
-      );
+      mockApiCalls.getRelevantLifecycleSystems.mockImplementation(() => new Promise(() => undefined));
       mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation((_hostIds, onProgress) => {
-        onProgress?.({ requested: 5000, total: 12300 });
+        onProgress?.({ completed: 5000, total: 12300 });
         return new Promise((resolve) => {
           resolveAppstreams = resolve;
         });
@@ -399,34 +444,139 @@ describe('LifecycleTab Component', () => {
 
       renderWithRouter(<LifecycleTab />);
 
-      expect(await screen.findByRole('heading', { name: 'Preparing life cycle data' })).toBeInTheDocument();
-      expect(screen.getByText(/Loading data for 12,300 systems\./)).toBeInTheDocument();
-      expect(screen.getByText(/Keep this page open to track progress\./)).toBeInTheDocument();
-      expect(screen.getByText('Application Streams')).toBeInTheDocument();
-      expect(screen.getByText('Red Hat Enterprise Linux')).toBeInTheDocument();
-      expect(screen.getByText('Loading 5,000 out of 12,300 systems')).toBeInTheDocument();
-      expect(screen.getByText('41%')).toBeInTheDocument();
-      expect(screen.queryByRole('progressbar', { name: 'Loading life cycle data' })).not.toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /We're preparing life cycle data for 12,300 systems/ })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByText('5,000 / 12,300 systems')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar', { name: 'Lifecycle data loading progress' })).toHaveAttribute(
+        'aria-valuenow',
+        '41'
+      );
+      expect(screen.queryByRole('button', { name: 'Retry now' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('lifecycle-filters')).toBeInTheDocument();
+      expect(screen.getAllByText('Loading lifecycle chart').length).toBeGreaterThan(0);
+      expect(screen.queryByTestId('lifecycle-chart')).not.toBeInTheDocument();
 
       await act(async () => {
-        resolveRhel({ data: [] });
-        resolveAppstreams({ data: [] });
+        resolveAppstreams({ data: mockAppData.filter((item) => item.related === false) });
       });
 
       await waitFor(() => {
-        expect(screen.queryByText('Preparing life cycle data')).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole('progressbar', { name: 'Lifecycle data loading progress' })
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId('lifecycle-chart')).toBeInTheDocument();
       });
     });
 
-    test('shows RHEL loading progress and marks it completed while app streams are still loading', async () => {
-      let resolveRhel: (value: { data: Stream[] }) => void = () => undefined;
-      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+    test('shows the RHEL progress after switching lifecycle type while app streams are still loading', async () => {
       mockApiCalls.getRelevantLifecycleSystems.mockImplementation((_hostIds, onProgress) => {
-        onProgress?.({ requested: 5000, total: 12300 });
-        return new Promise((resolve) => {
-          resolveRhel = resolve;
-        });
+        onProgress?.({ completed: 5000, total: 12300 });
+        return new Promise(() => undefined);
       });
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(() => new Promise(() => undefined));
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+
+      expect(
+        await screen.findByRole('heading', { name: /We're preparing life cycle data for 12,300 systems/ })
+      ).toBeInTheDocument();
+      expect(screen.getByText('5,000 / 12,300 systems')).toBeInTheDocument();
+      expect(screen.queryByTestId('lifecycle-chart-system')).not.toBeInTheDocument();
+    });
+
+    test('renders the All catalog while Relevant is still loading', async () => {
+      let signal: AbortSignal | undefined;
+      mockApiCalls.getRelevantLifecycleSystems.mockImplementation(() => new Promise(() => undefined));
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
+        (_hostIds, _onProgress, incoming: AbortSignal) => {
+          signal = incoming;
+          return new Promise(() => undefined);
+        }
+      );
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Retry now' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('export-csv')).toBeEnabled();
+      expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledTimes(1);
+      expect(signal?.aborted).toBe(false);
+    });
+
+    test('Retry aborts the in-flight load, shows progress state, and keeps All rows', async () => {
+      let signal: AbortSignal | undefined;
+      let notifySlow: ((isSlow: boolean) => void) | undefined;
+      let resolveRetryHostUuids: (value: {
+        meta: { count: number; total: number };
+        data: string[];
+      }) => void = () => undefined;
+      mockApiCalls.getAccessibleHostUuids
+        .mockResolvedValueOnce({ meta: { count: 1, total: 1 }, data: ['host-1'] })
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              resolveRetryHostUuids = resolve;
+            })
+        );
+      mockApiCalls.getRelevantLifecycleSystems.mockImplementation(() => new Promise(() => undefined));
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
+        (_hostIds, _onProgress, incoming: AbortSignal, onBatchSlow: (isSlow: boolean) => void) => {
+          signal = incoming;
+          notifySlow = onBatchSlow;
+          return new Promise(() => undefined);
+        }
+      );
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByText('nodejs')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Retry now' })).not.toBeInTheDocument();
+
+      const firstSignal = signal;
+      await act(async () => {
+        notifySlow?.(true);
+      });
+      expect(screen.getByText('Taking longer than expected.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retry now' }));
+
+      await waitFor(() => {
+        expect(firstSignal?.aborted).toBe(true);
+        expect(mockApiCalls.getAccessibleHostUuids).toHaveBeenCalledTimes(2);
+      });
+      expect(screen.getByRole('button', { name: 'Retry in progress...' })).toBeDisabled();
+      expect(
+        screen.queryByRole('progressbar', { name: 'Lifecycle data loading progress' })
+      ).not.toBeInTheDocument();
+
+      await act(async () => {
+        resolveRetryHostUuids({ meta: { count: 1, total: 1 }, data: ['host-1'] });
+      });
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleAppstreams.mock.calls.length).toBeGreaterThan(1);
+        expect(screen.queryByRole('button', { name: 'Retry now' })).not.toBeInTheDocument();
+        expect(screen.getByRole('progressbar', { name: 'Lifecycle data loading progress' })).toBeInTheDocument();
+      });
+      expect(screen.getByText('nodejs')).toBeInTheDocument();
+      expect(screen.queryByText('Failed to load data')).not.toBeInTheDocument();
+      expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
+    });
+
+    test('shows a dismissible alert when Relevant becomes ready on All', async () => {
+      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
       mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
         () =>
           new Promise((resolve) => {
@@ -435,28 +585,109 @@ describe('LifecycleTab Component', () => {
       );
 
       renderWithRouter(<LifecycleTab />);
-
-      expect(await screen.findByRole('heading', { name: 'Preparing life cycle data' })).toBeInTheDocument();
-      expect(screen.getByText(/Loading data for 12,300 systems\./)).toBeInTheDocument();
-      expect(screen.getByText('Red Hat Enterprise Linux')).toBeInTheDocument();
-      expect(screen.getByText('Loading 5,000 out of 12,300 systems')).toBeInTheDocument();
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
 
       await act(async () => {
-        resolveRhel({ data: [] });
+        resolveAppstreams({ data: mockAppData.filter((item) => item.related === false) });
       });
 
-      expect(await screen.findByText(/This can take a few minutes for 12,300 systems\./)).toBeInTheDocument();
-      expect(screen.getByText('Red Hat Enterprise Linux data loaded for 12,300 systems')).toBeInTheDocument();
-      expect(screen.getByText('Application Streams')).toBeInTheDocument();
-      expect(screen.queryByText('Loading 5,000 out of 12,300 systems')).not.toBeInTheDocument();
-      expect(screen.getByRole('progressbar', { name: 'Red Hat Enterprise Linux' })).toHaveAttribute(
-        'aria-valuenow',
-        '100'
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+      expect(screen.getByText('Relevant lifecycle data is ready.').closest('.pf-v6-c-alert')).toHaveClass(
+        'pf-m-success'
+      );
+      expect(screen.getByTestId('view-filter-select')).toHaveValue('all');
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(screen.queryByText('Relevant lifecycle data is ready.')).not.toBeInTheDocument();
+    });
+
+    test('keeps the ready alert associated with its originating lifecycle type', async () => {
+      let resolveAppstreams: (value: { data: Stream[] }) => void = () => undefined;
+      mockApiCalls.getRelevantLifecycleAppstreams.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveAppstreams = resolve;
+          })
       );
 
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+
       await act(async () => {
-        resolveAppstreams({ data: [] });
+        resolveAppstreams({ data: mockAppData.filter((item) => item.related === false) });
       });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      expect(screen.queryByText('Relevant lifecycle data is ready.')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+      expect(screen.queryByText('Relevant lifecycle data is ready.')).not.toBeInTheDocument();
+    });
+
+    test('retains undismissed ready alerts independently for each lifecycle type', async () => {
+      const appRelevant = deferred<{ data: Stream[] }>();
+      const rhelRelevant = deferred<{ data: SystemLifecycleChanges[] }>();
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(appRelevant.promise);
+      mockApiCalls.getRelevantLifecycleSystems.mockReturnValue(rhelRelevant.promise);
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+
+      await act(async () => {
+        appRelevant.resolve({ data: mockAppData.filter((item) => item.related === false) });
+      });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      expect(screen.queryByText('Relevant lifecycle data is ready.')).not.toBeInTheDocument();
+
+      await act(async () => {
+        rhelRelevant.resolve({ data: mockSystemData.filter((item) => item.related === false) });
+      });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      expect(await screen.findByText('Relevant lifecycle data is ready.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+      expect(screen.queryByText('Relevant lifecycle data is ready.')).not.toBeInTheDocument();
+    });
+
+    test('keeps All usable when Relevant fails and retries Relevant only', async () => {
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValue(new Error('relevant failed'));
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      expect(await screen.findByText('relevant failed')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Retry all' })).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(screen.queryByText('relevant failed')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'installed-only' } });
+      fireEvent.click(await screen.findByRole('button', { name: 'Retry all' }));
+
+      await waitFor(() => {
+        expect(mockApiCalls.getRelevantLifecycleAppstreams.mock.calls.length).toBeGreaterThan(1);
+      });
+      expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
     });
 
     test('displays content after loading', async () => {
@@ -478,10 +709,176 @@ describe('LifecycleTab Component', () => {
     });
   });
 
+  describe('Independent readiness and live filters', () => {
+    test('preserves the sort selected while Relevant is loading', async () => {
+      const apps = deferred<{ data: Stream[] }>();
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(apps.promise);
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByTestId('lifecycle-filters');
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      await screen.findByTestId('lifecycle-chart');
+      fireEvent.change(screen.getByTestId('sort-select'), { target: { value: 'Name' } });
+
+      await act(async () => apps.resolve({ data: mockAppData }));
+
+      expect(screen.getByTestId('sort-select')).toHaveValue('Name');
+      expect(new URLSearchParams(window.location.search).get('chartSortBy')).toBe('Name');
+    });
+
+    test('preserves the version selected while another lifecycle type is loading', async () => {
+      const apps = deferred<{ data: Stream[] }>();
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(apps.promise);
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByTestId('lifecycle-filters');
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      await screen.findByTestId('lifecycle-chart-system');
+      fireEvent.click(screen.getByTestId('select-rhel9'));
+
+      await act(async () => apps.resolve({ data: mockAppData }));
+
+      expect(screen.getByTestId('version-selection')).toHaveTextContent('RHEL 9');
+      expect(screen.getByTestId('lifecycle-table')).toHaveTextContent('Table with 1 items');
+      expect(new URLSearchParams(window.location.search).get('versions')).toBe('RHEL 9');
+    });
+
+    test('applies the saved name filter before background Relevant completes', async () => {
+      window.history.replaceState({}, '', '/?viewFilter=all&name=Node');
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(deferred<{ data: Stream[] }>().promise);
+      renderWithRouter(<LifecycleTab />);
+
+      await screen.findByTestId('lifecycle-chart');
+
+      expect(screen.getByTestId('name-filter-input')).toHaveValue('Node');
+      expect(screen.getByTestId('lifecycle-table')).toHaveTextContent('Table with 1 items');
+      expect(screen.getByTestId('table-item-0')).toHaveTextContent('nodejs');
+      expect(screen.getByTestId('export-csv')).not.toBeDisabled();
+    });
+
+    test('does not restore the old URL name after the user edits it', async () => {
+      window.history.replaceState({}, '', '/?viewFilter=all&name=Node');
+      const apps = deferred<{ data: Stream[] }>();
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(apps.promise);
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByTestId('lifecycle-chart');
+      fireEvent.change(screen.getByTestId('name-filter-input'), { target: { value: 'Python' } });
+
+      await act(async () => apps.resolve({ data: mockAppData }));
+
+      expect(screen.getByTestId('name-filter-input')).toHaveValue('Python');
+      expect(screen.getByTestId('table-item-0')).toHaveTextContent('python');
+      expect(new URLSearchParams(window.location.search).get('name')).toBe('Python');
+    });
+
+    test('keeps failed Relevant reachable and retryable after switching lifecycle types', async () => {
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValueOnce(new Error('relevant failed'));
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByText('relevant failed');
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+      await screen.findByTestId('lifecycle-chart-system');
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+
+      expect(await screen.findByText('relevant failed')).toBeInTheDocument();
+      expect(screen.getByTestId('view-filter-select')).toHaveValue('installed-only');
+      expect(screen.getByTestId('view-filter-select')).not.toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Retry all' }));
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(['pending', 'failed'])('applies related-only fallback while RHEL is %s', async (state) => {
+      if (state === 'pending') {
+        mockApiCalls.getRelevantLifecycleSystems.mockReturnValue(
+          deferred<{ data: SystemLifecycleChanges[] }>().promise
+        );
+      } else {
+        mockApiCalls.getRelevantLifecycleSystems.mockRejectedValue(new Error('rhel failed'));
+      }
+      mockApiCalls.getRelevantLifecycleAppstreams.mockResolvedValue({
+        data: mockAppData.map((row) => ({ ...row, related: true })),
+      });
+      renderWithRouter(<LifecycleTab />);
+
+      await screen.findByTestId('lifecycle-chart');
+
+      expect(screen.getByTestId('view-filter-select')).toHaveValue('installed-and-related');
+      expect(screen.getByTestId('lifecycle-table')).toHaveTextContent('Table with 2 items');
+      expect(screen.getByTestId('export-csv')).not.toBeDisabled();
+    });
+
+    test('clears cross-domain filters during background loading', async () => {
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(deferred<{ data: Stream[] }>().promise);
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByTestId('lifecycle-filters');
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      await screen.findByTestId('lifecycle-chart');
+      fireEvent.change(screen.getByTestId('name-filter-input'), { target: { value: 'Node' } });
+      fireEvent.click(screen.getByTestId('select-supported'));
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-systems' } });
+
+      await screen.findByTestId('lifecycle-chart-system');
+      expect(screen.getByTestId('name-filter-input')).toHaveValue('');
+      expect(screen.getByTestId('status-selection')).toBeEmptyDOMElement();
+      expect(screen.getByTestId('lifecycle-table')).toHaveTextContent('Table with 2 items');
+
+      fireEvent.click(screen.getByTestId('select-rhel9'));
+      fireEvent.change(screen.getByTestId('dropdown-select'), { target: { value: 'rhel-9-appstreams' } });
+      await screen.findByTestId('lifecycle-chart');
+      expect(screen.getByTestId('version-selection')).toBeEmptyDOMElement();
+    });
+
+    test('shows loading while a failed catalog is being retried', async () => {
+      const catalog = deferred<{ data: Stream[] }>();
+      mockApiCalls.getAllLifecycleAppstreams
+        .mockRejectedValueOnce(new Error('catalog failed'))
+        .mockReturnValueOnce(catalog.promise);
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByTestId('lifecycle-chart');
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      await screen.findByText('catalog failed');
+      fireEvent.click(screen.getByRole('button', { name: 'Retry all' }));
+
+      expect(screen.queryByText('catalog failed')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Retry all' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('export-csv')).toBeDisabled();
+      await act(async () => catalog.resolve({ data: mockAppData }));
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(2);
+      expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not relabel All rows as installed after a zero-host retry', async () => {
+      mockApiCalls.getAllLifecycleSystems.mockRejectedValue(new Error('system catalog failed'));
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValue(new Error('relevant failed'));
+      renderWithRouter(<LifecycleTab />);
+      await screen.findByText('relevant failed');
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      await screen.findByTestId('lifecycle-chart');
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'installed-only' } });
+      await screen.findByText('relevant failed');
+      mockApiCalls.getAccessibleHostUuids.mockResolvedValue({ data: [] });
+      fireEvent.click(screen.getByRole('button', { name: 'Retry all' }));
+
+      expect(await screen.findByTestId('lifecycle-table')).toHaveTextContent('Table with 2 items, view: all');
+      expect(screen.getByTestId('view-filter-select')).toHaveValue('all');
+      expect(mockApiCalls.getRelevantLifecycleAppstreams).toHaveBeenCalledTimes(1);
+    });
+
+    test('renders a ready empty catalog without waiting for Relevant', async () => {
+      window.history.replaceState({}, '', '/?viewFilter=all');
+      mockApiCalls.getAllLifecycleAppstreams.mockResolvedValue({ data: [] });
+      mockApiCalls.getRelevantLifecycleAppstreams.mockReturnValue(deferred<{ data: Stream[] }>().promise);
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByTestId('lifecycle-table')).toHaveTextContent('Table with 0 items, view: all');
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    });
+  });
+
   describe('Error Handling', () => {
     test('displays error state when API calls fail', async () => {
       const errorMessage = 'Failed to fetch data';
-      mockApiCalls.getAllLifecycleSystems.mockRejectedValue(new Error(errorMessage));
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValue(new Error(errorMessage));
 
       renderWithRouter(<LifecycleTab />);
 
@@ -489,6 +886,80 @@ describe('LifecycleTab Component', () => {
         expect(screen.getByText('Failed to load data')).toBeInTheDocument();
         expect(screen.getByText(errorMessage)).toBeInTheDocument();
       });
+    });
+
+    test('offers a retry when the initial load fails before any dataset is ready', async () => {
+      mockApiCalls.getAccessibleHostUuids
+        .mockRejectedValueOnce(new Error('host lookup timed out'))
+        .mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['host-1'] });
+      mockApiCalls.getAllLifecycleSystems
+        .mockRejectedValueOnce(new Error('systems catalog failed'))
+        .mockResolvedValue({ data: mockSystemData });
+      mockApiCalls.getAllLifecycleAppstreams
+        .mockRejectedValueOnce(new Error('app catalog failed'))
+        .mockResolvedValue({ data: mockAppData });
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByText('host lookup timed out')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retry all' }));
+
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(mockApiCalls.getAccessibleHostUuids).toHaveBeenCalledTimes(2);
+    });
+
+    test('shows an All error without hiding Relevant rows', async () => {
+      mockApiCalls.getAllLifecycleAppstreams.mockRejectedValue(new Error('catalog failed'));
+
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+      expect(screen.queryByText('catalog failed')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+
+      expect(await screen.findByText('catalog failed')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load data')).toBeInTheDocument();
+      expect(screen.getByTestId('lifecycle-filters')).toBeInTheDocument();
+      expect(screen.queryByTestId('lifecycle-chart')).not.toBeInTheDocument();
+    });
+
+    test('shows an error-specific export tooltip when the active catalog failed', async () => {
+      mockApiCalls.getAllLifecycleAppstreams.mockRejectedValue(new Error('catalog failed'));
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-filters')).toBeInTheDocument();
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+
+      expect(await screen.findByText('catalog failed')).toBeInTheDocument();
+      expect(screen.getByTestId('export-csv')).toBeDisabled();
+      expect(screen.getByTestId('export-disabled-tooltip')).toHaveTextContent('Data failed to load');
+    });
+
+    test('allows retrying an All catalog failure', async () => {
+      mockApiCalls.getAllLifecycleAppstreams
+        .mockRejectedValueOnce(new Error('catalog failed'))
+        .mockResolvedValueOnce({ data: mockAppData });
+
+      renderWithRouter(<LifecycleTab />);
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+      expect(await screen.findByText('catalog failed')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retry all' }));
+
+      await waitFor(() => {
+        expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(2);
+      });
+      expect(await screen.findByTestId('lifecycle-chart')).toBeInTheDocument();
+    });
+
+    test('preserves the host lookup error message in the Relevant error state', async () => {
+      mockApiCalls.getAccessibleHostUuids.mockRejectedValue(new Error('host lookup failed'));
+
+      renderWithRouter(<LifecycleTab />);
+
+      expect(await screen.findByText('host lookup failed')).toBeInTheDocument();
+      expect(screen.queryByText('[object Object]')).not.toBeInTheDocument();
     });
 
     test('displays workspace filtering error state', async () => {
@@ -507,7 +978,7 @@ describe('LifecycleTab Component', () => {
     test('displays generic error state for a 504 status', async () => {
       const timeoutError = new Error('Gateway Timeout') as any;
       timeoutError.status_code = 504;
-      mockApiCalls.getAllLifecycleSystems.mockRejectedValue(timeoutError);
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValue(timeoutError);
 
       renderWithRouter(<LifecycleTab />);
 
@@ -520,7 +991,7 @@ describe('LifecycleTab Component', () => {
     test('displays generic error state for other status codes', async () => {
       const serverError = new Error('Internal Server Error') as any;
       serverError.status_code = 500;
-      mockApiCalls.getAllLifecycleSystems.mockRejectedValue(serverError);
+      mockApiCalls.getRelevantLifecycleAppstreams.mockRejectedValue(serverError);
 
       renderWithRouter(<LifecycleTab />);
 
@@ -695,9 +1166,7 @@ describe('LifecycleTab Component', () => {
 
   describe('URL Parameter Handling', () => {
     test('initializes with URL parameters', async () => {
-      // Mock window.location.search
-      delete (window as any).location;
-      (window as any).location = { search: '?name=nodejs&lifecycleDropdown=rhel-systems' };
+      window.history.replaceState({}, '', '/?name=RHEL&lifecycleDropdown=rhel-systems');
 
       renderWithRouter(<LifecycleTab />);
 
@@ -705,9 +1174,8 @@ describe('LifecycleTab Component', () => {
         expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
       });
 
-      // The component should initialize with the URL parameters
-      expect(screen.getByTestId('name-filter-input')).toBeInTheDocument();
-      expect(screen.getByTestId('dropdown-select')).toBeInTheDocument();
+      expect(screen.getByTestId('name-filter-input')).toHaveValue('RHEL');
+      expect(screen.getByTestId('dropdown-select')).toHaveValue('rhel-systems');
     });
   });
 
@@ -859,6 +1327,30 @@ describe('LifecycleTab Component', () => {
 });
 
 describe('Dynamic RHEL version options', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/');
+    const apiMocks = [
+      api.getAccessibleHostUuids,
+      api.getAllLifecycleAppstreams,
+      api.getAllLifecycleSystems,
+      api.getRelevantLifecycleAppstreams,
+      api.getRelevantLifecycleSystems,
+    ] as jest.Mock[];
+    apiMocks.forEach((mock) => mock.mockReset());
+    (api.getAccessibleHostUuids as jest.Mock).mockResolvedValue({
+      meta: { count: 1, total: 1 },
+      data: ['host-1'],
+    });
+    (api.getAllLifecycleAppstreams as jest.Mock).mockResolvedValue({ data: mockAppData });
+    (api.getAllLifecycleSystems as jest.Mock).mockResolvedValue({ data: mockSystemData });
+    (api.getRelevantLifecycleAppstreams as jest.Mock).mockResolvedValue({
+      data: mockAppData.filter((item) => item.related === false),
+    });
+    (api.getRelevantLifecycleSystems as jest.Mock).mockResolvedValue({
+      data: mockSystemData.filter((item) => item.related === false),
+    });
+  });
+
   test('computes and passes dynamic RHEL version options from system data', async () => {
     renderWithRouter(<LifecycleTab />);
 
@@ -870,5 +1362,58 @@ describe('Dynamic RHEL version options', () => {
     expect(list).toBeInTheDocument();
     expect(list).toHaveTextContent('RHEL 8');
     expect(list).toHaveTextContent('RHEL 9');
+  });
+
+  test('uses Relevant rows as fallback version options until the All catalog succeeds', async () => {
+    window.history.replaceState({}, '', '/?lifecycleDropdown=rhel-systems&versions=RHEL%209');
+    const catalog = deferred<{ data: SystemLifecycleChanges[] }>();
+    (api.getAllLifecycleSystems as jest.Mock).mockReturnValue(catalog.promise);
+    (api.getRelevantLifecycleSystems as jest.Mock).mockResolvedValue({ data: mockSystemData });
+
+    renderWithRouter(<LifecycleTab />);
+    const list = await screen.findByTestId('rhel-version-options');
+    await waitFor(() => expect(list).toHaveTextContent('RHEL 8'));
+    expect(list).toHaveTextContent('RHEL 9');
+
+    await act(async () => {
+      catalog.resolve({ data: mockSystemData.filter((item) => item.major === 9) });
+    });
+    await waitFor(() => {
+      expect(list).toHaveTextContent('RHEL 9');
+      expect(list).not.toHaveTextContent('RHEL 8');
+    });
+  });
+
+  test('keeps Relevant version options when the All catalog request fails', async () => {
+    window.history.replaceState({}, '', '/?lifecycleDropdown=rhel-systems&versions=RHEL%209');
+    (api.getAllLifecycleSystems as jest.Mock).mockRejectedValue(new Error('catalog failed'));
+    (api.getRelevantLifecycleSystems as jest.Mock).mockResolvedValue({ data: mockSystemData });
+
+    renderWithRouter(<LifecycleTab />);
+    const list = screen.getByTestId('rhel-version-options');
+    await waitFor(() => expect(list).toHaveTextContent('RHEL 9'));
+    expect(list).toHaveTextContent('RHEL 8');
+    expect(screen.getByTestId('version-selection')).toHaveTextContent('RHEL 9');
+    fireEvent.change(screen.getByTestId('view-filter-select'), { target: { value: 'all' } });
+    expect(await screen.findByText('catalog failed')).toBeInTheDocument();
+  });
+
+  test('keeps catalog version options when the catalog resolves before Relevant rows', async () => {
+    window.history.replaceState({}, '', '/?lifecycleDropdown=rhel-systems');
+    (api.getAllLifecycleSystems as jest.Mock).mockResolvedValue({
+      data: mockSystemData.filter((item) => item.major === 9),
+    });
+    const relevant = deferred<{ data: SystemLifecycleChanges[] }>();
+    (api.getRelevantLifecycleSystems as jest.Mock).mockReturnValue(relevant.promise);
+
+    renderWithRouter(<LifecycleTab />);
+    const list = await screen.findByTestId('rhel-version-options');
+    await waitFor(() => expect(list).toHaveTextContent('RHEL 9'));
+    expect(list).not.toHaveTextContent('RHEL 8');
+
+    await act(async () => {
+      relevant.resolve({ data: mockSystemData });
+    });
+    await waitFor(() => expect(list).not.toHaveTextContent('RHEL 8'));
   });
 });

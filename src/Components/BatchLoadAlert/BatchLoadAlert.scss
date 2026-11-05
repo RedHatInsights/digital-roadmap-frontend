@@ -1,0 +1,26 @@
+.drf-batch-load-alert__progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--sm);
+  margin-block: var(--pf-t--global--spacer--sm);
+}
+
+.drf-batch-load-alert__count {
+  white-space: nowrap;
+}
+
+.drf-batch-load-alert__retry {
+  margin-block-start: var(--pf-t--global--spacer--sm);
+  text-align: end;
+}
+
+.drf-batch-load-alert__retry-in-progress {
+  text-decoration-line: none;
+  text-decoration-style: none;
+}
+
+.drf-batch-load-alert__progress .pf-v6-c-progress {
+  flex: 1 1 auto;
+  min-width: 8rem;
+}

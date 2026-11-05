@@ -52,7 +52,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
     const releases: Array<() => void> = [];
     let inFlight = 0;
     let maxInFlight = 0;
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
 
     const client: RelevantAppstreamsClient = {
       getRelevantLifecycleAppstreamsForHosts: (hostIds) => {
@@ -73,25 +73,100 @@ describe('loadRelevantLifecycleAppstreams', () => {
     await waitForCalls(calls, 1);
     expect(calls[0]).toHaveLength(1000);
     expect(calls[0]).toEqual(ids.slice(0, 1000));
-    expect(progress).toEqual([{ requested: 1000, total: ids.length }]);
+    expect(progress).toEqual([]);
     expect(maxInFlight).toBe(1);
 
     releases[0]();
     await waitForCalls(calls, 2);
     expect(calls[1]).toHaveLength(1000);
     expect(calls[1]).toEqual(ids.slice(1000, 2000));
-    expect(progress[1]).toEqual({ requested: 2000, total: ids.length });
+    expect(progress[0]).toEqual({ completed: 1000, total: ids.length });
     expect(maxInFlight).toBe(1);
 
     releases[1]();
     await waitForCalls(calls, 3);
     expect(calls[2]).toHaveLength(1);
     expect(calls[2]).toEqual(ids.slice(2000));
-    expect(progress[2]).toEqual({ requested: ids.length, total: ids.length });
+    expect(progress[1]).toEqual({ completed: 2000, total: ids.length });
 
     releases[2]();
     await expect(pending).resolves.toEqual({ data: [] });
+    expect(progress[2]).toEqual({ completed: ids.length, total: ids.length });
     expect(maxInFlight).toBe(1);
+  });
+
+  it('clears a slow status before retrying a transiently failed batch', async () => {
+    jest.useFakeTimers();
+    try {
+      const actualRetry = jest.requireActual<typeof import('./batchRetry')>('./batchRetry');
+      jest.mocked(batchRetry.waitBeforeRetry).mockImplementationOnce(actualRetry.waitBeforeRetry);
+      const onBatchSlow = jest.fn();
+      let release!: () => void;
+      const fetchHosts = jest
+        .fn<Promise<{ data: RelevantAppStreamRow[] }>, [string[]]>()
+        .mockImplementationOnce(
+          () =>
+            new Promise((_resolve, reject) => {
+              setTimeout(() => reject(new Error('transient failure')), batchRetry.SLOW_BATCH_TIMEOUT_MS + 250);
+            })
+        )
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              release = () => resolve({ data: [] });
+            })
+        );
+      const client: RelevantAppstreamsClient = { getRelevantLifecycleAppstreamsForHosts: fetchHosts };
+      const pending = loadRelevantLifecycleAppstreams(makeIds(1), client, undefined, undefined, onBatchSlow);
+
+      await jest.advanceTimersByTimeAsync(batchRetry.SLOW_BATCH_TIMEOUT_MS);
+      expect(fetchHosts).toHaveBeenCalledTimes(1);
+      expect(onBatchSlow).toHaveBeenLastCalledWith(true);
+
+      await jest.advanceTimersByTimeAsync(250);
+      expect(fetchHosts).toHaveBeenCalledTimes(1);
+      expect(onBatchSlow).toHaveBeenLastCalledWith(false);
+      await jest.advanceTimersByTimeAsync(batchRetry.RETRY_DELAY_MS);
+      expect(fetchHosts).toHaveBeenCalledTimes(2);
+      await jest.advanceTimersByTimeAsync(batchRetry.SLOW_BATCH_TIMEOUT_MS - 1);
+      expect(onBatchSlow).toHaveBeenLastCalledWith(false);
+      await jest.advanceTimersByTimeAsync(1);
+      expect(onBatchSlow).toHaveBeenLastCalledWith(true);
+
+      release();
+      await expect(pending).resolves.toEqual({ data: [] });
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('notifies when a batch request takes longer than 30 seconds', async () => {
+    jest.useFakeTimers();
+    try {
+      const onBatchSlow = jest.fn();
+      let release: () => void = () => undefined;
+      const client: RelevantAppstreamsClient = {
+        getRelevantLifecycleAppstreamsForHosts: () =>
+          new Promise((resolve) => {
+            release = () => resolve({ data: [] });
+          }),
+      };
+
+      const pending = loadRelevantLifecycleAppstreams(makeIds(1), client, undefined, undefined, onBatchSlow);
+      await Promise.resolve();
+      expect(onBatchSlow).not.toHaveBeenCalled();
+
+      jest.advanceTimersByTime(batchRetry.SLOW_BATCH_TIMEOUT_MS - 1);
+      expect(onBatchSlow).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(1);
+      expect(onBatchSlow).toHaveBeenCalledTimes(1);
+
+      release();
+      await expect(pending).resolves.toEqual({ data: [] });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('merges installed rows and drops a related row once that stream is installed', async () => {
@@ -268,7 +343,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
 
   it('retries a failed batch with the same ids and does not advance progress', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
     const fetchHosts = jest
       .fn<Promise<{ data: RelevantAppStreamRow[] }>, [string[]]>()
       .mockRejectedValueOnce(new Error('once'))
@@ -285,8 +360,8 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
     expect(progress).toEqual([
-      { requested: BATCH_SIZE, total: ids.length },
-      { requested: ids.length, total: ids.length },
+      { completed: BATCH_SIZE, total: ids.length },
+      { completed: ids.length, total: ids.length },
     ]);
   });
 

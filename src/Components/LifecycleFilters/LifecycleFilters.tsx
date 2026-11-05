@@ -36,6 +36,8 @@ interface LifecycleFiltersProps {
   selectedChartSortBy: string;
   updateChartSortValue: (name: string, order: string) => void;
   onExport: (format: ExportFormat) => void;
+  isExportDisabled?: boolean;
+  exportDisabledTooltipContent?: string;
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable: boolean;
@@ -107,6 +109,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
   selectedChartSortBy,
   updateChartSortValue,
   onExport,
+  isExportDisabled = false,
+  exportDisabledTooltipContent = 'Still loading',
   selectedViewFilter,
   handleViewFilterChange,
   noDataAvailable,
@@ -514,6 +518,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onSelect={onSelect}
             setIsOpen={setIsOpen}
             onExport={onExport}
+            isExportDisabled={isExportDisabled}
+            exportDisabledTooltipContent={exportDisabledTooltipContent}
             disableInstalledOnly={disableInstalledOnly ?? false}
           />
         ) : (
@@ -551,6 +557,8 @@ export const LifecycleFilters: React.FunctionComponent<LifecycleFiltersProps> = 
             onSelect={onSelect}
             setIsOpen={setIsOpen}
             onExport={onExport}
+            isExportDisabled={isExportDisabled}
+            exportDisabledTooltipContent={exportDisabledTooltipContent}
             disableInstalledOnly={disableInstalledOnly ?? false}
           />
         )}

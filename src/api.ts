@@ -34,6 +34,8 @@ type AccessibleHostUuidsResponse = {
   data: string[];
 };
 
+export const HOST_UUID_LOOKUP_TIMEOUT_MS = 60_000;
+
 export const getRelevantReleaseNotes = async (major: number, minor: number, keyword: string) => {
   const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
@@ -126,9 +128,16 @@ export const getRelevantLifecycleSystemsForHosts = async (hostIds: string[], sig
 export const getRelevantLifecycleSystems = (
   hostIds: string[],
   onProgress?: (progress: RhelLoadProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onBatchSlow?: (isSlow: boolean) => void
 ) => {
-  return loadRelevantLifecycleSystems(hostIds, { getRelevantLifecycleSystemsForHosts }, onProgress, signal);
+  return loadRelevantLifecycleSystems(
+    hostIds,
+    { getRelevantLifecycleSystemsForHosts },
+    onProgress,
+    signal,
+    onBatchSlow
+  );
 };
 
 export const getAllLifecycleSystems = async (signal?: AbortSignal) => {
@@ -164,7 +173,13 @@ export const getAllLifecycleSystems = async (signal?: AbortSignal) => {
 };
 
 export const getAccessibleHostUuids = async (signal?: AbortSignal): Promise<AccessibleHostUuidsResponse> => {
-  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS), undefined, signal);
+  return requestBackend(
+    'get',
+    DR_API.concat(DR_LIFECYCLE_HOST_UUIDS),
+    undefined,
+    signal,
+    HOST_UUID_LOOKUP_TIMEOUT_MS
+  );
 };
 
 export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[], signal?: AbortSignal) => {
@@ -181,9 +196,16 @@ export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[], 
 export const getRelevantLifecycleAppstreams = (
   hostIds: string[],
   onProgress?: (progress: AppstreamLoadProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onBatchSlow?: (isSlow: boolean) => void
 ) => {
-  return loadRelevantLifecycleAppstreams(hostIds, { getRelevantLifecycleAppstreamsForHosts }, onProgress, signal);
+  return loadRelevantLifecycleAppstreams(
+    hostIds,
+    { getRelevantLifecycleAppstreamsForHosts },
+    onProgress,
+    signal,
+    onBatchSlow
+  );
 };
 
 export const getAllLifecycleAppstreams = async (signal?: AbortSignal) => {
@@ -249,13 +271,20 @@ const throwAsApiError = (error: unknown): never => {
   }
 };
 
-const requestBackend = async (method: 'get' | 'post', path: string, body?: unknown, signal?: AbortSignal) => {
+const requestBackend = async (
+  method: 'get' | 'post',
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+  timeout?: number
+) => {
   try {
     const response = await axios.request({
       method,
       url: path,
       data: body,
       signal,
+      ...(timeout === undefined ? {} : { timeout }),
       validateStatus: function (status) {
         return status === 200;
       },

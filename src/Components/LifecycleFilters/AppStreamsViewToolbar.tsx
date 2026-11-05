@@ -54,6 +54,8 @@ interface AppStreamsViewToolbarProps {
   ) => void;
   setIsOpen: (open: boolean) => void;
   onExport: (format: ExportFormat) => void;
+  isExportDisabled?: boolean;
+  exportDisabledTooltipContent?: string;
   disableInstalledOnly: boolean;
 }
 
@@ -78,6 +80,8 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
   onSelect,
   setIsOpen,
   onExport,
+  isExportDisabled = false,
+  exportDisabledTooltipContent = 'Still loading',
   disableInstalledOnly,
 }) => {
   return (
@@ -184,7 +188,12 @@ export const AppStreamsViewToolbar: React.FunctionComponent<AppStreamsViewToolba
               </Form>
             </ToolbarItem>
             <ToolbarItem>
-              <ExportDataButton className="drf-lifecycle__filter-download" onExport={onExport} />
+              <ExportDataButton
+                className="drf-lifecycle__filter-download"
+                onExport={onExport}
+                isDisabled={isExportDisabled}
+                disabledTooltipContent={exportDisabledTooltipContent}
+              />
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarContent>

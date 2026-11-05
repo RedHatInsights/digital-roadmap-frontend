@@ -1,6 +1,9 @@
 /** Pause before another attempt after a transient failure. */
 export const RETRY_DELAY_MS = 500;
 
+/** Show a retry affordance when one lifecycle batch request has been waiting this long. */
+export const SLOW_BATCH_TIMEOUT_MS = 30_000;
+
 const statusCode = (error: unknown): number | undefined => {
   if (typeof error !== 'object' || error === null || !('status_code' in error)) {
     return undefined;
