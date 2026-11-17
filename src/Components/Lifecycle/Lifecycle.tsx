@@ -52,7 +52,7 @@ import { exportData as exportToFile } from '../../utils/export';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
-import BatchLoadAlert from '../BatchLoadAlert/BatchLoadAlert';
+import BatchLoadAlert, { type BatchLoadAlertProps } from '../BatchLoadAlert/BatchLoadAlert';
 import { useBatchLoad } from '../../hooks/useBatchLoad';
 
 const PREPARING_DESCRIPTION =
@@ -112,6 +112,12 @@ const LifecycleContentSkeleton = () => (
   </Stack>
 );
 
+export type LifecycleBatchLoadAlertProps = BatchLoadAlertProps;
+
+type LifecycleTabProps = {
+  onBatchLoadAlertChange?: (alert: LifecycleBatchLoadAlertProps | null) => void;
+};
+
 // Define DEFAULT_FILTERS with the ExtendedFilter type
 const DEFAULT_FILTERS: ExtendedFilter = {
   name: '',
@@ -120,7 +126,7 @@ const DEFAULT_FILTERS: ExtendedFilter = {
   viewFilter: 'installed-only',
 };
 
-const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
+const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) => {
   const loadAbortRef = useRef(new AbortController());
   const cacheRef = useRef<LifecycleCache>(emptyCache());
   const rhelReadyRef = useRef(false);
@@ -131,7 +137,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [, setIsLoading] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
   const rhelBatch = useBatchLoad<SystemLifecycleChanges[]>('loading');
   const appBatch = useBatchLoad<Stream[]>('loading');
   const [allSystemsStatus, setAllSystemsStatus] = useState<DatasetStatus>('loading');
@@ -300,15 +305,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setFilteredChartData(filterChartData(baseData, value, lifecycleDropdownValue, effectiveOrder));
   };
 
-  const restartLoad = () => {
-    setIsRetrying(true);
-    loadAbortRef.current.abort();
-    const controller = new AbortController();
-    loadAbortRef.current = controller;
-    dismissedReadyRef.current.clear();
-    void initializeData(controller.signal, { preserveAll: true });
-  };
-
   const onLifecycleDropdownSelect = (value: string) => {
     const isCrossDomainSwitch = isAppStream(dropdownRef.current) !== isAppStream(value);
     if (isCrossDomainSwitch) {
@@ -446,12 +442,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setError((current) => (isWorkspaceFilteringError(current) ? current : undefined));
   };
 
-  // First data fetch. Later calls are Retry / Retry all.
-  const initializeData = async (
-    signal: AbortSignal = loadAbortRef.current.signal,
-    options?: { preserveAll?: boolean }
-  ) => {
-    const preserveAll = options?.preserveAll ?? false;
+  // Initial data fetch.
+  const initializeData = async (signal: AbortSignal = loadAbortRef.current.signal) => {
     setIsLoading(true);
     setReadyAlertSurfaces(new Set());
     setNoDataAvailable(false);
@@ -460,77 +452,63 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     rhelBatch.reset();
     appBatch.reset();
     clearPageErrorUnlessLocked();
-    if (!preserveAll) {
-      cacheRef.current = emptyCache();
-    }
-    if (!preserveAll || !allSystemsReadyRef.current) {
-      allSystemsReadyRef.current = false;
-      setAllSystemsStatus('loading');
-      setAllSystemsError(undefined);
-    }
-    if (!preserveAll || !allAppsReadyRef.current) {
-      allAppsReadyRef.current = false;
-      setAllAppsStatus('loading');
-      setAllAppsError(undefined);
-    }
+    cacheRef.current = emptyCache();
+    allSystemsReadyRef.current = false;
+    setAllSystemsStatus('loading');
+    setAllSystemsError(undefined);
+    allAppsReadyRef.current = false;
+    setAllAppsStatus('loading');
+    setAllAppsError(undefined);
     rememberRelevantSystems([]);
     rememberRelevantApps([]);
     syncDisplayedView(dropdownRef.current, viewRef.current);
 
-    const allSystemsDone =
-      preserveAll && allSystemsReadyRef.current
-        ? Promise.resolve(cacheRef.current.allSystems)
-        : getAllLifecycleSystems(signal)
-            .then((response) => {
-              if (signal.aborted) {
-                return [] as SystemLifecycleChanges[];
-              }
-              const allSystems = (response.data || []).filter(
-                (datum: SystemLifecycleChanges) => datum.minor !== null
-              );
-              cacheRef.current.allSystems = allSystems;
-              allSystemsReadyRef.current = true;
-              setRhelVersionOptions(computeRhelVersionOptions(allSystems));
-              setAllSystemsStatus('ready');
-              setAllSystemsError(undefined);
-              if (viewRef.current === 'all' && dropdownRef.current === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-                syncDisplayedView(RHEL_SYSTEMS_DROPDOWN_VALUE, 'all');
-              }
-              clearPageErrorUnlessLocked();
-              return allSystems;
-            })
-            .catch((error) => {
-              if (!signal.aborted) {
-                markSurfaceError('all-systems', error);
-              }
-              throw error;
-            });
+    const allSystemsDone = getAllLifecycleSystems(signal)
+      .then((response) => {
+        if (signal.aborted) {
+          return [] as SystemLifecycleChanges[];
+        }
+        const allSystems = (response.data || []).filter((datum: SystemLifecycleChanges) => datum.minor !== null);
+        cacheRef.current.allSystems = allSystems;
+        allSystemsReadyRef.current = true;
+        setRhelVersionOptions(computeRhelVersionOptions(allSystems));
+        setAllSystemsStatus('ready');
+        setAllSystemsError(undefined);
+        if (viewRef.current === 'all' && dropdownRef.current === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          syncDisplayedView(RHEL_SYSTEMS_DROPDOWN_VALUE, 'all');
+        }
+        clearPageErrorUnlessLocked();
+        return allSystems;
+      })
+      .catch((error) => {
+        if (!signal.aborted) {
+          markSurfaceError('all-systems', error);
+        }
+        throw error;
+      });
 
-    const allAppsDone =
-      preserveAll && allAppsReadyRef.current
-        ? Promise.resolve(cacheRef.current.allApps)
-        : getAllLifecycleAppstreams(signal)
-            .then((response) => {
-              if (signal.aborted) {
-                return [] as Stream[];
-              }
-              const allApps = response.data || [];
-              cacheRef.current.allApps = allApps;
-              allAppsReadyRef.current = true;
-              setAllAppsStatus('ready');
-              setAllAppsError(undefined);
-              if (viewRef.current === 'all' && dropdownRef.current !== RHEL_SYSTEMS_DROPDOWN_VALUE) {
-                syncDisplayedView(dropdownRef.current, 'all');
-              }
-              clearPageErrorUnlessLocked();
-              return allApps;
-            })
-            .catch((error) => {
-              if (!signal.aborted) {
-                markSurfaceError('all-apps', error);
-              }
-              throw error;
-            });
+    const allAppsDone = getAllLifecycleAppstreams(signal)
+      .then((response) => {
+        if (signal.aborted) {
+          return [] as Stream[];
+        }
+        const allApps = response.data || [];
+        cacheRef.current.allApps = allApps;
+        allAppsReadyRef.current = true;
+        setAllAppsStatus('ready');
+        setAllAppsError(undefined);
+        if (viewRef.current === 'all' && dropdownRef.current !== RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          syncDisplayedView(dropdownRef.current, 'all');
+        }
+        clearPageErrorUnlessLocked();
+        return allApps;
+      })
+      .catch((error) => {
+        if (!signal.aborted) {
+          markSurfaceError('all-apps', error);
+        }
+        throw error;
+      });
 
     const catalogResults = Promise.allSettled([allSystemsDone, allAppsDone]);
 
@@ -552,19 +530,16 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         rememberRelevantApps([]);
         rhelBatch.complete([]);
         appBatch.complete([]);
-        setIsRetrying(false);
         rhelReadyRef.current = true;
         appReadyRef.current = true;
         noteReadyAlert('rhel');
         noteReadyAlert('app');
         syncDisplayedView(dropdownRef.current, viewRef.current);
       } else {
-        setIsRetrying(false);
-
         const rhelDone = rhelBatch
           .start(
-            (onProgress, onSlow, batchSignal) =>
-              getRelevantLifecycleSystems(hostIds, onProgress, batchSignal, onSlow).then(
+            (onProgress, batchSignal) =>
+              getRelevantLifecycleSystems(hostIds, onProgress, batchSignal).then(
                 (response) => response.data || []
               ),
             signal,
@@ -588,8 +563,8 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
         const appDone = appBatch
           .start(
-            (onProgress, onSlow, batchSignal) =>
-              getRelevantLifecycleAppstreams(hostIds, onProgress, batchSignal, onSlow).then(
+            (onProgress, batchSignal) =>
+              getRelevantLifecycleAppstreams(hostIds, onProgress, batchSignal).then(
                 (response) => response.data || []
               ),
             signal,
@@ -964,32 +939,49 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     preparingTotal > 0
       ? `We're preparing life cycle data for ${preparingTotal.toLocaleString('en-US')} systems`
       : "We're preparing life cycle data";
-
-  if (
-    [
-      error,
-      toErrorObjectOrUndefined(rhelBatch.error),
-      toErrorObjectOrUndefined(appBatch.error),
-      allSystemsError,
-      allAppsError,
-    ].some((item) => isWorkspaceFilteringError(item))
-  ) {
-    return lockedState;
-  }
-
+  const workspaceFilteringError = [
+    error,
+    toErrorObjectOrUndefined(rhelBatch.error),
+    toErrorObjectOrUndefined(appBatch.error),
+    allSystemsError,
+    allAppsError,
+  ].some((item) => isWorkspaceFilteringError(item));
   const nothingReady =
     allSystemsStatus !== 'ready' &&
     allAppsStatus !== 'ready' &&
     rhelBatch.status !== 'ready' &&
     appBatch.status !== 'ready';
+  const batchLoadAlertProps = React.useMemo<LifecycleBatchLoadAlertProps | null>(
+    () =>
+      activeRelevantStatus === 'loading' && !workspaceFilteringError && !(error && nothingReady)
+        ? {
+            title: preparingTitle,
+            description: PREPARING_DESCRIPTION,
+            completed: activeProgress?.completed ?? 0,
+            total: preparingTotal,
+          }
+        : null,
+    [
+      activeRelevantStatus,
+      preparingTitle,
+      activeProgress?.completed,
+      preparingTotal,
+      workspaceFilteringError,
+      error,
+      nothingReady,
+    ]
+  );
+
+  useEffect(() => {
+    onBatchLoadAlertChange?.(batchLoadAlertProps);
+  }, [onBatchLoadAlertChange, batchLoadAlertProps]);
+
+  if (workspaceFilteringError) {
+    return lockedState;
+  }
+
   if (error && nothingReady) {
-    return (
-      <ErrorState
-        titleText="Failed to load data"
-        bodyText={String(error.message)}
-        customFooter={<Button onClick={restartLoad}>Retry all</Button>}
-      />
-    );
+    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
   const emptyState = (
@@ -1012,13 +1004,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       <EmptyStateBody>
         {String(activeSurfaceError?.message ?? 'Failed to load relevant lifecycle data')}
       </EmptyStateBody>
-      <EmptyStateFooter>
-        <EmptyStateActions>
-          <Button variant="link" onClick={restartLoad}>
-            Retry all
-          </Button>
-        </EmptyStateActions>
-      </EmptyStateFooter>
     </EmptyState>
   );
 
@@ -1026,7 +1011,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     <ErrorState
       titleText="Failed to load data"
       bodyText={String(activeSurfaceError?.message ?? 'Failed to load lifecycle catalog')}
-      customFooter={<Button onClick={restartLoad}>Retry all</Button>}
     />
   );
 
@@ -1116,17 +1100,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     <React.Fragment>
       <Stack hasGutter>
         <Card>
-          {activeRelevantStatus === 'loading' && (
-            <BatchLoadAlert
-              title={preparingTitle}
-              description={PREPARING_DESCRIPTION}
-              completed={activeProgress?.completed ?? 0}
-              total={preparingTotal}
-              onRetry={restartLoad}
-              showRetry={activeIsSystems ? rhelBatch.isSlow : appBatch.isSlow}
-              isRetrying={isRetrying}
-            />
-          )}
+          {!onBatchLoadAlertChange && batchLoadAlertProps && <BatchLoadAlert {...batchLoadAlertProps} />}
           {readyAlertSurfaces.has(activeSurface) &&
             selectedViewFilter === 'all' &&
             activeRelevantStatus === 'ready' && (

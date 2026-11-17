@@ -1,15 +1,12 @@
 import './BatchLoadAlert.scss';
 import React from 'react';
-import { Alert, Button, Progress } from '@patternfly/react-core';
+import { Alert, Progress } from '@patternfly/react-core';
 
 export type BatchLoadAlertProps = {
   title: string;
   description: string;
   completed: number;
   total: number;
-  onRetry: () => void;
-  showRetry?: boolean;
-  isRetrying?: boolean;
   progressLabel?: string;
   progressAriaLabel?: string;
 };
@@ -21,9 +18,6 @@ const BatchLoadAlert = ({
   description,
   completed,
   total,
-  onRetry,
-  showRetry = false,
-  isRetrying = false,
   progressLabel = 'systems',
   progressAriaLabel = 'Lifecycle data loading progress',
 }: BatchLoadAlertProps) => {
@@ -39,22 +33,6 @@ const BatchLoadAlert = ({
             total
           )} ${progressLabel}`}</span>
           <Progress value={percent} measureLocation="outside" aria-label={progressAriaLabel} />
-        </div>
-      )}
-      {(showRetry || isRetrying) && (
-        <div className="drf-batch-load-alert__retry">
-          {isRetrying ? (
-            <Button className="drf-batch-load-alert__retry-in-progress" variant="link" isInline isDisabled>
-              Retry in progress...
-            </Button>
-          ) : (
-            <>
-              <span>Taking longer than expected. </span>
-              <Button variant="link" isInline onClick={onRetry}>
-                Retry now
-              </Button>
-            </>
-          )}
         </div>
       )}
     </Alert>

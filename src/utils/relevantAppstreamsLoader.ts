@@ -1,12 +1,6 @@
 import { Stream } from '../types/Stream';
 import { SystemsDetail } from '../types/SystemsDetail';
-import {
-  SLOW_BATCH_TIMEOUT_MS,
-  abortedError,
-  isAbortError,
-  isTransientFailure,
-  waitBeforeRetry,
-} from './batchRetry';
+import { abortedError, isAbortError, isTransientFailure, waitBeforeRetry } from './batchRetry';
 
 /** Hosts per app-stream request. Keep this below the API maximum of 10,000; these responses are heavier than RHEL. */
 export const BATCH_SIZE = 1000;
@@ -105,8 +99,7 @@ export const loadRelevantLifecycleAppstreams = async (
   hostIds: string[],
   client: RelevantAppstreamsClient,
   onProgress?: (progress: AppstreamLoadProgress) => void,
-  signal?: AbortSignal,
-  onBatchSlow?: (isSlow: boolean) => void
+  signal?: AbortSignal
 ): Promise<{ data: Stream[] }> => {
   const pending = [...hostIds];
   const total = pending.length;
@@ -173,15 +166,7 @@ export const loadRelevantLifecycleAppstreams = async (
       if (stopIfAborted()) {
         return;
       }
-      let slowTimer: ReturnType<typeof setTimeout> | undefined;
-      let slowNotified = false;
       try {
-        slowTimer = setTimeout(() => {
-          if (!signal?.aborted && !failure) {
-            slowNotified = true;
-            onBatchSlow?.(true);
-          }
-        }, SLOW_BATCH_TIMEOUT_MS);
         const response = await client.getRelevantLifecycleAppstreamsForHosts(batch, signal);
         if (failure || stopIfAborted()) {
           return;
@@ -189,7 +174,6 @@ export const loadRelevantLifecycleAppstreams = async (
         mergeRows(Array.isArray(response?.data) ? response.data : []);
         return;
       } catch (error) {
-        if (slowTimer) clearTimeout(slowTimer);
         if (stopIfAborted(error)) {
           return;
         }
@@ -199,20 +183,12 @@ export const loadRelevantLifecycleAppstreams = async (
           pending.length = 0;
           return;
         }
-        if (slowNotified) {
-          onBatchSlow?.(false);
-        }
-        // The next attempt gets its own slow timer.
         try {
           await waitBeforeRetry(signal);
         } catch (waitError) {
           failure = failure ?? waitError;
           pending.length = 0;
           return;
-        }
-      } finally {
-        if (slowTimer) {
-          clearTimeout(slowTimer);
         }
       }
     }

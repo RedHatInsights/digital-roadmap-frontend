@@ -10,7 +10,6 @@ export type BatchLoadProgress = {
 
 export type BatchLoadTask<T> = (
   onProgress: (progress: BatchLoadProgress) => void,
-  onSlow: (isSlow: boolean) => void,
   signal: AbortSignal
 ) => Promise<T>;
 
@@ -18,14 +17,12 @@ export type BatchLoadState<T> = {
   status: BatchLoadStatus;
   data?: T;
   progress: BatchLoadProgress | null;
-  isSlow: boolean;
   error?: unknown;
 };
 
 const initialState = <T>(status: BatchLoadStatus): BatchLoadState<T> => ({
   status,
   progress: null,
-  isSlow: false,
 });
 
 export const useBatchLoad = <T>(initialStatus: BatchLoadStatus = 'idle') => {
@@ -37,31 +34,23 @@ export const useBatchLoad = <T>(initialStatus: BatchLoadStatus = 'idle') => {
     const active = () => runRef.current === run && !signal.aborted;
     let latestProgress = total > 0 ? { completed: 0, total } : null;
 
-    setState({ status: 'loading', progress: latestProgress, isSlow: false });
+    setState({ status: 'loading', progress: latestProgress });
 
     try {
-      const data = await task(
-        (nextProgress) => {
-          if (active()) {
-            latestProgress = nextProgress;
-            setState((current) => ({ ...current, progress: nextProgress, isSlow: false }));
-          }
-        },
-        (isSlow) => {
-          if (active()) {
-            setState((current) => ({ ...current, isSlow }));
-          }
-        },
-        signal
-      );
+      const data = await task((nextProgress) => {
+        if (active()) {
+          latestProgress = nextProgress;
+          setState((current) => ({ ...current, progress: nextProgress }));
+        }
+      }, signal);
 
       if (active()) {
-        setState({ status: 'ready', data, progress: latestProgress, isSlow: false });
+        setState({ status: 'ready', data, progress: latestProgress });
       }
       return data;
     } catch (error) {
       if (active() && !isAbortError(error)) {
-        setState((current) => ({ ...current, status: 'error', isSlow: false, error }));
+        setState((current) => ({ ...current, status: 'error', error }));
       }
       throw error;
     }
@@ -69,7 +58,7 @@ export const useBatchLoad = <T>(initialStatus: BatchLoadStatus = 'idle') => {
 
   const complete = useCallback((data: T) => {
     ++runRef.current;
-    setState({ status: 'ready', data, progress: null, isSlow: false });
+    setState({ status: 'ready', data, progress: null });
     return data;
   }, []);
 
@@ -80,7 +69,7 @@ export const useBatchLoad = <T>(initialStatus: BatchLoadStatus = 'idle') => {
 
   const fail = useCallback((error: unknown) => {
     ++runRef.current;
-    setState({ status: 'error', progress: null, isSlow: false, error });
+    setState({ status: 'error', progress: null, error });
   }, []);
 
   return { ...state, start, complete, reset, fail };

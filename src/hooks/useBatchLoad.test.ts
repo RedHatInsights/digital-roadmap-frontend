@@ -10,7 +10,7 @@ describe('useBatchLoad', () => {
     let pending!: Promise<string>;
     act(() => {
       pending = result.current.start(
-        async (onProgress, _onSlow, signal) => {
+        async (onProgress, signal) => {
           onProgress({ completed: 2, total: 5 });
           expect(signal).toBe(controller.signal);
           return new Promise<string>((resolve) => {
@@ -32,49 +32,6 @@ describe('useBatchLoad', () => {
 
     expect(result.current.status).toBe('ready');
     expect(result.current.data).toBe('loaded');
-    expect(result.current.isSlow).toBe(false);
-  });
-
-  it('shows the slow state and clears it when progress advances', async () => {
-    const { result } = renderHook(() => useBatchLoad<string>());
-    const controller = new AbortController();
-    let resolveLoad: (value: string) => void = () => undefined;
-    let reportProgress!: (progress: BatchLoadProgress) => void;
-    let reportSlow!: (isSlow: boolean) => void;
-
-    let pending!: Promise<string>;
-    act(() => {
-      pending = result.current.start(
-        async (onProgress, onSlow) => {
-          reportProgress = onProgress;
-          reportSlow = onSlow;
-          return new Promise<string>((resolve) => {
-            resolveLoad = resolve;
-          });
-        },
-        controller.signal,
-        5
-      );
-    });
-
-    act(() => reportSlow(true));
-    expect(result.current.isSlow).toBe(true);
-
-    act(() => reportProgress({ completed: 2, total: 5 }));
-    expect(result.current.isSlow).toBe(false);
-    expect(result.current.progress).toEqual({ completed: 2, total: 5 });
-    expect(result.current.status).toBe('loading');
-
-    act(() => reportSlow(true));
-    expect(result.current.isSlow).toBe(true);
-    act(() => reportSlow(false));
-    expect(result.current.isSlow).toBe(false);
-
-    await act(async () => {
-      resolveLoad('loaded');
-      await pending;
-    });
-    expect(result.current.data).toBe('loaded');
   });
 
   it.each(['resolve', 'reject'] as const)('ignores a superseded task that later %ss', async (outcome) => {
@@ -82,13 +39,11 @@ describe('useBatchLoad', () => {
     let resolveOld!: (value: string) => void;
     let rejectOld!: (error: Error) => void;
     let reportOldProgress!: (progress: BatchLoadProgress) => void;
-    let reportOldSlow!: (isSlow: boolean) => void;
     let oldRun!: Promise<string>;
     act(() => {
       oldRun = result.current.start(
-        (onProgress, onSlow) => {
+        (onProgress) => {
           reportOldProgress = onProgress;
-          reportOldSlow = onSlow;
           return new Promise((resolve, reject) => {
             resolveOld = resolve;
             rejectOld = reject;
@@ -113,7 +68,6 @@ describe('useBatchLoad', () => {
 
     await act(async () => {
       reportOldProgress({ completed: 1, total: 5 });
-      reportOldSlow(true);
       if (outcome === 'resolve') {
         resolveOld('stale');
         await oldRun;
@@ -126,7 +80,6 @@ describe('useBatchLoad', () => {
     expect(result.current.status).toBe('ready');
     expect(result.current.data).toBe('restarted');
     expect(result.current.progress).toEqual({ completed: 3, total: 3 });
-    expect(result.current.isSlow).toBe(false);
     expect(result.current.error).toBeUndefined();
   });
 

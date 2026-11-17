@@ -128,16 +128,9 @@ export const getRelevantLifecycleSystemsForHosts = async (hostIds: string[], sig
 export const getRelevantLifecycleSystems = (
   hostIds: string[],
   onProgress?: (progress: RhelLoadProgress) => void,
-  signal?: AbortSignal,
-  onBatchSlow?: (isSlow: boolean) => void
+  signal?: AbortSignal
 ) => {
-  return loadRelevantLifecycleSystems(
-    hostIds,
-    { getRelevantLifecycleSystemsForHosts },
-    onProgress,
-    signal,
-    onBatchSlow
-  );
+  return loadRelevantLifecycleSystems(hostIds, { getRelevantLifecycleSystemsForHosts }, onProgress, signal);
 };
 
 export const getAllLifecycleSystems = async (signal?: AbortSignal) => {
@@ -193,16 +186,9 @@ export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[], 
 export const getRelevantLifecycleAppstreams = (
   hostIds: string[],
   onProgress?: (progress: AppstreamLoadProgress) => void,
-  signal?: AbortSignal,
-  onBatchSlow?: (isSlow: boolean) => void
+  signal?: AbortSignal
 ) => {
-  return loadRelevantLifecycleAppstreams(
-    hostIds,
-    { getRelevantLifecycleAppstreamsForHosts },
-    onProgress,
-    signal,
-    onBatchSlow
-  );
+  return loadRelevantLifecycleAppstreams(hostIds, { getRelevantLifecycleAppstreamsForHosts }, onProgress, signal);
 };
 
 export const getAllLifecycleAppstreams = async (signal?: AbortSignal) => {
