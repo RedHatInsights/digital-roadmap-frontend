@@ -3,12 +3,15 @@ import { Alert, Button, Content, Popover, Spinner } from '@patternfly/react-core
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 import LifecycleTab from '../../Components/Lifecycle/Lifecycle';
+import type { LifecycleBatchLoadAlertProps } from '../../Components/Lifecycle/Lifecycle';
+import BatchLoadAlert from '../../Components/BatchLoadAlert/BatchLoadAlert';
 import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
 import './LifecyclePage.scss';
 
 const LifecyclePage = () => {
   const { appAction } = useChrome();
+  const [batchLoadAlert, setBatchLoadAlert] = React.useState<LifecycleBatchLoadAlertProps | null>(null);
   useEffect(() => {
     appAction('digital-roadmap');
   }, []);
@@ -65,6 +68,11 @@ const LifecyclePage = () => {
         isPlain
         style={{ paddingLeft: '28px' }}
       />
+      {batchLoadAlert && (
+        <div className="drf-lifecycle-page__batch-load-alert">
+          <BatchLoadAlert {...batchLoadAlert} />
+        </div>
+      )}
       <Alert
         id="lifecycle-info"
         className="drf-lifecycle-page__info-alert"
@@ -91,7 +99,7 @@ const LifecyclePage = () => {
       </Alert>
       <section className="pf-l-page__main-section pf-c-page__main-section" id="lifecycle">
         <Suspense fallback={<Spinner />}>
-          <LifecycleTab />
+          <LifecycleTab onBatchLoadAlertChange={setBatchLoadAlert} />
         </Suspense>
       </section>
     </React.Fragment>

@@ -12,7 +12,7 @@ export const MAX_CONCURRENT_REQUESTS = 1;
 export const MAX_FAILED_REQUESTS = 3;
 
 export type RhelLoadProgress = {
-  requested: number;
+  completed: number;
   total: number;
 };
 
@@ -119,7 +119,7 @@ export const loadRelevantLifecycleSystems = async (
   const installed = new Map<string, RelevantRhelRow>();
   const installedVersions = new Set<string>();
   const related = new Map<string, RelevantRhelRow>();
-  let requested = 0;
+  let completed = 0;
   let failure: unknown;
 
   const mergeRows = (rows: RelevantRhelRow[]) => {
@@ -211,13 +211,18 @@ export const loadRelevantLifecycleSystems = async (
       }
 
       batch.forEach((id) => waiting.add(id));
-      requested += batch.length;
-      onProgress?.({ requested, total });
+      let succeeded = false;
 
       try {
         await postBatch(batch);
+        succeeded = !failure;
       } finally {
         batch.forEach((id) => waiting.delete(id));
+      }
+
+      if (succeeded) {
+        completed += batch.length;
+        onProgress?.({ completed, total });
       }
     }
   };

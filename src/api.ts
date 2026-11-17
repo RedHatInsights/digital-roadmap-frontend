@@ -34,6 +34,8 @@ type AccessibleHostUuidsResponse = {
   data: string[];
 };
 
+export const HOST_UUID_LOOKUP_TIMEOUT_MS = 60_000;
+
 export const getRelevantReleaseNotes = async (major: number, minor: number, keyword: string) => {
   const path = DR_API.concat(DR_RELEASE_NOTES).concat('/get-relevant-notes');
   const params = `?major=${major}&minor=${minor}&keywords=${keyword}`;
@@ -163,8 +165,11 @@ export const getAllLifecycleSystems = async (signal?: AbortSignal) => {
   return getResponseOrError(response);
 };
 
-export const getAccessibleHostUuids = async (signal?: AbortSignal): Promise<AccessibleHostUuidsResponse> => {
-  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS), undefined, signal);
+export const getAccessibleHostUuids = async (
+  signal?: AbortSignal,
+  timeout?: number
+): Promise<AccessibleHostUuidsResponse> => {
+  return requestBackend('get', DR_API.concat(DR_LIFECYCLE_HOST_UUIDS), undefined, signal, timeout);
 };
 
 export const getRelevantLifecycleAppstreamsForHosts = async (hostIds: string[], signal?: AbortSignal) => {
@@ -249,13 +254,20 @@ const throwAsApiError = (error: unknown): never => {
   }
 };
 
-const requestBackend = async (method: 'get' | 'post', path: string, body?: unknown, signal?: AbortSignal) => {
+const requestBackend = async (
+  method: 'get' | 'post',
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+  timeout?: number
+) => {
   try {
     const response = await axios.request({
       method,
       url: path,
       data: body,
       signal,
+      ...(timeout === undefined ? {} : { timeout }),
       validateStatus: function (status) {
         return status === 200;
       },

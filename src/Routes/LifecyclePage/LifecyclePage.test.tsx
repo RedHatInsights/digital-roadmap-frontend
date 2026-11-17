@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import LifecyclePage from './LifecyclePage';
+import type { LifecycleBatchLoadAlertProps } from '../../Components/Lifecycle/Lifecycle';
 
 // Mock the useChrome hook
 jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
@@ -13,7 +14,20 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 
 // Mock the LifecycleTab component
 jest.mock('../../Components/Lifecycle/Lifecycle', () => {
-  return function MockLifecycleTab() {
+  const React = jest.requireActual<typeof import('react')>('react');
+  return function MockLifecycleTab({
+    onBatchLoadAlertChange,
+  }: {
+    onBatchLoadAlertChange?: (alert: LifecycleBatchLoadAlertProps | null) => void;
+  }) {
+    React.useEffect(() => {
+      onBatchLoadAlertChange?.({
+        title: "We're preparing life cycle data for 20,000 systems",
+        description: 'Large environments can take a few minutes to calculate.',
+        completed: 2000,
+        total: 20000,
+      });
+    }, [onBatchLoadAlertChange]);
     return <div data-testid="lifecycle-tab">Lifecycle Tab</div>;
   };
 });
@@ -30,6 +44,19 @@ describe('LifecyclePage', () => {
   it('renders the warning alert', () => {
     render(<LifecyclePage />);
     expect(screen.getByText('Dates are approximations and subject to change.')).toBeInTheDocument();
+  });
+
+  it('places the preparing alert after the dates warning', async () => {
+    render(<LifecyclePage />);
+
+    const warning = screen.getByText('Dates are approximations and subject to change.');
+    const preparing = await screen.findByRole('heading', {
+      name: /We're preparing life cycle data for 20,000 systems/,
+    });
+    const notifications = screen.getByText('Get notified about lifecycle changes');
+
+    expect(warning.compareDocumentPosition(preparing) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    expect(preparing.compareDocumentPosition(notifications) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
   it('renders the expandable info alert', () => {

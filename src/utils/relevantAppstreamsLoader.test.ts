@@ -52,7 +52,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
     const releases: Array<() => void> = [];
     let inFlight = 0;
     let maxInFlight = 0;
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
 
     const client: RelevantAppstreamsClient = {
       getRelevantLifecycleAppstreamsForHosts: (hostIds) => {
@@ -73,24 +73,25 @@ describe('loadRelevantLifecycleAppstreams', () => {
     await waitForCalls(calls, 1);
     expect(calls[0]).toHaveLength(1000);
     expect(calls[0]).toEqual(ids.slice(0, 1000));
-    expect(progress).toEqual([{ requested: 1000, total: ids.length }]);
+    expect(progress).toEqual([]);
     expect(maxInFlight).toBe(1);
 
     releases[0]();
     await waitForCalls(calls, 2);
     expect(calls[1]).toHaveLength(1000);
     expect(calls[1]).toEqual(ids.slice(1000, 2000));
-    expect(progress[1]).toEqual({ requested: 2000, total: ids.length });
+    expect(progress[0]).toEqual({ completed: 1000, total: ids.length });
     expect(maxInFlight).toBe(1);
 
     releases[1]();
     await waitForCalls(calls, 3);
     expect(calls[2]).toHaveLength(1);
     expect(calls[2]).toEqual(ids.slice(2000));
-    expect(progress[2]).toEqual({ requested: ids.length, total: ids.length });
+    expect(progress[1]).toEqual({ completed: 2000, total: ids.length });
 
     releases[2]();
     await expect(pending).resolves.toEqual({ data: [] });
+    expect(progress[2]).toEqual({ completed: ids.length, total: ids.length });
     expect(maxInFlight).toBe(1);
   });
 
@@ -268,7 +269,7 @@ describe('loadRelevantLifecycleAppstreams', () => {
 
   it('retries a failed batch with the same ids and does not advance progress', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
     const fetchHosts = jest
       .fn<Promise<{ data: RelevantAppStreamRow[] }>, [string[]]>()
       .mockRejectedValueOnce(new Error('once'))
@@ -285,8 +286,8 @@ describe('loadRelevantLifecycleAppstreams', () => {
     expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
     expect(progress).toEqual([
-      { requested: BATCH_SIZE, total: ids.length },
-      { requested: ids.length, total: ids.length },
+      { completed: BATCH_SIZE, total: ids.length },
+      { completed: ids.length, total: ids.length },
     ]);
   });
 
