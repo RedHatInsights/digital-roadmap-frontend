@@ -64,6 +64,8 @@ interface SystemsViewToolbarProps {
   ) => void;
   setIsOpen: (open: boolean) => void;
   onExport: (format: ExportFormat) => void;
+  isExportDisabled?: boolean;
+  exportDisabledTooltipContent?: string;
   disableInstalledOnly: boolean;
 }
 
@@ -101,6 +103,8 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
   onSelect,
   setIsOpen,
   onExport,
+  isExportDisabled = false,
+  exportDisabledTooltipContent = 'Still loading',
   disableInstalledOnly,
 }) => {
   return (
@@ -208,7 +212,12 @@ export const SystemsViewToolbar: React.FunctionComponent<SystemsViewToolbarProps
               </Form>
             </ToolbarItem>
             <ToolbarItem>
-              <ExportDataButton className="drf-lifecycle__filter-download" onExport={onExport} />
+              <ExportDataButton
+                className="drf-lifecycle__filter-download"
+                onExport={onExport}
+                isDisabled={isExportDisabled}
+                disabledTooltipContent={exportDisabledTooltipContent}
+              />
             </ToolbarItem>
           </ToolbarGroup>
         </ToolbarContent>

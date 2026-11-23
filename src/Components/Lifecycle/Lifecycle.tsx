@@ -2,6 +2,8 @@ import './Lifecycle.scss';
 import React, { lazy, useEffect, useRef, useState } from 'react';
 import '@patternfly/react-core/dist/styles/base.css';
 import {
+  Alert,
+  AlertActionCloseButton,
   Bullseye,
   Button,
   Card,
@@ -10,6 +12,7 @@ import {
   EmptyStateBody,
   EmptyStateFooter,
   EmptyStateVariant,
+  Skeleton,
   Spinner,
   Stack,
 } from '@patternfly/react-core';
@@ -17,6 +20,7 @@ import { ErrorObject } from '../../types/ErrorObject';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import {
+  HOST_UUID_LOOKUP_TIMEOUT_MS,
   getAccessibleHostUuids,
   getAllLifecycleAppstreams,
   getAllLifecycleSystems,
@@ -26,7 +30,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { isAbortError } from '../../utils/batchRetry';
+import { isAbortError, isTransientFailure, waitBeforeRetry } from '../../utils/batchRetry';
 import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
@@ -48,7 +52,86 @@ import { exportData as exportToFile } from '../../utils/export';
 import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { getNewName } from '../../utils/utils';
 import { ExtendedFilter } from '../../types/Filter';
-import PreparingDataState from '../PreparingDataState/PreparingDataState';
+import BatchLoadAlert, { type BatchLoadAlertProps } from '../BatchLoadAlert/BatchLoadAlert';
+import { useBatchLoad } from '../../hooks/useBatchLoad';
+
+const PREPARING_DESCRIPTION =
+  'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.';
+const READY_ALERT_TITLE = 'Relevant lifecycle data is ready.';
+const WORKSPACE_FILTERING_MESSAGE = 'Error: Workspace filtering is not yet implemented';
+const MAX_HOST_UUID_LOOKUP_ATTEMPTS = 3;
+
+type DatasetStatus = 'loading' | 'ready' | 'error';
+type RelevantSurface = 'rhel' | 'app';
+
+type LifecycleCache = {
+  allSystems: SystemLifecycleChanges[];
+  allApps: Stream[];
+  installedSystems: SystemLifecycleChanges[];
+  relatedSystems: SystemLifecycleChanges[];
+  installedApps: Stream[];
+  relatedApps: Stream[];
+};
+
+const emptyCache = (): LifecycleCache => ({
+  allSystems: [],
+  allApps: [],
+  installedSystems: [],
+  relatedSystems: [],
+  installedApps: [],
+  relatedApps: [],
+});
+
+const toErrorObject = (error: unknown): ErrorObject => {
+  if (error instanceof Error) {
+    const withStatus = error as Error & { status_code?: number };
+    return { message: withStatus.message, status_code: withStatus.status_code };
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const candidate = error as { message?: unknown; status_code?: unknown };
+    if (typeof candidate.message === 'string') {
+      return {
+        message: candidate.message,
+        status_code: typeof candidate.status_code === 'number' ? candidate.status_code : undefined,
+      };
+    }
+  }
+  return { message: String(error) };
+};
+
+const toErrorObjectOrUndefined = (error: unknown): ErrorObject | undefined =>
+  error === undefined ? undefined : toErrorObject(error);
+
+const isWorkspaceFilteringError = (error: ErrorObject | undefined) =>
+  error?.message === WORKSPACE_FILTERING_MESSAGE;
+
+const getAccessibleHostUuidsWithRetry = async (signal: AbortSignal) => {
+  for (let attempt = 1; attempt <= MAX_HOST_UUID_LOOKUP_ATTEMPTS; attempt += 1) {
+    try {
+      return await getAccessibleHostUuids(signal, HOST_UUID_LOOKUP_TIMEOUT_MS);
+    } catch (error) {
+      if (signal.aborted || !isTransientFailure(error) || attempt === MAX_HOST_UUID_LOOKUP_ATTEMPTS) {
+        throw error;
+      }
+      await waitBeforeRetry(signal);
+    }
+  }
+  throw new Error('Host UUID lookup exhausted its retry attempts.');
+};
+
+const LifecycleContentSkeleton = () => (
+  <Stack hasGutter className="drf-lifecycle__content-skeleton">
+    {['42%', '58%', '36%', '70%', '48%', '84%'].map((width) => (
+      <Skeleton key={width} width={width} height="16px" screenreaderText="Loading lifecycle chart" />
+    ))}
+  </Stack>
+);
+
+export type LifecycleBatchLoadAlertProps = BatchLoadAlertProps;
+
+type LifecycleTabProps = {
+  onBatchLoadAlertChange?: (alert: LifecycleBatchLoadAlertProps | null) => void;
+};
 
 // Define DEFAULT_FILTERS with the ExtendedFilter type
 const DEFAULT_FILTERS: ExtendedFilter = {
@@ -58,40 +141,29 @@ const DEFAULT_FILTERS: ExtendedFilter = {
   viewFilter: 'installed-only',
 };
 
-type LifecycleLoadProgress = {
-  requested: number;
-  total: number;
-  completed: boolean;
-};
-
-const trackLifecycleLoad = <T,>(
-  load: (onProgress: (progress: { requested: number; total: number }) => void) => Promise<T>,
-  setProgress: (progress: LifecycleLoadProgress | null) => void,
-  setProgressCompleted: (update: (current: LifecycleLoadProgress | null) => LifecycleLoadProgress) => void
-) =>
-  load((progress) => setProgress({ ...progress, completed: false })).then((result) => {
-    setProgressCompleted((current) => ({
-      requested: current?.requested ?? 0,
-      total: current?.total ?? 0,
-      completed: true,
-    }));
-    return result;
-  });
-
-const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
+const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) => {
   const loadAbortRef = useRef(new AbortController());
+  const cacheRef = useRef<LifecycleCache>(emptyCache());
+  const rhelReadyRef = useRef(false);
+  const appReadyRef = useRef(false);
+  const allSystemsReadyRef = useRef(false);
+  const allAppsReadyRef = useRef(false);
+  const dismissedReadyRef = useRef(new Set<string>());
   const [systemLifecycleChanges, setSystemLifecycleChanges] = useState<SystemLifecycleChanges[]>([]);
   const [filteredTableData, setFilteredTableData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [rhelLoadProgress, setRhelLoadProgress] = useState<LifecycleLoadProgress | null>(null);
-  const [appLoadProgress, setAppLoadProgress] = useState<LifecycleLoadProgress | null>(null);
+  const [, setIsLoading] = useState(false);
+  const rhelBatch = useBatchLoad<SystemLifecycleChanges[]>('loading');
+  const appBatch = useBatchLoad<Stream[]>('loading');
+  const [allSystemsStatus, setAllSystemsStatus] = useState<DatasetStatus>('loading');
+  const [allAppsStatus, setAllAppsStatus] = useState<DatasetStatus>('loading');
+  const [allSystemsError, setAllSystemsError] = useState<ErrorObject>();
+  const [allAppsError, setAllAppsError] = useState<ErrorObject>();
+  const [readyAlertSurfaces, setReadyAlertSurfaces] = useState<Set<RelevantSurface>>(() => new Set());
   const [nameFilter, setNameFilter] = useState<string>('');
   const [error, setError] = useState<ErrorObject>();
   const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
   const [filteredChartData, setFilteredChartData] = useState<SystemLifecycleChanges[] | Stream[]>([]);
   const [appLifecycleChanges, setAppLifecycleChanges] = useState<Stream[]>([]);
-  // Add a state for the full app lifecycle data
-  const [fullAppLifecycleChanges, setFullAppLifecycleChanges] = useState<Stream[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   // drop down menu
   const [lifecycleDropdownValue, setLifecycleDropdownValue] = React.useState<string>(DEFAULT_DROPDOWN_VALUE);
@@ -100,21 +172,28 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   const [filters, setFilters] = useState<ExtendedFilter>(DEFAULT_FILTERS);
   // Add state for view filter (all, installed-only, installed-and-related)
   const [selectedViewFilter, setSelectedViewFilter] = useState<string>('installed-only');
-
-  // Add state variables to store cached API responses
-  const [allSystemData, setAllSystemData] = useState<SystemLifecycleChanges[]>([]);
-  const [allAppData, setAllAppData] = useState<Stream[]>([]);
-  const [installedSystemData, setInstalledSystemData] = useState<SystemLifecycleChanges[]>([]);
-  const [installedAppData, setInstalledAppData] = useState<Stream[]>([]);
-  const [relatedSystemData, setRelatedSystemData] = useState<SystemLifecycleChanges[]>([]);
-  const [relatedAppData, setRelatedAppData] = useState<Stream[]>([]);
-  const [dataInitialized, setDataInitialized] = useState<boolean>(false);
+  const viewRef = useRef(selectedViewFilter);
+  const dropdownRef = useRef(lifecycleDropdownValue);
+  const chartSortRef = useRef(chartSortByValue);
+  const chartDirectionRef = useRef(chartDirection);
+  viewRef.current = selectedViewFilter;
+  dropdownRef.current = lifecycleDropdownValue;
+  chartSortRef.current = chartSortByValue;
+  chartDirectionRef.current = chartDirection;
 
   const [filterField, setFilterField] = useState<'Name' | 'Version' | 'Status'>('Name');
+  const filterFieldRef = useRef(filterField);
+  filterFieldRef.current = filterField;
   const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
+  const rhelVersionFilterRef = useRef(rhelVersionFilter);
+  rhelVersionFilterRef.current = rhelVersionFilter;
 
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const statusFilterRef = useRef(statusFilter);
+  statusFilterRef.current = statusFilter;
+  const nameFilterRef = useRef(nameFilter);
+  nameFilterRef.current = nameFilter;
 
   const [isSwitchingView, setIsSwitchingView] = useState(false);
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
@@ -164,61 +243,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       .map((m) => `RHEL ${m}`);
   };
 
-  // Helper function to determine if data is available for current dropdown and view
-  const checkDataAvailability = (
-    dropdownValue: string,
-    viewFilter: string,
-    allSystems?: SystemLifecycleChanges[],
-    relatedSystems?: SystemLifecycleChanges[],
-    allApps?: Stream[],
-    relatedApps?: Stream[],
-    installedSystems?: SystemLifecycleChanges[],
-    installedApps?: Stream[]
-  ) => {
-    // Use passed data if available, otherwise fall back to state
-    const systemDataAll = allSystems ?? allSystemData;
-    const systemDataRelated = relatedSystems ?? relatedSystemData;
-    const systemDataInstalled = installedSystems ?? installedSystemData;
-
-    const appDataAll = allApps ?? allAppData;
-    const appDataRelated = relatedApps ?? relatedAppData;
-    const appDataInstalled = installedApps ?? installedAppData;
-
-    if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      // For systems dropdown, only check system data
-      if (viewFilter === 'all') {
-        return systemDataAll.length > 0;
-      }
-      const sysData = viewFilter === 'installed-and-related' ? systemDataRelated : systemDataInstalled;
-      return getSystemsCountForDropdown(sysData) > 0;
-    }
-
-    if (viewFilter === 'all') {
-      return filterAppDataByDropdown(appDataAll, dropdownValue).length > 0;
-    }
-
-    const appData = viewFilter === 'installed-and-related' ? appDataRelated : appDataInstalled;
-    return getAppCountForDropdown(appData, dropdownValue) > 0;
-  };
-
-  // Helper function to determine if we should show noDataAvailable for current dropdown
-  const shouldShowNoDataAvailable = (
-    dropdownValue: string,
-    relatedSystems?: SystemLifecycleChanges[],
-    relatedApps?: Stream[]
-  ) => {
-    const sysRelated = relatedSystems ?? relatedSystemData;
-    const appRelated = relatedApps ?? relatedAppData;
-
-    if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      // For systems dropdown, check if we have any installed/related systems
-      return getSystemsCountForDropdown(sysRelated) === 0;
-    } else {
-      // For app stream dropdowns, check if we have any installed/related apps for this specific dropdown
-      return getAppCountForDropdown(appRelated, dropdownValue) === 0;
-    }
-  };
-
   // Unified filter application to ensure consistent filtering
   const applyAllActiveFilters = (
     data: Stream[] | SystemLifecycleChanges[],
@@ -226,7 +250,9 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     nameFilterValue: string,
     field: 'Name' | 'Version' | 'Status' = filterField,
     versions: string[] = rhelVersionFilter,
-    statuses: string[] = statusFilter
+    statuses: string[] = statusFilter,
+    sortBy: string = chartSortByValue,
+    sortOrder: string = chartDirection
   ) => {
     let filteredData = data;
 
@@ -272,7 +298,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
 
     setFilteredTableData(filteredData);
 
-    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue, chartDirection);
+    const chartData = filterChartData(filteredData, sortBy, dropdownValue, sortOrder);
     setFilteredChartData(chartData);
 
     return filteredData;
@@ -305,363 +331,323 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const onLifecycleDropdownSelect = (value: string) => {
-    setIsSwitchingView(true);
-
-    const wasAppStream = isAppStream(lifecycleDropdownValue);
-    const willBeAppStream = isAppStream(value);
-    const isCrossDomainSwitch = wasAppStream !== willBeAppStream;
-    const nextNameFilter = isCrossDomainSwitch ? '' : nameFilter;
-
+    const isCrossDomainSwitch = isAppStream(dropdownRef.current) !== isAppStream(value);
     if (isCrossDomainSwitch) {
+      nameFilterRef.current = '';
+      rhelVersionFilterRef.current = [];
+      statusFilterRef.current = [];
+      filterFieldRef.current = 'Name';
       setNameFilter('');
       setRhelVersionFilter([]);
       setStatusFilter([]);
       setFilterField('Name');
       updateFilters({ name: '', versions: [], statuses: [] });
-
-      setAppsSwitchKey((k) => k + 1);
+      setAppsSwitchKey((key) => key + 1);
     }
 
+    dropdownRef.current = value;
     setLifecycleDropdownValue(value);
     updateFilters({ lifecycleDropdown: value });
+    setIsSwitchingView(true);
+    syncDisplayedView(value, viewRef.current);
+    queueMicrotask(() => setIsSwitchingView(false));
+  };
 
-    const disableInstalledOnlyValue = computeDisableInstalledOnly(value);
-    setDisableInstalledOnly(disableInstalledOnlyValue);
+  const publishDataset = (dropdown: string, view: string) => {
+    const cache = cacheRef.current;
+    const systems =
+      view === 'all'
+        ? cache.allSystems
+        : view === 'installed-only'
+        ? cache.installedSystems
+        : cache.relatedSystems;
+    const apps =
+      view === 'all' ? cache.allApps : view === 'installed-only' ? cache.installedApps : cache.relatedApps;
 
-    // Set noDataAvailable based on the specific dropdown type
-    setNoDataAvailable(shouldShowNoDataAvailable(value));
-
-    // Auto-switch to 'all' view if no data in current view
-    let effectiveViewFilter = selectedViewFilter;
-
-    if (disableInstalledOnlyValue && effectiveViewFilter === 'installed-only') {
-      effectiveViewFilter = 'installed-and-related';
-      setSelectedViewFilter(effectiveViewFilter);
-      updateFilters({ viewFilter: effectiveViewFilter });
+    if (dropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+      const updated = updateLifecycleData(systems);
+      setSystemLifecycleChanges(updated);
+      applyAllActiveFilters(
+        updated,
+        dropdown,
+        nameFilterRef.current,
+        filterFieldRef.current,
+        rhelVersionFilterRef.current,
+        statusFilterRef.current,
+        chartSortRef.current,
+        chartDirectionRef.current
+      );
+      return;
     }
 
-    if (!checkDataAvailability(value, effectiveViewFilter) && effectiveViewFilter !== 'all') {
-      const hasInstalledAndRelated = checkDataAvailability(value, 'installed-and-related');
-      if (effectiveViewFilter === 'installed-only' && hasInstalledAndRelated) {
-        effectiveViewFilter = 'installed-and-related';
-      } else {
-        effectiveViewFilter = 'all';
+    const streams = filterAppDataByDropdown([...apps], dropdown);
+    setAppLifecycleChanges(streams);
+    applyAllActiveFilters(
+      streams,
+      dropdown,
+      nameFilterRef.current,
+      filterFieldRef.current,
+      [],
+      statusFilterRef.current,
+      chartSortRef.current,
+      chartDirectionRef.current
+    );
+  };
+
+  // Only successfully loaded Relevant data can disable a view or trigger an empty-data fallback.
+  const syncDisplayedView = (dropdown: string, requestedView: string) => {
+    const cache = cacheRef.current;
+    const systems = dropdown === RHEL_SYSTEMS_DROPDOWN_VALUE;
+    const relevantReady = systems ? rhelReadyRef.current : appReadyRef.current;
+    const installedCount = systems
+      ? getSystemsCountForDropdown(cache.installedSystems)
+      : getAppCountForDropdown(cache.installedApps, dropdown);
+    const relatedCount = systems
+      ? getSystemsCountForDropdown(cache.relatedSystems)
+      : getAppCountForDropdown(cache.relatedApps, dropdown);
+
+    setNoDataAvailable(relevantReady && relatedCount === 0);
+    setDisableInstalledOnly(relevantReady && installedCount === 0 && relatedCount > 0);
+
+    let view = requestedView;
+    if (relevantReady && view !== 'all') {
+      if (relatedCount === 0) {
+        view = 'all';
+      } else if (view === 'installed-only' && installedCount === 0) {
+        view = 'installed-and-related';
       }
-      setSelectedViewFilter(effectiveViewFilter);
-      updateFilters({ viewFilter: effectiveViewFilter });
+    }
+    if (view !== requestedView) {
+      viewRef.current = view;
+      setSelectedViewFilter(view);
+      updateFilters({ viewFilter: view });
     }
 
-    // Apply all current filters to the new data
-    processData(effectiveViewFilter, value, nextNameFilter);
-
-    // Schedule resetting the "isSwitchingView" flag after the current microtask to avoid rendering conflicts.
-    queueMicrotask?.(() => setIsSwitchingView(false));
-  };
-
-  const computeDisableInstalledOnly = (
-    dropdownValue: string,
-    installedSystems?: SystemLifecycleChanges[],
-    relatedSystems?: SystemLifecycleChanges[],
-    installedApps?: Stream[],
-    relatedApps?: Stream[]
-  ) => {
-    const sysInstalled = installedSystems ?? installedSystemData;
-    const sysRelated = relatedSystems ?? relatedSystemData;
-    const appInstalled = installedApps ?? installedAppData;
-    const appRelated = relatedApps ?? relatedAppData;
-
-    if (dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      return getSystemsCountForDropdown(sysInstalled) === 0 && getSystemsCountForDropdown(sysRelated) > 0;
+    const catalogReady = systems ? allSystemsReadyRef.current : allAppsReadyRef.current;
+    const ready = view === 'all' ? catalogReady : relevantReady;
+    if (ready) {
+      publishDataset(dropdown, view);
+    } else {
+      // Never carry rows from a different view through a failed or restarted load.
+      if (systems) setSystemLifecycleChanges([]);
+      else setAppLifecycleChanges([]);
+      setFilteredTableData([]);
+      setFilteredChartData([]);
     }
-
-    const installedCount = getAppCountForDropdown(appInstalled, dropdownValue);
-    const relatedCount = getAppCountForDropdown(appRelated, dropdownValue);
-
-    return installedCount === 0 && relatedCount > 0;
   };
 
-  // First data fetch - called only once
-  const initializeData = async (viewFilter: string) => {
+  const rememberRelevantSystems = (rows: SystemLifecycleChanges[]) => {
+    const installed = rows.filter((datum) => datum.related === false);
+    cacheRef.current.relatedSystems = rows;
+    cacheRef.current.installedSystems = installed;
+  };
+
+  const rememberRelevantApps = (rows: Stream[]) => {
+    const installed = rows.filter((datum) => datum.related === false);
+    cacheRef.current.relatedApps = rows;
+    cacheRef.current.installedApps = installed;
+  };
+
+  const noteReadyAlert = (surface: RelevantSurface) => {
+    const activeSurface = dropdownRef.current === RHEL_SYSTEMS_DROPDOWN_VALUE ? 'rhel' : 'app';
+    if (viewRef.current === 'all' && activeSurface === surface && !dismissedReadyRef.current.has(surface)) {
+      setReadyAlertSurfaces((current) => new Set(current).add(surface));
+    }
+  };
+
+  const dismissReadyAlert = (surface: RelevantSurface) => {
+    dismissedReadyRef.current.add(surface);
+    setReadyAlertSurfaces((current) => {
+      const next = new Set(current);
+      next.delete(surface);
+      return next;
+    });
+  };
+
+  const markSurfaceError = (surface: 'rhel' | 'app' | 'all-systems' | 'all-apps', error: unknown) => {
+    if (isAbortError(error)) {
+      return;
+    }
+    const object = toErrorObject(error);
+    if (surface === 'all-systems') {
+      allSystemsReadyRef.current = false;
+      setAllSystemsStatus('error');
+      setAllSystemsError(object);
+    } else if (surface === 'all-apps') {
+      allAppsReadyRef.current = false;
+      setAllAppsStatus('error');
+      setAllAppsError(object);
+    }
+    if (isWorkspaceFilteringError(object)) {
+      setError(object);
+    }
+  };
+
+  const clearPageErrorUnlessLocked = () => {
+    setError((current) => (isWorkspaceFilteringError(current) ? current : undefined));
+  };
+
+  // Initial data fetch.
+  const initializeData = async (signal: AbortSignal = loadAbortRef.current.signal) => {
     setIsLoading(true);
-    setRhelLoadProgress(null);
-    setAppLoadProgress(null);
+    setReadyAlertSurfaces(new Set());
     setNoDataAvailable(false);
+    rhelReadyRef.current = false;
+    appReadyRef.current = false;
+    rhelBatch.reset();
+    appBatch.reset();
+    clearPageErrorUnlessLocked();
+    cacheRef.current = emptyCache();
+    allSystemsReadyRef.current = false;
+    setAllSystemsStatus('loading');
+    setAllSystemsError(undefined);
+    allAppsReadyRef.current = false;
+    setAllAppsStatus('loading');
+    setAllAppsError(undefined);
+    rememberRelevantSystems([]);
+    rememberRelevantApps([]);
+    syncDisplayedView(dropdownRef.current, viewRef.current);
 
-    // Global lifecycle lists do not use host ids, so they overlap the UUID lookup.
-    // The extra handlers keep a UUID failure from leaving these requests unhandled.
-    // allSettled below still observes the original result.
-    const signal = loadAbortRef.current.signal;
-    const allSystemsPromise = getAllLifecycleSystems(signal);
-    const allAppsPromise = getAllLifecycleAppstreams(signal);
-    void allSystemsPromise.catch(() => undefined);
-    void allAppsPromise.catch(() => undefined);
-
-    try {
-      const uuidResponse = await getAccessibleHostUuids(signal);
-      const hostIds = uuidResponse.data;
-
-      // Fetch data in parallel. Both lifecycle loaders use the same host ids.
-      const results = await Promise.allSettled([
-        trackLifecycleLoad(
-          (onProgress) => getRelevantLifecycleSystems(hostIds, onProgress, signal),
-          setRhelLoadProgress,
-          setRhelLoadProgress
-        ),
-        trackLifecycleLoad(
-          (onProgress) => getRelevantLifecycleAppstreams(hostIds, onProgress, signal),
-          setAppLoadProgress,
-          setAppLoadProgress
-        ),
-        allSystemsPromise,
-        allAppsPromise,
-      ]);
-
-      // If any of them has an error, propagate the exception to be handled and error is displayed
-      // The order of items in array needs to match with order in the Promise.allSettled()
-      const [relevantSystemResponse, relevantAppResponse, allSystemResponse, allAppResponse] = results.map(
-        (result) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          }
-          // if not fullfiled, there is a exception
-          throw result.reason;
+    const allSystemsDone = getAllLifecycleSystems(signal)
+      .then((response) => {
+        if (signal.aborted) {
+          return [] as SystemLifecycleChanges[];
         }
-      );
-
-      // Store all fetched data in state
-      const relatedInstalledSystems = relevantSystemResponse.data || [];
-      const relatedInstalledApps = relevantAppResponse.data || [];
-      // filter out system data with null minor field
-      const allSystems = (allSystemResponse.data || []).filter(
-        (datum: SystemLifecycleChanges) => datum.minor !== null
-      );
-      const allApps = allAppResponse.data || [];
-
-      // Filter out from the instlled & related list of Stream and SystemLifecycleChanges only the installed ones
-      // API is set to provide instlled & related and by this filter we can lower the number of API requests
-      const installedSystems = [
-        ...relatedInstalledSystems.filter((datum: SystemLifecycleChanges) => datum.related === false),
-      ];
-      const installedApps = [...relatedInstalledApps.filter((datum: Stream) => datum.related === false)];
-
-      // Store the data in state
-      setRelatedSystemData(relatedInstalledSystems);
-      setRelatedAppData(relatedInstalledApps);
-      setAllSystemData(allSystems);
-      setAllAppData(allApps);
-      setInstalledAppData(installedApps);
-      setInstalledSystemData(installedSystems);
-
-      // Mark data as initialized
-      setDataInitialized(true);
-
-      // Use the explicitly passed viewFilter or default to selectedViewFilter
-      let currentViewFilter = viewFilter || selectedViewFilter;
-      const currentDropdown = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
-
-      // Check if there's data available for the current dropdown and view filter
-      const hasDataForCurrentView = checkDataAvailability(
-        currentDropdown,
-        currentViewFilter,
-        allSystems,
-        relatedInstalledSystems,
-        allApps,
-        relatedInstalledApps,
-        installedSystems,
-        installedApps
-      );
-
-      // Auto-switch strategy:
-      // installed-only -> installed-and-related (if available) -> all
-      if (!hasDataForCurrentView && currentViewFilter !== 'all') {
-        if (currentViewFilter === 'installed-only') {
-          const hasDataForInstalledAndRelated = checkDataAvailability(
-            currentDropdown,
-            'installed-and-related',
-            allSystems,
-            relatedInstalledSystems,
-            allApps,
-            relatedInstalledApps,
-            installedSystems,
-            installedApps
-          );
-
-          if (hasDataForInstalledAndRelated) {
-            currentViewFilter = 'installed-and-related';
-            setSelectedViewFilter('installed-and-related');
-            updateFilters({ viewFilter: 'installed-and-related' });
-          } else {
-            currentViewFilter = 'all';
-            setSelectedViewFilter('all');
-            updateFilters({ viewFilter: 'all' });
-          }
-        } else {
-          currentViewFilter = 'all';
-          setSelectedViewFilter('all');
-          updateFilters({ viewFilter: 'all' });
+        const allSystems = (response.data || []).filter((datum: SystemLifecycleChanges) => datum.minor !== null);
+        cacheRef.current.allSystems = allSystems;
+        allSystemsReadyRef.current = true;
+        setRhelVersionOptions(computeRhelVersionOptions(allSystems));
+        setAllSystemsStatus('ready');
+        setAllSystemsError(undefined);
+        if (viewRef.current === 'all' && dropdownRef.current === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          syncDisplayedView(RHEL_SYSTEMS_DROPDOWN_VALUE, 'all');
         }
-      }
-
-      // Directly use the fetched data to process without relying on state updates
-      const systemData = (() => {
-        switch (currentViewFilter) {
-          case 'all':
-            return allSystems;
-          case 'installed-only':
-            return installedSystems;
-          case 'installed-and-related':
-            return relatedInstalledSystems;
-          default:
-            return installedSystems;
+        clearPageErrorUnlessLocked();
+        return allSystems;
+      })
+      .catch((error) => {
+        if (!signal.aborted) {
+          markSurfaceError('all-systems', error);
         }
-      })();
-      const appData = (() => {
-        switch (currentViewFilter) {
-          case 'all':
-            return allApps;
-          case 'installed-only':
-            return installedApps;
-          case 'installed-and-related':
-            return relatedInstalledApps;
-          default:
-            return installedApps;
-        }
-      })();
-
-      // Store the full app data set
-      setFullAppLifecycleChanges([...appData]);
-
-      // Filter based on current dropdown value
-      const appStreams = filterAppDataByDropdown([...appData], currentDropdown);
-      setAppLifecycleChanges(appStreams);
-
-      // Process the data without waiting for state updates
-      if (systemData.length > 0 || appStreams.length > 0) {
-        // Update and set the system lifecycle data
-        const updatedSystems = updateLifecycleData(systemData);
-        setSystemLifecycleChanges(updatedSystems);
-
-        // Apply filters based on URL parameters
-        // Directly using the data we already have instead of relying on state variables
-        filterInitialData(appStreams, updatedSystems);
-      } else {
-        // If no data, at least initialize empty arrays
-        setFilteredTableData([]);
-        setFilteredChartData([]);
-      }
-
-      // calculate RHEL version options
-      const dynOptions = computeRhelVersionOptions(allSystems);
-      setRhelVersionOptions(dynOptions);
-      if (versionsParam) {
-        const wanted = decodeURIComponent(versionsParam)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-        const valid = wanted.filter((v) => dynOptions.includes(v));
-        setRhelVersionFilter(valid);
-
-        updateFilters({ versions: valid });
-
-        const finalDropdownValue = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
-        if (finalDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-          const dataForSystems = updateLifecycleData(systemData);
-          setSystemLifecycleChanges(dataForSystems);
-          applyAllActiveFilters(
-            dataForSystems,
-            RHEL_SYSTEMS_DROPDOWN_VALUE,
-            nameQueryParam ?? '',
-            'Version',
-            valid,
-            statusFilter
-          );
-        }
-      } else {
-        setRhelVersionFilter([]);
-      }
-
-      // Set noDataAvailable based on the actual dropdown that will be used
-      // Pass the actual fetched data instead of relying on state
-      const finalDropdownValue = dropdownQueryParam || DEFAULT_DROPDOWN_VALUE;
-      const noDataValue = shouldShowNoDataAvailable(
-        finalDropdownValue,
-        relatedInstalledSystems,
-        relatedInstalledApps
-      );
-
-      const disableInstalledOnlyValue = computeDisableInstalledOnly(
-        finalDropdownValue,
-        installedSystems,
-        relatedInstalledSystems,
-        installedApps,
-        relatedInstalledApps
-      );
-      setDisableInstalledOnly(disableInstalledOnlyValue);
-
-      // If user is on installed-only but it would be empty while installed-and-related has data,
-      // automatically switch to installed-and-related.
-      if (disableInstalledOnlyValue && currentViewFilter === 'installed-only') {
-        currentViewFilter = 'installed-and-related';
-        setSelectedViewFilter('installed-and-related');
-        updateFilters({ viewFilter: 'installed-and-related' });
-      }
-
-      console.log('Initial load noDataAvailable check:', {
-        finalDropdownValue,
-        relatedSystemsCount: relatedInstalledSystems.length,
-        relatedAppsCount: relatedInstalledApps.length,
-        noDataValue,
+        throw error;
       });
 
-      setNoDataAvailable(noDataValue);
+    const allAppsDone = getAllLifecycleAppstreams(signal)
+      .then((response) => {
+        if (signal.aborted) {
+          return [] as Stream[];
+        }
+        const allApps = response.data || [];
+        cacheRef.current.allApps = allApps;
+        allAppsReadyRef.current = true;
+        setAllAppsStatus('ready');
+        setAllAppsError(undefined);
+        if (viewRef.current === 'all' && dropdownRef.current !== RHEL_SYSTEMS_DROPDOWN_VALUE) {
+          syncDisplayedView(dropdownRef.current, 'all');
+        }
+        clearPageErrorUnlessLocked();
+        return allApps;
+      })
+      .catch((error) => {
+        if (!signal.aborted) {
+          markSurfaceError('all-apps', error);
+        }
+        throw error;
+      });
+
+    const catalogResults = Promise.allSettled([allSystemsDone, allAppsDone]);
+
+    try {
+      const uuidResponse = await getAccessibleHostUuidsWithRetry(signal);
+      if (signal.aborted) {
+        return;
+      }
+      const hostIds = uuidResponse?.data;
+      if (
+        !Array.isArray(hostIds) ||
+        !hostIds.every((hostId) => typeof hostId === 'string' && hostId.trim().length > 0)
+      ) {
+        throw new Error('Invalid host UUID response: expected data to be an array of non-empty host IDs.');
+      }
+
+      if (hostIds.length === 0) {
+        rememberRelevantSystems([]);
+        rememberRelevantApps([]);
+        rhelBatch.complete([]);
+        appBatch.complete([]);
+        rhelReadyRef.current = true;
+        appReadyRef.current = true;
+        noteReadyAlert('rhel');
+        noteReadyAlert('app');
+        syncDisplayedView(dropdownRef.current, viewRef.current);
+      } else {
+        const rhelDone = rhelBatch
+          .start(
+            (onProgress, batchSignal) =>
+              getRelevantLifecycleSystems(hostIds, onProgress, batchSignal).then(
+                (response) => response.data || []
+              ),
+            signal,
+            hostIds.length
+          )
+          .then((rows) => {
+            if (signal.aborted) {
+              return [] as SystemLifecycleChanges[];
+            }
+            rememberRelevantSystems(rows);
+            if (!allSystemsReadyRef.current) {
+              setRhelVersionOptions(computeRhelVersionOptions(rows));
+            }
+            rhelReadyRef.current = true;
+            noteReadyAlert('rhel');
+            if (dropdownRef.current === RHEL_SYSTEMS_DROPDOWN_VALUE) {
+              syncDisplayedView(dropdownRef.current, viewRef.current);
+            }
+            return rows;
+          });
+
+        const appDone = appBatch
+          .start(
+            (onProgress, batchSignal) =>
+              getRelevantLifecycleAppstreams(hostIds, onProgress, batchSignal).then(
+                (response) => response.data || []
+              ),
+            signal,
+            hostIds.length
+          )
+          .then((rows) => {
+            if (signal.aborted) {
+              return [] as Stream[];
+            }
+            rememberRelevantApps(rows);
+            appReadyRef.current = true;
+            noteReadyAlert('app');
+            if (dropdownRef.current !== RHEL_SYSTEMS_DROPDOWN_VALUE) {
+              syncDisplayedView(dropdownRef.current, viewRef.current);
+            }
+            return rows;
+          });
+
+        await Promise.allSettled([rhelDone, appDone]);
+      }
+
+      await catalogResults;
     } catch (error: any) {
       if (signal.aborted || isAbortError(error)) {
         return;
       }
       console.error('Error fetching lifecycle changes:', error);
-      setError({ message: error.message, status_code: error.status_code });
+      const object = toErrorObject(error);
+      rhelBatch.fail(object);
+      appBatch.fail(object);
+      markSurfaceError('rhel', error);
+      markSurfaceError('app', error);
+      setError(object);
     } finally {
-      setIsLoading(false);
-      setRhelLoadProgress(null);
-      setAppLoadProgress(null);
+      if (!signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  };
-
-  // Updated processData function with dropdown-specific no data handling
-  const processData = (viewFilter: string, dropdownValue: string, nameFilterValue: string) => {
-    const isSystemsDropdown = dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
-
-    // Check data availability for current dropdown and view
-    const hasDataForCurrentView = checkDataAvailability(dropdownValue, viewFilter);
-    setNoDataAvailable(shouldShowNoDataAvailable(dropdownValue));
-
-    // Exit early if no data in the current view for current dropdown
-    if (!hasDataForCurrentView) {
-      setFilteredTableData([]);
-      setFilteredChartData([]);
-      return;
-    }
-
-    if (isSystemsDropdown) {
-      const systemData = selectSystemDataSource(viewFilter);
-      const updatedSystems = updateLifecycleData(systemData);
-      setSystemLifecycleChanges(updatedSystems);
-      applyAllActiveFilters(
-        updatedSystems,
-        dropdownValue,
-        nameFilterValue,
-        filterField,
-        rhelVersionFilter,
-        statusFilter
-      );
-      return;
-    }
-
-    const appData = selectAppDataSource(viewFilter);
-    setFullAppLifecycleChanges([...appData]);
-    const appStreams = filterAppDataByDropdown([...appData], dropdownValue);
-    setAppLifecycleChanges(appStreams);
-    applyAllActiveFilters(appStreams, dropdownValue, nameFilterValue, 'Name', [], statusFilter);
   };
 
   // Count "systems" by summing the `count` field (not by number of rows).
@@ -678,106 +664,13 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       return sum + (Number.isFinite(c) ? c : 0);
     }, 0);
 
-  const selectSystemDataSource = (filter: string) => {
-    switch (filter) {
-      case 'all':
-        return allSystemData;
-      case 'installed-only':
-        return installedSystemData;
-      case 'installed-and-related':
-        return relatedSystemData;
-      default:
-        return installedSystemData;
-    }
-  };
-
-  const selectAppDataSource = (filter: string) => {
-    switch (filter) {
-      case 'all':
-        return allAppData;
-      case 'installed-only':
-        return installedAppData;
-      case 'installed-and-related':
-        return relatedAppData;
-      default:
-        return installedAppData;
-    }
-  };
-
-  // Updated fetchData that uses cached data
-  const fetchData = (viewFilter = selectedViewFilter) => {
-    if (!dataInitialized) {
-      // First load - initialize all data with the explicit viewFilter
-      initializeData(viewFilter);
-    } else {
-      let effectiveViewFilter = viewFilter;
-      // Already have data - just process with current filter
-      setIsLoading(true);
-
-      // Check if relevant data is available for current dropdown
-      const hasRelevantData = checkDataAvailability(lifecycleDropdownValue, viewFilter);
-
-      // Set noDataAvailable based on the specific dropdown type
-      setNoDataAvailable(shouldShowNoDataAvailable(lifecycleDropdownValue));
-
-      const disableInstalledOnlyValue = computeDisableInstalledOnly(lifecycleDropdownValue);
-      setDisableInstalledOnly(disableInstalledOnlyValue);
-
-      if (disableInstalledOnlyValue && viewFilter === 'installed-only') {
-        setSelectedViewFilter('installed-and-related');
-        updateFilters({ viewFilter: 'installed-and-related' });
-        // Re-run with effective view
-        processData('installed-and-related', lifecycleDropdownValue, nameFilter);
-        setIsLoading(false);
-        return;
-      }
-
-      if (!hasRelevantData && viewFilter !== 'all') {
-        // Prefer "installed-and-related" over "all" when "installed-only" is empty but related has data.
-        if (viewFilter === 'installed-only') {
-          const hasInstalledAndRelatedData = checkDataAvailability(
-            lifecycleDropdownValue,
-            'installed-and-related'
-          );
-
-          if (hasInstalledAndRelatedData) {
-            effectiveViewFilter = 'installed-and-related';
-            setSelectedViewFilter('installed-and-related');
-            updateFilters({ viewFilter: 'installed-and-related' });
-          } else {
-            effectiveViewFilter = 'all';
-            setSelectedViewFilter('all');
-            updateFilters({ viewFilter: 'all' });
-          }
-        } else {
-          effectiveViewFilter = 'all';
-          setSelectedViewFilter('all');
-          updateFilters({ viewFilter: 'all' });
-        }
-      }
-
-      // Process cached data with the explicit viewFilter
-      processData(effectiveViewFilter, lifecycleDropdownValue, nameFilter);
-      setIsLoading(false);
-    }
-  };
-
-  // Update the view filter handler to use cached data
   const handleViewFilterChange = (filter: string) => {
-    console.log('View filter changed to:', filter);
-    // Prevent selecting "installed-only" when it's intentionally disabled
-    if (filter === 'installed-only' && disableInstalledOnly) {
-      setSelectedViewFilter('installed-and-related');
-      updateFilters({ viewFilter: 'installed-and-related' });
-      fetchData('installed-and-related');
-      return;
-    }
-
+    viewRef.current = filter;
     setSelectedViewFilter(filter);
     updateFilters({ viewFilter: filter });
-
-    // Process data with the new filter - no API call
-    fetchData(filter);
+    setIsSwitchingView(true);
+    syncDisplayedView(dropdownRef.current, filter);
+    queueMicrotask(() => setIsSwitchingView(false));
   };
 
   const updateLifecycleData = (data: SystemLifecycleChanges[]) => {
@@ -789,62 +682,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
         name: getNewName(datum.name, datum.major, datum.minor, datum.lifecycle_type),
       };
     });
-  };
-
-  // Updated to use unified filtering
-  const checkNameQueryParam = (data: Stream[] | SystemLifecycleChanges[], dropdownValue: string) => {
-    if (nameQueryParam !== null) {
-      setNameFilter(nameQueryParam);
-      // Use our unified filter function
-      const isSystemsDropdown = dropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
-      applyAllActiveFilters(
-        data,
-        dropdownValue,
-        nameQueryParam,
-        isSystemsDropdown ? filterField : 'Name',
-        isSystemsDropdown ? rhelVersionFilter : [],
-        statusFilter
-      );
-    } else {
-      let chartData;
-      if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
-        const effectiveOrder = orderParam ?? getDefaultOrder(sortByParam);
-        setChartSortByValue(sortByParam);
-        setChartDirection(effectiveOrder);
-        chartData = filterChartData(data, sortByParam, dropdownValue, effectiveOrder);
-        setFilteredChartData(chartData);
-      } else {
-        const defaultSort = DEFAULT_CHART_SORTBY_VALUE;
-        const effectiveOrder = getDefaultOrder(defaultSort);
-        setChartSortByValue(defaultSort);
-        setChartDirection(effectiveOrder);
-        chartData = filterChartData(data, defaultSort, dropdownValue, effectiveOrder);
-        setFilteredChartData(chartData);
-      }
-
-      setFilteredTableData(data);
-    }
-  };
-
-  // Use checkNameQueryParam for URL parameter handling
-  const filterInitialData = (appStreams: Stream[], updatedSystems: SystemLifecycleChanges[]) => {
-    // Set the correct dropdown value first
-    if (dropdownQueryParam && dropdownQueryParam === DEFAULT_DROPDOWN_VALUE) {
-      setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
-      checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-    } else if (dropdownQueryParam && dropdownQueryParam === RHEL_8_STREAMS_DROPDOWN_VALUE) {
-      setLifecycleDropdownValue(RHEL_8_STREAMS_DROPDOWN_VALUE);
-      checkNameQueryParam(appStreams, RHEL_8_STREAMS_DROPDOWN_VALUE);
-    } else if (dropdownQueryParam && dropdownQueryParam === RHEL_10_STREAMS_DROPDOWN_VALUE) {
-      setLifecycleDropdownValue(RHEL_10_STREAMS_DROPDOWN_VALUE);
-      checkNameQueryParam(appStreams, RHEL_10_STREAMS_DROPDOWN_VALUE);
-    } else if (dropdownQueryParam && dropdownQueryParam === RHEL_SYSTEMS_DROPDOWN_VALUE) {
-      setLifecycleDropdownValue(RHEL_SYSTEMS_DROPDOWN_VALUE);
-      checkNameQueryParam(updatedSystems, RHEL_SYSTEMS_DROPDOWN_VALUE);
-    } else {
-      setLifecycleDropdownValue(DEFAULT_DROPDOWN_VALUE);
-      checkNameQueryParam(appStreams, DEFAULT_DROPDOWN_VALUE);
-    }
   };
 
   const nameQueryParam = searchParams.get('name');
@@ -875,8 +712,20 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     // Set the initial filter state from URL params
     const initialFilters = structuredClone(DEFAULT_FILTERS) as ExtendedFilter;
     if (nameQueryParam) initialFilters.name = nameQueryParam;
-    if (dropdownQueryParam) initialFilters.lifecycleDropdown = dropdownQueryParam;
-    if (sortByParam) initialFilters.chartSortBy = sortByParam;
+    if (
+      dropdownQueryParam &&
+      [
+        DEFAULT_DROPDOWN_VALUE,
+        RHEL_8_STREAMS_DROPDOWN_VALUE,
+        RHEL_10_STREAMS_DROPDOWN_VALUE,
+        RHEL_SYSTEMS_DROPDOWN_VALUE,
+      ].includes(dropdownQueryParam)
+    ) {
+      initialFilters.lifecycleDropdown = dropdownQueryParam;
+    }
+    if (sortByParam && checkValidityOfQueryParam('sortByQueryParam', sortByParam)) {
+      initialFilters.chartSortBy = sortByParam;
+    }
     if (orderParam) initialFilters.chartOrder = orderParam;
     else if (sortByParam) initialFilters.chartOrder = getDefaultOrder(sortByParam);
     else initialFilters.chartOrder = getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE);
@@ -908,16 +757,28 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
       setFilterField('Version');
     }
 
-    setLifecycleDropdownValue(initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE);
+    const initialDropdown = initialFilters.lifecycleDropdown ?? DEFAULT_DROPDOWN_VALUE;
+    dropdownRef.current = initialDropdown;
+    viewRef.current = initialViewFilter;
+    setNameFilter(initialFilters.name ?? '');
+    setLifecycleDropdownValue(initialDropdown);
     setChartSortByValue(initialFilters.chartSortBy ?? DEFAULT_CHART_SORTBY_VALUE);
     setChartDirection(initialFilters.chartOrder as 'asc' | 'desc');
 
     updateFilters(() => initialFilters);
 
-    // Initialize data with the correct view filter
-    fetchData(initialViewFilter);
-    return () => controller.abort();
+    void initializeData(controller.signal);
+    return () => loadAbortRef.current.abort();
   }, []);
+
+  useEffect(() => {
+    if (allSystemsStatus !== 'ready') return;
+    const valid = rhelVersionFilter.filter((version) => rhelVersionOptions.includes(version));
+    if (valid.length !== rhelVersionFilter.length) {
+      setRhelVersionFilter(valid);
+      updateFilters({ versions: valid });
+    }
+  }, [allSystemsStatus, rhelVersionOptions, rhelVersionFilter, updateFilters]);
 
   useEffect(() => {
     const dataSource =
@@ -1045,8 +906,12 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     setStatusFilter([]);
     setSearchParams(buildURL(DEFAULT_FILTERS));
 
-    // Use the cached data
-    fetchData('installed-only');
+    dropdownRef.current = DEFAULT_DROPDOWN_VALUE;
+    viewRef.current = 'installed-only';
+    setChartDirection(getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE));
+    setIsSwitchingView(true);
+    syncDisplayedView(DEFAULT_DROPDOWN_VALUE, 'installed-only');
+    queueMicrotask(() => setIsSwitchingView(false));
   };
 
   // Helper function to filter app data based on dropdown value
@@ -1071,38 +936,6 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     const data = buildExportData(filteredTableData, lifecycleDropdownValue, appStreamDropdownValues);
     exportToFile(format, data);
   };
-
-  if (isLoading) {
-    const hasKnownSystemTotal = (rhelLoadProgress?.total ?? 0) > 0 || (appLoadProgress?.total ?? 0) > 0;
-
-    if (!hasKnownSystemTotal) {
-      return (
-        <Bullseye>
-          <Spinner aria-label="Loading life cycle data" />
-        </Bullseye>
-      );
-    }
-
-    return (
-      <PreparingDataState
-        title="Preparing life cycle data"
-        items={[
-          {
-            label: 'Red Hat Enterprise Linux',
-            loaded: rhelLoadProgress?.requested ?? 0,
-            total: rhelLoadProgress?.total ?? 0,
-            completed: rhelLoadProgress?.completed ?? false,
-          },
-          {
-            label: 'Application Streams',
-            loaded: appLoadProgress?.requested ?? 0,
-            total: appLoadProgress?.total ?? 0,
-            completed: appLoadProgress?.completed ?? false,
-          },
-        ]}
-      />
-    );
-  }
 
   const redirectToDashboard = () => {
     // get the base url and append the dashboard path
@@ -1131,11 +964,68 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
-  if (error) {
-    if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
-      // corner case with workspace filtering, we need different error message
-      return lockedState;
-    }
+  const activeIsSystems = lifecycleDropdownValue === RHEL_SYSTEMS_DROPDOWN_VALUE;
+  const activeRelevantStatus = activeIsSystems ? rhelBatch.status : appBatch.status;
+  const activeCatalogStatus = activeIsSystems ? allSystemsStatus : allAppsStatus;
+  const activeDatasetStatus = selectedViewFilter === 'all' ? activeCatalogStatus : activeRelevantStatus;
+  const activeProgress = activeIsSystems ? rhelBatch.progress : appBatch.progress;
+  const activeSurfaceError = activeIsSystems
+    ? selectedViewFilter === 'all'
+      ? allSystemsError
+      : toErrorObjectOrUndefined(rhelBatch.error)
+    : selectedViewFilter === 'all'
+    ? allAppsError
+    : toErrorObjectOrUndefined(appBatch.error);
+  const exportDisabled = activeDatasetStatus !== 'ready';
+  const exportDisabledTooltipContent = activeDatasetStatus === 'error' ? 'Data failed to load' : 'Still loading';
+  const activeSurface = activeIsSystems ? 'rhel' : 'app';
+  const preparingTotal = activeProgress?.total ?? 0;
+  const preparingTitle =
+    preparingTotal > 0
+      ? `We're preparing life cycle data for ${preparingTotal.toLocaleString('en-US')} systems`
+      : "We're preparing life cycle data";
+  const workspaceFilteringError = [
+    error,
+    toErrorObjectOrUndefined(rhelBatch.error),
+    toErrorObjectOrUndefined(appBatch.error),
+    allSystemsError,
+    allAppsError,
+  ].some((item) => isWorkspaceFilteringError(item));
+  const nothingReady =
+    allSystemsStatus !== 'ready' &&
+    allAppsStatus !== 'ready' &&
+    rhelBatch.status !== 'ready' &&
+    appBatch.status !== 'ready';
+  const batchLoadAlertProps = React.useMemo<LifecycleBatchLoadAlertProps | null>(
+    () =>
+      activeRelevantStatus === 'loading' && !workspaceFilteringError && !(error && nothingReady)
+        ? {
+            title: preparingTitle,
+            description: PREPARING_DESCRIPTION,
+            completed: activeProgress?.completed ?? 0,
+            total: preparingTotal,
+          }
+        : null,
+    [
+      activeRelevantStatus,
+      preparingTitle,
+      activeProgress?.completed,
+      preparingTotal,
+      workspaceFilteringError,
+      error,
+      nothingReady,
+    ]
+  );
+
+  useEffect(() => {
+    onBatchLoadAlertChange?.(batchLoadAlertProps);
+  }, [onBatchLoadAlertChange, batchLoadAlertProps]);
+
+  if (workspaceFilteringError) {
+    return lockedState;
+  }
+
+  if (error && nothingReady) {
     return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
   }
 
@@ -1154,12 +1044,40 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
+  const renderRelevantError = () => (
+    <EmptyState headingLevel="h2" titleText="Failed to load data" variant={EmptyStateVariant.sm}>
+      <EmptyStateBody>
+        {String(activeSurfaceError?.message ?? 'Failed to load relevant lifecycle data')}
+      </EmptyStateBody>
+    </EmptyState>
+  );
+
+  const renderCatalogError = () => (
+    <ErrorState
+      titleText="Failed to load data"
+      bodyText={String(activeSurfaceError?.message ?? 'Failed to load lifecycle catalog')}
+    />
+  );
+
   const renderContent = () => {
     const LoadingComponent = (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
+
+    if (selectedViewFilter !== 'all' && activeRelevantStatus === 'error') {
+      return renderRelevantError();
+    }
+    if (selectedViewFilter === 'all' && activeCatalogStatus === 'error') {
+      return renderCatalogError();
+    }
+    if (selectedViewFilter === 'all' && activeCatalogStatus !== 'ready') {
+      return <LifecycleContentSkeleton />;
+    }
+    if (selectedViewFilter !== 'all' && activeRelevantStatus !== 'ready') {
+      return <LifecycleContentSkeleton />;
+    }
 
     // Check if any filters are active
     const hasActiveFilters = nameFilter !== '' || rhelVersionFilter.length > 0 || statusFilter.length > 0;
@@ -1183,9 +1101,7 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     }
 
     if (!dataReadyForView) {
-      return isLoading ? (
-        LoadingComponent
-      ) : (
+      return (
         <LifecycleTable
           data={filteredTableData}
           viewFilter={selectedViewFilter}
@@ -1229,38 +1145,55 @@ const LifecycleTab: React.FC<React.PropsWithChildren> = () => {
     <React.Fragment>
       <Stack hasGutter>
         <Card>
-          <LifecycleFilters
-            nameFilter={nameFilter}
-            setNameFilter={(name: string) => onNameFilterChange(name)}
-            setIsLoading={(isLoading: boolean) => setIsLoading(isLoading)}
-            setError={(error: ErrorObject) => setError(error)}
-            lifecycleDropdownValue={lifecycleDropdownValue}
-            setLifecycleDropdownValue={setLifecycleDropdownValue}
-            onLifecycleDropdownSelect={onLifecycleDropdownSelect}
-            selectedChartSortBy={chartSortByValue}
-            updateChartSortValue={setOrderingStates}
-            onExport={handleExport}
-            selectedViewFilter={selectedViewFilter}
-            handleViewFilterChange={handleViewFilterChange}
-            noDataAvailable={noDataAvailable}
-            onFilterFieldChange={(field) => {
-              setFilterField(field);
-            }}
-            onRhelVersionsChange={(versions) => {
-              setRhelVersionFilter(versions);
-              updateFilters({ versions });
-            }}
-            onStatusesChange={(statuses) => {
-              setStatusFilter(statuses);
-              updateFilters({ statuses });
-            }}
-            rhelVersionOptions={rhelVersionOptions}
-            initialRhelVersions={rhelVersionFilter}
-            initialStatuses={statusFilter}
-            resetOnAppsSwitchKey={appsSwitchKey}
-            disableInstalledOnly={disableInstalledOnly}
-          />
-          {renderContent()}
+          {!onBatchLoadAlertChange && batchLoadAlertProps && <BatchLoadAlert {...batchLoadAlertProps} />}
+          {readyAlertSurfaces.has(activeSurface) &&
+            selectedViewFilter === 'all' &&
+            activeRelevantStatus === 'ready' && (
+              <Alert
+                variant="success"
+                isInline
+                title={READY_ALERT_TITLE}
+                actionClose={
+                  <AlertActionCloseButton aria-label="Close" onClose={() => dismissReadyAlert(activeSurface)} />
+                }
+              />
+            )}
+          <React.Suspense fallback={<Spinner aria-label="Loading lifecycle filters" />}>
+            <LifecycleFilters
+              nameFilter={nameFilter}
+              setNameFilter={(name: string) => onNameFilterChange(name)}
+              setIsLoading={(isLoading: boolean) => setIsLoading(isLoading)}
+              setError={(error: ErrorObject) => setError(error)}
+              lifecycleDropdownValue={lifecycleDropdownValue}
+              setLifecycleDropdownValue={setLifecycleDropdownValue}
+              onLifecycleDropdownSelect={onLifecycleDropdownSelect}
+              selectedChartSortBy={chartSortByValue}
+              updateChartSortValue={setOrderingStates}
+              onExport={handleExport}
+              isExportDisabled={exportDisabled}
+              exportDisabledTooltipContent={exportDisabledTooltipContent}
+              selectedViewFilter={selectedViewFilter}
+              handleViewFilterChange={handleViewFilterChange}
+              noDataAvailable={noDataAvailable}
+              onFilterFieldChange={(field) => {
+                setFilterField(field);
+              }}
+              onRhelVersionsChange={(versions) => {
+                setRhelVersionFilter(versions);
+                updateFilters({ versions });
+              }}
+              onStatusesChange={(statuses) => {
+                setStatusFilter(statuses);
+                updateFilters({ statuses });
+              }}
+              rhelVersionOptions={rhelVersionOptions}
+              initialRhelVersions={rhelVersionFilter}
+              initialStatuses={statusFilter}
+              resetOnAppsSwitchKey={appsSwitchKey}
+              disableInstalledOnly={disableInstalledOnly}
+            />
+          </React.Suspense>
+          <React.Suspense fallback={<LifecycleContentSkeleton />}>{renderContent()}</React.Suspense>
         </Card>
       </Stack>
     </React.Fragment>

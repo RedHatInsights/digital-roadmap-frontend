@@ -4,6 +4,27 @@ import '@testing-library/jest-dom';
 import { SystemsViewToolbar } from './SystemsViewToolbar';
 import userEvent from '@testing-library/user-event';
 
+jest.mock('../ExportDataButton/ExportDataButton', () => {
+  const React = jest.requireActual('react');
+  return {
+    __esModule: true,
+    default: ({
+      isDisabled = false,
+      disabledTooltipContent,
+    }: {
+      isDisabled?: boolean;
+      disabledTooltipContent?: string;
+    }) =>
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement('button', { type: 'button', 'aria-label': 'Export host list', disabled: isDisabled }),
+        isDisabled &&
+          React.createElement('span', { 'data-testid': 'export-disabled-tooltip' }, disabledTooltipContent)
+      ),
+  };
+});
+
 describe('SystemsViewToolbar', () => {
   const defaultProps = {
     selectedField: 'Name' as const,
@@ -269,6 +290,30 @@ describe('SystemsViewToolbar', () => {
   });
 
   describe('Export Button', () => {
+    test('forwards loading readiness and disabled tooltip content', () => {
+      const { rerender } = render(
+        <SystemsViewToolbar
+          {...defaultProps}
+          isExportDisabled={true}
+          exportDisabledTooltipContent="Data failed to load"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'Export host list' })).toBeDisabled();
+      expect(screen.getByTestId('export-disabled-tooltip')).toHaveTextContent('Data failed to load');
+
+      rerender(
+        <SystemsViewToolbar
+          {...defaultProps}
+          isExportDisabled={false}
+          exportDisabledTooltipContent="Still loading"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'Export host list' })).toBeEnabled();
+      expect(screen.queryByTestId('export-disabled-tooltip')).not.toBeInTheDocument();
+    });
+
     test('renders successfully with onExport prop', () => {
       render(<SystemsViewToolbar {...defaultProps} />);
 
