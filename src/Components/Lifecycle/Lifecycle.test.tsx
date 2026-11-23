@@ -845,9 +845,9 @@ describe('LifecycleTab Component', () => {
       mockApiCalls.getAllLifecycleAppstreams.mockRejectedValue(new Error('app catalog failed'));
 
       renderWithRouter(<LifecycleTab />);
-      expect(await screen.findByText('host lookup timed out')).toBeInTheDocument();
+      expect(await screen.findByText('host lookup timed out', {}, { timeout: 3000 })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /retry/i })).not.toBeInTheDocument();
-      expect(mockApiCalls.getAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockApiCalls.getAccessibleHostUuids).toHaveBeenCalledTimes(3);
       expect(mockApiCalls.getAllLifecycleSystems).toHaveBeenCalledTimes(1);
       expect(mockApiCalls.getAllLifecycleAppstreams).toHaveBeenCalledTimes(1);
     });
@@ -897,7 +897,7 @@ describe('LifecycleTab Component', () => {
 
       renderWithRouter(<LifecycleTab />);
 
-      expect(await screen.findByText('host lookup failed')).toBeInTheDocument();
+      expect(await screen.findByText('host lookup failed', {}, { timeout: 3000 })).toBeInTheDocument();
       expect(screen.queryByText('[object Object]')).not.toBeInTheDocument();
     });
 

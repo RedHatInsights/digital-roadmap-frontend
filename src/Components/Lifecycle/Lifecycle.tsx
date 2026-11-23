@@ -30,7 +30,7 @@ import {
 import { SystemLifecycleChanges } from '../../types/SystemLifecycleChanges';
 import { Stream } from '../../types/Stream';
 import { useSearchParams } from 'react-router-dom';
-import { isAbortError } from '../../utils/batchRetry';
+import { isAbortError, isTransientFailure, waitBeforeRetry } from '../../utils/batchRetry';
 import { buildExportData, buildURL, checkValidityOfQueryParam } from '../../utils/utils';
 import {
   DEFAULT_CHART_SORTBY_VALUE,
@@ -59,6 +59,7 @@ const PREPARING_DESCRIPTION =
   'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.';
 const READY_ALERT_TITLE = 'Relevant lifecycle data is ready.';
 const WORKSPACE_FILTERING_MESSAGE = 'Error: Workspace filtering is not yet implemented';
+const MAX_HOST_UUID_LOOKUP_ATTEMPTS = 3;
 
 type DatasetStatus = 'loading' | 'ready' | 'error';
 type RelevantSurface = 'rhel' | 'app';
@@ -103,6 +104,20 @@ const toErrorObjectOrUndefined = (error: unknown): ErrorObject | undefined =>
 
 const isWorkspaceFilteringError = (error: ErrorObject | undefined) =>
   error?.message === WORKSPACE_FILTERING_MESSAGE;
+
+const getAccessibleHostUuidsWithRetry = async (signal: AbortSignal) => {
+  for (let attempt = 1; attempt <= MAX_HOST_UUID_LOOKUP_ATTEMPTS; attempt += 1) {
+    try {
+      return await getAccessibleHostUuids(signal, HOST_UUID_LOOKUP_TIMEOUT_MS);
+    } catch (error) {
+      if (signal.aborted || !isTransientFailure(error) || attempt === MAX_HOST_UUID_LOOKUP_ATTEMPTS) {
+        throw error;
+      }
+      await waitBeforeRetry(signal);
+    }
+  }
+  throw new Error('Host UUID lookup exhausted its retry attempts.');
+};
 
 const LifecycleContentSkeleton = () => (
   <Stack hasGutter className="drf-lifecycle__content-skeleton">
@@ -167,10 +182,18 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
   chartDirectionRef.current = chartDirection;
 
   const [filterField, setFilterField] = useState<'Name' | 'Version' | 'Status'>('Name');
+  const filterFieldRef = useRef(filterField);
+  filterFieldRef.current = filterField;
   const [rhelVersionOptions, setRhelVersionOptions] = useState<string[]>([]);
   const [rhelVersionFilter, setRhelVersionFilter] = useState<string[]>([]);
+  const rhelVersionFilterRef = useRef(rhelVersionFilter);
+  rhelVersionFilterRef.current = rhelVersionFilter;
 
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const statusFilterRef = useRef(statusFilter);
+  statusFilterRef.current = statusFilter;
+  const nameFilterRef = useRef(nameFilter);
+  nameFilterRef.current = nameFilter;
 
   const [isSwitchingView, setIsSwitchingView] = useState(false);
   const [appsSwitchKey, setAppsSwitchKey] = useState(0);
@@ -227,7 +250,9 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     nameFilterValue: string,
     field: 'Name' | 'Version' | 'Status' = filterField,
     versions: string[] = rhelVersionFilter,
-    statuses: string[] = statusFilter
+    statuses: string[] = statusFilter,
+    sortBy: string = chartSortByValue,
+    sortOrder: string = chartDirection
   ) => {
     let filteredData = data;
 
@@ -273,7 +298,7 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
 
     setFilteredTableData(filteredData);
 
-    const chartData = filterChartData(filteredData, chartSortByValue, dropdownValue, chartDirection);
+    const chartData = filterChartData(filteredData, sortBy, dropdownValue, sortOrder);
     setFilteredChartData(chartData);
 
     return filteredData;
@@ -308,6 +333,10 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
   const onLifecycleDropdownSelect = (value: string) => {
     const isCrossDomainSwitch = isAppStream(dropdownRef.current) !== isAppStream(value);
     if (isCrossDomainSwitch) {
+      nameFilterRef.current = '';
+      rhelVersionFilterRef.current = [];
+      statusFilterRef.current = [];
+      filterFieldRef.current = 'Name';
       setNameFilter('');
       setRhelVersionFilter([]);
       setStatusFilter([]);
@@ -338,15 +367,31 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     if (dropdown === RHEL_SYSTEMS_DROPDOWN_VALUE) {
       const updated = updateLifecycleData(systems);
       setSystemLifecycleChanges(updated);
-      setFilteredTableData(updated);
-      setFilteredChartData(filterChartData(updated, chartSortRef.current, dropdown, chartDirectionRef.current));
+      applyAllActiveFilters(
+        updated,
+        dropdown,
+        nameFilterRef.current,
+        filterFieldRef.current,
+        rhelVersionFilterRef.current,
+        statusFilterRef.current,
+        chartSortRef.current,
+        chartDirectionRef.current
+      );
       return;
     }
 
     const streams = filterAppDataByDropdown([...apps], dropdown);
     setAppLifecycleChanges(streams);
-    setFilteredTableData(streams);
-    setFilteredChartData(filterChartData(streams, chartSortRef.current, dropdown, chartDirectionRef.current));
+    applyAllActiveFilters(
+      streams,
+      dropdown,
+      nameFilterRef.current,
+      filterFieldRef.current,
+      [],
+      statusFilterRef.current,
+      chartSortRef.current,
+      chartDirectionRef.current
+    );
   };
 
   // Only successfully loaded Relevant data can disable a view or trigger an empty-data fallback.
@@ -513,7 +558,7 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     const catalogResults = Promise.allSettled([allSystemsDone, allAppsDone]);
 
     try {
-      const uuidResponse = await getAccessibleHostUuids(signal, HOST_UUID_LOOKUP_TIMEOUT_MS);
+      const uuidResponse = await getAccessibleHostUuidsWithRetry(signal);
       if (signal.aborted) {
         return;
       }
