@@ -6,7 +6,7 @@ import React, { lazy } from 'react';
 import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { SystemsDetail } from '../../types/SystemsDetail';
-import { Button, Content, ContentVariants, Icon } from '@patternfly/react-core';
+import { Button, Content, ContentVariants, Icon, Spinner } from '@patternfly/react-core';
 import { formatDate } from '../../utils/utils';
 const LifecycleModalWindow = lazy(() => import('../../Components/LifecycleModalWindow/LifecycleModalWindow'));
 
@@ -23,6 +23,8 @@ interface TableRowProps {
   columnNames: typeof columnNames;
   rowIndex: number;
   isExpanded: boolean;
+  countsPending?: boolean;
+  countsFailed?: boolean;
   hideRepo: () => void;
   showRepo: () => void;
 }
@@ -32,6 +34,8 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
   rowIndex,
   columnNames,
   isExpanded,
+  countsPending = false,
+  countsFailed = false,
   showRepo,
   hideRepo,
 }) => {
@@ -142,8 +146,11 @@ export const TableRow: React.FunctionComponent<TableRowProps> = ({
                         Potentially affected systems
                       </Content>
                       <Content component={ContentVariants.dd} style={{ margin: 0 }}>
-                        {repo.details.potentiallyAffectedSystemsCount &&
-                        repo.details.potentiallyAffectedSystemsCount > 0 ? (
+                        {countsPending ? (
+                          <Spinner size="sm" aria-label="Loading affected system count" />
+                        ) : countsFailed || repo.details.potentiallyAffectedSystemsCount == null ? (
+                          <span>—</span>
+                        ) : repo.details.potentiallyAffectedSystemsCount > 0 ? (
                           <Button
                             variant="link"
                             onClick={(event) => {

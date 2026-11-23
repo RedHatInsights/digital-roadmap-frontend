@@ -1,6 +1,8 @@
 import './upcoming.scss';
-import React, { lazy, useEffect, useRef, useState } from 'react';
+import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Alert,
+  AlertActionCloseButton,
   Bullseye,
   Button,
   Card,
@@ -14,25 +16,35 @@ import {
   EmptyStateVariant,
   Grid,
   GridItem,
-  Spinner,
+  Skeleton,
   Stack,
   StackItem,
 } from '@patternfly/react-core';
 
-import { getAccessibleHostUuids, getAllUpcomingChanges } from '../../api';
+import {
+  HOST_UUID_LOOKUP_TIMEOUT_MS,
+  getAccessibleHostUuids,
+  getAllUpcomingChanges,
+  getUpcomingChanges,
+} from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 import { ErrorObject } from '../../types/ErrorObject';
 import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-import CubesIcon from '@patternfly/react-icons/dist/esm/icons/cubes-icon';
-import { isAbortError } from '../../utils/batchRetry';
+import { isAbortError, isTransientFailure, waitBeforeRetry } from '../../utils/batchRetry';
 import { DEFAULT_FILTERS, KNOWN_TYPES, buildURL, pluralize } from '../../utils/utils';
-import ErrorState from '@patternfly/react-component-groups/dist/dynamic/ErrorState';
 import { useSearchParams } from 'react-router-dom';
 import { Filter } from '../../types/Filter';
-import PreparingDataState from '../PreparingDataState/PreparingDataState';
+import {
+  UpcomingChangeDetails,
+  UpcomingChangeIdentity,
+  UpcomingChangeRow,
+  itemKey,
+} from '../../utils/relevantUpcomingLoader';
+import { useBatchLoad } from '../../hooks/useBatchLoad';
+import BatchLoadAlert from '../BatchLoadAlert/BatchLoadAlert';
 
 const UpcomingTable = lazy(() => import('../UpcomingTable/UpcomingTable'));
 
@@ -44,296 +56,425 @@ export const UPCOMING_COLUMN_NAMES = {
   date: 'Release date',
 };
 
-// Helper function to capitalize the first letter of a string
 const capitalizeFirstLetter = (string: string) => {
   if (!string) return string;
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-// The "all" response is a superset of the "relevant" one: it carries the same items plus
-// those with a count of 0. Deriving the relevant view here instead of issuing a second
-// request mirrors the backend's `all=false` filter and halves the inventory work per page load.
 const isRelevant = (item: UpcomingChanges) => (item.details?.potentiallyAffectedSystemsCount ?? 0) > 0;
 
-const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
-  const loadAbortRef = useRef(new AbortController());
-  const emptyUpcomingChanges: UpcomingChanges[] = [];
-  const [upcomingChanges, setUpcomingChanges] = React.useState(emptyUpcomingChanges);
+const filtersFromSearchParams = (params: URLSearchParams): Filter => {
+  const filters: Filter = { ...DEFAULT_FILTERS };
+  const name = params.get('name');
+  const type = params.get('type');
+  const release = params.get('release');
+  const date = params.get('date');
+  const addedToRoadmap = params.get('addedToRoadmap');
+  const viewFilter = params.get('viewFilter');
 
-  // Both views come from a single "all" response; relevant is derived from it
-  const [allUpcomingChangesData, setAllUpcomingChangesData] = React.useState(emptyUpcomingChanges);
-  const [relevantUpcomingChangesData, setRelevantUpcomingChangesData] = React.useState(emptyUpcomingChanges);
-  const [hasFetchedData, setHasFetchedData] = React.useState(false);
+  if (name) filters.name = name;
+  if (type) filters.type = new Set(type.split(','));
+  if (release) filters.release = release.split(',');
+  if (date) filters.date = date;
+  if (addedToRoadmap) filters.addedToRoadmap = addedToRoadmap;
+  if (viewFilter) filters.viewFilter = viewFilter;
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [upcomingLoadProgress, setUpcomingLoadProgress] = React.useState<{
-    requested: number;
-    total: number;
-  } | null>(null);
-  const [numDeprecations, setNumDeprecations] = React.useState(0);
-  const [numAdditions, setNumAdditions] = React.useState(0);
-  const [numChanges, setNumChanges] = React.useState(0);
-  const [visibleData, setVisibleData] = React.useState<UpcomingChanges[]>(emptyUpcomingChanges);
-  const [currentTypeFilters, setCurrentTypeFilters] = React.useState<Set<string>>(new Set());
-  const [currentDateFilter, setCurrentDateFilter] = React.useState('');
-  const [currentNameFilter, setCurrentNameFilters] = React.useState('');
-  const [currentReleaseFilters, setCurrentReleaseFilters] = React.useState<string[]>([]);
-  const [currentAddedToRoadmapFilter, setCurrentAddedToRoadmapFilter] = React.useState('');
-  const [error, setError] = React.useState<ErrorObject>();
-  const [noAllDataAvailable, setNoAllDataAvailable] = useState<boolean>(false);
-  const [noDataAvailable, setNoDataAvailable] = useState<boolean>(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [filtersForURL, setFiltersForURL] = React.useState<Filter>(DEFAULT_FILTERS);
+  return filters;
+};
 
-  // Add view filter state
-  const [selectedViewFilter, setSelectedViewFilter] = useState<string>('relevant');
+type UpcomingCatalogRow = UpcomingChangeIdentity & {
+  package?: string;
+  details?: Partial<UpcomingChangeDetails>;
+};
 
-  const nameParam = searchParams.get('name');
-  const typeParam = searchParams.get('type');
-  const releaseParam = searchParams.get('release');
-  const dateParam = searchParams.get('date');
-  const addedToRoadmapParam = searchParams.get('addedToRoadmap');
-  const viewFilterParam = searchParams.get('viewFilter');
+const PREPARING_DESCRIPTION =
+  'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.';
+const READY_ALERT_TITLE = 'Relevant roadmap data is ready.';
+const WORKSPACE_FILTERING_ERROR = 'Error: Workspace filtering is not yet implemented';
+const MAX_HOST_UUID_LOOKUP_ATTEMPTS = 3;
 
-  // Type comes in as Release1,Release2 or Release1 or any other permutation
-  const isValidRelease = (data: UpcomingChanges[], release: string) => {
-    const releaseAsArr = release.split(',');
-    return releaseAsArr.every((release) =>
-      Array.from(new Set(data.map((repo) => repo.release))).includes(release)
-    );
-  };
-
-  const isValidDate = (data: UpcomingChanges[], date: string) => {
-    return Array.from(new Set(data.map((repo) => repo.date))).includes(date);
-  };
-
-  const isValidAddedToRoadmap = (_data: UpcomingChanges[], addedToRoadmap: string) => {
-    const validRanges = ['lastMonthToDate', 'last90Days', 'lastYear', 'moreThan1YearAgo'];
-    return validRanges.includes(addedToRoadmap);
-  };
-
-  // Validates against KNOWN_TYPES plus data-derived types so URL params work
-  // even when the current view doesn't contain all types, while also accepting
-  // any novel types the API may return (matching what typeOptions shows).
-  const isValidType = (data: UpcomingChanges[], type: string) => {
-    const validTypes = new Set<string>([...KNOWN_TYPES, ...data.map((d) => d.type)]);
-    return type.split(',').every((t) => validTypes.has(t));
-  };
-
-  // Process data and update counts
-  const processData = (data: UpcomingChanges[]) => {
-    // Calculate counts for different types
-    const filteredDeprecations = data.filter((item) => item.type === 'Deprecation');
-    setNumDeprecations(filteredDeprecations.length);
-
-    const filteredAdditions = data.filter((item) => item.type === 'Addition' || item.type === 'Enhancement');
-    setNumAdditions(filteredAdditions.length);
-
-    const filteredChanges = data.filter((item) => item.type === 'Change');
-    setNumChanges(filteredChanges.length);
-
-    setVisibleData(data);
-  };
-
-  // One all=true catalog, loaded in host batches. The relevant view is filtered out of it.
-  const fetchUpcomingChanges = async (signal: AbortSignal) => {
-    // Used when we don't have deployedDate available - basically when there are
-    // new items which weren't deployed to production. This is for easier testing on stage.
-    // Format as YYYY-MM-DD using local time (not UTC) - handles corner case with timezones.
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-      now.getDate()
-    ).padStart(2, '0')}`;
-
-    const uuidResponse = await getAccessibleHostUuids(signal);
-    const response = await getAllUpcomingChanges(
-      uuidResponse.data ?? [],
-      (progress) => {
-        setUpcomingLoadProgress(progress);
-      },
-      signal
-    );
-    const rows = (response?.data ?? []) as UpcomingChanges[];
-    const allData: UpcomingChanges[] = rows.map((item) => ({
-      ...item,
-      type: capitalizeFirstLetter(item.type),
-      ...(item.details && {
-        details: {
-          ...item.details,
-          // when deployedDate is not available, use todays date for easier testing
-          deployedDate: item.details.deployedDate ?? todayStr,
-        },
-      }),
-    }));
-    const relevantData = allData.filter(isRelevant);
-
-    setAllUpcomingChangesData(allData);
-    setRelevantUpcomingChangesData(relevantData);
-    setHasFetchedData(true);
-
-    return {
-      allData,
-      relevantData,
-    };
-  };
-
-  // Handle view filter changes
-  const handleViewFilterChange = (filter: string) => {
-    // Don't allow switching to relevant if no relevant data available
-    if (filter === 'relevant' && noDataAvailable) {
-      return;
-    }
-
-    setSelectedViewFilter(filter);
-    const newFilters = { ...filtersForURL };
-    newFilters['viewFilter'] = filter;
-    setFiltersForURL(newFilters);
-    setSearchParams(buildURL(newFilters));
-
-    // Use cached data if available, otherwise fetch it
-    if (!hasFetchedData) {
-      fetchData(filter);
-      return;
-    }
-
-    if (filter === 'all') {
-      setUpcomingChanges(allUpcomingChangesData);
-      processData(allUpcomingChangesData);
-    } else {
-      setUpcomingChanges(relevantUpcomingChangesData);
-      processData(relevantUpcomingChangesData);
-      // Set noDataAvailable based on cached data
-      setNoDataAvailable(relevantUpcomingChangesData.length === 0);
-    }
-  };
-
-  useEffect(() => {
-    // If we've loaded relevant data and it's empty, and all data is available and not empty
-    // then automatically switch to "all" view regardless of current view
-    if (
-      hasFetchedData &&
-      relevantUpcomingChangesData.length === 0 &&
-      allUpcomingChangesData.length > 0 &&
-      selectedViewFilter === 'relevant'
-    ) {
-      console.log('Auto-switching to "all" view due to empty relevant data');
-
-      // Force the view to "all"
-      setSelectedViewFilter('all');
-
-      // Update URL and filters
-      const newFilters = { ...filtersForURL };
-      newFilters['viewFilter'] = 'all';
-      setFiltersForURL(newFilters);
-      setSearchParams(buildURL(newFilters));
-
-      // Use the all data
-      setUpcomingChanges(allUpcomingChangesData);
-      processData(allUpcomingChangesData);
-    }
-  }, [hasFetchedData, relevantUpcomingChangesData.length, allUpcomingChangesData.length]);
-
-  const fetchData = async (viewFilter?: string) => {
-    setIsLoading(true);
-    setUpcomingLoadProgress(null);
-    setNoAllDataAvailable(false);
-    setNoDataAvailable(false);
-    const currentViewFilter = viewFilter || selectedViewFilter;
-    const signal = loadAbortRef.current.signal;
-
+const getAccessibleHostUuidsWithRetry = async (signal: AbortSignal) => {
+  for (let attempt = 1; attempt <= MAX_HOST_UUID_LOOKUP_ATTEMPTS; attempt += 1) {
     try {
-      let allData = allUpcomingChangesData;
-      let relevantData = relevantUpcomingChangesData;
-
-      if (!hasFetchedData) {
-        ({ allData, relevantData } = await fetchUpcomingChanges(signal));
+      return await getAccessibleHostUuids(signal, HOST_UUID_LOOKUP_TIMEOUT_MS);
+    } catch (error) {
+      if (signal.aborted || !isTransientFailure(error) || attempt === MAX_HOST_UUID_LOOKUP_ATTEMPTS) {
+        throw error;
       }
+      await waitBeforeRetry(signal);
+    }
+  }
+  throw new Error('Host UUID lookup exhausted its retry attempts.');
+};
 
-      // Check if ALL data source is empty
-      if (allData.length === 0) {
-        setNoAllDataAvailable(true);
-        setIsLoading(false);
+const toErrorObject = (error: unknown): ErrorObject => {
+  const value = (error ?? {}) as { message?: unknown; status_code?: number };
+  const fallback = typeof error === 'string' ? error : 'Failed to load data';
+  return {
+    message: String(value.message ?? fallback),
+    status_code: value.status_code,
+  };
+};
+
+const isWorkspaceFilteringError = (error?: unknown) => toErrorObject(error).message === WORKSPACE_FILTERING_ERROR;
+
+const formatUpcomingRows = (rows: UpcomingCatalogRow[]): UpcomingChanges[] => {
+  const now = new Date();
+  const todayStr = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return rows.map((item) => ({
+    ...item,
+    type: capitalizeFirstLetter(item.type),
+    ...(item.details && {
+      details: {
+        ...item.details,
+        deployedDate: item.details.deployedDate ?? todayStr,
+      },
+    }),
+  })) as UpcomingChanges[];
+};
+
+const mergeCatalogWithCorrelation = (
+  catalog: UpcomingCatalogRow[],
+  correlated: UpcomingChangeRow[]
+): UpcomingChanges[] => {
+  const correlatedByKey = new Map(correlated.map((row) => [itemKey(row), row]));
+  const merged = catalog.map((row) => {
+    const match = correlatedByKey.get(itemKey(row));
+    return {
+      ...row,
+      details: {
+        ...row.details,
+        potentiallyAffectedSystemsCount: match?.details?.potentiallyAffectedSystemsCount ?? 0,
+        potentiallyAffectedSystemsDetail: match?.details?.potentiallyAffectedSystemsDetail ?? [],
+        potentiallyAffectedSystems: match?.details?.potentiallyAffectedSystems ?? [],
+      },
+    };
+  });
+
+  return formatUpcomingRows(merged);
+};
+
+const isValidRelease = (data: UpcomingChanges[], release: string) => {
+  const releaseAsArr = release.split(',');
+  const availableReleases = new Set(data.map((repo) => repo.release));
+  return releaseAsArr.every((item) => availableReleases.has(item));
+};
+
+const isValidDate = (data: UpcomingChanges[], date: string) =>
+  Array.from(new Set(data.map((repo) => repo.date))).includes(date);
+
+const isValidAddedToRoadmap = (_data: UpcomingChanges[], addedToRoadmap: string) =>
+  ['lastMonthToDate', 'last90Days', 'lastYear', 'moreThan1YearAgo'].includes(addedToRoadmap);
+
+const isValidType = (data: UpcomingChanges[], type: string) => {
+  const validTypes = new Set<string>([...KNOWN_TYPES, ...data.map((item) => item.type)]);
+  return type.split(',').every((item) => validTypes.has(item));
+};
+
+const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
+  const catalogAbortRef = useRef<AbortController | null>(null);
+  const correlationAbortRef = useRef<AbortController | null>(null);
+  const correlation = useBatchLoad<UpcomingChangeRow[]>('loading');
+  const {
+    complete: completeCorrelation,
+    fail: failCorrelation,
+    reset: resetCorrelation,
+    start: startCorrelationTask,
+  } = correlation;
+  const catalogRowsRef = useRef<UpcomingCatalogRow[] | null>(null);
+  const correlationRowsRef = useRef<UpcomingChangeRow[] | null>(null);
+  const initialUrlFiltersAppliedRef = useRef(false);
+
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [catalogError, setCatalogError] = useState<ErrorObject>();
+  const [showReadyAlert, setShowReadyAlert] = useState(false);
+  const [readyAlertDismissed, setReadyAlertDismissed] = useState(false);
+  const [numDeprecations, setNumDeprecations] = useState(0);
+  const [numAdditions, setNumAdditions] = useState(0);
+  const [numChanges, setNumChanges] = useState(0);
+  const [visibleData, setVisibleData] = useState<UpcomingChanges[]>([]);
+  const [currentTypeFilters, setCurrentTypeFilters] = useState<Set<string>>(new Set());
+  const [currentDateFilter, setCurrentDateFilter] = useState('');
+  const [currentNameFilter, setCurrentNameFilters] = useState('');
+  const [currentReleaseFilters, setCurrentReleaseFilters] = useState<string[]>([]);
+  const [currentAddedToRoadmapFilter, setCurrentAddedToRoadmapFilter] = useState('');
+  const [noDataAvailable, setNoDataAvailable] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearchParamsRef = useRef(searchParams);
+  const setSearchParamsRef = useRef(setSearchParams);
+  setSearchParamsRef.current = setSearchParams;
+  const [filtersForURL, setFiltersForURL] = useState<Filter>(() =>
+    filtersFromSearchParams(initialSearchParamsRef.current)
+  );
+  const filtersForURLRef = useRef(filtersForURL);
+  filtersForURLRef.current = filtersForURL;
+  const [selectedViewFilter, setSelectedViewFilter] = useState(
+    searchParams.get('viewFilter') === 'all' ? 'all' : 'relevant'
+  );
+  const selectedViewFilterRef = useRef(selectedViewFilter);
+  selectedViewFilterRef.current = selectedViewFilter;
+
+  const nameParam = initialSearchParamsRef.current.get('name');
+  const typeParam = initialSearchParamsRef.current.get('type');
+  const releaseParam = initialSearchParamsRef.current.get('release');
+  const dateParam = initialSearchParamsRef.current.get('date');
+  const addedToRoadmapParam = initialSearchParamsRef.current.get('addedToRoadmap');
+
+  const processData = useCallback((data: UpcomingChanges[]) => {
+    setNumDeprecations(data.filter((item) => item.type === 'Deprecation').length);
+    setNumAdditions(data.filter((item) => item.type === 'Addition' || item.type === 'Enhancement').length);
+    setNumChanges(data.filter((item) => item.type === 'Change').length);
+    setVisibleData(data);
+  }, []);
+
+  const applyInitialUrlFilters = useCallback(
+    (data: UpcomingChanges[], view: string) => {
+      if (initialUrlFiltersAppliedRef.current) {
         return;
       }
+      initialUrlFiltersAppliedRef.current = true;
 
-      // Determine which data to display based on current view filter
-      const dataToUse = currentViewFilter === 'all' ? allData : relevantData;
-
-      if (currentViewFilter === 'all') {
-        setUpcomingChanges(allData);
-        processData(allData);
-        setNoDataAvailable(relevantData.length === 0);
-      } else {
-        // For relevant view
-        if (relevantData.length === 0) {
-          setNoDataAvailable(true);
-        } else {
-          setNoDataAvailable(false);
-        }
-
-        setUpcomingChanges(relevantData);
-        processData(relevantData);
-      }
-
-      // Apply URL parameters
-      const newFilters = { ...filtersForURL };
-
-      // Apply URL parameters if this is the initial load - use local data instead of state
+      const newFilters: Filter = { ...DEFAULT_FILTERS, viewFilter: view };
       if (nameParam) {
         const name = decodeURIComponent(nameParam);
         setCurrentNameFilters(name);
-        newFilters['name'] = name;
+        newFilters.name = name;
       }
-      if (releaseParam && isValidRelease(dataToUse, decodeURIComponent(releaseParam))) {
+      if (releaseParam && isValidRelease(data, decodeURIComponent(releaseParam))) {
         const release = decodeURIComponent(releaseParam).split(',');
         setCurrentReleaseFilters(release);
-        newFilters['release'] = release;
+        newFilters.release = release;
       }
-      if (typeParam && isValidType(dataToUse, decodeURIComponent(typeParam))) {
+      if (typeParam && isValidType(data, decodeURIComponent(typeParam))) {
         const type = new Set(decodeURIComponent(typeParam).split(','));
         setCurrentTypeFilters(type);
-        newFilters['type'] = type;
+        newFilters.type = type;
       }
-      if (dateParam && isValidDate(dataToUse, decodeURIComponent(dateParam))) {
+      if (dateParam && isValidDate(data, decodeURIComponent(dateParam))) {
         const date = decodeURIComponent(dateParam);
         setCurrentDateFilter(date);
-        newFilters['date'] = date;
+        newFilters.date = date;
       }
-      if (addedToRoadmapParam && isValidAddedToRoadmap(dataToUse, decodeURIComponent(addedToRoadmapParam))) {
+      if (addedToRoadmapParam && isValidAddedToRoadmap(data, decodeURIComponent(addedToRoadmapParam))) {
         const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
         setCurrentAddedToRoadmapFilter(addedToRoadmap);
-        newFilters['addedToRoadmap'] = addedToRoadmap;
+        newFilters.addedToRoadmap = addedToRoadmap;
+      }
+      setFiltersForURL(newFilters);
+      setSearchParamsRef.current(buildURL(newFilters));
+    },
+    [addedToRoadmapParam, dateParam, nameParam, releaseParam, typeParam]
+  );
+
+  const applyView = useCallback(
+    (view: string) => {
+      if (view === 'all') {
+        const catalog = catalogRowsRef.current;
+        const rows = catalog
+          ? correlationRowsRef.current
+            ? mergeCatalogWithCorrelation(catalog, correlationRowsRef.current)
+            : formatUpcomingRows(catalog)
+          : [];
+        processData(rows);
+        setNoDataAvailable(
+          correlationRowsRef.current !== null &&
+            !formatUpcomingRows(correlationRowsRef.current as UpcomingCatalogRow[]).some(isRelevant)
+        );
+        return rows;
       }
 
-      // Include view filter in URL
-      newFilters['viewFilter'] = currentViewFilter;
-      setFiltersForURL(newFilters);
-      setIsLoading(false);
-    } catch (error: any) {
-      if (signal.aborted || isAbortError(error)) {
-        return;
+      const correlationRows = correlationRowsRef.current;
+      const rows = correlationRows
+        ? formatUpcomingRows(correlationRows as UpcomingCatalogRow[]).filter(isRelevant)
+        : [];
+      processData(rows);
+      setNoDataAvailable(correlationRows !== null && rows.length === 0);
+      return rows;
+    },
+    [processData]
+  );
+
+  const changeView = useCallback(
+    (view: string, updateUrl: boolean) => {
+      selectedViewFilterRef.current = view;
+      setSelectedViewFilter(view);
+      if (updateUrl) {
+        const newFilters = { ...filtersForURLRef.current, viewFilter: view };
+        setFiltersForURL(newFilters);
+        setSearchParamsRef.current(buildURL(newFilters));
       }
-      console.error('Error fetching changes:', error.message);
-      setError({ message: error.message, status_code: error.status_code });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const rows = applyView(view);
+      if (view === 'all' && catalogRowsRef.current) {
+        if (!initialUrlFiltersAppliedRef.current) {
+          applyInitialUrlFilters(rows, view);
+        }
+      } else if (view === 'relevant' && correlationRowsRef.current !== null) {
+        if (!initialUrlFiltersAppliedRef.current) {
+          applyInitialUrlFilters(rows, view);
+        }
+      }
+    },
+    [applyInitialUrlFilters, applyView]
+  );
+
+  const loadCatalog = useCallback(
+    async (signal: AbortSignal) => {
+      setCatalogStatus('loading');
+      setCatalogError(undefined);
+      try {
+        const response = await getUpcomingChanges(signal);
+        if (signal.aborted) {
+          return;
+        }
+        if (!Array.isArray(response?.data)) {
+          throw new Error('The upcoming changes catalog response was invalid.');
+        }
+
+        const rows = response.data as UpcomingCatalogRow[];
+        catalogRowsRef.current = rows;
+        setCatalogStatus('ready');
+        const allRows = correlationRowsRef.current
+          ? mergeCatalogWithCorrelation(rows, correlationRowsRef.current)
+          : formatUpcomingRows(rows);
+        applyView(selectedViewFilterRef.current);
+
+        if (selectedViewFilterRef.current === 'all' && !initialUrlFiltersAppliedRef.current) {
+          applyInitialUrlFilters(allRows, 'all');
+        }
+        if (
+          selectedViewFilterRef.current === 'relevant' &&
+          correlationRowsRef.current !== null &&
+          formatUpcomingRows(correlationRowsRef.current as UpcomingCatalogRow[]).filter(isRelevant).length === 0 &&
+          rows.length > 0
+        ) {
+          changeView('all', true);
+        }
+      } catch (error) {
+        if (signal.aborted || isAbortError(error)) {
+          return;
+        }
+        setCatalogError(toErrorObject(error));
+        setCatalogStatus('error');
+      }
+    },
+    [applyInitialUrlFilters, applyView, changeView]
+  );
+
+  const loadCorrelation = useCallback(
+    async (signal: AbortSignal) => {
+      setShowReadyAlert(false);
+      try {
+        const uuidResponse = await getAccessibleHostUuidsWithRetry(signal);
+        if (signal.aborted) {
+          return;
+        }
+        const hostIds = uuidResponse?.data;
+        if (
+          !Array.isArray(hostIds) ||
+          hostIds.some((hostId) => typeof hostId !== 'string' || hostId.trim().length === 0)
+        ) {
+          throw new Error('Host inventory returned an invalid system identifier list.');
+        }
+
+        let rows: UpcomingChangeRow[];
+        if (hostIds.length === 0) {
+          rows = [];
+          completeCorrelation(rows);
+        } else {
+          const result = await startCorrelationTask(
+            (onProgress, batchSignal) =>
+              getAllUpcomingChanges(hostIds, onProgress, batchSignal).then((response) => {
+                if (!Array.isArray(response?.data)) {
+                  throw new Error('Upcoming changes correlation response was invalid.');
+                }
+                return response.data as UpcomingChangeRow[];
+              }),
+            signal,
+            hostIds.length
+          );
+          rows = result;
+        }
+
+        if (signal.aborted) {
+          return;
+        }
+        correlationRowsRef.current = rows;
+        const relevantRows = formatUpcomingRows(rows as UpcomingCatalogRow[]).filter(isRelevant);
+        setNoDataAvailable(relevantRows.length === 0);
+        const viewAtCompletion = selectedViewFilterRef.current;
+        const activeRows = applyView(viewAtCompletion);
+        if (viewAtCompletion === 'all') {
+          setShowReadyAlert(true);
+          setReadyAlertDismissed(false);
+        } else if (relevantRows.length === 0 && catalogRowsRef.current && catalogRowsRef.current.length > 0) {
+          changeView('all', true);
+        } else if (!initialUrlFiltersAppliedRef.current && relevantRows.length > 0) {
+          applyInitialUrlFilters(activeRows, viewAtCompletion);
+        }
+      } catch (error) {
+        if (signal.aborted || isAbortError(error)) {
+          return;
+        }
+        correlationRowsRef.current = null;
+        failCorrelation(error);
+      }
+    },
+    [applyInitialUrlFilters, applyView, changeView, completeCorrelation, failCorrelation, startCorrelationTask]
+  );
+
+  const startCatalog = useCallback(() => {
+    catalogAbortRef.current?.abort();
+    const controller = new AbortController();
+    catalogAbortRef.current = controller;
+    void loadCatalog(controller.signal);
+  }, [loadCatalog]);
+
+  const startCorrelation = useCallback(() => {
+    correlationAbortRef.current?.abort();
+    const controller = new AbortController();
+    correlationAbortRef.current = controller;
+    correlationRowsRef.current = null;
+    resetCorrelation();
+    setNoDataAvailable(false);
+    void loadCorrelation(controller.signal);
+  }, [loadCorrelation, resetCorrelation]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    loadAbortRef.current = controller;
+    const catalogController = new AbortController();
+    const correlationController = new AbortController();
+    catalogAbortRef.current = catalogController;
+    correlationAbortRef.current = correlationController;
 
-    // Get view filter from URL params or use default
-    let initialViewFilter = 'relevant';
-    if (viewFilterParam && (viewFilterParam === 'relevant' || viewFilterParam === 'all')) {
-      initialViewFilter = viewFilterParam;
-      setSelectedViewFilter(viewFilterParam);
+    // Start both independent requests in the same effect. Correlation batches wait
+    // for host IDs, while the static All catalog can render as soon as it arrives.
+    void loadCatalog(catalogController.signal);
+    void loadCorrelation(correlationController.signal);
+
+    return () => {
+      catalogController.abort();
+      correlationController.abort();
+    };
+  }, [loadCatalog, loadCorrelation]);
+
+  const retryCatalog = useCallback(() => {
+    startCatalog();
+  }, [startCatalog]);
+
+  const retryCorrelation = useCallback(() => {
+    startCorrelation();
+  }, [startCorrelation]);
+
+  const handleViewFilterChange = (filter: string) => {
+    if (filter === 'relevant' && noDataAvailable) {
+      return;
     }
-
-    fetchData(initialViewFilter);
-    return () => controller.abort();
-  }, []);
+    changeView(filter, true);
+  };
 
   const resetFilters = () => {
     setCurrentTypeFilters(new Set());
@@ -341,40 +482,15 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     setCurrentNameFilters('');
     setCurrentReleaseFilters([]);
     setCurrentAddedToRoadmapFilter('');
-
-    // Don't reset to relevant if no relevant data available
-    if (!noDataAvailable) {
-      setSelectedViewFilter('relevant');
-    }
-
-    // Use cached relevant data if available
-    if (hasFetchedData) {
-      if (relevantUpcomingChangesData.length === 0 && allUpcomingChangesData.length > 0) {
-        // If relevant data is empty but all data exists, use all data
-        setUpcomingChanges(allUpcomingChangesData);
-        setVisibleData(allUpcomingChangesData);
-        setSelectedViewFilter('all');
-      } else {
-        setUpcomingChanges(relevantUpcomingChangesData);
-        setVisibleData(relevantUpcomingChangesData);
-      }
-      // Update noDataAvailable based on cached relevant data
-      setNoDataAvailable(relevantUpcomingChangesData.length === 0);
-    } else {
-      setVisibleData(upcomingChanges);
-      fetchData(noDataAvailable ? 'all' : 'relevant');
-    }
-
-    // Update filters for URL
-    const newFilters: any = { ...DEFAULT_FILTERS };
-    newFilters['viewFilter'] = noDataAvailable ? 'all' : 'relevant';
+    const nextView = noDataAvailable ? 'all' : 'relevant';
+    changeView(nextView, false);
+    const newFilters: Filter = { ...DEFAULT_FILTERS, viewFilter: nextView };
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
   };
 
   const setTypeParam = (type: Set<string>) => {
-    const newFilters = { ...filtersForURL };
-    newFilters['type'] = type;
+    const newFilters = { ...filtersForURL, type };
     setFiltersForURL(newFilters);
     setSearchParams(buildURL(newFilters));
   };
@@ -401,34 +517,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     }
   };
 
-  if (isLoading) {
-    if (!upcomingLoadProgress || upcomingLoadProgress.total <= 0) {
-      return (
-        <Bullseye>
-          <Spinner aria-label="Loading upcoming changes" />
-        </Bullseye>
-      );
-    }
-
-    return (
-      <PreparingDataState
-        title="Preparing upcoming changes"
-        items={[
-          {
-            label: 'Upcoming changes',
-            loaded: upcomingLoadProgress.requested,
-            total: upcomingLoadProgress.total,
-            completed: false,
-          },
-        ]}
-      />
-    );
-  }
-
   const redirectToDashboard = () => {
-    // get the base url and append the dashboard path
-    const dashUrl = `${window.location.origin}/insights/dashboard`;
-    // redirect to the dash board
+    const dashUrl = window.location.origin + '/insights/dashboard';
     window.location.href = dashUrl;
   };
 
@@ -452,41 +542,58 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     </Bullseye>
   );
 
-  if (error) {
-    if (String(error.message) === 'Error: Workspace filtering is not yet implemented') {
-      // corner case with workspace filtering, we need different error message
-      return lockedState;
-    }
-    return <ErrorState titleText="Failed to load data" bodyText={String(error.message)} />;
+  const activeViewIsAll = selectedViewFilter === 'all';
+  const contentStatus = activeViewIsAll
+    ? catalogStatus
+    : correlation.status === 'idle'
+    ? 'loading'
+    : correlation.status;
+  const activeError = activeViewIsAll
+    ? catalogError
+    : correlation.status === 'error'
+    ? toErrorObject(correlation.error)
+    : undefined;
+  const correlationError = correlation.status === 'error';
+  const exportIsDisabled = activeViewIsAll
+    ? catalogStatus !== 'ready' || correlation.status !== 'ready'
+    : correlation.status !== 'ready';
+  const exportDisabledTooltipContent =
+    contentStatus === 'error' || (activeViewIsAll && correlationError) ? 'Data failed to load' : 'Still loading';
+  const cardCountsReady = activeViewIsAll ? catalogStatus === 'ready' : correlation.status === 'ready';
+  const cardsContent = (value: number) =>
+    cardCountsReady ? (
+      <span className="drf-lifecycle__upcoming-count">{value}</span>
+    ) : (
+      <Skeleton
+        width="56px"
+        style={{ display: 'inline-block', height: '1em', verticalAlign: 'middle' }}
+        data-testid="upcoming-summary-count-skeleton"
+      />
+    );
+
+  if (!activeViewIsAll && correlation.status === 'error' && isWorkspaceFilteringError(correlation.error)) {
+    return lockedState;
   }
 
-  // New error state for when no all data is available
-  if (noAllDataAvailable) {
-    return (
-      <Bullseye>
-        <EmptyState
-          headingLevel="h2"
-          icon={CubesIcon}
-          titleText="No roadmap data available"
-          variant={EmptyStateVariant.lg}
-        >
-          <EmptyStateBody>
-            We could not find any Roadmap data. Please add systems to inventory to view Roadmap information.
-          </EmptyStateBody>
-          <EmptyStateFooter>
-            <EmptyStateActions>
-              <Button variant="primary" onClick={() => fetchData()}>
-                Try again
-              </Button>
-            </EmptyStateActions>
-          </EmptyStateFooter>
-        </EmptyState>
-      </Bullseye>
-    );
-  }
+  const progress = correlation.progress;
+  const preparingTitle =
+    progress && progress.total > 0
+      ? "We're preparing roadmap data for " + progress.total.toLocaleString('en-US') + ' systems'
+      : "We're preparing roadmap data";
 
   return (
     <Stack className="drf-lifecycle__upcoming" hasGutter>
+      {correlation.status === 'loading' && (
+        <StackItem data-testid="upcoming-correlation-progress">
+          <BatchLoadAlert
+            title={preparingTitle}
+            description={PREPARING_DESCRIPTION}
+            completed={progress?.completed ?? 0}
+            total={progress?.total ?? 0}
+            progressAriaLabel="Roadmap data loading progress"
+          />
+        </StackItem>
+      )}
       <StackItem>
         <Grid hasGutter span={12}>
           <GridItem span={4}>
@@ -503,8 +610,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numDeprecations}</span>{' '}
-                {pluralize(numDeprecations, 'deprecation')} that could affect your systems
+                {cardsContent(numDeprecations)} {pluralize(numDeprecations, 'deprecation')} that could affect your
+                systems
               </CardBody>
             </Card>
           </GridItem>
@@ -522,8 +629,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numChanges}</span>{' '}
-                {pluralize(numChanges, 'change')} that could affect your systems
+                {cardsContent(numChanges)} {pluralize(numChanges, 'change')} that could affect your systems
               </CardBody>
             </Card>
           </GridItem>
@@ -541,14 +647,31 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <span className="drf-lifecycle__upcoming-count">{numAdditions}</span>{' '}
-                {pluralize(numAdditions, 'addition')} and {pluralize(numAdditions, 'enhancement')} that could
-                affect your systems
+                {cardsContent(numAdditions)} {pluralize(numAdditions, 'addition')} and{' '}
+                {pluralize(numAdditions, 'enhancement')} that could affect your systems
               </CardBody>
             </Card>
           </GridItem>
         </Grid>
       </StackItem>
+      {showReadyAlert && activeViewIsAll && !readyAlertDismissed && (
+        <StackItem>
+          <Alert
+            variant="success"
+            isInline
+            title={READY_ALERT_TITLE}
+            actionClose={
+              <AlertActionCloseButton
+                aria-label="Close"
+                onClose={() => {
+                  setReadyAlertDismissed(true);
+                  setShowReadyAlert(false);
+                }}
+              />
+            }
+          />
+        </StackItem>
+      )}
       <StackItem>
         <UpcomingTable
           data={visibleData}
@@ -564,6 +687,14 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           selectedViewFilter={selectedViewFilter}
           handleViewFilterChange={handleViewFilterChange}
           noDataAvailable={noDataAvailable}
+          contentStatus={contentStatus}
+          contentError={activeError?.message}
+          onRetryContent={activeViewIsAll ? retryCatalog : retryCorrelation}
+          contentRetryLabel={activeViewIsAll ? 'Try again' : 'Retry all'}
+          countsPending={activeViewIsAll && catalogStatus === 'ready' && correlation.status === 'loading'}
+          countsFailed={activeViewIsAll && catalogStatus === 'ready' && correlation.status === 'error'}
+          isExportDisabled={exportIsDisabled}
+          exportDisabledTooltipContent={exportDisabledTooltipContent}
         />
       </StackItem>
     </Stack>

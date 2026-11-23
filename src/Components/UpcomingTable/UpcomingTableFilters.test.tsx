@@ -78,6 +78,14 @@ describe('UpcomingTableFilters', () => {
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
     });
+
+    test('disables export while the active dataset is loading', () => {
+      render(
+        <UpcomingTableFilters {...defaultProps} isExportDisabled exportDisabledTooltipContent="Still loading" />
+      );
+
+      expect(screen.getByRole('button', { name: 'Export host list' })).toBeDisabled();
+    });
   });
 
   describe('Search Filter', () => {

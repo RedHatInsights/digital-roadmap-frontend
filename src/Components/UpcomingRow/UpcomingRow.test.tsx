@@ -83,7 +83,7 @@ const defaultProps = {
 };
 
 // Helper to render component within a proper table structure
-const renderTableRow = (props = defaultProps) => {
+const renderTableRow = (props: Parameters<typeof TableRow>[0] = defaultProps) => {
   return render(
     <table>
       <Suspense
@@ -304,6 +304,31 @@ describe('TableRow', () => {
 
       expect(screen.getByText('0')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: '0' })).not.toBeInTheDocument();
+    });
+
+    test('shows a spinner while the affected systems count is pending', () => {
+      renderTableRow({
+        ...defaultProps,
+        repo: repoWithDetails,
+        isExpanded: true,
+        countsPending: true,
+      });
+
+      expect(screen.getByRole('progressbar', { name: 'Loading affected system count' })).toBeInTheDocument();
+      expect(screen.queryByText('5')).not.toBeInTheDocument();
+      expect(screen.queryByText('0')).not.toBeInTheDocument();
+    });
+
+    test('shows an em dash after the affected systems count fails to load', () => {
+      renderTableRow({
+        ...defaultProps,
+        repo: repoWithDetails,
+        isExpanded: true,
+        countsFailed: true,
+      });
+
+      expect(screen.getByText('—')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '5' })).not.toBeInTheDocument();
     });
 
     test('handles missing potentiallyAffectedSystemsCount', () => {

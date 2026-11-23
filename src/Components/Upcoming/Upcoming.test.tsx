@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import UpcomingTab from './Upcoming';
-import { getAccessibleHostUuids, getAllUpcomingChanges } from '../../api';
+import { getAccessibleHostUuids, getAllUpcomingChanges, getUpcomingChanges } from '../../api';
 import { UpcomingChanges } from '../../types/UpcomingChanges';
 
 // Polyfill for structuredClone in test environment
@@ -14,8 +14,10 @@ if (!global.structuredClone) {
 
 // Mock the API functions
 jest.mock('../../api', () => ({
+  HOST_UUID_LOOKUP_TIMEOUT_MS: 60_000,
   getAccessibleHostUuids: jest.fn(),
   getAllUpcomingChanges: jest.fn(),
+  getUpcomingChanges: jest.fn(),
 }));
 
 // Mock the lazy-loaded UpcomingTable component
@@ -27,6 +29,14 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
+    contentStatus,
+    contentError,
+    countsPending,
+    countsFailed,
+    isExportDisabled,
+    exportDisabledTooltipContent,
+    onRetryContent,
+    contentRetryLabel,
   }: any) {
     return (
       <div data-testid="upcoming-table">
@@ -39,6 +49,17 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
         <div data-testid="initial-type-filters">{JSON.stringify([...initialTypeFilters])}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
+        <div data-testid="table-content-status">{contentStatus}</div>
+        <div data-testid="table-content-error">{contentError ?? ''}</div>
+        <div data-testid="counts-pending">{Boolean(countsPending).toString()}</div>
+        <div data-testid="counts-failed">{Boolean(countsFailed).toString()}</div>
+        <div data-testid="export-disabled">{Boolean(isExportDisabled).toString()}</div>
+        <div data-testid="export-disabled-tooltip">{exportDisabledTooltipContent}</div>
+        {contentStatus === 'error' && (
+          <button onClick={onRetryContent} data-testid="retry-content">
+            {contentRetryLabel}
+          </button>
+        )}
         <button onClick={resetInitialFilters} data-testid="reset-filters">
           Reset Filters
         </button>
@@ -80,10 +101,11 @@ const mockSetSearchParams = jest.fn();
 
 const mockGetAllUpcomingChanges = getAllUpcomingChanges as jest.MockedFunction<typeof getAllUpcomingChanges>;
 const mockGetAccessibleHostUuids = getAccessibleHostUuids as jest.MockedFunction<typeof getAccessibleHostUuids>;
+const mockGetUpcomingChanges = getUpcomingChanges as jest.MockedFunction<typeof getUpcomingChanges>;
 
 const upcomingResponse = (data: UpcomingChanges[]): Awaited<ReturnType<typeof getAllUpcomingChanges>> => ({
   meta: { count: data.length, total: data.length },
-  data,
+  data: data as unknown as Awaited<ReturnType<typeof getAllUpcomingChanges>>['data'],
 });
 
 // The "relevant" view is derived from the "all" response, so the affected-systems count
@@ -126,6 +148,22 @@ const mockAllData: UpcomingChanges[] = [
     details: detailsWithCount(0),
   },
 ];
+
+const withoutAffectedSystems = (item: UpcomingChanges): UpcomingChanges => ({
+  ...item,
+  details: item.details
+    ? {
+        summary: item.details.summary,
+        architecture: item.details.architecture,
+        trainingTicket: item.details.trainingTicket,
+        deployedDate: item.details.deployedDate,
+        lastModified: item.details.lastModified,
+        detailFormat: item.details.detailFormat,
+      }
+    : undefined,
+});
+
+const mockCatalogData = mockAllData.map(withoutAffectedSystems);
 
 // Every count is 0, so nothing is relevant
 const mockNoRelevantData: UpcomingChanges[] = mockAllData.map((item) => ({
@@ -172,10 +210,13 @@ describe('UpcomingTab', () => {
     // Reset mocks to default successful state
     mockGetAccessibleHostUuids.mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['host-1'] });
     mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mockAllData));
+    mockGetUpcomingChanges.mockResolvedValue({ data: mockCatalogData } as Awaited<
+      ReturnType<typeof getUpcomingChanges>
+    >);
   });
 
   describe('Initial Loading', () => {
-    test('displays loading spinner initially', async () => {
+    test('keeps the table controls visible while relevant data is loading', async () => {
       let resolveAll: (value: any) => void;
 
       // Create a promise that we can control
@@ -192,19 +233,32 @@ describe('UpcomingTab', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
-      // Host UUIDs can resolve before a system total is known. That short wait stays a spinner.
-      expect(screen.getByRole('progressbar', { name: 'Loading upcoming changes' })).toBeInTheDocument();
-      expect(screen.queryByText('Preparing upcoming changes')).not.toBeInTheDocument();
+      expect(screen.getByTestId('upcoming-table')).toBeInTheDocument();
+      expect(screen.getByTestId('table-content-status')).toHaveTextContent('loading');
+      expect(screen.getByRole('heading', { name: /preparing roadmap data/ })).toBeInTheDocument();
+      const correlationProgress = screen.getByTestId('upcoming-correlation-progress');
+      expect(correlationProgress.parentElement?.firstElementChild).toBe(correlationProgress);
+      const summaryCountSkeletons = screen.getAllByTestId('upcoming-summary-count-skeleton');
+      expect(summaryCountSkeletons).toHaveLength(3);
+      summaryCountSkeletons.forEach((skeleton) => {
+        expect(skeleton).toHaveStyle({ display: 'inline-block', height: '1em', verticalAlign: 'middle' });
+      });
+      expect(
+        screen.getByText(
+          'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('export-disabled')).toHaveTextContent('true');
 
       // Resolve the promise
       await act(async () => {
         resolveAll!({ data: mockAllData });
       });
 
-      // Wait for loading to complete
+      // Wait for correlation to complete without replacing the page.
       await waitFor(
         () => {
-          expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+          expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
         },
         { timeout: 3000 }
       );
@@ -215,9 +269,7 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-      });
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
 
       // Check summary cards are rendered
       expect(screen.getByText('Deprecations')).toBeInTheDocument();
@@ -238,12 +290,14 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('table-data-count')).toBeInTheDocument();
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
       });
 
       expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1);
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
-      expect(mockGetAccessibleHostUuids).toHaveBeenCalledWith(expect.any(AbortSignal));
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledWith(expect.any(AbortSignal), 60_000);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledWith(expect.any(AbortSignal));
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith(
         ['host-1'],
         expect.any(Function),
@@ -272,20 +326,201 @@ describe('UpcomingTab', () => {
       });
 
       expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1);
       expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
     });
 
-    test('passes an empty UUID list into the upcoming loader', async () => {
+    test('retries transient host UUID lookup failures up to three attempts', async () => {
+      mockGetAccessibleHostUuids
+        .mockRejectedValueOnce(new Error('Host inventory unavailable'))
+        .mockRejectedValueOnce({ status_code: 503, message: 'Host inventory unavailable' })
+        .mockResolvedValueOnce({ meta: { count: 1, total: 1 }, data: ['host-1'] });
+
+      renderComponent();
+
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'), {
+        timeout: 3000,
+      });
+
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(3);
+      expect(mockGetAccessibleHostUuids).toHaveBeenNthCalledWith(1, expect.any(AbortSignal), 60_000);
+      expect(mockGetAccessibleHostUuids).toHaveBeenNthCalledWith(2, expect.any(AbortSignal), 60_000);
+      expect(mockGetAccessibleHostUuids).toHaveBeenNthCalledWith(3, expect.any(AbortSignal), 60_000);
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not retry permanent host UUID lookup failures', async () => {
+      mockGetAccessibleHostUuids.mockRejectedValue({ status_code: 403, message: 'Forbidden' });
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent('Forbidden');
+      });
+
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockGetAllUpcomingChanges).not.toHaveBeenCalled();
+    });
+
+    test('stops after three transient host UUID lookup attempts', async () => {
+      mockGetAccessibleHostUuids.mockRejectedValue(new Error('Host inventory unavailable'));
+
+      renderComponent();
+
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+          expect(screen.getByTestId('table-content-error')).toHaveTextContent('Host inventory unavailable');
+        },
+        { timeout: 3000 }
+      );
+
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(3);
+      expect(mockGetAllUpcomingChanges).not.toHaveBeenCalled();
+    });
+
+    test('does not restart requests when the URL setter identity changes on a view switch', async () => {
+      const searchParams = new URLSearchParams();
+      const nextSetter = jest.fn();
+      let activeSetter = jest.fn((nextUrl: unknown) => {
+        if (String(nextUrl).includes('viewFilter=all')) {
+          activeSetter = nextSetter;
+        }
+      });
+      mockedUseSearchParams.mockImplementation(() => [searchParams, activeSetter]);
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
+
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+      });
+      fireEvent.click(screen.getByTestId('switch-to-relevant'));
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
+
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+    });
+
+    test('shows the static All catalog before correlation completes', async () => {
+      let resolveCorrelation: (value: Awaited<ReturnType<typeof getAllUpcomingChanges>>) => void = () => undefined;
+      mockGetAllUpcomingChanges.mockImplementation(() => new Promise((resolve) => (resolveCorrelation = resolve)));
+
+      renderComponent();
+      await waitFor(() => expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('loading'));
+
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      await waitFor(() => {
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+      });
+      expect(screen.getByTestId('counts-pending')).toHaveTextContent('true');
+      expect(screen.getByTestId('export-disabled')).toHaveTextContent('true');
+
+      await act(async () => resolveCorrelation(upcomingResponse(mockAllData)));
+      await waitFor(() => expect(screen.getByTestId('counts-pending')).toHaveTextContent('false'));
+      expect(screen.getByTestId('export-disabled')).toHaveTextContent('false');
+    });
+
+    test('keeps Relevant available when the static catalog fails', async () => {
+      mockGetUpcomingChanges.mockRejectedValue(new Error('Catalog unavailable'));
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
+
+      expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
+      expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+      expect(screen.getByTestId('table-content-error')).toHaveTextContent('Catalog unavailable');
+    });
+
+    test('keeps the static All catalog available after correlation fails', async () => {
+      mockGetAllUpcomingChanges.mockRejectedValue(new Error('Correlation unavailable'));
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('error'));
+      expect(screen.getByTestId('table-content-error')).toHaveTextContent('Correlation unavailable');
+      expect(screen.getByTestId('retry-content')).toHaveTextContent('Retry all');
+
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+      expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+      expect(screen.getByTestId('counts-failed')).toHaveTextContent('true');
+      expect(screen.getByTestId('export-disabled')).toHaveTextContent('true');
+      expect(screen.getByTestId('export-disabled-tooltip')).toHaveTextContent('Data failed to load');
+    });
+
+    test('Retry all reloads correlation while preserving the catalog request', async () => {
+      mockGetAllUpcomingChanges
+        .mockRejectedValueOnce(new Error('Correlation unavailable'))
+        .mockResolvedValueOnce(upcomingResponse(mockAllData));
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('error'));
+      fireEvent.click(screen.getByTestId('retry-content'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('1');
+      });
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(2);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(2);
+    });
+
+    test('All retry refetches only the catalog and reuses completed correlation', async () => {
+      mockGetUpcomingChanges
+        .mockRejectedValueOnce(new Error('Catalog unavailable'))
+        .mockResolvedValueOnce({ data: mockCatalogData } as Awaited<ReturnType<typeof getUpcomingChanges>>);
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('error'));
+      fireEvent.click(screen.getByTestId('retry-content'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+      });
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(1);
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId('export-disabled')).toHaveTextContent('false');
+    });
+
+    test('skips correlation POST when the host UUID list is empty', async () => {
       mockGetAccessibleHostUuids.mockResolvedValue({ meta: { count: 0, total: 0 }, data: [] });
 
       await act(async () => {
         renderComponent();
       });
 
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready'));
+      expect(mockGetAllUpcomingChanges).not.toHaveBeenCalled();
+      expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
+      expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+    });
+
+    test('rejects whitespace-only host UUIDs before starting correlation', async () => {
+      mockGetAccessibleHostUuids.mockResolvedValue({ meta: { count: 1, total: 1 }, data: ['   '] });
+
+      renderComponent();
+
       await waitFor(() => {
-        expect(mockGetAllUpcomingChanges).toHaveBeenCalledWith([], expect.any(Function), expect.any(AbortSignal));
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent(
+          'Host inventory returned an invalid system identifier list.'
+        );
       });
+      expect(mockGetAllUpcomingChanges).not.toHaveBeenCalled();
     });
 
     test('aborts in-flight upcoming requests when the page unmounts', async () => {
@@ -308,7 +543,7 @@ describe('UpcomingTab', () => {
     test('shows how many systems are loading once a system total is known', async () => {
       let resolveChanges: (value: Awaited<ReturnType<typeof getAllUpcomingChanges>>) => void = () => undefined;
       mockGetAllUpcomingChanges.mockImplementation((_hostIds, onProgress) => {
-        onProgress?.({ requested: 2000, total: 4500 });
+        onProgress?.({ completed: 2000, total: 4500 });
         return new Promise((resolve) => {
           resolveChanges = resolve;
         });
@@ -318,20 +553,25 @@ describe('UpcomingTab', () => {
         renderComponent();
       });
 
-      expect(await screen.findByRole('heading', { name: 'Preparing upcoming changes' })).toBeInTheDocument();
-      expect(screen.getByText(/Loading data for 4,500 systems\./)).toBeInTheDocument();
-      expect(screen.getByText('Upcoming changes')).toBeInTheDocument();
-      expect(screen.getByText('Loading 2,000 out of 4,500 systems')).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /preparing roadmap data for 4,500 systems/ })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Large environments can take a few minutes to calculate. Keep this tab open to watch progress.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByText('2,000 / 4,500 systems')).toBeInTheDocument();
       expect(screen.getByText('44%')).toBeInTheDocument();
-      expect(screen.queryByRole('progressbar', { name: 'Loading upcoming changes' })).not.toBeInTheDocument();
+      expect(screen.getByRole('progressbar', { name: 'Roadmap data loading progress' })).toBeInTheDocument();
 
       await act(async () => {
         resolveChanges(upcomingResponse(mockAllData));
       });
 
       await waitFor(() => {
-        expect(screen.queryByText('Loading 2,000 out of 4,500 systems')).not.toBeInTheDocument();
-        expect(screen.queryByText('Preparing upcoming changes')).not.toBeInTheDocument();
+        expect(screen.queryByText('2,000 / 4,500 systems')).not.toBeInTheDocument();
+        expect(screen.queryByText("We're preparing roadmap data for 4,500 systems")).not.toBeInTheDocument();
       });
     });
 
@@ -344,8 +584,8 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent(
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent(
           'Not authorized to access host inventory'
         );
       });
@@ -366,7 +606,7 @@ describe('UpcomingTab', () => {
       });
     });
 
-    test('handles a 504 with the generic error state', async () => {
+    test('shows correlation errors in the Relevant content region', async () => {
       const timeoutError = { message: 'Gateway Timeout', status_code: 504 };
 
       mockGetAllUpcomingChanges.mockRejectedValue(timeoutError);
@@ -376,8 +616,9 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent('Gateway Timeout');
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent('Gateway Timeout');
+        expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('relevant');
       });
     });
 
@@ -392,8 +633,8 @@ describe('UpcomingTab', () => {
 
       // Should show generic error message
       await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent('Internal Server Error');
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent('Internal Server Error');
       });
     });
   });
@@ -486,7 +727,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Find the clickable button in the deprecations card by its aria-labelledby
@@ -512,7 +753,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Find the clickable button in the changes card by its aria-labelledby
@@ -537,7 +778,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Find the clickable button in the additions card by its aria-labelledby
@@ -564,7 +805,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Reset filters
@@ -597,6 +838,35 @@ describe('UpcomingTab', () => {
   });
 
   describe('URL Parameters', () => {
+    test('preserves initial URL filters when switching views before loading completes', async () => {
+      type CatalogResponse = Awaited<ReturnType<typeof getUpcomingChanges>>;
+      type CorrelationResponse = Awaited<ReturnType<typeof getAllUpcomingChanges>>;
+      let resolveCatalog: (value: CatalogResponse) => void = () => undefined;
+      let resolveCorrelation: (value: CorrelationResponse) => void = () => undefined;
+      mockGetUpcomingChanges.mockReturnValue(
+        new Promise<CatalogResponse>((resolve) => (resolveCatalog = resolve))
+      );
+      mockGetAllUpcomingChanges.mockReturnValue(
+        new Promise<CorrelationResponse>((resolve) => (resolveCorrelation = resolve))
+      );
+      setupSearchParamsMock({ name: 'Ruby', type: 'Change', release: 'Release 1.0' });
+
+      renderComponent('name=Ruby&type=Change&release=Release%201.0');
+
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+
+      const latestUrl = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+      expect(latestUrl).toContain('name=Ruby');
+      expect(latestUrl).toContain('type=Change');
+      expect(latestUrl).toContain('release=Release 1.0');
+      expect(latestUrl).toContain('viewFilter=all');
+
+      await act(async () => {
+        resolveCatalog({ data: mockCatalogData });
+        resolveCorrelation(upcomingResponse(mockAllData));
+      });
+    });
+
     test('initializes with view filter from URL', async () => {
       setupSearchParamsMock({ viewFilter: 'all' });
 
@@ -716,7 +986,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       await waitFor(() => {
@@ -738,7 +1008,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       await waitFor(() => {
@@ -760,7 +1030,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       await waitFor(() => {
@@ -778,7 +1048,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       await waitFor(() => {
@@ -819,18 +1089,15 @@ describe('UpcomingTab', () => {
   describe('Empty States', () => {
     test('displays no data available state when all data sources are empty', async () => {
       mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse([]));
+      mockGetUpcomingChanges.mockResolvedValue({ data: [] } as Awaited<ReturnType<typeof getUpcomingChanges>>);
 
       await act(async () => {
         renderComponent();
       });
 
       await waitFor(() => {
-        expect(screen.getByText('No roadmap data available')).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            'We could not find any Roadmap data. Please add systems to inventory to view Roadmap information.'
-          )
-        ).toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+        expect(screen.getByTestId('table-data-count')).toHaveTextContent('0');
       });
     });
   });
@@ -850,7 +1117,7 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Should auto-switch to all view and show the count
@@ -871,13 +1138,16 @@ describe('UpcomingTab', () => {
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mixedData));
+      mockGetUpcomingChanges.mockResolvedValue({ data: mixedData } as Awaited<
+        ReturnType<typeof getUpcomingChanges>
+      >);
 
       await act(async () => {
         renderComponent();
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       // Check that data is rendered
@@ -912,13 +1182,16 @@ describe('UpcomingTab', () => {
       ];
 
       mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(dataWithNullDeployedDate));
+      mockGetUpcomingChanges.mockResolvedValue({
+        data: dataWithNullDeployedDate.map(withoutAffectedSystems),
+      } as Awaited<ReturnType<typeof getUpcomingChanges>>);
 
       await act(async () => {
         renderComponent();
       });
 
       await waitFor(() => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
       });
 
       const deployedDates = JSON.parse(screen.getByTestId('table-deployed-dates').textContent!);
@@ -966,8 +1239,8 @@ describe('UpcomingTab', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-        expect(screen.getByTestId('error-description')).toHaveTextContent('General API Error');
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('error');
+        expect(screen.getByTestId('table-content-error')).toHaveTextContent('General API Error');
       });
     });
   });

@@ -8,6 +8,9 @@ import {
   EmptyStateFooter,
   Pagination,
   PaginationVariant,
+  Skeleton,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 import { SortByDirection, Table, Tbody, Td, Th, ThProps, Thead, Tr } from '@patternfly/react-table';
 import { TableRow } from '../../Components/UpcomingRow/UpcomingRow';
@@ -19,6 +22,8 @@ import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
 import { DEFAULT_FILTERS, KNOWN_TYPES } from '../../utils/utils';
 import { exportData as exportToFile } from '../../utils/export';
+
+export type UpcomingContentStatus = 'loading' | 'ready' | 'error';
 
 interface UpcomingTableProps {
   data: UpcomingChanges[];
@@ -48,6 +53,14 @@ interface UpcomingTableProps {
   selectedViewFilter: string;
   handleViewFilterChange: (filter: string) => void;
   noDataAvailable?: boolean;
+  contentStatus?: UpcomingContentStatus;
+  contentError?: string;
+  onRetryContent?: () => void;
+  contentRetryLabel?: string;
+  countsPending?: boolean;
+  countsFailed?: boolean;
+  isExportDisabled?: boolean;
+  exportDisabledTooltipContent?: string;
 }
 
 export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
@@ -64,6 +77,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   selectedViewFilter,
   handleViewFilterChange,
   noDataAvailable = false, // Default to false if not provided
+  contentStatus = 'ready',
+  contentError,
+  onRetryContent,
+  contentRetryLabel = 'Retry all',
+  countsPending = false,
+  countsFailed = false,
+  isExportDisabled = false,
+  exportDisabledTooltipContent = 'Still loading',
 }) => {
   const [searchValue, setSearchValue] = useState(initialNameFilter ?? '');
   const [typeSelections, setTypeSelections] = useState<Set<string>>(initialTypeFilters);
@@ -395,77 +416,112 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
         noDataAvailable={noDataAvailable}
         onExport={handleExport}
         canExport={sortedFilteredData.length > 0}
+        isExportDisabled={isExportDisabled}
+        exportDisabledTooltipContent={exportDisabledTooltipContent}
       />
-      <Table
-        aria-label="Upcoming changes, deprecations, and additions to your system"
-        variant="compact"
-        isExpandable
-      >
-        <Thead>
-          {filteredData.length > 0 && (
-            <Tr>
-              <Th>
-                <span className="pf-v6-c-table__toggle ">
-                  <Button
-                    icon={
-                      <div className="pf-v6-c-table__toggle-icon">
-                        <AngleDownIcon />
-                      </div>
-                    }
-                    aria-expanded={expandedRows.size === paginatedRows.length}
-                    aria-label={
-                      expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'
-                    }
-                    variant="plain"
-                    onClick={onClickArrow}
-                    className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
-                  />
-                </span>
-              </Th>
-
-              <Th width={10} sort={getSortParams(0)}>
-                {columnNames.name}
-              </Th>
-              <Th width={10} sort={getSortParams(1)}>
-                {columnNames.type}
-              </Th>
-              <Th width={10} sort={getSortParams(2)}>
-                {columnNames.release}
-              </Th>
-              <Th width={10} sort={getSortParams(3)}>
-                {columnNames.addedToRoadmap}
-              </Th>
-              <Th width={10} sort={getSortParams(4)}>
-                {columnNames.date}
-              </Th>
-            </Tr>
+      {contentStatus === 'loading' ? (
+        <div role="status" aria-label="Loading roadmap data" className="drf-upcoming__table-skeleton">
+          <Stack hasGutter>
+            <StackItem>
+              <Skeleton width="70%" />
+            </StackItem>
+            <StackItem>
+              <Skeleton width="90%" />
+            </StackItem>
+            <StackItem>
+              <Skeleton width="80%" />
+            </StackItem>
+          </Stack>
+        </div>
+      ) : contentStatus === 'error' ? (
+        <EmptyState headingLevel="h2" titleText="Failed to load data" variant="sm">
+          <EmptyStateBody>{contentError ?? 'The data could not be loaded.'}</EmptyStateBody>
+          {onRetryContent && (
+            <EmptyStateFooter>
+              <EmptyStateActions>
+                <Button variant="link" onClick={onRetryContent}>
+                  {contentRetryLabel}
+                </Button>
+              </EmptyStateActions>
+            </EmptyStateFooter>
           )}
-        </Thead>
-        {filteredData.length === 0 ? (
-          <Tbody>
-            <Tr>
-              <Td colSpan={5}>
-                <Bullseye>{emptyState}</Bullseye>
-              </Td>
-            </Tr>
-          </Tbody>
-        ) : (
-          paginatedRows.map((repo, rowIndex) => {
-            return (
-              <TableRow
-                key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`}
-                repo={repo}
-                columnNames={columnNames}
-                rowIndex={rowIndex}
-                isExpanded={expandedRows.has(repo)}
-                hideRepo={() => removeRepo(repo)}
-                showRepo={() => addRepo(repo)}
-              />
-            );
-          })
-        )}
-      </Table>
-      {buildPagination('bottom', false)}
+        </EmptyState>
+      ) : (
+        <>
+          <Table
+            aria-label="Upcoming changes, deprecations, and additions to your system"
+            variant="compact"
+            isExpandable
+          >
+            <Thead>
+              {filteredData.length > 0 && (
+                <Tr>
+                  <Th>
+                    <span className="pf-v6-c-table__toggle ">
+                      <Button
+                        icon={
+                          <div className="pf-v6-c-table__toggle-icon">
+                            <AngleDownIcon />
+                          </div>
+                        }
+                        aria-expanded={expandedRows.size === paginatedRows.length}
+                        aria-label={
+                          expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'
+                        }
+                        variant="plain"
+                        onClick={onClickArrow}
+                        className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
+                      />
+                    </span>
+                  </Th>
+
+                  <Th width={10} sort={getSortParams(0)}>
+                    {columnNames.name}
+                  </Th>
+                  <Th width={10} sort={getSortParams(1)}>
+                    {columnNames.type}
+                  </Th>
+                  <Th width={10} sort={getSortParams(2)}>
+                    {columnNames.release}
+                  </Th>
+                  <Th width={10} sort={getSortParams(3)}>
+                    {columnNames.addedToRoadmap}
+                  </Th>
+                  <Th width={10} sort={getSortParams(4)}>
+                    {columnNames.date}
+                  </Th>
+                </Tr>
+              )}
+            </Thead>
+            {filteredData.length === 0 ? (
+              <Tbody>
+                <Tr>
+                  <Td colSpan={5}>
+                    <Bullseye>{emptyState}</Bullseye>
+                  </Td>
+                </Tr>
+              </Tbody>
+            ) : (
+              paginatedRows.map((repo, rowIndex) => {
+                return (
+                  <TableRow
+                    key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`}
+                    repo={repo}
+                    columnNames={columnNames}
+                    rowIndex={rowIndex}
+                    isExpanded={expandedRows.has(repo)}
+                    countsPending={countsPending}
+                    countsFailed={countsFailed}
+                    hideRepo={() => removeRepo(repo)}
+                    showRepo={() => addRepo(repo)}
+                  />
+                );
+              })
+            )}
+          </Table>
+          {buildPagination('bottom', false)}
+        </>
+      )}
     </React.Fragment>
   );
 };
