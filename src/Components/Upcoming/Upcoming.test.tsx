@@ -43,6 +43,9 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
         <div data-testid="table-data-count">{data.length}</div>
         <div data-testid="table-types">{JSON.stringify(data.map((d: any) => d.type))}</div>
         <div data-testid="table-names">{JSON.stringify(data.map((d: any) => d.name))}</div>
+        <div data-testid="table-affected-counts">
+          {JSON.stringify(data.map((d: any) => d.details?.potentiallyAffectedSystemsCount ?? null))}
+        </div>
         <div data-testid="table-deployed-dates">
           {JSON.stringify(data.map((d: any) => d.details?.deployedDate ?? null))}
         </div>
@@ -455,6 +458,29 @@ describe('UpcomingTab', () => {
       expect(screen.getByTestId('counts-failed')).toHaveTextContent('true');
       expect(screen.getByTestId('export-disabled')).toHaveTextContent('true');
       expect(screen.getByTestId('export-disabled-tooltip')).toHaveTextContent('Data failed to load');
+      expect(screen.getByTestId('upcoming-correlation-error')).toBeInTheDocument();
+      expect(screen.getByTestId('retry-correlation')).toHaveTextContent('Retry affected system counts');
+    });
+
+    test('retries correlation from All without refetching the catalog', async () => {
+      mockGetAllUpcomingChanges
+        .mockRejectedValueOnce(new Error('Correlation unavailable'))
+        .mockResolvedValueOnce(upcomingResponse(mockAllData));
+
+      renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('error'));
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      expect(screen.getByTestId('upcoming-correlation-error')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('retry-correlation'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('upcoming-correlation-error')).not.toBeInTheDocument();
+        expect(screen.getByTestId('counts-failed')).toHaveTextContent('false');
+      });
+      expect(mockGetAccessibleHostUuids).toHaveBeenCalledTimes(2);
+      expect(mockGetUpcomingChanges).toHaveBeenCalledTimes(1);
+      expect(mockGetAllUpcomingChanges).toHaveBeenCalledTimes(2);
     });
 
     test('Retry all reloads correlation while preserving the catalog request', async () => {
@@ -507,6 +533,7 @@ describe('UpcomingTab', () => {
       expect(mockGetAllUpcomingChanges).not.toHaveBeenCalled();
       expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
       expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
+      expect(screen.getByTestId('table-affected-counts')).toHaveTextContent('[0,0,0]');
     });
 
     test('rejects whitespace-only host UUIDs before starting correlation', async () => {
@@ -538,6 +565,44 @@ describe('UpcomingTab', () => {
 
       view.unmount();
       expect(signal?.aborted).toBe(true);
+    });
+
+    test('aborts the current correlation retry when the page unmounts', async () => {
+      let retrySignal: AbortSignal | undefined;
+      mockGetAllUpcomingChanges
+        .mockRejectedValueOnce(new Error('Correlation unavailable'))
+        .mockImplementationOnce((_hostIds, _onProgress, signal) => {
+          retrySignal = signal;
+          return new Promise(() => undefined);
+        });
+
+      const view = renderComponent();
+      await waitFor(() => expect(screen.getByTestId('retry-content')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('retry-content'));
+      await waitFor(() => expect(retrySignal).toBeInstanceOf(AbortSignal));
+
+      view.unmount();
+      expect(retrySignal?.aborted).toBe(true);
+    });
+
+    test('aborts the current catalog retry when the page unmounts', async () => {
+      let retrySignal: AbortSignal | undefined;
+      mockGetUpcomingChanges
+        .mockRejectedValueOnce(new Error('Catalog unavailable'))
+        .mockImplementationOnce((signal) => {
+          retrySignal = signal;
+          return new Promise(() => undefined);
+        });
+
+      const view = renderComponent();
+      await waitFor(() => expect(screen.getByTestId('table-data-count')).toHaveTextContent('1'));
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+      await waitFor(() => expect(screen.getByTestId('retry-content')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('retry-content'));
+      await waitFor(() => expect(retrySignal).toBeInstanceOf(AbortSignal));
+
+      view.unmount();
+      expect(retrySignal?.aborted).toBe(true);
     });
 
     test('shows how many systems are loading once a system total is known', async () => {
@@ -794,6 +859,58 @@ describe('UpcomingTab', () => {
 
       await waitFor(() => {
         expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+    });
+
+    test('preserves a card filter selected before initial URL filters finish applying', async () => {
+      let resolveCatalog: (value: Awaited<ReturnType<typeof getUpcomingChanges>>) => void = () => undefined;
+      let resolveCorrelation: (value: Awaited<ReturnType<typeof getAllUpcomingChanges>>) => void = () => undefined;
+      mockGetUpcomingChanges.mockReturnValue(
+        new Promise<Awaited<ReturnType<typeof getUpcomingChanges>>>((resolve) => (resolveCatalog = resolve))
+      );
+      mockGetAllUpcomingChanges.mockReturnValue(
+        new Promise<Awaited<ReturnType<typeof getAllUpcomingChanges>>>((resolve) => (resolveCorrelation = resolve))
+      );
+      setupSearchParamsMock({ type: 'Deprecation' });
+
+      renderComponent('type=Deprecation');
+
+      const changesButton = screen
+        .getAllByRole('button')
+        .find((button) => button.getAttribute('aria-labelledby') === 'filter-by-type-2');
+      expect(changesButton).toBeInTheDocument();
+      fireEvent.click(changesButton!);
+
+      await act(async () => {
+        resolveCatalog({ data: mockCatalogData });
+        resolveCorrelation(upcomingResponse(mockAllData));
+      });
+
+      await waitFor(() => {
+        expect(JSON.parse(screen.getByTestId('initial-type-filters').textContent!)).toEqual(['Change']);
+      });
+      const latestUrl = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
+      expect(latestUrl).toContain('type=Change');
+    });
+
+    test('keeps unmatched catalog correlation counts unknown instead of showing zero', async () => {
+      const mismatchedCorrelation = mockAllData.map((item, index) =>
+        index === 0
+          ? {
+              ...item,
+              details: { ...item.details!, summary: 'A different identity' },
+            }
+          : item
+      );
+      mockGetAllUpcomingChanges.mockResolvedValue(upcomingResponse(mismatchedCorrelation));
+
+      renderComponent();
+
+      await waitFor(() => expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready'));
+      fireEvent.click(screen.getByTestId('switch-to-all'));
+
+      await waitFor(() => {
+        expect(JSON.parse(screen.getByTestId('table-affected-counts').textContent!)).toEqual([null, 0, 0]);
       });
     });
   });

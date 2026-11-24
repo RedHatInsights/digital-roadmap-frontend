@@ -5,6 +5,7 @@ import {
   MAX_FAILED_REQUESTS,
   UpcomingChangeRow,
   UpcomingChangesClient,
+  itemKey,
   loadAllUpcomingChanges,
 } from './relevantUpcomingLoader';
 
@@ -44,6 +45,36 @@ const host = (id: string, osMajor = 9) => ({ id, display_name: id, os_major: osM
 describe('loadAllUpcomingChanges', () => {
   beforeEach(() => {
     jest.mocked(batchRetry.waitBeforeRetry).mockClear();
+  });
+
+  it('uses one identity for catalog and all=true host responses', () => {
+    const catalogRow = {
+      name: 'Ruby 3.3 Deprecation',
+      type: 'deprecation',
+      packages: ['ruby'],
+      release: '9.6',
+      date: '2026-05-31',
+      details: {
+        summary: 'Ruby leaves the default streams',
+        architecture: 'x86_64',
+        trainingTicket: 'TEST-1',
+        deployedDate: '2024-11-01',
+        lastModified: '2024-01-01',
+        dateAdded: '2026-01-01',
+        detailFormat: 0,
+      },
+    };
+    const correlatedRow = {
+      ...catalogRow,
+      details: {
+        ...catalogRow.details,
+        potentiallyAffectedSystemsCount: 1,
+        potentiallyAffectedSystemsDetail: [host('host-1')],
+        potentiallyAffectedSystems: ['host-1'],
+      },
+    };
+
+    expect(itemKey(catalogRow)).toBe(itemKey(correlatedRow));
   });
 
   it('uses one request at a time and batches 1000 host ids', async () => {

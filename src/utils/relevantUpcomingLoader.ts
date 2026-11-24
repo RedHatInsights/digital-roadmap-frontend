@@ -62,9 +62,12 @@ export interface UpcomingChangesClient {
 }
 
 /**
- * Identity of one upcoming file entry. Affected-system lists stay out of the
- * key so batches can union hosts. Name and release are not enough: an addition
- * and a deprecation can share both.
+ * Identity of one upcoming file entry. This mirrors the fields shared by the
+ * backend's unscoped `/upcoming-changes` catalog and its
+ * `/relevant/upcoming-changes/hosts?all=true` response, both of which are
+ * serialized from the same roadmap record. Affected-system lists stay out of
+ * the key so batches can union hosts. Name and release are not enough: an
+ * addition and a deprecation can share both.
  */
 export const itemKey = (row: UpcomingChangeIdentity): string => {
   const packages = [...(row.packages ?? (row.package == null ? [] : [row.package]))].sort();

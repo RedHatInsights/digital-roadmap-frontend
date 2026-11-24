@@ -22,6 +22,7 @@ import UpcomingTableFilters from './UpcomingTableFilters';
 import { Filter } from '../../types/Filter';
 import { DEFAULT_FILTERS, KNOWN_TYPES } from '../../utils/utils';
 import { exportData as exportToFile } from '../../utils/export';
+import { itemKey } from '../../utils/relevantUpcomingLoader';
 
 export type UpcomingContentStatus = 'loading' | 'ready' | 'error';
 
@@ -98,7 +99,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>();
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>();
   const [sortedFilteredData, setSortedFilteredData] = React.useState<UpcomingChanges[]>(data);
-  const [expandedRows, setExpandedRows] = React.useState<Set<UpcomingChanges>>(new Set([]));
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
   useEffect(() => {
     if (initialTypeFilters.size === 0) {
       setTypeSelections(new Set());
@@ -325,9 +326,14 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
     const sortedData = sortFilteredData(filteredData);
     setFilteredData(filteredData);
     setSortedFilteredData(sortedData);
-    setPaginatedRows(sortedData.slice(0, perPage));
-    setPage(1);
-  }, [data]);
+    const maxPage = Math.max(1, Math.ceil(sortedData.length / perPage));
+    const nextPage = Math.min(page, maxPage);
+    if (nextPage !== page) {
+      setPage(nextPage);
+    }
+    const startIndex = (nextPage - 1) * perPage;
+    setPaginatedRows(sortedData.slice(startIndex, startIndex + perPage));
+  }, [data, page, perPage]);
 
   useEffect(() => {
     const filteredData = data.filter(onFilter);
@@ -351,24 +357,31 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
   );
 
   const onClickArrow = () => {
-    if (expandedRows.size < paginatedRows.length) {
-      setExpandedRows(new Set(paginatedRows));
-    } else {
-      setExpandedRows(new Set([]));
-    }
+    const visibleKeys = paginatedRows.map(itemKey);
+    setExpandedRows((currentExpandedRows) => {
+      const allVisibleRowsExpanded =
+        visibleKeys.length > 0 && visibleKeys.every((key) => currentExpandedRows.has(key));
+      if (allVisibleRowsExpanded) {
+        return new Set();
+      }
+      return new Set([...currentExpandedRows, ...visibleKeys]);
+    });
   };
 
   const removeRepo = (repo: UpcomingChanges) => {
-    const newExpandedRows = new Set([...expandedRows]);
-    newExpandedRows.delete(repo);
-    setExpandedRows(newExpandedRows);
+    setExpandedRows((currentExpandedRows) => {
+      const nextExpandedRows = new Set(currentExpandedRows);
+      nextExpandedRows.delete(itemKey(repo));
+      return nextExpandedRows;
+    });
   };
 
   const addRepo = (repo: UpcomingChanges) => {
-    const newExpandedRows = new Set([...expandedRows]);
-    newExpandedRows.add(repo);
-    setExpandedRows(newExpandedRows);
+    setExpandedRows((currentExpandedRows) => new Set([...currentExpandedRows, itemKey(repo)]));
   };
+
+  const allVisibleRowsExpanded =
+    paginatedRows.length > 0 && paginatedRows.every((repo) => expandedRows.has(itemKey(repo)));
 
   const buildExportData = () =>
     sortedFilteredData.map((item) => ({
@@ -464,13 +477,11 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                             <AngleDownIcon />
                           </div>
                         }
-                        aria-expanded={expandedRows.size === paginatedRows.length}
-                        aria-label={
-                          expandedRows.size === paginatedRows.length ? 'Collapse all rows' : 'Expand all rows'
-                        }
+                        aria-expanded={allVisibleRowsExpanded}
+                        aria-label={allVisibleRowsExpanded ? 'Collapse all rows' : 'Expand all rows'}
                         variant="plain"
                         onClick={onClickArrow}
-                        className={expandedRows.size === paginatedRows.length ? 'pf-m-expanded' : ''}
+                        className={allVisibleRowsExpanded ? 'pf-m-expanded' : ''}
                       />
                     </span>
                   </Th>
@@ -509,7 +520,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
                     repo={repo}
                     columnNames={columnNames}
                     rowIndex={rowIndex}
-                    isExpanded={expandedRows.has(repo)}
+                    isExpanded={expandedRows.has(itemKey(repo))}
                     countsPending={countsPending}
                     countsFailed={countsFailed}
                     hideRepo={() => removeRepo(repo)}

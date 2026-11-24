@@ -3,6 +3,7 @@ import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   AlertActionCloseButton,
+  AlertActionLink,
   Bullseye,
   Button,
   Card,
@@ -92,6 +93,18 @@ const PREPARING_DESCRIPTION =
 const READY_ALERT_TITLE = 'Relevant roadmap data is ready.';
 const WORKSPACE_FILTERING_ERROR = 'Error: Workspace filtering is not yet implemented';
 const MAX_HOST_UUID_LOOKUP_ATTEMPTS = 3;
+type InitialFilterKey = 'name' | 'type' | 'release' | 'date' | 'addedToRoadmap';
+const INITIAL_FILTER_KEYS: InitialFilterKey[] = ['name', 'type', 'release', 'date', 'addedToRoadmap'];
+
+const areFilterValuesEqual = (left: unknown, right: unknown) => {
+  if (left instanceof Set && right instanceof Set) {
+    return left.size === right.size && [...left].every((value) => right.has(value));
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((value, index) => value === right[index]);
+  }
+  return left === right;
+};
 
 const getAccessibleHostUuidsWithRetry = async (signal: AbortSignal) => {
   for (let attempt = 1; attempt <= MAX_HOST_UUID_LOOKUP_ATTEMPTS; attempt += 1) {
@@ -140,19 +153,41 @@ const formatUpcomingRows = (rows: UpcomingCatalogRow[]): UpcomingChanges[] => {
 
 const mergeCatalogWithCorrelation = (
   catalog: UpcomingCatalogRow[],
-  correlated: UpcomingChangeRow[]
+  correlated: UpcomingChangeRow[],
+  hasEmptyInventory = false
 ): UpcomingChanges[] => {
   const correlatedByKey = new Map(correlated.map((row) => [itemKey(row), row]));
   const merged = catalog.map((row) => {
     const match = correlatedByKey.get(itemKey(row));
+    const details = match?.details;
+    const mergedDetails = match
+      ? {
+          ...row.details,
+          potentiallyAffectedSystemsCount: details?.potentiallyAffectedSystemsCount,
+          potentiallyAffectedSystemsDetail: details?.potentiallyAffectedSystemsDetail,
+          potentiallyAffectedSystems: details?.potentiallyAffectedSystems,
+        }
+      : hasEmptyInventory && row.details
+      ? {
+          ...row.details,
+          // An empty accessible inventory is a known zero, not an unknown count.
+          potentiallyAffectedSystemsCount: 0,
+          potentiallyAffectedSystemsDetail: [],
+          potentiallyAffectedSystems: [],
+        }
+      : row.details
+      ? {
+          ...row.details,
+          // A missing correlation row is an unknown value, not a zero count.
+          potentiallyAffectedSystemsCount: undefined,
+          potentiallyAffectedSystemsDetail: undefined,
+          potentiallyAffectedSystems: undefined,
+        }
+      : undefined;
+
     return {
       ...row,
-      details: {
-        ...row.details,
-        potentiallyAffectedSystemsCount: match?.details?.potentiallyAffectedSystemsCount ?? 0,
-        potentiallyAffectedSystemsDetail: match?.details?.potentiallyAffectedSystemsDetail ?? [],
-        potentiallyAffectedSystems: match?.details?.potentiallyAffectedSystems ?? [],
-      },
+      ...(mergedDetails ? { details: mergedDetails } : {}),
     };
   });
 
@@ -188,6 +223,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   } = correlation;
   const catalogRowsRef = useRef<UpcomingCatalogRow[] | null>(null);
   const correlationRowsRef = useRef<UpcomingChangeRow[] | null>(null);
+  const correlationInventoryEmptyRef = useRef(false);
   const initialUrlFiltersAppliedRef = useRef(false);
 
   const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -208,6 +244,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   const initialSearchParamsRef = useRef(searchParams);
   const setSearchParamsRef = useRef(setSearchParams);
   setSearchParamsRef.current = setSearchParams;
+  const userEditedFiltersRef = useRef<Set<InitialFilterKey>>(new Set());
   const [filtersForURL, setFiltersForURL] = useState<Filter>(() =>
     filtersFromSearchParams(initialSearchParamsRef.current)
   );
@@ -239,33 +276,50 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       }
       initialUrlFiltersAppliedRef.current = true;
 
-      const newFilters: Filter = { ...DEFAULT_FILTERS, viewFilter: view };
-      if (nameParam) {
+      const newFilters: Filter = { ...filtersForURLRef.current, viewFilter: view };
+      if (nameParam && !userEditedFiltersRef.current.has('name')) {
         const name = decodeURIComponent(nameParam);
         setCurrentNameFilters(name);
         newFilters.name = name;
       }
-      if (releaseParam && isValidRelease(data, decodeURIComponent(releaseParam))) {
-        const release = decodeURIComponent(releaseParam).split(',');
-        setCurrentReleaseFilters(release);
-        newFilters.release = release;
+      if (!userEditedFiltersRef.current.has('release')) {
+        if (releaseParam && isValidRelease(data, decodeURIComponent(releaseParam))) {
+          const release = decodeURIComponent(releaseParam).split(',');
+          setCurrentReleaseFilters(release);
+          newFilters.release = release;
+        } else {
+          delete newFilters.release;
+        }
       }
-      if (typeParam && isValidType(data, decodeURIComponent(typeParam))) {
-        const type = new Set(decodeURIComponent(typeParam).split(','));
-        setCurrentTypeFilters(type);
-        newFilters.type = type;
+      if (!userEditedFiltersRef.current.has('type')) {
+        if (typeParam && isValidType(data, decodeURIComponent(typeParam))) {
+          const type = new Set(decodeURIComponent(typeParam).split(','));
+          setCurrentTypeFilters(type);
+          newFilters.type = type;
+        } else {
+          delete newFilters.type;
+        }
       }
-      if (dateParam && isValidDate(data, decodeURIComponent(dateParam))) {
-        const date = decodeURIComponent(dateParam);
-        setCurrentDateFilter(date);
-        newFilters.date = date;
+      if (!userEditedFiltersRef.current.has('date')) {
+        if (dateParam && isValidDate(data, decodeURIComponent(dateParam))) {
+          const date = decodeURIComponent(dateParam);
+          setCurrentDateFilter(date);
+          newFilters.date = date;
+        } else {
+          delete newFilters.date;
+        }
       }
-      if (addedToRoadmapParam && isValidAddedToRoadmap(data, decodeURIComponent(addedToRoadmapParam))) {
-        const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
-        setCurrentAddedToRoadmapFilter(addedToRoadmap);
-        newFilters.addedToRoadmap = addedToRoadmap;
+      if (!userEditedFiltersRef.current.has('addedToRoadmap')) {
+        if (addedToRoadmapParam && isValidAddedToRoadmap(data, decodeURIComponent(addedToRoadmapParam))) {
+          const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
+          setCurrentAddedToRoadmapFilter(addedToRoadmap);
+          newFilters.addedToRoadmap = addedToRoadmap;
+        } else {
+          delete newFilters.addedToRoadmap;
+        }
       }
       setFiltersForURL(newFilters);
+      filtersForURLRef.current = newFilters;
       setSearchParamsRef.current(buildURL(newFilters));
     },
     [addedToRoadmapParam, dateParam, nameParam, releaseParam, typeParam]
@@ -277,7 +331,11 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         const catalog = catalogRowsRef.current;
         const rows = catalog
           ? correlationRowsRef.current
-            ? mergeCatalogWithCorrelation(catalog, correlationRowsRef.current)
+            ? mergeCatalogWithCorrelation(
+                catalog,
+                correlationRowsRef.current,
+                correlationInventoryEmptyRef.current
+              )
             : formatUpcomingRows(catalog)
           : [];
         processData(rows);
@@ -306,6 +364,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       if (updateUrl) {
         const newFilters = { ...filtersForURLRef.current, viewFilter: view };
         setFiltersForURL(newFilters);
+        filtersForURLRef.current = newFilters;
         setSearchParamsRef.current(buildURL(newFilters));
       }
       const rows = applyView(view);
@@ -339,7 +398,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         catalogRowsRef.current = rows;
         setCatalogStatus('ready');
         const allRows = correlationRowsRef.current
-          ? mergeCatalogWithCorrelation(rows, correlationRowsRef.current)
+          ? mergeCatalogWithCorrelation(rows, correlationRowsRef.current, correlationInventoryEmptyRef.current)
           : formatUpcomingRows(rows);
         applyView(selectedViewFilterRef.current);
 
@@ -382,6 +441,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         }
 
         let rows: UpcomingChangeRow[];
+        correlationInventoryEmptyRef.current = hostIds.length === 0;
         if (hostIds.length === 0) {
           rows = [];
           completeCorrelation(rows);
@@ -439,6 +499,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     const controller = new AbortController();
     correlationAbortRef.current = controller;
     correlationRowsRef.current = null;
+    correlationInventoryEmptyRef.current = false;
     resetCorrelation();
     setNoDataAvailable(false);
     void loadCorrelation(controller.signal);
@@ -456,8 +517,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     void loadCorrelation(correlationController.signal);
 
     return () => {
-      catalogController.abort();
-      correlationController.abort();
+      catalogAbortRef.current?.abort();
+      correlationAbortRef.current?.abort();
     };
   }, [loadCatalog, loadCorrelation]);
 
@@ -477,6 +538,7 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
   };
 
   const resetFilters = () => {
+    INITIAL_FILTER_KEYS.forEach((key) => userEditedFiltersRef.current.add(key));
     setCurrentTypeFilters(new Set());
     setCurrentDateFilter('');
     setCurrentNameFilters('');
@@ -486,17 +548,31 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
     changeView(nextView, false);
     const newFilters: Filter = { ...DEFAULT_FILTERS, viewFilter: nextView };
     setFiltersForURL(newFilters);
+    filtersForURLRef.current = newFilters;
     setSearchParams(buildURL(newFilters));
   };
 
   const setTypeParam = (type: Set<string>) => {
-    const newFilters = { ...filtersForURL, type };
+    userEditedFiltersRef.current.add('type');
+    const newFilters = { ...filtersForURLRef.current, type };
     setFiltersForURL(newFilters);
+    filtersForURLRef.current = newFilters;
     setSearchParams(buildURL(newFilters));
   };
 
   const updateChildFilters = (filters: Filter) => {
+    INITIAL_FILTER_KEYS.forEach((key) => {
+      if (!areFilterValuesEqual(filtersForURLRef.current[key], filters[key])) {
+        userEditedFiltersRef.current.add(key);
+      }
+    });
+    setCurrentTypeFilters(filters.type ? new Set(filters.type) : new Set());
+    setCurrentNameFilters(filters.name ?? '');
+    setCurrentReleaseFilters(filters.release ?? []);
+    setCurrentDateFilter(filters.date ?? '');
+    setCurrentAddedToRoadmapFilter(filters.addedToRoadmap ?? '');
     setFiltersForURL(filters);
+    filtersForURLRef.current = filters;
     setSearchParams(buildURL(filters));
   };
 
@@ -670,6 +746,22 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
               />
             }
           />
+        </StackItem>
+      )}
+      {activeViewIsAll && correlationError && (
+        <StackItem data-testid="upcoming-correlation-error">
+          <Alert
+            variant="danger"
+            isInline
+            title="Affected system counts failed to load."
+            actionLinks={
+              <AlertActionLink onClick={retryCorrelation} data-testid="retry-correlation">
+                Retry affected system counts
+              </AlertActionLink>
+            }
+          >
+            {toErrorObject(correlation.error).message}
+          </Alert>
         </StackItem>
       )}
       <StackItem>

@@ -360,6 +360,31 @@ describe('UpcomingTable', () => {
       expect(screen.getByTestId('table-row-Item 1')).toBeInTheDocument();
       expect(screen.queryByTestId('table-row-Item 15')).not.toBeInTheDocument();
     });
+
+    test('keeps the current page when refreshed data still contains it', async () => {
+      const largeDataSet: UpcomingChanges[] = Array.from({ length: 25 }, (_, i) => ({
+        name: `Item ${i + 1}`,
+        type: 'Addition',
+        release: `${9 + (i % 3)}.${i % 5}`,
+        date: '2024-12-01',
+        package: 'test',
+      }));
+      const { rerender } = render(<UpcomingTable {...defaultProps} data={largeDataSet} />);
+
+      const nextPageButton = screen.getByRole('button', { name: /Go to next page/i });
+      fireEvent.click(nextPageButton);
+      fireEvent.click(nextPageButton);
+      await waitFor(() => expect(screen.getByTestId('table-row-Item 21')).toBeInTheDocument());
+
+      rerender(<UpcomingTable {...defaultProps} data={largeDataSet.map((repo) => ({ ...repo }))} />);
+      await waitFor(() => {
+        expect(screen.getByTestId('table-row-Item 21')).toBeInTheDocument();
+        expect(screen.queryByTestId('table-row-Item 1')).not.toBeInTheDocument();
+      });
+
+      rerender(<UpcomingTable {...defaultProps} data={largeDataSet.slice(0, 5)} />);
+      await waitFor(() => expect(screen.getByTestId('table-row-Item 1')).toBeInTheDocument());
+    });
   });
 
   describe('Row Expansion', () => {
@@ -421,6 +446,35 @@ describe('UpcomingTable', () => {
         expect(screen.queryByTestId('expanded-row-Ruby 2.7 EOL')).not.toBeInTheDocument();
         expect(screen.queryByTestId('expanded-row-PostgreSQL 15 Feature')).not.toBeInTheDocument();
       });
+    });
+
+    test('keeps a row expanded when refreshed data replaces its object', async () => {
+      const dataWithDetails: UpcomingChanges[] = mockData.map((repo) => ({
+        ...repo,
+        details: {
+          summary: 'Summary',
+          architecture: 'x86_64',
+          potentiallyAffectedSystemsCount: 0,
+          potentiallyAffectedSystemsDetail: [],
+          trainingTicket: 'TEST-1',
+          deployedDate: '2024-01-01',
+          lastModified: '2024-01-01',
+          detailFormat: 0,
+        },
+      }));
+      const { rerender } = render(<UpcomingTable {...defaultProps} data={dataWithDetails} />);
+
+      fireEvent.click(screen.getByTestId('expand-button-Ruby 2.7 EOL'));
+      await waitFor(() => expect(screen.getByTestId('expanded-row-Ruby 2.7 EOL')).toBeInTheDocument());
+
+      const refreshedData = dataWithDetails.map((repo) =>
+        repo.name === 'Ruby 2.7 EOL'
+          ? { ...repo, details: { ...repo.details!, potentiallyAffectedSystemsCount: 4 } }
+          : { ...repo }
+      );
+      rerender(<UpcomingTable {...defaultProps} data={refreshedData} />);
+
+      await waitFor(() => expect(screen.getByTestId('expanded-row-Ruby 2.7 EOL')).toBeInTheDocument());
     });
   });
 
