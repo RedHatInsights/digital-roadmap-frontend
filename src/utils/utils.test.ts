@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { buildExportData, useChartDataAttributes } from './utils';
+import { buildExportData, buildURL, useChartDataAttributes } from './utils';
 import { Stream } from '../types/Stream';
 import { SystemLifecycleChanges } from '../types/SystemLifecycleChanges';
 
@@ -194,6 +194,22 @@ describe('useChartDataAttributes', () => {
 });
 
 const APP_STREAM_DROPDOWNS = ['rhel-9-appstreams', 'rhel-8-appstreams', 'rhel-10-appstreams'];
+
+describe('buildURL', () => {
+  it('encodes filter values while preserving their decoded values', () => {
+    const url = buildURL({
+      name: '100% & escaped',
+      release: ['Release & 1.0'],
+      type: new Set(['Change', 'Deprecation']),
+    });
+    const params = new URLSearchParams(url);
+
+    expect(url).toContain('name=100%25%20%26%20escaped');
+    expect(params.get('name')).toBe('100% & escaped');
+    expect(params.get('release')).toBe('Release & 1.0');
+    expect(params.get('type')).toBe('Change,Deprecation');
+  });
+});
 
 describe('buildExportData', () => {
   const streamWithHosts: Stream[] = [

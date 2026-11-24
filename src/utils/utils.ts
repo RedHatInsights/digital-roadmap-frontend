@@ -63,39 +63,40 @@ export const checkValidityOfQueryParam = (queryParam: string, queryValue: string
 };
 
 export const buildURL = (filter: Filter) => {
+  const encode = (value: string) => encodeURIComponent(value);
   let encodedData = '';
   if (filter['name']) {
-    encodedData += `name=${filter['name']}`;
+    encodedData += `name=${encode(filter['name'])}`;
   }
   if (filter['lifecycleDropdown']) {
-    encodedData += `&lifecycleDropdown=${filter['lifecycleDropdown']}`;
+    encodedData += `&lifecycleDropdown=${encode(filter['lifecycleDropdown'])}`;
   }
   if (filter['chartSortBy']) {
-    encodedData += `&chartSortBy=${filter['chartSortBy']}`;
+    encodedData += `&chartSortBy=${encode(filter['chartSortBy'])}`;
   }
   if (filter['chartOrder']) {
-    encodedData += `&chartOrder=${filter['chartOrder']}`;
+    encodedData += `&chartOrder=${encode(filter['chartOrder'])}`;
   }
   if (filter['viewFilter']) {
-    encodedData += `&viewFilter=${filter['viewFilter']}`;
+    encodedData += `&viewFilter=${encode(filter['viewFilter'])}`;
   }
   if (filter['versions'] && filter['versions'].length > 0) {
-    encodedData += `&versions=${filter['versions'].join(',')}`;
+    encodedData += `&versions=${encode(filter['versions'].join(','))}`;
   }
   if (filter['statuses'] && filter['statuses'].length > 0) {
-    encodedData += `&statuses=${filter['statuses'].join(',')}`;
+    encodedData += `&statuses=${encode(filter['statuses'].join(','))}`;
   }
   if (filter['type'] && filter['type'].size > 0) {
-    encodedData += `&type=${Array.from(filter['type']).join(',')}`;
+    encodedData += `&type=${encode(Array.from(filter['type']).join(','))}`;
   }
   if (filter['date']) {
-    encodedData += `&date=${filter['date']}`;
+    encodedData += `&date=${encode(filter['date'])}`;
   }
   if (filter['release'] && filter['release'].length > 0) {
-    encodedData += `&release=${filter['release'].join(',')}`;
+    encodedData += `&release=${encode(filter['release'].join(','))}`;
   }
   if (filter['addedToRoadmap']) {
-    encodedData += `&addedToRoadmap=${filter['addedToRoadmap']}`;
+    encodedData += `&addedToRoadmap=${encode(filter['addedToRoadmap'])}`;
   }
   return encodedData;
 };

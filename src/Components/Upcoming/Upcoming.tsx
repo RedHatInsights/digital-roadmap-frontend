@@ -278,13 +278,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
 
       const newFilters: Filter = { ...filtersForURLRef.current, viewFilter: view };
       if (nameParam && !userEditedFiltersRef.current.has('name')) {
-        const name = decodeURIComponent(nameParam);
-        setCurrentNameFilters(name);
-        newFilters.name = name;
+        setCurrentNameFilters(nameParam);
+        newFilters.name = nameParam;
       }
       if (!userEditedFiltersRef.current.has('release')) {
-        if (releaseParam && isValidRelease(data, decodeURIComponent(releaseParam))) {
-          const release = decodeURIComponent(releaseParam).split(',');
+        if (releaseParam && isValidRelease(data, releaseParam)) {
+          const release = releaseParam.split(',');
           setCurrentReleaseFilters(release);
           newFilters.release = release;
         } else {
@@ -292,8 +291,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         }
       }
       if (!userEditedFiltersRef.current.has('type')) {
-        if (typeParam && isValidType(data, decodeURIComponent(typeParam))) {
-          const type = new Set(decodeURIComponent(typeParam).split(','));
+        if (typeParam && isValidType(data, typeParam)) {
+          const type = new Set(typeParam.split(','));
           setCurrentTypeFilters(type);
           newFilters.type = type;
         } else {
@@ -301,8 +300,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         }
       }
       if (!userEditedFiltersRef.current.has('date')) {
-        if (dateParam && isValidDate(data, decodeURIComponent(dateParam))) {
-          const date = decodeURIComponent(dateParam);
+        if (dateParam && isValidDate(data, dateParam)) {
+          const date = dateParam;
           setCurrentDateFilter(date);
           newFilters.date = date;
         } else {
@@ -310,8 +309,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         }
       }
       if (!userEditedFiltersRef.current.has('addedToRoadmap')) {
-        if (addedToRoadmapParam && isValidAddedToRoadmap(data, decodeURIComponent(addedToRoadmapParam))) {
-          const addedToRoadmap = decodeURIComponent(addedToRoadmapParam);
+        if (addedToRoadmapParam && isValidAddedToRoadmap(data, addedToRoadmapParam)) {
+          const addedToRoadmap = addedToRoadmapParam;
           setCurrentAddedToRoadmapFilter(addedToRoadmap);
           newFilters.addedToRoadmap = addedToRoadmap;
         } else {

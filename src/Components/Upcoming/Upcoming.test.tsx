@@ -26,6 +26,7 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
     data,
     resetInitialFilters,
     initialTypeFilters,
+    initialNameFilter,
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
@@ -50,6 +51,7 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
           {JSON.stringify(data.map((d: any) => d.details?.deployedDate ?? null))}
         </div>
         <div data-testid="initial-type-filters">{JSON.stringify([...initialTypeFilters])}</div>
+        <div data-testid="initial-name-filter">{initialNameFilter}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
         <div data-testid="table-content-status">{contentStatus}</div>
@@ -973,10 +975,11 @@ describe('UpcomingTab', () => {
       fireEvent.click(screen.getByTestId('switch-to-all'));
 
       const latestUrl = mockSetSearchParams.mock.calls[mockSetSearchParams.mock.calls.length - 1][0];
-      expect(latestUrl).toContain('name=Ruby');
-      expect(latestUrl).toContain('type=Change');
-      expect(latestUrl).toContain('release=Release 1.0');
-      expect(latestUrl).toContain('viewFilter=all');
+      const latestParams = new URLSearchParams(latestUrl);
+      expect(latestParams.get('name')).toBe('Ruby');
+      expect(latestParams.get('type')).toBe('Change');
+      expect(latestParams.get('release')).toBe('Release 1.0');
+      expect(latestParams.get('viewFilter')).toBe('all');
 
       await act(async () => {
         resolveCatalog({ data: mockCatalogData });
@@ -995,6 +998,18 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('selected-view-filter')).toHaveTextContent('all');
         expect(screen.getByTestId('table-data-count')).toHaveTextContent('3');
       });
+    });
+
+    test('uses URLSearchParams-decoded filter values without decoding them twice', async () => {
+      setupSearchParamsMock({ name: '100%', type: 'Change', release: 'Release 1.0' });
+
+      renderComponent('name=100%25&type=Change&release=Release%201.0');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('table-content-status')).toHaveTextContent('ready');
+        expect(screen.getByTestId('initial-name-filter')).toHaveTextContent('100%');
+      });
+      expect(screen.getByTestId('table-content-error')).toBeEmptyDOMElement();
     });
 
     // RSPEED-2766: verify that clicking a type card preserves viewFilter=all when set via URL on page load
