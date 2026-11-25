@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-import { ApiError, HOST_UUID_LOOKUP_TIMEOUT_MS, getAccessibleHostUuids, getUpcomingChangesForHosts } from './api';
+import {
+  ApiError,
+  HOST_UUID_LOOKUP_TIMEOUT_MS,
+  getAccessibleHostUuids,
+  getUpcomingChanges,
+  getUpcomingChangesForHosts,
+} from './api';
 import { isTransientFailure } from './utils/batchRetry';
 
 jest.mock('axios', () => ({
@@ -12,11 +18,37 @@ jest.mock('axios', () => ({
 
 jest.mock('./constants', () => ({
   DR_API: '/api/roadmap/v1',
+  DR_ALL_UPCOMING: '/upcoming-changes',
   DR_LIFECYCLE_HOST_UUIDS: '/lifecycle/host-uuids',
   DR_RELEVANT_UPCOMING_HOSTS: '/relevant/upcoming-changes/hosts?all=true',
 }));
 
 const request = axios.request as jest.Mock;
+
+describe('getUpcomingChanges', () => {
+  beforeEach(() => {
+    request.mockReset();
+  });
+
+  it('requests the static upcoming catalog', async () => {
+    const body = { meta: { count: 1, total: 1 }, data: [{ name: 'change' }] };
+    request.mockResolvedValue({ status: 200, data: body });
+
+    await expect(getUpcomingChanges()).resolves.toEqual(body);
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'get', url: '/api/roadmap/v1/upcoming-changes' })
+    );
+  });
+
+  it('forwards an abort signal on the static catalog request', async () => {
+    const controller = new AbortController();
+    request.mockResolvedValue({ status: 200, data: { meta: { count: 0, total: 0 }, data: [] } });
+
+    await getUpcomingChanges(controller.signal);
+
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+  });
+});
 
 describe('getAccessibleHostUuids', () => {
   beforeEach(() => {

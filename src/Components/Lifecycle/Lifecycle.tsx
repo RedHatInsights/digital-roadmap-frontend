@@ -731,7 +731,7 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     else initialFilters.chartOrder = getDefaultOrder(DEFAULT_CHART_SORTBY_VALUE);
 
     if (versionsParam) {
-      const raw = decodeURIComponent(versionsParam)
+      const raw = versionsParam
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
@@ -740,7 +740,7 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     }
 
     if (statusesParam) {
-      const raw = decodeURIComponent(statusesParam)
+      const raw = statusesParam
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
@@ -751,9 +751,9 @@ const LifecycleTab: React.FC<LifecycleTabProps> = ({ onBatchLoadAlertChange }) =
     initialFilters.viewFilter = initialViewFilter;
 
     // Set filterField based on which filters are present in URL (status takes precedence)
-    if (statusesParam && decodeURIComponent(statusesParam).trim()) {
+    if (statusesParam && statusesParam.trim()) {
       setFilterField('Status');
-    } else if (versionsParam && decodeURIComponent(versionsParam).trim()) {
+    } else if (versionsParam && versionsParam.trim()) {
       setFilterField('Version');
     }
 

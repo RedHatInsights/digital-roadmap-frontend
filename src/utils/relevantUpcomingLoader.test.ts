@@ -5,6 +5,7 @@ import {
   MAX_FAILED_REQUESTS,
   UpcomingChangeRow,
   UpcomingChangesClient,
+  itemKey,
   loadAllUpcomingChanges,
 } from './relevantUpcomingLoader';
 
@@ -46,6 +47,36 @@ describe('loadAllUpcomingChanges', () => {
     jest.mocked(batchRetry.waitBeforeRetry).mockClear();
   });
 
+  it('uses one identity for catalog and all=true host responses', () => {
+    const catalogRow = {
+      name: 'Ruby 3.3 Deprecation',
+      type: 'deprecation',
+      packages: ['ruby'],
+      release: '9.6',
+      date: '2026-05-31',
+      details: {
+        summary: 'Ruby leaves the default streams',
+        architecture: 'x86_64',
+        trainingTicket: 'TEST-1',
+        deployedDate: '2024-11-01',
+        lastModified: '2024-01-01',
+        dateAdded: '2026-01-01',
+        detailFormat: 0,
+      },
+    };
+    const correlatedRow = {
+      ...catalogRow,
+      details: {
+        ...catalogRow.details,
+        potentiallyAffectedSystemsCount: 1,
+        potentiallyAffectedSystemsDetail: [host('host-1')],
+        potentiallyAffectedSystems: ['host-1'],
+      },
+    };
+
+    expect(itemKey(catalogRow)).toBe(itemKey(correlatedRow));
+  });
+
   it('uses one request at a time and batches 1000 host ids', async () => {
     expect(BATCH_SIZE).toBe(1000);
     expect(MAX_CONCURRENT_REQUESTS).toBe(1);
@@ -56,7 +87,7 @@ describe('loadAllUpcomingChanges', () => {
     const releases: Array<() => void> = [];
     let inFlight = 0;
     let maxInFlight = 0;
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
 
     const client: UpcomingChangesClient = {
       getUpcomingChangesForHosts: (hostIds) => {
@@ -77,19 +108,19 @@ describe('loadAllUpcomingChanges', () => {
     await waitForCalls(calls, 1);
     expect(calls[0]).toHaveLength(BATCH_SIZE);
     expect(calls[0]).toEqual(ids.slice(0, BATCH_SIZE));
-    expect(progress).toEqual([{ requested: BATCH_SIZE, total: ids.length }]);
+    expect(progress).toEqual([]);
     expect(maxInFlight).toBe(1);
 
     releases[0]();
     await waitForCalls(calls, 2);
     expect(calls[1]).toHaveLength(BATCH_SIZE);
-    expect(progress[1]).toEqual({ requested: BATCH_SIZE * 2, total: ids.length });
+    expect(progress).toEqual([{ completed: BATCH_SIZE, total: ids.length }]);
     expect(maxInFlight).toBe(1);
 
     releases[1]();
     await waitForCalls(calls, 3);
     expect(calls[2]).toEqual(ids.slice(BATCH_SIZE * 2));
-    expect(progress[2]).toEqual({ requested: ids.length, total: ids.length });
+    expect(progress[1]).toEqual({ completed: BATCH_SIZE * 2, total: ids.length });
 
     releases[2]();
     await expect(pending).resolves.toEqual({ meta: { count: 0, total: 0 }, data: [] });
@@ -304,7 +335,7 @@ describe('loadAllUpcomingChanges', () => {
 
   it('retries a failed batch with the same ids and does not advance progress', async () => {
     const ids = makeIds(BATCH_SIZE + 1);
-    const progress: Array<{ requested: number; total: number }> = [];
+    const progress: Array<{ completed: number; total: number }> = [];
     const fetchHosts = jest
       .fn<Promise<{ data: UpcomingChangeRow[] }>, [string[]]>()
       .mockRejectedValueOnce(new Error('once'))
@@ -321,8 +352,8 @@ describe('loadAllUpcomingChanges', () => {
     expect(fetchHosts.mock.calls[1][0]).toEqual(ids.slice(0, BATCH_SIZE));
     expect(fetchHosts.mock.calls[2][0]).toEqual(ids.slice(BATCH_SIZE));
     expect(progress).toEqual([
-      { requested: BATCH_SIZE, total: ids.length },
-      { requested: ids.length, total: ids.length },
+      { completed: BATCH_SIZE, total: ids.length },
+      { completed: ids.length, total: ids.length },
     ]);
   });
 

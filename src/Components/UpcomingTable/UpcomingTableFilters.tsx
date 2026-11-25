@@ -71,6 +71,8 @@ interface UpcomingTableFiltersProps {
   noDataAvailable?: boolean; // Add noDataAvailable prop with optional flag
   onExport: (format: ExportFormat) => void;
   canExport: boolean;
+  isExportDisabled?: boolean;
+  exportDisabledTooltipContent?: string;
 }
 
 export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersProps> = ({
@@ -101,6 +103,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
   noDataAvailable = false, // Default to false if not provided
   onExport,
   canExport,
+  isExportDisabled = false,
+  exportDisabledTooltipContent = 'Still loading',
 }) => {
   const [isReleaseMenuOpen, setIsReleaseMenuOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -558,8 +562,8 @@ export const UpcomingTableFilters: React.FunctionComponent<UpcomingTableFiltersP
               <ExportDataButton
                 className="drf-upcoming__filter-download"
                 onExport={onExport}
-                isDisabled={!canExport}
-                disabledTooltipContent="No data to export"
+                isDisabled={!canExport || isExportDisabled}
+                disabledTooltipContent={isExportDisabled ? exportDisabledTooltipContent : 'No data to export'}
               />
             </ToolbarItem>
           </ToolbarGroup>

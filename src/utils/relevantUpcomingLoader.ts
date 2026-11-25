@@ -10,7 +10,7 @@ export const MAX_CONCURRENT_REQUESTS = 1;
 export const MAX_FAILED_REQUESTS = 3;
 
 export type UpcomingLoadProgress = {
-  requested: number;
+  completed: number;
   total: number;
 };
 
@@ -44,16 +44,32 @@ export type UpcomingChangeRow = {
   details?: UpcomingChangeDetails;
 };
 
+export type UpcomingChangeIdentity = {
+  name: string;
+  type: string;
+  package?: string;
+  packages?: string[];
+  release: string;
+  date: string;
+  details?: Pick<
+    UpcomingChangeDetails,
+    'summary' | 'architecture' | 'trainingTicket' | 'deployedDate' | 'lastModified' | 'dateAdded' | 'detailFormat'
+  >;
+};
+
 export interface UpcomingChangesClient {
   getUpcomingChangesForHosts: (hostIds: string[], signal?: AbortSignal) => Promise<{ data?: UpcomingChangeRow[] }>;
 }
 
 /**
- * Identity of one upcoming file entry. Affected-system lists stay out of the
- * key so batches can union hosts. Name and release are not enough: an addition
- * and a deprecation can share both.
+ * Identity of one upcoming file entry. This mirrors the fields shared by the
+ * backend's unscoped `/upcoming-changes` catalog and its
+ * `/relevant/upcoming-changes/hosts?all=true` response, both of which are
+ * serialized from the same roadmap record. Affected-system lists stay out of
+ * the key so batches can union hosts. Name and release are not enough: an
+ * addition and a deprecation can share both.
  */
-const itemKey = (row: UpcomingChangeRow): string => {
+export const itemKey = (row: UpcomingChangeIdentity): string => {
   const packages = [...(row.packages ?? (row.package == null ? [] : [row.package]))].sort();
   const details = row.details;
   return JSON.stringify([
@@ -114,7 +130,7 @@ export const loadAllUpcomingChanges = async (
   const total = pending.length;
   const merged = new Map<string, UpcomingChangeRow>();
   const order: string[] = [];
-  let requested = 0;
+  let completed = 0;
   let failure: unknown;
 
   const mergeRows = (rows: UpcomingChangeRow[]) => {
@@ -177,7 +193,7 @@ export const loadAllUpcomingChanges = async (
   };
 
   if (total === 0) {
-    onProgress?.({ requested: 0, total: 0 });
+    onProgress?.({ completed: 0, total: 0 });
     await postBatch([]);
   } else {
     const worker = async () => {
@@ -190,10 +206,11 @@ export const loadAllUpcomingChanges = async (
           return;
         }
 
-        requested += batch.length;
-        onProgress?.({ requested, total });
-
         await postBatch(batch);
+        if (!failure && !signal?.aborted) {
+          completed += batch.length;
+          onProgress?.({ completed, total });
+        }
       }
     };
 

@@ -8,3 +8,4 @@ export const DR_ALL_LIFECYCLE_APPSTREAMS = '/lifecycle/app-streams/streams';
 
 export const DR_RELEVANT_UPCOMING_HOSTS = '/relevant/upcoming-changes/hosts?all=true';
 export const DR_RELEVANT_UPCOMING = '/relevant/upcoming-changes';
+export const DR_ALL_UPCOMING = '/upcoming-changes';

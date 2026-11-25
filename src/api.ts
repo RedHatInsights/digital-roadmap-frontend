@@ -3,6 +3,7 @@ import axios, { AxiosResponse } from 'axios';
 import {
   DR_ALL_LIFECYCLE_APPSTREAMS,
   DR_ALL_LIFECYCLE_SYSTEMS,
+  DR_ALL_UPCOMING,
   DR_API,
   DR_LIFECYCLE_HOST_UUIDS,
   DR_RELEASE_NOTES,
@@ -75,6 +76,10 @@ export const getUpcomingChangesForHosts = async (hostIds: string[], signal?: Abo
     },
     signal
   );
+};
+
+export const getUpcomingChanges = async (signal?: AbortSignal) => {
+  return requestBackend('get', DR_API.concat(DR_ALL_UPCOMING), undefined, signal);
 };
 
 export const getAllUpcomingChanges = (
