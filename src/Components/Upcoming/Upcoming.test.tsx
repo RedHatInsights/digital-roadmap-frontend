@@ -27,6 +27,8 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
     resetInitialFilters,
     initialTypeFilters,
     initialNameFilter,
+    initialDateFilter,
+    initialReleaseFilters,
     selectedViewFilter,
     handleViewFilterChange,
     noDataAvailable,
@@ -52,6 +54,8 @@ jest.mock('../UpcomingTable/UpcomingTable', () => {
         </div>
         <div data-testid="initial-type-filters">{JSON.stringify([...initialTypeFilters])}</div>
         <div data-testid="initial-name-filter">{initialNameFilter}</div>
+        <div data-testid="initial-date-filter">{initialDateFilter}</div>
+        <div data-testid="initial-release-filters">{JSON.stringify(initialReleaseFilters)}</div>
         <div data-testid="selected-view-filter">{selectedViewFilter}</div>
         <div data-testid="no-data-available">{noDataAvailable.toString()}</div>
         <div data-testid="table-content-status">{contentStatus}</div>
@@ -1010,6 +1014,74 @@ describe('UpcomingTab', () => {
         expect(screen.getByTestId('initial-name-filter')).toHaveTextContent('100%');
       });
       expect(screen.getByTestId('table-content-error')).toBeEmptyDOMElement();
+    });
+
+    test('keeps catalog URL filters when Relevant finishes before the catalog', async () => {
+      type CatalogResponse = Awaited<ReturnType<typeof getUpcomingChanges>>;
+      type CorrelationResponse = Awaited<ReturnType<typeof getAllUpcomingChanges>>;
+      let resolveCatalog: (value: CatalogResponse) => void = () => undefined;
+      let resolveCorrelation: (value: CorrelationResponse) => void = () => undefined;
+      mockGetUpcomingChanges.mockReturnValue(
+        new Promise<CatalogResponse>((resolve) => (resolveCatalog = resolve))
+      );
+      mockGetAllUpcomingChanges.mockReturnValue(
+        new Promise<CorrelationResponse>((resolve) => (resolveCorrelation = resolve))
+      );
+      setupSearchParamsMock({ release: 'Release 2.0', date: '2024-12-15' });
+
+      renderComponent('release=Release%202.0&date=2024-12-15');
+
+      await act(async () => {
+        resolveCorrelation(upcomingResponse(mockAllData));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('initial-release-filters')).toHaveTextContent('Release 2.0');
+        expect(screen.getByTestId('initial-date-filter')).toHaveTextContent('2024-12-15');
+      });
+
+      await act(async () => {
+        resolveCatalog({ data: mockCatalogData });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('initial-release-filters')).toHaveTextContent('Release 2.0');
+        expect(screen.getByTestId('initial-date-filter')).toHaveTextContent('2024-12-15');
+      });
+    });
+
+    test('clears provisional URL filters rejected by the catalog', async () => {
+      type CatalogResponse = Awaited<ReturnType<typeof getUpcomingChanges>>;
+      type CorrelationResponse = Awaited<ReturnType<typeof getAllUpcomingChanges>>;
+      let resolveCatalog: (value: CatalogResponse) => void = () => undefined;
+      let resolveCorrelation: (value: CorrelationResponse) => void = () => undefined;
+      mockGetUpcomingChanges.mockReturnValue(
+        new Promise<CatalogResponse>((resolve) => (resolveCatalog = resolve))
+      );
+      mockGetAllUpcomingChanges.mockReturnValue(
+        new Promise<CorrelationResponse>((resolve) => (resolveCorrelation = resolve))
+      );
+      setupSearchParamsMock({ release: 'Release 9.9', date: '2099-01-01' });
+
+      renderComponent('release=Release%209.9&date=2099-01-01');
+
+      await act(async () => {
+        resolveCorrelation(upcomingResponse(mockAllData));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('initial-release-filters')).toHaveTextContent('Release 9.9');
+        expect(screen.getByTestId('initial-date-filter')).toHaveTextContent('2099-01-01');
+      });
+
+      await act(async () => {
+        resolveCatalog({ data: mockCatalogData });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('initial-release-filters')).toHaveTextContent('[]');
+        expect(screen.getByTestId('initial-date-filter')).toBeEmptyDOMElement();
+      });
     });
 
     // RSPEED-2766: verify that clicking a type card preserves viewFilter=all when set via URL on page load

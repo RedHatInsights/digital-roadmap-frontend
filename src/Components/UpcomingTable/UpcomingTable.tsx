@@ -516,7 +516,7 @@ export const UpcomingTable: React.FunctionComponent<UpcomingTableProps> = ({
               paginatedRows.map((repo, rowIndex) => {
                 return (
                   <TableRow
-                    key={`${repo.name}-${repo.type}-${repo.release}-${repo.date}`}
+                    key={itemKey(repo)}
                     repo={repo}
                     columnNames={columnNames}
                     rowIndex={rowIndex}

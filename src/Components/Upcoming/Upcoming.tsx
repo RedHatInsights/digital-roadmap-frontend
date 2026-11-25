@@ -274,7 +274,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
       if (initialUrlFiltersAppliedRef.current) {
         return;
       }
-      initialUrlFiltersAppliedRef.current = true;
+
+      // Release and date values describe the complete roadmap catalog. Relevant
+      // rows can be empty for a valid catalog filter, so defer invalidation until
+      // the catalog has loaded and can be used as the validation source.
+      const catalogData = catalogRowsRef.current === null ? undefined : formatUpcomingRows(catalogRowsRef.current);
+      const canValidateCatalogFilters = catalogData !== undefined;
 
       const newFilters: Filter = { ...filtersForURLRef.current, viewFilter: view };
       if (nameParam && !userEditedFiltersRef.current.has('name')) {
@@ -282,16 +287,17 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         newFilters.name = nameParam;
       }
       if (!userEditedFiltersRef.current.has('release')) {
-        if (releaseParam && isValidRelease(data, releaseParam)) {
+        if (releaseParam && (!catalogData || isValidRelease(catalogData, releaseParam))) {
           const release = releaseParam.split(',');
           setCurrentReleaseFilters(release);
           newFilters.release = release;
-        } else {
+        } else if (canValidateCatalogFilters) {
+          setCurrentReleaseFilters([]);
           delete newFilters.release;
         }
       }
       if (!userEditedFiltersRef.current.has('type')) {
-        if (typeParam && isValidType(data, typeParam)) {
+        if (typeParam && isValidType(catalogData ?? data, typeParam)) {
           const type = new Set(typeParam.split(','));
           setCurrentTypeFilters(type);
           newFilters.type = type;
@@ -300,11 +306,12 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         }
       }
       if (!userEditedFiltersRef.current.has('date')) {
-        if (dateParam && isValidDate(data, dateParam)) {
+        if (dateParam && (!catalogData || isValidDate(catalogData, dateParam))) {
           const date = dateParam;
           setCurrentDateFilter(date);
           newFilters.date = date;
-        } else {
+        } else if (canValidateCatalogFilters) {
+          setCurrentDateFilter('');
           delete newFilters.date;
         }
       }
@@ -316,6 +323,9 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
         } else {
           delete newFilters.addedToRoadmap;
         }
+      }
+      if (canValidateCatalogFilters) {
+        initialUrlFiltersAppliedRef.current = true;
       }
       setFiltersForURL(newFilters);
       filtersForURLRef.current = newFilters;
@@ -401,8 +411,8 @@ const UpcomingTab: React.FC<React.PropsWithChildren> = () => {
           : formatUpcomingRows(rows);
         applyView(selectedViewFilterRef.current);
 
-        if (selectedViewFilterRef.current === 'all' && !initialUrlFiltersAppliedRef.current) {
-          applyInitialUrlFilters(allRows, 'all');
+        if (!initialUrlFiltersAppliedRef.current) {
+          applyInitialUrlFilters(allRows, selectedViewFilterRef.current);
         }
         if (
           selectedViewFilterRef.current === 'relevant' &&
